@@ -1,43 +1,35 @@
 package handler
 
 import (
-	"net/http"
-	"runtime"
-	"time"
-
-	"fiozap/internal/model"
+	"github.com/gofiber/fiber/v2"
+	"wzap/internal/model"
 )
 
-var startTime = time.Now()
-
-type HealthHandler struct{}
-
-func NewHealthHandler() *HealthHandler {
-	return &HealthHandler{}
+type HealthHandler struct {
+	dbConn    bool
+	natsConn  bool
+	minioConn bool
 }
 
-// GetHealth godoc
-// @Summary Health check
-// @Tags Health
-// @Produce json
-// @Success 200 {object} map[string]interface{}
-// @Router /health [get]
-func (h *HealthHandler) GetHealth(w http.ResponseWriter, r *http.Request) {
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
+func NewHealthHandler(db, nats, minio bool) *HealthHandler {
+	return &HealthHandler{dbConn: db, natsConn: nats, minioConn: minio}
+}
 
-	response := map[string]interface{}{
-		"status":     "ok",
-		"timestamp":  time.Now().UTC().Format(time.RFC3339),
-		"uptime":     time.Since(startTime).String(),
-		"goroutines": runtime.NumGoroutine(),
-		"memory": map[string]interface{}{
-			"alloc_mb":       memStats.Alloc / 1024 / 1024,
-			"total_alloc_mb": memStats.TotalAlloc / 1024 / 1024,
-			"sys_mb":         memStats.Sys / 1024 / 1024,
-			"num_gc":         memStats.NumGC,
+// Check godoc
+// @Summary     Health check
+// @Description Returns the health status of the API and its dependencies
+// @Tags        Health
+// @Produce     json
+// @Success     200 {object} model.APIResponse
+// @Router      /health [get]
+func (h *HealthHandler) Check(c *fiber.Ctx) error {
+	status := map[string]interface{}{
+		"status": "UP",
+		"services": map[string]bool{
+			"database": h.dbConn,
+			"nats":     h.natsConn,
+			"minio":    h.minioConn,
 		},
 	}
-
-	model.RespondOK(w, response)
+	return c.JSON(model.SuccessResp(status, "wzap is running"))
 }

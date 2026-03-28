@@ -1,118 +1,41 @@
-.PHONY: all build run dev clean test lint fmt tidy docker-up docker-down docker-logs help swagger
+# wzap Makefile
 
-APP_NAME := fiozap
-BINARY := bin/$(APP_NAME)
-MAIN := ./cmd/server
-GO := $(shell which go)
+.PHONY: help dev build run tidy up down clean install-tools
 
-all: build
+# Variables
+APP_NAME=wzap
+BUILD_DIR=build
+DOCKER_IMAGE=wzap:latest
 
-## Build
-build:
+help: ## Show this help message
+	@echo "Available commands:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+tidy: ## Tidy go modules
+	go mod tidy
+
+dev: ## Run the application
+	go run cmd/wzap/main.go
+
+build: ## Build the application
 	@echo "Building $(APP_NAME)..."
-	@$(GO) build -o $(BINARY) $(MAIN)
+	@mkdir -p $(BUILD_DIR)
+	CGO_ENABLED=0 go build -ldflags "-s -w" -o $(BUILD_DIR)/$(APP_NAME) cmd/wzap/main.go
 
-build-linux:
-	@echo "Building $(APP_NAME) for Linux..."
-	@GOOS=linux GOARCH=amd64 $(GO) build -o $(BINARY)-linux $(MAIN)
+run: build ## Build and run the application
+	./$(BUILD_DIR)/$(APP_NAME)
 
-## Run
-run: build
-	@./$(BINARY)
+up: ## Start all services via docker-compose
+	docker compose up -d
 
-dev:
-	@$(GO) run $(MAIN)
+down: ## Stop all services
+	docker compose down
 
-## Dependencies
-tidy:
-	@$(GO) mod tidy
+down-clean: ## Stop all services and remove volumes (DESTRUCTIVE)
+	docker compose down -v
 
-download:
-	@$(GO) mod download
+clean: ## Clean build artifacts
+	@rm -rf $(BUILD_DIR)
 
-## Swagger
-swagger:
-	@swag init -g cmd/server/main.go -o docs
-
-## Code Quality
-fmt:
-	@$(GO) fmt ./...
-
-lint:
-	@golangci-lint run ./...
-
-vet:
-	@$(GO) vet ./...
-
-## Testing
-test:
-	@$(GO) test -v ./...
-
-test-cover:
-	@$(GO) test -coverprofile=coverage.out ./...
-	@$(GO) tool cover -html=coverage.out -o coverage.html
-
-## Docker
-docker-up:
-	@docker-compose up -d
-
-docker-down:
-	@docker-compose down
-
-docker-logs:
-	@docker-compose logs -f
-
-docker-ps:
-	@docker-compose ps
-
-## Database
-db-reset:
-	@docker-compose down -v
-	@docker-compose up -d postgres
-	@echo "Waiting for PostgreSQL..."
-	@sleep 3
-
-## Clean
-clean:
-	@rm -rf bin/
-	@rm -f coverage.out coverage.html
-
-## Kill
-kill:
-	@echo "Killing server on port 8080..."
-	@lsof -ti:8080 | xargs kill -9 2>/dev/null || echo "No process on port 8080"
-
-## Setup
-setup: docker-up
-	@cp -n .env.example .env 2>/dev/null || true
-	@echo "Setup complete. Edit .env as needed."
-
-## Help
-help:
-	@echo "FioZap Makefile Commands:"
-	@echo ""
-	@echo "  make build        - Build the application"
-	@echo "  make build-linux  - Build for Linux amd64"
-	@echo "  make run          - Build and run the application"
-	@echo "  make dev          - Run without building (go run)"
-	@echo ""
-	@echo "  make tidy         - Run go mod tidy"
-	@echo "  make download     - Download dependencies"
-	@echo ""
-	@echo "  make swagger      - Generate Swagger docs"
-	@echo "  make fmt          - Format code"
-	@echo "  make lint         - Run linter"
-	@echo "  make vet          - Run go vet"
-	@echo ""
-	@echo "  make test         - Run tests"
-	@echo "  make test-cover   - Run tests with coverage"
-	@echo ""
-	@echo "  make docker-up    - Start docker services"
-	@echo "  make docker-down  - Stop docker services"
-	@echo "  make docker-logs  - View docker logs"
-	@echo "  make docker-ps    - List docker services"
-	@echo ""
-	@echo "  make db-reset     - Reset database (destroys data)"
-	@echo "  make setup        - Initial setup (docker + .env)"
-	@echo "  make clean        - Remove build artifacts"
-	@echo "  make kill         - Kill running fiozap processes"
+install-tools: ## Install development tools (golangci-lint)
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.56.2

@@ -1,74 +1,60 @@
 services:
+  # Database: PostgreSQL
   postgres:
     image: postgres:16-alpine
-    container_name: fiozap-postgres
-    restart: unless-stopped
+    container_name: wzap_postgres
     environment:
-      POSTGRES_USER: fiozap
-      POSTGRES_PASSWORD: fiozap123
-      POSTGRES_DB: fiozap
+      POSTGRES_DB: ${POSTGRES_DB:-wzap}
+      POSTGRES_USER: ${POSTGRES_USER:-wzap}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wzap123}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5435}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U fiozap"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-wzap} -d ${POSTGRES_DB:-wzap}"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  redis:
-    image: redis:7-alpine
-    container_name: fiozap-redis
     restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
+  # Storage: MinIO
+  minio:
+    image: minio/minio:latest
+    container_name: wzap_minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-admin123}
+    ports:
+      - "${MINIO_PORT:-9010}:9000"
+      - "${MINIO_CONSOLE_PORT:-9011}:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Queue: NATS JetStream
   nats:
     image: nats:2-alpine
-    container_name: fiozap-nats
-    restart: unless-stopped
+    container_name: wzap_nats
     ports:
       - "4222:4222"
       - "8222:8222"
-    command: ["--jetstream", "--http_port", "8222"]
+    command: "-js -m 8222"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8222/healthz"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
       interval: 10s
       timeout: 5s
       retries: 5
-
-  dbgate:
-    image: dbgate/dbgate:latest
-    container_name: fiozap-dbgate
     restart: unless-stopped
-    ports:
-      - "3000:3000"
-    volumes:
-      - dbgate_data:/root/.dbgate
-    environment:
-      CONNECTIONS: postgres
 
-      LABEL_postgres: FioZap PostgreSQL
-      SERVER_postgres: postgres
-      USER_postgres: fiozap
-      PASSWORD_postgres: fiozap123
-      PORT_postgres: 5432
-      DATABASE_postgres: fiozap
-      ENGINE_postgres: postgres@dbgate-plugin-postgres
-    depends_on:
-      postgres:
-        condition: service_healthy
+
 
 volumes:
   postgres_data:
-  redis_data:
-  dbgate_data:
+  minio_data:

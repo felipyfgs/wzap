@@ -1,197 +1,96 @@
 package handler
 
 import (
-	"encoding/json"
-	"errors"
-	"net/http"
-	"strings"
-
-	"fiozap/internal/database/repository"
-	"fiozap/internal/middleware"
-	"fiozap/internal/model"
+	"github.com/gofiber/fiber/v2"
+	"wzap/internal/model"
+	"wzap/internal/service"
 )
 
-var supportedEventTypes = []string{
-	"Message",
-	"ReadReceipt",
-	"HistorySync",
-	"ChatPresence",
-	"Presence",
-	"Connected",
-	"Disconnected",
-	"QR",
-	"LoggedOut",
-	"GroupInfo",
-	"JoinedGroup",
-	"CallOffer",
-	"All",
-}
-
 type WebhookHandler struct {
-	sessionRepo *repository.SessionRepository
+	webhookSvc *service.WebhookService
 }
 
-func NewWebhookHandler(sessionRepo *repository.SessionRepository) *WebhookHandler {
-	return &WebhookHandler{sessionRepo: sessionRepo}
+func NewWebhookHandler(webhookSvc *service.WebhookService) *WebhookHandler {
+	return &WebhookHandler{webhookSvc: webhookSvc}
 }
 
-// Get godoc
-// @Summary Get webhook
-// @Tags Webhook
-// @Produce json
-// @Param sessionId path string true "Session name"
-// @Success 200 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Security ApiKeyAuth
-// @Router /sessions/{sessionId}/webhook [get]
-func (h *WebhookHandler) Get(w http.ResponseWriter, r *http.Request) {
-	session := middleware.GetSessionFromContext(r.Context())
-	if session == nil {
-		model.RespondUnauthorized(w, errors.New("session not found"))
-		return
-	}
-
-	var events []string
-	if session.Events != "" {
-		events = strings.Split(session.Events, ",")
-	}
-
-	model.RespondOK(w, map[string]interface{}{
-		"webhook": session.Webhook,
-		"events":  events,
-	})
-}
-
-// Set godoc
-// @Summary Set webhook
-// @Tags Webhook
-// @Accept json
-// @Produce json
-// @Param sessionId path string true "Session name"
-// @Param request body model.WebhookRequest true "Webhook configuration"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Security ApiKeyAuth
-// @Router /sessions/{sessionId}/webhook [post]
-func (h *WebhookHandler) Set(w http.ResponseWriter, r *http.Request) {
-	session := middleware.GetSessionFromContext(r.Context())
-	if session == nil {
-		model.RespondUnauthorized(w, errors.New("session not found"))
-		return
-	}
-
-	var req model.WebhookRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		model.RespondBadRequest(w, errors.New("invalid payload"))
-		return
-	}
-
-	var validEvents []string
-	for _, event := range req.Events {
-		if isValidEvent(event) {
-			validEvents = append(validEvents, event)
+func (h *WebhookHandler) getSessionID(c *fiber.Ctx) string {
+	id := c.Params("id")
+	if id == "" {
+		val := c.Locals("session_id")
+		if val != nil {
+			return val.(string)
 		}
 	}
-
-	eventString := strings.Join(validEvents, ",")
-
-	if err := h.sessionRepo.UpdateWebhook(session.ID, req.WebhookURL, eventString); err != nil {
-		model.RespondInternalError(w, err)
-		return
-	}
-
-	model.RespondOK(w, map[string]interface{}{
-		"webhook": req.WebhookURL,
-		"events":  validEvents,
-	})
+	return id
 }
 
-// Update godoc
-// @Summary Update webhook
-// @Description active=false to disable
-// @Tags Webhook
-// @Accept json
-// @Produce json
-// @Param sessionId path string true "Session name"
-// @Param request body object{webhook=string,events=[]string,active=bool} true "Webhook update data"
-// @Success 200 {object} map[string]interface{}
-// @Failure 400 {object} map[string]interface{}
-// @Security ApiKeyAuth
-// @Router /sessions/{sessionId}/webhook [put]
-func (h *WebhookHandler) Update(w http.ResponseWriter, r *http.Request) {
-	session := middleware.GetSessionFromContext(r.Context())
-	if session == nil {
-		model.RespondUnauthorized(w, errors.New("session not found"))
-		return
+// Create godoc
+// @Summary     Create a webhook
+// @Description Registers a new webhook for a session
+// @Tags        Webhooks
+// @Accept      json
+// @Produce     json
+// @Param       id   path     string                 false "Session ID"
+// @Param       body body     model.CreateWebhookReq  true "Webhook data"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /webhooks [post]
+// @Router      /sessions/{id}/webhooks [post]
+func (h *WebhookHandler) Create(c *fiber.Ctx) error {
+	id := h.getSessionID(c)
+	var req model.CreateWebhookReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
 	}
 
-	var req struct {
-		WebhookURL string   `json:"webhook"`
-		Events     []string `json:"events"`
-		Active     bool     `json:"active"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		model.RespondBadRequest(w, errors.New("invalid payload"))
-		return
+	webhook, err := h.webhookSvc.Create(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Create Error", err.Error()))
 	}
 
-	webhook := req.WebhookURL
-	var eventString string
+	return c.JSON(model.SuccessResp(webhook, "Webhook created"))
+}
 
-	if req.Active {
-		var validEvents []string
-		for _, event := range req.Events {
-			if isValidEvent(event) {
-				validEvents = append(validEvents, event)
-			}
-		}
-		eventString = strings.Join(validEvents, ",")
-	} else {
-		webhook = ""
-		eventString = ""
+// List godoc
+// @Summary     List webhooks
+// @Description Returns all webhooks for a session
+// @Tags        Webhooks
+// @Produce     json
+// @Param       id  path     string false "Session ID"
+// @Success     200 {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /webhooks [get]
+// @Router      /sessions/{id}/webhooks [get]
+func (h *WebhookHandler) List(c *fiber.Ctx) error {
+	id := h.getSessionID(c)
+	webhooks, err := h.webhookSvc.List(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("List Error", err.Error()))
 	}
 
-	if err := h.sessionRepo.UpdateWebhook(session.ID, webhook, eventString); err != nil {
-		model.RespondInternalError(w, err)
-		return
-	}
-
-	model.RespondOK(w, map[string]interface{}{
-		"webhook": webhook,
-		"events":  strings.Split(eventString, ","),
-		"active":  req.Active,
-	})
+	return c.JSON(model.SuccessResp(webhooks, "Webhooks retrieved"))
 }
 
 // Delete godoc
-// @Summary Delete webhook
-// @Tags Webhook
-// @Produce json
-// @Param sessionId path string true "Session name"
-// @Success 200 {object} map[string]interface{}
-// @Failure 401 {object} map[string]interface{}
-// @Security ApiKeyAuth
-// @Router /sessions/{sessionId}/webhook [delete]
-func (h *WebhookHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	session := middleware.GetSessionFromContext(r.Context())
-	if session == nil {
-		model.RespondUnauthorized(w, errors.New("session not found"))
-		return
+// @Summary     Delete a webhook
+// @Description Removes a webhook from a session
+// @Tags        Webhooks
+// @Produce     json
+// @Param       id  path     string false "Session ID"
+// @Param       wid path     string true "Webhook ID"
+// @Success     200 {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /webhooks/{wid} [delete]
+// @Router      /sessions/{id}/webhooks/{wid} [delete]
+func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
+	id := h.getSessionID(c)
+	webhookID := c.Params("wid")
+
+	err := h.webhookSvc.Delete(c.Context(), id, webhookID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Delete Error", err.Error()))
 	}
 
-	if err := h.sessionRepo.UpdateWebhook(session.ID, "", ""); err != nil {
-		model.RespondInternalError(w, err)
-		return
-	}
-
-	model.RespondOK(w, nil)
-}
-
-func isValidEvent(event string) bool {
-	for _, e := range supportedEventTypes {
-		if e == event {
-			return true
-		}
-	}
-	return false
+	return c.JSON(model.SuccessResp(nil, "Webhook deleted"))
 }

@@ -1,119 +1,70 @@
 package config
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"errors"
-	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
-const (
-	defaultPort      = "8080"
-	defaultAddress   = "0.0.0.0"
-	defaultDBHost    = "localhost"
-	defaultDBPort    = "5432"
-	defaultDBUser    = "fiozap"
-	defaultDBPass    = "fiozap123"
-	defaultDBName    = "fiozap"
-	defaultDBSSLMode = "disable"
-	defaultLogLevel  = "info"
-	defaultLogType   = "console"
-	tokenLength      = 16
-)
-
 type Config struct {
-	Port       string
-	Address    string
-	AdminToken string
-	DBHost     string
-	DBPort     string
-	DBUser     string
-	DBPassword string
-	DBName     string
-	DBSSLMode  string
-	LogLevel   string
-	LogType    string
-	WADebug    string
-	CORSOrigin string
+	Port        string
+	ServerHost  string
+	APIKey      string
+	LogLevel    string
+	Environment string
+
+	DatabaseURL string
+
+	MinioEndpoint  string
+	MinioAccessKey string
+	MinioSecretKey string
+	MinioBucket    string
+	MinioUseSSL    bool
+
+	NatsURL string
+
+	WALogLevel       string
+	GlobalWebhookURL string
 }
 
-func Load() (*Config, error) {
+func Load() *Config {
 	_ = godotenv.Load()
 
-	cfg := &Config{
-		Port:       getEnv("PORT", defaultPort),
-		Address:    getEnv("ADDRESS", defaultAddress),
-		AdminToken: getEnv("ADMIN_TOKEN", ""),
-		DBHost:     getEnv("DB_HOST", defaultDBHost),
-		DBPort:     getEnv("DB_PORT", defaultDBPort),
-		DBUser:     getEnv("DB_USER", defaultDBUser),
-		DBPassword: getEnv("DB_PASSWORD", defaultDBPass),
-		DBName:     getEnv("DB_NAME", defaultDBName),
-		DBSSLMode:  getEnv("DB_SSLMODE", defaultDBSSLMode),
-		LogLevel:   getEnv("LOG_LEVEL", defaultLogLevel),
-		LogType:    getEnv("LOG_TYPE", defaultLogType),
-		WADebug:    getEnv("WA_DEBUG", ""),
-		CORSOrigin: getEnv("CORS_ORIGIN", "*"),
-	}
+	return &Config{
+		Port:        getEnv("PORT", "8080"),
+		ServerHost:  getEnv("SERVER_HOST", "0.0.0.0"),
+		APIKey:      getEnv("API_KEY", ""),
+		LogLevel:    getEnv("LOG_LEVEL", "info"),
+		Environment: getEnv("ENVIRONMENT", "development"),
 
-	if cfg.AdminToken == "" {
-		cfg.AdminToken = generateToken()
-	}
+		DatabaseURL: getEnv("DATABASE_URL", "postgres://wzap:wzap123@localhost:5435/wzap?sslmode=disable"),
 
-	if err := cfg.Validate(); err != nil {
-		return nil, err
-	}
+		MinioEndpoint:  getEnv("MINIO_ENDPOINT", "localhost:9010"),
+		MinioAccessKey: getEnv("MINIO_ACCESS_KEY", "admin"),
+		MinioSecretKey: getEnv("MINIO_SECRET_KEY", "admin123"),
+		MinioBucket:    getEnv("MINIO_BUCKET", "wzap-media"),
+		MinioUseSSL:    getEnvAsBool("MINIO_USE_SSL", false),
 
-	return cfg, nil
+		NatsURL: getEnv("NATS_URL", "nats://localhost:4222"),
+
+		WALogLevel:       getEnv("WA_LOG_LEVEL", "INFO"),
+		GlobalWebhookURL: getEnv("GLOBAL_WEBHOOK_URL", ""),
+	}
 }
 
-func (c *Config) Validate() error {
-	if c.DBHost == "" {
-		return errors.New("DB_HOST is required")
-	}
-	if c.DBName == "" {
-		return errors.New("DB_NAME is required")
-	}
-	if c.DBUser == "" {
-		return errors.New("DB_USER is required")
-	}
-	return nil
-}
-
-func (c *Config) DSN() string {
-	return fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		c.DBHost, c.DBPort, c.DBUser, c.DBPassword, c.DBName, c.DBSSLMode,
-	)
-}
-
-func (c *Config) PostgresURL() string {
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		c.DBUser, c.DBPassword, c.DBHost, c.DBPort, c.DBName, c.DBSSLMode,
-	)
-}
-
-func (c *Config) ServerAddr() string {
-	return c.Address + ":" + c.Port
-}
-
-func (c *Config) IsPrettyLog() bool {
-	return c.LogType == "console"
-}
-
-func getEnv(key, defaultValue string) string {
+func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
-	return defaultValue
+	return fallback
 }
 
-func generateToken() string {
-	b := make([]byte, tokenLength)
-	_, _ = rand.Read(b)
-	return hex.EncodeToString(b)
+func getEnvAsBool(key string, fallback bool) bool {
+	if value := os.Getenv(key); value != "" {
+		if boolValue, err := strconv.ParseBool(value); err == nil {
+			return boolValue
+		}
+	}
+	return fallback
 }

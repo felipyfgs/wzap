@@ -1,99 +1,55 @@
 package middleware
 
 import (
-	"context"
-	"errors"
-	"net/http"
 	"strings"
-	"time"
 
-	"github.com/patrickmn/go-cache"
-
-	"fiozap/internal/database/repository"
-	"fiozap/internal/logger"
-	"fiozap/internal/model"
+	"github.com/gofiber/fiber/v2"
+	"wzap/internal/config"
+	"wzap/internal/model"
+	"wzap/internal/repository"
 )
 
-type contextKey string
-
-const (
-	UserContextKey contextKey = "user"
-	bearerPrefix              = "Bearer "
-	headerToken               = "Token"
-	headerAuth                = "Authorization"
-	queryToken                = "token"
-	cacheExpiration           = 5 * time.Minute
-	cacheCleanup              = 10 * time.Minute
-)
-
-var (
-	errMissingToken = errors.New("missing token")
-	errInvalidToken = errors.New("invalid token")
-	userCache       = cache.New(cacheExpiration, cacheCleanup)
-)
-
-type AuthMiddleware struct {
-	userRepo *repository.UserRepository
-}
-
-func NewAuthMiddleware(userRepo *repository.UserRepository) *AuthMiddleware {
-	return &AuthMiddleware{userRepo: userRepo}
-}
-
-func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := extractToken(r)
-		if token == "" {
-			model.RespondUnauthorized(w, errMissingToken)
-			return
+func Auth(cfg *config.Config, repo *repository.SessionRepository) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// If both are empty, no auth
+		if cfg.APIKey == "" {
+			c.Locals("auth_role", "admin")
+			return c.Next()
 		}
 
-		user, err := m.getUser(token)
-		if err != nil {
-			logger.Warnf("Invalid token: %s", token)
-			model.RespondUnauthorized(w, errInvalidToken)
-			return
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			authHeader = c.Get("Token")
+		}
+		
+		if authHeader == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Missing Authorization or Token header"))
 		}
 
-		ctx := context.WithValue(r.Context(), UserContextKey, user)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		token = strings.TrimSpace(token)
 
-func (m *AuthMiddleware) getUser(token string) (*model.User, error) {
-	if cached, found := userCache.Get(token); found {
-		return cached.(*model.User), nil
+		// 1. Check Global Admin Key
+		if token == cfg.APIKey {
+			c.Locals("auth_role", "admin")
+			return c.Next()
+		}
+
+		// 2. Check Session-specific Key
+		session, err := repo.FindByAPIKey(c.Context(), token)
+		if err == nil {
+			c.Locals("auth_role", "session")
+			c.Locals("session_id", session.ID)
+
+			// Security check: if :id is in URL, it MUST match token's session ID
+			pathID := c.Params("id")
+			if pathID != "" && pathID != session.ID {
+				return c.Status(fiber.StatusForbidden).JSON(model.ErrorResp("Forbidden", "Token not authorized for this session ID"))
+			}
+
+			return c.Next()
+		}
+
+		return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Invalid API Key or Session Token"))
 	}
-
-	user, err := m.userRepo.GetByToken(token)
-	if err != nil {
-		return nil, err
-	}
-
-	userCache.Set(token, user, cache.DefaultExpiration)
-	return user, nil
-}
-
-func extractToken(r *http.Request) string {
-	token := r.Header.Get(headerToken)
-	if token == "" {
-		token = r.Header.Get(headerAuth)
-	}
-	if token == "" {
-		token = r.URL.Query().Get(queryToken)
-	}
-	return strings.TrimPrefix(token, bearerPrefix)
-}
-
-func GetUserFromContext(ctx context.Context) *model.User {
-	if user, ok := ctx.Value(UserContextKey).(*model.User); ok {
-		return user
-	}
-	return nil
-}
-
-func InvalidateUserCache(token string) { userCache.Delete(token) }
-
-func UpdateUserCache(user *model.User) {
-	userCache.Set(user.Token, user, cache.DefaultExpiration)
 }

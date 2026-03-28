@@ -1,35 +1,57 @@
 # Binaries
-bin/
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test
 *.test
-coverage.out
-coverage.html
+*.out
 
-# Environment
+# Go workspace file
+go.work
+
+# Build artifacts
+build/
+dist/
+wzap
+
+# Environment files
 .env
+.env.*
+!.env.example
 
-# IDE
-.idea/
+# Logs
+logs/
+*.log
+
+# Wameow sessions (contains sensitive data)
+sessions/
+*.session
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE files
 .vscode/
+.idea/
 *.swp
 *.swo
+*~
 
-# OS
+# OS files
 .DS_Store
-Thumbs.db
 
-# Debug
-*.log
-debug
+# Temporary files
+tmp/
+*.tmp
 
-# Vendor (if not committed)
-# vendor/
+# Docker volumes
+postgres_data/
+minio_data/
 
-# Factory AI
-.factory/
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+ssl/

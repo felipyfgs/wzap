@@ -1,668 +1,1035 @@
-basePath: /
 definitions:
-  model.ArchiveChatMessage:
+  wzap_internal_model.APIError:
     properties:
-      archive:
-        type: boolean
-      phone:
+      details:
         type: string
-    type: object
-  model.AudioMessage:
-    properties:
-      audio:
+      error:
         type: string
-      id:
-        type: string
-      mimetype:
-        type: string
-      phone:
-        type: string
-      ptt:
+      success:
         type: boolean
     type: object
-  model.ButtonItem:
+  wzap_internal_model.APIResponse:
     properties:
-      button_id:
+      data: {}
+      message:
         type: string
-      button_text:
-        type: string
+      success:
+        type: boolean
     type: object
-  model.ButtonsMessage:
+  wzap_internal_model.CheckContactReq:
     properties:
-      buttons:
+      phones:
         items:
-          $ref: '#/definitions/model.ButtonItem'
+          type: string
         type: array
-      id:
-        type: string
-      phone:
-        type: string
-      title:
-        type: string
+    required:
+    - phones
     type: object
-  model.ContactMessage:
+  wzap_internal_model.CreateGroupReq:
     properties:
-      contact_name:
+      name:
+        example: My Awesome Group
         type: string
-      contact_vcard:
-        type: string
-      id:
-        type: string
-      phone:
-        type: string
-    type: object
-  model.DeleteMessage:
-    properties:
-      message_id:
-        type: string
-      phone:
-        type: string
-    type: object
-  model.DocumentMessage:
-    properties:
-      caption:
-        type: string
-      document:
-        type: string
-      filename:
-        type: string
-      id:
-        type: string
-      mimetype:
-        type: string
-      phone:
-        type: string
-    type: object
-  model.DownloadMediaMessage:
-    properties:
-      direct_path:
-        type: string
-      file_enc_sha256:
+      participants:
+        description: list of phone numbers
+        example:
+        - "5511999999999"
+        - "5511888888888"
         items:
-          type: integer
+          type: string
         type: array
-      file_length:
-        type: integer
-      file_sha256:
+    type: object
+  wzap_internal_model.CreateWebhookReq:
+    properties:
+      events:
         items:
-          type: integer
+          type: string
         type: array
-      media_key:
-        items:
-          type: integer
-        type: array
-      mimetype:
+      secret:
         type: string
       url:
         type: string
+    required:
+    - events
+    - url
     type: object
-  model.EditMessage:
+  wzap_internal_model.GroupInviteLinkResp:
     properties:
-      body:
-        type: string
-      message_id:
-        type: string
-      phone:
-        type: string
-    type: object
-  model.GroupAnnounceRequest:
-    properties:
-      announce:
-        type: boolean
-      jid:
+      link:
         type: string
     type: object
-  model.GroupEphemeralRequest:
+  wzap_internal_model.GroupJIDReq:
     properties:
-      duration:
-        description: '"24h", "7d", "90d", "off"'
-        type: string
-      jid:
-        type: string
-    type: object
-  model.GroupInviteInfoRequest:
-    properties:
-      code:
-        type: string
-    type: object
-  model.GroupJoinRequest:
-    properties:
-      code:
-        type: string
-    type: object
-  model.GroupLockedRequest:
-    properties:
-      jid:
-        type: string
-      locked:
-        type: boolean
-    type: object
-  model.GroupPhotoRequest:
-    properties:
-      image:
-        type: string
-      jid:
-        type: string
-    type: object
-  model.ImageMessage:
-    properties:
-      caption:
-        type: string
-      id:
-        type: string
-      image:
-        type: string
-      mimetype:
-        type: string
-      phone:
-        type: string
-    type: object
-  model.ListItem:
-    properties:
-      desc:
-        type: string
-      row_id:
-        type: string
-      title:
-        type: string
-    type: object
-  model.ListMessage:
-    properties:
-      button_text:
-        type: string
-      desc:
-        type: string
-      footer_text:
-        type: string
-      id:
-        type: string
-      phone:
-        type: string
-      sections:
-        items:
-          $ref: '#/definitions/model.ListSection'
-        type: array
-      title:
-        type: string
-    type: object
-  model.ListSection:
-    properties:
-      rows:
-        items:
-          $ref: '#/definitions/model.ListItem'
-        type: array
-      title:
-        type: string
-    type: object
-  model.LocationMessage:
-    properties:
-      address:
-        type: string
-      id:
-        type: string
-      latitude:
-        type: number
-      longitude:
-        type: number
-      name:
-        type: string
-      phone:
-        type: string
-    type: object
-  model.MarkReadMessage:
-    properties:
-      chat_phone:
-        type: string
-      ids:
-        items:
-          type: string
-        type: array
-      sender_phone:
-        type: string
-    type: object
-  model.NewsletterCreateRequest:
-    properties:
-      description:
-        example: Newsletter description
-        type: string
-      name:
-        example: My Newsletter
-        type: string
-      picture:
-        description: base64 encoded image
-        type: string
-    type: object
-  model.NewsletterFollowRequest:
-    properties:
-      jid:
-        example: 123456789@newsletter
-        type: string
-    type: object
-  model.NewsletterMarkViewedRequest:
-    properties:
-      jid:
-        example: 123456789@newsletter
-        type: string
-      server_ids:
-        example:
-        - 1
-        - 2
-        - 3
-        items:
-          type: integer
-        type: array
-    type: object
-  model.NewsletterMuteRequest:
-    properties:
-      jid:
-        example: 123456789@newsletter
-        type: string
-      mute:
-        example: true
-        type: boolean
-    type: object
-  model.NewsletterReactionRequest:
-    properties:
-      jid:
-        example: 123456789@newsletter
-        type: string
-      reaction:
-        example: "\U0001F44D"
-        type: string
-      server_id:
-        example: 123
-        type: integer
-    type: object
-  model.PairPhoneRequest:
-    properties:
-      phone:
-        type: string
-    type: object
-  model.PollMessage:
-    properties:
-      header:
-        type: string
-      id:
-        type: string
-      options:
-        items:
-          type: string
-        type: array
-      phone:
-        type: string
-    type: object
-  model.ReactionMessage:
-    properties:
-      emoji:
-        type: string
-      message_id:
-        type: string
-      phone:
-        type: string
-    type: object
-  model.RejectCallRequest:
-    properties:
-      call_from:
-        type: string
-      call_id:
-        type: string
-    type: object
-  model.SessionConnectRequest:
-    properties:
-      immediate:
-        type: boolean
-      subscribe:
-        items:
-          type: string
-        type: array
-    type: object
-  model.SessionCreateRequest:
-    properties:
-      events:
-        example: ""
-        type: string
-      name:
-        example: my-session
-        type: string
-      proxyUrl:
-        example: ""
-        type: string
-      webhook:
-        example: ""
+      groupJid:
         type: string
     required:
-    - name
+    - groupJid
     type: object
-  model.SessionUpdateRequest:
+  wzap_internal_model.GroupJoinReq:
     properties:
-      events:
+      invite_code:
         type: string
-      name:
-        type: string
-      proxyUrl:
-        type: string
-      webhook:
-        type: string
+    required:
+    - invite_code
     type: object
-  model.StatusTextMessage:
+  wzap_internal_model.GroupParticipantReq:
     properties:
-      body:
+      action:
+        description: add, remove, promote, demote
+        example: add
         type: string
-    type: object
-  model.StickerMessage:
-    properties:
-      emojis:
+      groupJid:
+        type: string
+      participants:
+        example:
+        - "5511999999999"
         items:
           type: string
         type: array
-      id:
+    required:
+    - action
+    - groupJid
+    - participants
+    type: object
+  wzap_internal_model.GroupPhotoReq:
+    properties:
+      groupJid:
         type: string
-      mimetype:
+      photo_base64:
+        description: Base64 encoded image
         type: string
-      pack_id:
+    required:
+    - groupJid
+    - photo_base64
+    type: object
+  wzap_internal_model.GroupRequestActionReq:
+    properties:
+      action:
+        description: approve, reject
+        example: approve
         type: string
-      pack_name:
+      groupJid:
         type: string
-      pack_publisher:
-        type: string
-      phone:
-        type: string
-      png_thumbnail:
+      participants:
+        example:
+        - "5511999999999"
         items:
-          type: integer
+          type: string
         type: array
-      sticker:
-        type: string
+    required:
+    - action
+    - groupJid
+    - participants
     type: object
-  model.TextMessage:
+  wzap_internal_model.GroupSettingReq:
     properties:
-      id:
+      enabled:
+        type: boolean
+      groupJid:
         type: string
-      message:
-        type: string
-      phone:
-        type: string
+    required:
+    - groupJid
     type: object
-  model.UserCreateRequest:
+  wzap_internal_model.GroupTextReq:
     properties:
-      maxSessions:
-        example: 5
-        type: integer
-      name:
-        example: Felipe
+      groupJid:
         type: string
-      token:
-        example: abc123xyz
+      text:
         type: string
+    required:
+    - groupJid
+    - text
     type: object
-  model.UserUpdateRequest:
+  wzap_internal_model.SendMediaReq:
     properties:
-      maxSessions:
-        type: integer
-      name:
+      base64:
+        description: For base64 upload
         type: string
-      token:
-        type: string
-    type: object
-  model.VideoMessage:
-    properties:
       caption:
         type: string
+      filename:
+        description: For documents
+        type: string
+      mime_type:
+        type: string
+      to:
+        type: string
+    required:
+    - mime_type
+    - to
+    type: object
+  wzap_internal_model.SendTextReq:
+    properties:
+      text:
+        type: string
+      to:
+        description: Phone number or group JID
+        type: string
+    required:
+    - text
+    - to
+    type: object
+  wzap_internal_model.SessionCreateReq:
+    properties:
       id:
         type: string
-      mimetype:
-        type: string
-      phone:
-        type: string
-      video:
-        type: string
-    type: object
-  model.WebhookRequest:
-    properties:
-      events:
-        items:
-          type: string
-        type: array
-      webhookurl:
-        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+    required:
+    - id
     type: object
 info:
   contact:
-    email: support@fiozap.io
-    name: FioZap Support
-  description: WhatsApp API using whatsmeow
+    name: wzap Support
+    url: https://github.com/galvaofelipe421-wq/fiozap
+  description: WhatsApp Multi-Session API powered by whatsmeow
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  termsOfService: http://swagger.io/terms/
-  title: FioZap API
+  termsOfService: https://github.com/galvaofelipe421-wq/fiozap
+  title: wzap API
   version: "1.0"
 paths:
-  /admin/sessions:
+  /contacts:
     get:
+      description: Returns all contacts from the WhatsApp session
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - AdminKeyAuth: []
-      summary: List all sessions
+      - BearerAuth: []
+      summary: List contacts
       tags:
-      - Admin
-  /admin/users:
-    get:
-      description: Returns all or single by ID
+      - Contacts
+  /contacts/check:
+    post:
+      consumes:
+      - application/json
+      description: Checks if phone numbers are registered on WhatsApp
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Phone numbers
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.CheckContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - AdminKeyAuth: []
-      summary: List users
+      - BearerAuth: []
+      summary: Check contacts on WhatsApp
       tags:
-      - Admin
+      - Contacts
+  /groups:
+    get:
+      description: Returns all WhatsApp groups the session is part of
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List joined groups
+      tags:
+      - Groups
+  /groups/announce:
+    post:
+      consumes:
+      - application/json
+      description: Sets whether only admins can send messages in the group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Enabled state
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupSettingReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Set group announce mode
+      tags:
+      - Groups
+  /groups/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp group with the given participants
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Group properties
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.CreateGroupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new group
+      tags:
+      - Groups
+  /groups/description:
+    post:
+      consumes:
+      - application/json
+      description: Updates the description of the specified WhatsApp group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: New description
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update group description
+      tags:
+      - Groups
+  /groups/info:
+    get:
+      description: Get detailed information about a group by JID
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Group JID
+        in: query
+        name: jid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get group info
+      tags:
+      - Groups
+  /groups/invite-info:
+    get:
+      description: Previews a group's info using an invite code without joining
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Invite Code
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get group info from invite link
+      tags:
+      - Groups
+  /groups/invite-link:
+    post:
+      description: Gets the invite link for a WhatsApp group, optionally resetting
+        it
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Target Group JID Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupJIDReq'
+      - description: Reset the invite link
+        in: query
+        name: reset
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/wzap_internal_model.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/wzap_internal_model.GroupInviteLinkResp'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get group invite link
+      tags:
+      - Groups
+  /groups/join:
+    post:
+      consumes:
+      - application/json
+      description: Joins a group using an invite code
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Invite Code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupJoinReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Join group via link
+      tags:
+      - Groups
+  /groups/join-approval:
+    post:
+      consumes:
+      - application/json
+      description: Activates or deactivates the admin approval system for new members
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Enabled state
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupSettingReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Set group join approval mode
+      tags:
+      - Groups
+  /groups/leave:
+    post:
+      description: Leaves a specified WhatsApp group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Target Group JID Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupJIDReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Leave group
+      tags:
+      - Groups
+  /groups/locked:
+    post:
+      consumes:
+      - application/json
+      description: Sets whether only admins can edit group info
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Enabled state
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupSettingReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Set group locked mode
+      tags:
+      - Groups
+  /groups/name:
+    post:
+      consumes:
+      - application/json
+      description: Updates the name of the specified WhatsApp group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: New name
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update group name
+      tags:
+      - Groups
+  /groups/participants:
+    post:
+      consumes:
+      - application/json
+      description: Add, remove, promote or demote participants in a group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Participants and action
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupParticipantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update group participants
+      tags:
+      - Groups
+  /groups/photo:
+    post:
+      consumes:
+      - application/json
+      description: Updates the profile picture of the specified WhatsApp group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Base64 encoded photo
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupPhotoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Update group photo
+      tags:
+      - Groups
+  /groups/requests:
+    post:
+      description: Get the list of participants that requested to join the group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Target Group JID Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupJIDReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get group join requests
+      tags:
+      - Groups
+  /groups/requests/action:
+    post:
+      consumes:
+      - application/json
+      description: Approves or rejects participants that requested to join the group
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Participants and action (approve/reject)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.GroupRequestActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Approve/Reject group join requests
+      tags:
+      - Groups
+  /health:
+    get:
+      description: Returns the health status of the API and its dependencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      summary: Health check
+      tags:
+      - Health
+  /messages/audio:
     post:
       consumes:
       - application/json
       parameters:
-      - description: User data
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Media payload
         in: body
-        name: user
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/model.UserCreateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - AdminKeyAuth: []
-      summary: Create user
-      tags:
-      - Admin
-  /admin/users/{id}:
-    delete:
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
+          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - AdminKeyAuth: []
-      summary: Delete user
+      - BearerAuth: []
+      summary: Send an audio message
       tags:
-      - Admin
-    get:
-      description: Returns all or single by ID
-      parameters:
-      - description: User ID
-        in: path
-        name: id
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - AdminKeyAuth: []
-      summary: List users
-      tags:
-      - Admin
-    put:
+      - Messages
+  /messages/document:
+    post:
       consumes:
       - application/json
       parameters:
-      - description: User ID
-        in: path
-        name: id
-        required: true
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
         type: string
-      - description: User data
+      - description: Media payload
         in: body
-        name: user
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/model.UserUpdateRequest'
+          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - AdminKeyAuth: []
-      summary: Update user
+      - BearerAuth: []
+      summary: Send a document
       tags:
-      - Admin
-  /health:
-    get:
+      - Messages
+  /messages/image:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-      summary: Health check
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send an image message
       tags:
-      - Health
+      - Messages
+  /messages/text:
+    post:
+      consumes:
+      - application/json
+      description: Sends a text message via WhatsApp. If :id is omitted, session is
+        identified from Bearer token.
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.SendTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a text message
+      tags:
+      - Messages
+  /messages/video:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a video message
+      tags:
+      - Messages
+  /session:
+    delete:
+      description: Disconnects and deletes the current session
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete current session
+      tags:
+      - Sessions
+    get:
+      description: Returns the session identified by the Bearer token (or query/header
+        fallback)
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current session
+      tags:
+      - Sessions
+  /session/connect:
+    post:
+      description: Connects a WhatsApp session (starts pairing if new)
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Connect current session
+      tags:
+      - Sessions
+  /session/disconnect:
+    post:
+      description: Disconnects the active WhatsApp session
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Disconnect current session
+      tags:
+      - Sessions
+  /session/qr:
+    get:
+      description: Returns a QR code for pairing a new WhatsApp device for current
+        session
+      parameters:
+      - description: Session ID (Admin fallback)
+        in: header
+        name: X-Session-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get QR code for pair
+      tags:
+      - Sessions
   /sessions:
     get:
+      description: Returns all sessions (Admin) or just the authenticated session
+        (User)
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - BearerAuth: []
       summary: List sessions
       tags:
       - Sessions
     post:
       consumes:
       - application/json
+      description: Creates a new WhatsApp session entry in the database. Returns the
+        generated api_key.
       parameters:
       - description: Session data
         in: body
-        name: request
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SessionCreateRequest'
+          $ref: '#/definitions/wzap_internal_model.SessionCreateReq'
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIError'
       security:
-      - ApiKeyAuth: []
-      summary: Create session
+      - BearerAuth: []
+      summary: Create a new session (Admin Only)
       tags:
       - Sessions
-  /sessions/{sessionId}:
+  /sessions/{id}/webhooks:
+    get:
+      description: Returns all webhooks for a session
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List webhooks
+      tags:
+      - Webhooks
+    post:
+      consumes:
+      - application/json
+      description: Registers a new webhook for a session
+      parameters:
+      - description: Session ID
+        in: path
+        name: id
+        type: string
+      - description: Webhook data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/wzap_internal_model.CreateWebhookReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a webhook
+      tags:
+      - Webhooks
+  /sessions/{id}/webhooks/{wid}:
     delete:
+      description: Removes a webhook from a session
       parameters:
       - description: Session ID
         in: path
-        name: sessionId
+        name: id
+        type: string
+      - description: Webhook ID
+        in: path
+        name: wid
         required: true
         type: string
       produces:
@@ -671,2262 +1038,61 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Delete session
+      - BearerAuth: []
+      summary: Delete a webhook
       tags:
-      - Sessions
+      - Webhooks
+  /webhooks:
     get:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
+      description: Returns all webhooks for a session
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Get session
+      - BearerAuth: []
+      summary: List webhooks
       tags:
-      - Sessions
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Session data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.SessionUpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update session
-      tags:
-      - Sessions
-  /sessions/{sessionId}/call/reject:
+      - Webhooks
     post:
       consumes:
       - application/json
+      description: Registers a new webhook for a session
       parameters:
-      - description: Call rejection data
+      - description: Webhook data
         in: body
-        name: request
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/model.RejectCallRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
+          $ref: '#/definitions/wzap_internal_model.CreateWebhookReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Reject call
+      - BearerAuth: []
+      summary: Create a webhook
       tags:
-      - User
-  /sessions/{sessionId}/chat/archive:
-    post:
-      consumes:
-      - application/json
-      description: archive=true/false
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Archive data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.ArchiveChatMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Archive chat
-      tags:
-      - Chat
-  /sessions/{sessionId}/chat/downloadaudio:
-    post:
-      consumes:
-      - application/json
-      description: Returns base64
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Download data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.DownloadMediaMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Download audio
-      tags:
-      - Chat
-  /sessions/{sessionId}/chat/downloaddocument:
-    post:
-      consumes:
-      - application/json
-      description: Returns base64
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Download data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.DownloadMediaMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Download document
-      tags:
-      - Chat
-  /sessions/{sessionId}/chat/downloadimage:
-    post:
-      consumes:
-      - application/json
-      description: Returns base64
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Download data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.DownloadMediaMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Download image
-      tags:
-      - Chat
-  /sessions/{sessionId}/chat/downloadsticker:
-    post:
-      consumes:
-      - application/json
-      description: Returns base64
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Download data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.DownloadMediaMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Download sticker
-      tags:
-      - Chat
-  /sessions/{sessionId}/chat/downloadvideo:
-    post:
-      consumes:
-      - application/json
-      description: Returns base64
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Download data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.DownloadMediaMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Download video
-      tags:
-      - Chat
-  /sessions/{sessionId}/chat/markread:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Mark read data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.MarkReadMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Mark as read
-      tags:
-      - Chat
-  /sessions/{sessionId}/chat/presence:
-    post:
-      consumes:
-      - application/json
-      description: 'state: composing/paused'
-      parameters:
-      - description: Chat presence data
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            media:
-              type: string
-            phone:
-              type: string
-            state:
-              type: string
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Chat presence
-      tags:
-      - User
-  /sessions/{sessionId}/connect:
-    post:
-      consumes:
-      - application/json
-      description: immediate=false waits 10s for verification
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Connection options
-        in: body
-        name: request
-        schema:
-          $ref: '#/definitions/model.SessionConnectRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Connect session
-      tags:
-      - Sessions
-  /sessions/{sessionId}/disconnect:
-    post:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Disconnect session
-      tags:
-      - Sessions
-  /sessions/{sessionId}/group/announce:
-    post:
-      consumes:
-      - application/json
-      description: Only admins send when true
-      parameters:
-      - description: Group announce data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupAnnounceRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set announce mode
-      tags:
-      - Group
-  /sessions/{sessionId}/group/create:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Group data
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            name:
-              type: string
-            participants:
-              items:
-                type: string
-              type: array
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Create group
-      tags:
-      - Group
-  /sessions/{sessionId}/group/ephemeral:
-    post:
-      consumes:
-      - application/json
-      description: 'duration: 24h/7d/90d/off'
-      parameters:
-      - description: Group ephemeral data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupEphemeralRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set ephemeral
-      tags:
-      - Group
-  /sessions/{sessionId}/group/info:
-    get:
-      parameters:
-      - description: Group JID
-        in: query
-        name: jid
-        required: true
-        type: string
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get group info
-      tags:
-      - Group
-  /sessions/{sessionId}/group/inviteinfo:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Group invite info request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupInviteInfoRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get invite info
-      tags:
-      - Group
-  /sessions/{sessionId}/group/invitelink:
-    get:
-      parameters:
-      - description: Group JID
-        in: query
-        name: jid
-        required: true
-        type: string
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get invite link
-      tags:
-      - Group
-  /sessions/{sessionId}/group/join:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Group join data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupJoinRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Join group
-      tags:
-      - Group
-  /sessions/{sessionId}/group/leave:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Group JID
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            jid:
-              type: string
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Leave group
-      tags:
-      - Group
-  /sessions/{sessionId}/group/list:
-    get:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: List groups
-      tags:
-      - Group
-  /sessions/{sessionId}/group/locked:
-    post:
-      consumes:
-      - application/json
-      description: Only admins edit when true
-      parameters:
-      - description: Group locked data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupLockedRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set locked mode
-      tags:
-      - Group
-  /sessions/{sessionId}/group/name:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Group name data
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            jid:
-              type: string
-            name:
-              type: string
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set name
-      tags:
-      - Group
-  /sessions/{sessionId}/group/photo:
-    post:
-      consumes:
-      - application/json
-      description: Base64 image required
-      parameters:
-      - description: Group photo data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.GroupPhotoRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set photo
-      tags:
-      - Group
-  /sessions/{sessionId}/group/photo/remove:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Group JID
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            jid:
-              type: string
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Remove photo
-      tags:
-      - Group
-  /sessions/{sessionId}/group/topic:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Group topic data
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            jid:
-              type: string
-            topic:
-              type: string
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set topic
-      tags:
-      - Group
-  /sessions/{sessionId}/group/updateparticipants:
-    post:
-      consumes:
-      - application/json
-      description: 'action: add/remove/promote/demote'
-      parameters:
-      - description: Participants data
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            action:
-              type: string
-            jid:
-              type: string
-            participants:
-              items:
-                type: string
-              type: array
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update participants
-      tags:
-      - Group
-  /sessions/{sessionId}/logout:
-    post:
-      description: Clears session credentials
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Logout session
-      tags:
-      - Sessions
-  /sessions/{sessionId}/messages/audio:
-    post:
-      consumes:
-      - application/json
-      description: Base64 data:audio/* required
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Audio data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.AudioMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send audio
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/buttons:
-    post:
-      consumes:
-      - application/json
-      description: Experimental, 1-3 buttons
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Buttons data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.ButtonsMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send buttons
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/contact:
-    post:
-      consumes:
-      - application/json
-      description: Requires vCard format
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Contact data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.ContactMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send contact
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/delete:
-    post:
-      consumes:
-      - application/json
-      description: Revokes own messages
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Delete data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.DeleteMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Delete message
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/document:
-    post:
-      consumes:
-      - application/json
-      description: Base64 with filename required
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Document data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.DocumentMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send document
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/edit:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Edit data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.EditMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Edit message
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/image:
-    post:
-      consumes:
-      - application/json
-      description: Base64 data:image/* required
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Image data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.ImageMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send image
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/list:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: List data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.ListMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send list
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/location:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Location data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.LocationMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send location
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/poll:
-    post:
-      consumes:
-      - application/json
-      description: Min 2 options required
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Poll data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.PollMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send poll
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/reaction:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Reaction data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.ReactionMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: React to message
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/sticker:
-    post:
-      consumes:
-      - application/json
-      description: WebP format required
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Sticker data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.StickerMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send sticker
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/text:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Message data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.TextMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send text
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/video:
-    post:
-      consumes:
-      - application/json
-      description: Base64 data:video/* required
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Video data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.VideoMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send video
-      tags:
-      - Messages
-  /sessions/{sessionId}/newsletter/create:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Newsletter details
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.NewsletterCreateRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Create newsletter
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/follow:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Newsletter JID
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.NewsletterFollowRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Follow
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/info:
-    get:
-      parameters:
-      - description: Newsletter JID
-        in: query
-        name: jid
-        required: true
-        type: string
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get info
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/info/invite:
-    get:
-      parameters:
-      - description: Invite key/code
-        in: query
-        name: key
-        required: true
-        type: string
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get info by invite
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/list:
-    get:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: List newsletters
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/liveupdates:
-    post:
-      consumes:
-      - application/json
-      description: Returns subscription duration
-      parameters:
-      - description: Newsletter JID
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.NewsletterFollowRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Live updates
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/markviewed:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Mark viewed request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.NewsletterMarkViewedRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Mark viewed
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/messages:
-    get:
-      description: count/before for pagination
-      parameters:
-      - description: Newsletter JID
-        in: query
-        name: jid
-        required: true
-        type: string
-      - default: 50
-        description: Number of messages to fetch
-        in: query
-        name: count
-        type: integer
-      - description: Fetch messages before this server ID
-        in: query
-        name: before
-        type: integer
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get messages
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/mute:
-    post:
-      consumes:
-      - application/json
-      description: mute=true/false
-      parameters:
-      - description: Mute request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.NewsletterMuteRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Mute newsletter
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/reaction:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Reaction request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.NewsletterReactionRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send reaction
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/newsletter/unfollow:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Newsletter JID
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.NewsletterFollowRequest'
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Unfollow
-      tags:
-      - Newsletter
-  /sessions/{sessionId}/pairphone:
-    post:
-      consumes:
-      - application/json
-      description: Returns 8-digit linking code
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Phone number
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.PairPhoneRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Pair phone
-      tags:
-      - Sessions
-  /sessions/{sessionId}/qr:
-    get:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get QR code
-      tags:
-      - Sessions
-  /sessions/{sessionId}/status:
-    get:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get status
-      tags:
-      - Sessions
-  /sessions/{sessionId}/status/text:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Status text data
-        in: body
-        name: message
-        required: true
-        schema:
-          $ref: '#/definitions/model.StatusTextMessage'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set status
-      tags:
-      - Status
-  /sessions/{sessionId}/user/avatar:
-    post:
-      consumes:
-      - application/json
-      description: preview=true for thumbnail
-      parameters:
-      - description: Phone and preview option
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            phone:
-              type: string
-            preview:
-              type: boolean
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get avatar
-      tags:
-      - User
-  /sessions/{sessionId}/user/check:
-    post:
-      consumes:
-      - application/json
-      description: Verifies WhatsApp registration
-      parameters:
-      - description: Phone numbers
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            phone:
-              items:
-                type: string
-              type: array
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Check users
-      tags:
-      - User
-  /sessions/{sessionId}/user/contacts:
-    get:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get contacts
-      tags:
-      - User
-  /sessions/{sessionId}/user/getlid:
-    get:
-      parameters:
-      - description: Phone number
-        in: query
-        name: phone
-        required: true
-        type: string
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get LID
-      tags:
-      - User
-  /sessions/{sessionId}/user/info:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Phone numbers
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            phone:
-              items:
-                type: string
-              type: array
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get user info
-      tags:
-      - User
-  /sessions/{sessionId}/user/newsletters:
-    get:
-      parameters:
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get newsletters
-      tags:
-      - User
-  /sessions/{sessionId}/user/presence:
-    post:
-      consumes:
-      - application/json
-      description: available/unavailable
-      parameters:
-      - description: Presence (available/unavailable)
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            presence:
-              type: string
-          type: object
-      - description: Session ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Send presence
-      tags:
-      - User
-  /sessions/{sessionId}/webhook:
+      - Webhooks
+  /webhooks/{wid}:
     delete:
+      description: Removes a webhook from a session
       parameters:
-      - description: Session name
+      - description: Session ID
         in: path
-        name: sessionId
+        name: id
+        type: string
+      - description: Webhook ID
+        in: path
+        name: wid
         required: true
         type: string
       produces:
@@ -2935,128 +1101,16 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/wzap_internal_model.APIResponse'
       security:
-      - ApiKeyAuth: []
-      summary: Delete webhook
+      - BearerAuth: []
+      summary: Delete a webhook
       tags:
-      - Webhook
-    get:
-      parameters:
-      - description: Session name
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Get webhook
-      tags:
-      - Webhook
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Session name
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Webhook configuration
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/model.WebhookRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Set webhook
-      tags:
-      - Webhook
-    put:
-      consumes:
-      - application/json
-      description: active=false to disable
-      parameters:
-      - description: Session name
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Webhook update data
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            active:
-              type: boolean
-            events:
-              items:
-                type: string
-              type: array
-            webhook:
-              type: string
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - ApiKeyAuth: []
-      summary: Update webhook
-      tags:
-      - Webhook
+      - Webhooks
 securityDefinitions:
-  AdminKeyAuth:
-    description: Admin token for user management
+  BearerAuth:
+    description: 'API Key for authentication. Pass as: Bearer <your-api-key>'
     in: header
     name: Authorization
-    type: apiKey
-  ApiKeyAuth:
-    description: User API token for session operations
-    in: header
-    name: Token
     type: apiKey
 swagger: "2.0"

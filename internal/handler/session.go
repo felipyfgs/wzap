@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/mdp/qrterminal/v3"
@@ -224,15 +225,20 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", "Client already connected or already paired"))
 	}
 
-	evt := <-qrChan
-	if evt.Event == "code" {
-		// Terminal QR output
+	select {
+	case evt, ok := <-qrChan:
+		if !ok {
+			return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("QR Error", "QR channel closed unexpectedly"))
+		}
+		if evt.Event != "code" {
+			return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("QR Error", "Failed to retrieve QR code"))
+		}
+
 		qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
 
-		// Image QR output capability
-		imageBytes, err := qrcode.Encode(evt.Code, qrcode.Medium, 256)
+		imageBytes, imgErr := qrcode.Encode(evt.Code, qrcode.Medium, 256)
 		qrBase64 := ""
-		if err == nil {
+		if imgErr == nil {
 			qrBase64 = "data:image/png;base64," + base64.StdEncoding.EncodeToString(imageBytes)
 		}
 
@@ -241,7 +247,7 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 			"image":   qrBase64,
 			"timeout": evt.Timeout,
 		}, "QR Code retrieved"))
+	case <-time.After(45 * time.Second):
+		return c.Status(fiber.StatusRequestTimeout).JSON(model.ErrorResp("QR Timeout", "QR code request timed out after 45 seconds"))
 	}
-
-	return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("QR Error", "Failed to retrieve QR code"))
 }

@@ -41,9 +41,12 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 	for rows.Next() {
 		var s model.Session
 		if err := rows.Scan(&s.ID, &s.APIKey, &s.DeviceJID, &s.Status, &s.IsConnected, &s.QRCode, &s.Metadata, &s.CreatedAt, &s.UpdatedAt); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan session: %w", err)
 		}
 		sessions = append(sessions, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating sessions: %w", err)
 	}
 	return sessions, nil
 }
@@ -81,40 +84,55 @@ func (r *SessionRepository) FindByDeviceJID(ctx context.Context, jid string) (*m
 	var s model.Session
 	err := r.db.QueryRow(ctx, query, jid).Scan(&s.ID, &s.DeviceJID, &s.Status, &s.IsConnected, &s.QRCode, &s.Metadata, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to find session by device JID %s: %w", jid, err)
 	}
 	return &s, nil
 }
 
 func (r *SessionRepository) Delete(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx, `DELETE FROM wz_sessions WHERE id = $1`, id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete session %s: %w", id, err)
+	}
+	return nil
 }
 
 func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status model.SessionStatus) error {
 	_, err := r.db.Exec(ctx, `UPDATE wz_sessions SET status = $1 WHERE id = $2`, status, id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to update status for session %s: %w", id, err)
+	}
+	return nil
 }
 
 func (r *SessionRepository) UpdateDeviceJID(ctx context.Context, id string, jid string) error {
 	_, err := r.db.Exec(ctx,
 		`UPDATE wz_sessions SET device_jid = $1, is_connected = true, status = 'READY' WHERE id = $2`,
 		jid, id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to update device JID for session %s: %w", id, err)
+	}
+	return nil
 }
 
 func (r *SessionRepository) SetConnected(ctx context.Context, id string, connected bool) error {
 	_, err := r.db.Exec(ctx,
 		`UPDATE wz_sessions SET is_connected = $1 WHERE id = $2`,
 		connected, id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to set connected status for session %s: %w", id, err)
+	}
+	return nil
 }
 
 func (r *SessionRepository) ClearDevice(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx,
 		`UPDATE wz_sessions SET is_connected = false, device_jid = NULL, status = 'CLOSED' WHERE id = $1`,
 		id)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to clear device for session %s: %w", id, err)
+	}
+	return nil
 }
 
 func (r *SessionRepository) GetDeviceJID(ctx context.Context, id string) (string, error) {
@@ -122,7 +140,10 @@ func (r *SessionRepository) GetDeviceJID(ctx context.Context, id string) (string
 	err := r.db.QueryRow(ctx,
 		`SELECT COALESCE(device_jid, '') FROM wz_sessions WHERE id = $1`,
 		id).Scan(&jid)
-	return jid, err
+	if err != nil {
+		return "", fmt.Errorf("failed to get device JID for session %s: %w", id, err)
+	}
+	return jid, nil
 }
 
 func (r *SessionRepository) FindSessionIDByJID(ctx context.Context, jid string) (string, error) {
@@ -130,5 +151,8 @@ func (r *SessionRepository) FindSessionIDByJID(ctx context.Context, jid string) 
 	err := r.db.QueryRow(ctx,
 		`SELECT id FROM wz_sessions WHERE device_jid = $1`,
 		jid).Scan(&sessionID)
-	return sessionID, err
+	if err != nil {
+		return "", fmt.Errorf("failed to find session ID by JID %s: %w", jid, err)
+	}
+	return sessionID, nil
 }

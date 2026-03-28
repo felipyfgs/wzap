@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 	"wzap/internal/model"
 	"wzap/internal/repository"
 )
@@ -48,7 +49,9 @@ func (s *SessionService) Get(ctx context.Context, id string) (*model.Session, er
 }
 
 func (s *SessionService) Delete(ctx context.Context, id string) error {
-	s.engine.Disconnect(id)
+	if err := s.engine.Disconnect(id); err != nil {
+		log.Warn().Err(err).Str("session", id).Msg("Failed to disconnect session during delete")
+	}
 	return s.repo.Delete(ctx, id)
 }
 

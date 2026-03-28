@@ -85,8 +85,12 @@ func (e *Engine) ReconnectAll(ctx context.Context) error {
 			continue
 		}
 
-		_ = e.sessionRepo.SetConnected(ctx, sessionID, true)
-		_ = e.sessionRepo.UpdateStatus(ctx, sessionID, "READY")
+		if err := e.sessionRepo.SetConnected(ctx, sessionID, true); err != nil {
+			log.Error().Err(err).Str("session", sessionID).Msg("Failed to set connected status")
+		}
+		if err := e.sessionRepo.UpdateStatus(ctx, sessionID, "READY"); err != nil {
+			log.Error().Err(err).Str("session", sessionID).Msg("Failed to update status to READY")
+		}
 		log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Reconnected session")
 	}
 
@@ -154,20 +158,29 @@ func (e *Engine) Connect(ctx context.Context, sessionID string) (*whatsmeow.Clie
 		case *events.Connected:
 			if client.Store.ID != nil {
 				jidStr := client.Store.ID.String()
-				_ = e.sessionRepo.UpdateDeviceJID(ctx, sessionID, jidStr)
+				if err := e.sessionRepo.UpdateDeviceJID(ctx, sessionID, jidStr); err != nil {
+					log.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update device JID")
+				}
 				log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Session paired")
 			}
 		case *events.Disconnected:
-			_ = e.sessionRepo.SetConnected(context.Background(), sessionID, false)
+			if err := e.sessionRepo.SetConnected(context.Background(), sessionID, false); err != nil {
+				log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
+			}
 		case *events.LoggedOut:
-			_ = e.sessionRepo.ClearDevice(context.Background(), sessionID)
+			if err := e.sessionRepo.ClearDevice(context.Background(), sessionID); err != nil {
+				log.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
+			}
 		}
 	})
 
 	e.clients[sessionID] = client
 
 	if client.Store.ID == nil {
-		qrChan, _ := client.GetQRChannel(ctx)
+		qrChan, qrErr := client.GetQRChannel(ctx)
+		if qrErr != nil {
+			return nil, nil, fmt.Errorf("failed to get QR channel: %w", qrErr)
+		}
 		err = client.Connect()
 		return client, qrChan, err
 	}
@@ -179,14 +192,17 @@ func (e *Engine) Connect(ctx context.Context, sessionID string) (*whatsmeow.Clie
 // Disconnect disconnects a session.
 func (e *Engine) Disconnect(sessionID string) error {
 	e.mu.Lock()
+	defer e.mu.Unlock()
+
 	client, exists := e.clients[sessionID]
 	if exists {
 		client.Disconnect()
 		delete(e.clients, sessionID)
 	}
-	e.mu.Unlock()
 
-	_ = e.sessionRepo.SetConnected(context.Background(), sessionID, false)
+	if err := e.sessionRepo.SetConnected(context.Background(), sessionID, false); err != nil {
+		log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
+	}
 	return nil
 }
 
@@ -217,10 +233,14 @@ func (e *Engine) handleEvent(sessionID string, evt interface{}) {
 		"timestamp":  time.Now().Format(time.RFC3339),
 	}
 
-	bytes, _ := json.Marshal(payload)
+	bytes, err := json.Marshal(payload)
+	if err != nil {
+		log.Error().Err(err).Str("session", sessionID).Msg("Failed to marshal NATS event payload")
+		return
+	}
 	if e.nats != nil {
 		if err := e.nats.Publish(context.Background(), "wzap.events."+sessionID, bytes); err != nil {
-			log.Error().Err(err).Msg("failed to publish NATS event")
+			log.Error().Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
 		}
 	}
 }

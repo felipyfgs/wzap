@@ -3,7 +3,6 @@ package wa
 import (
 	"sync"
 
-	_ "github.com/lib/pq" // PostgreSQL driver required by whatsmeow sqlstore
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	waLog "go.mau.fi/whatsmeow/util/log"

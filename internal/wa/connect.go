@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	_ "github.com/lib/pq" // registers the PostgreSQL driver used by whatsmeow sqlstore
 	"github.com/rs/zerolog/log"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"

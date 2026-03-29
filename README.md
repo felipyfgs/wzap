@@ -1,6 +1,6 @@
 # wzap API
 
-WhatsApp API built in Go using Fiber, PostgreSQL, NATS, MinIO, and Whatsmeow.
+WhatsApp API - built in Go using Fiber, PostgreSQL, NATS, MinIO, and Whatsmeow.
 
 ## Structure
 

@@ -34,7 +34,7 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 			return c.Next()
 		}
 
-		session, err := sessionRepo.FindByApiKey(c.Context(), token)
+		session, err := sessionRepo.FindByAPIKey(c.Context(), token)
 		if err == nil {
 			c.Locals("authRole", "session")
 			c.Locals("sessionId", session.ID)

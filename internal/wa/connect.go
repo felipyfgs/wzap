@@ -149,7 +149,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 			if err := m.sessionRepo.UpdateJid(context.Background(), sessionID, jidStr); err != nil {
 				log.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid on pair")
 			}
-			_ = m.sessionRepo.UpdateQrCode(context.Background(), sessionID, "")
+			_ = m.sessionRepo.UpdateQRCode(context.Background(), sessionID, "")
 			log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("QR pairing successful")
 		case *events.Disconnected:
 			if err := m.sessionRepo.SetConnected(context.Background(), sessionID, 0); err != nil {
@@ -159,7 +159,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 			if err := m.sessionRepo.ClearDevice(context.Background(), sessionID); err != nil {
 				log.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
 			}
-			_ = m.sessionRepo.UpdateQrCode(context.Background(), sessionID, "")
+			_ = m.sessionRepo.UpdateQRCode(context.Background(), sessionID, "")
 		}
 	})
 

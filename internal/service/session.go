@@ -37,7 +37,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		return nil, fmt.Errorf("name must contain only letters, numbers, hyphens and underscores")
 	}
 
-	apiKey := req.ApiKey
+	apiKey := req.APIKey
 	if apiKey == "" {
 		apiKey = "sk_" + uuid.NewString()
 	}
@@ -46,7 +46,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	session := &model.Session{
 		ID:        uuid.NewString(),
 		Name:      req.Name,
-		ApiKey:    apiKey,
+		APIKey:    apiKey,
 		Status:    "disconnected",
 		Metadata:  req.Metadata,
 		CreatedAt: now,

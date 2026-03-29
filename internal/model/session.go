@@ -5,9 +5,9 @@ import "time"
 type Session struct {
 	ID        string                 `json:"id"`
 	Name      string                 `json:"name"`
-	ApiKey    string                 `json:"apiKey,omitempty"`
-	Jid       string                 `json:"jid,omitempty"`
-	QrCode    string                 `json:"qrCode,omitempty"`
+	APIKey    string                 `json:"apiKey,omitempty"`
+	JID       string                 `json:"jid,omitempty"`
+	QRCode    string                 `json:"qrCode,omitempty"`
 	Connected int                    `json:"connected"`
 	Status    string                 `json:"status"`
 	Metadata  map[string]interface{} `json:"metadata,omitempty"`

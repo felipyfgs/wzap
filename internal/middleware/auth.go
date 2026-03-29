@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"strings"
-
 	"wzap/internal/config"
 	"wzap/internal/dto"
 	"wzap/internal/repo"
@@ -12,29 +10,22 @@ import (
 
 func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		if cfg.APIKey == "" {
+		if cfg.APIToken == "" {
 			c.Locals("authRole", "admin")
 			return c.Next()
 		}
 
-		authHeader := c.Get("Authorization")
-		if authHeader == "" {
-			authHeader = c.Get("Token")
+		token := c.Get("Token")
+		if token == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing Token header"))
 		}
 
-		if authHeader == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing Authorization or Token header"))
-		}
-
-		token := strings.TrimPrefix(authHeader, "Bearer ")
-		token = strings.TrimSpace(token)
-
-		if token == cfg.APIKey {
+		if token == cfg.APIToken {
 			c.Locals("authRole", "admin")
 			return c.Next()
 		}
 
-		session, err := sessionRepo.FindByAPIKey(c.Context(), token)
+		session, err := sessionRepo.FindByToken(c.Context(), token)
 		if err == nil {
 			c.Locals("authRole", "session")
 			c.Locals("sessionId", session.ID)

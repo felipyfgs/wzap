@@ -18,9 +18,9 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 }
 
 func (r *SessionRepository) Create(ctx context.Context, session *model.Session) error {
-	query := `INSERT INTO "wzSessions" ("id", "name", "apiKey", "status", "metadata", "createdAt", "updatedAt")
+	query := `INSERT INTO "wzSessions" ("id", "name", "token", "status", "metadata", "createdAt", "updatedAt")
 		VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.APIKey, session.Status, session.Metadata, session.CreatedAt, session.UpdatedAt)
+	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.Token, session.Status, session.Metadata, session.CreatedAt, session.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert session: %w", err)
 	}
@@ -75,15 +75,15 @@ func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model
 	return &s, nil
 }
 
-func (r *SessionRepository) FindByAPIKey(ctx context.Context, apiKey string) (*model.Session, error) {
+func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*model.Session, error) {
 	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
 		"connected", "status", "metadata", "createdAt", "updatedAt"
-		FROM "wzSessions" WHERE "apiKey" = $1`
+		FROM "wzSessions" WHERE "token" = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, apiKey).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Metadata, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, token).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Metadata, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("session not found for api key: %w", err)
+		return nil, fmt.Errorf("session not found for token: %w", err)
 	}
 	return &s, nil
 }

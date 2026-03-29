@@ -5,7 +5,7 @@ import "time"
 type Session struct {
 	ID        string                 `json:"id"`
 	Name      string                 `json:"name"`
-	APIKey    string                 `json:"apiKey,omitempty"`
+	Token     string                 `json:"token,omitempty"`
 	JID       string                 `json:"jid,omitempty"`
 	QRCode    string                 `json:"qrCode,omitempty"`
 	Connected int                    `json:"connected"`

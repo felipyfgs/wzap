@@ -50,7 +50,7 @@ func (s *Server) SetupRoutes() error {
 	// Health (No Auth)
 	s.App.Get("/health", healthHandler.Check)
 
-	// API Group with Auth (admin token or session apiKey)
+	// API Group with Auth (admin token or session token)
 	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))
 
 	// 1. Session Management
@@ -59,7 +59,7 @@ func (s *Server) SetupRoutes() error {
 
 	// Session-scoped routes — :sessionName resolved by RequiredSession middleware
 	reqSession := middleware.RequiredSession(sessionRepo)
-	sess := grp.Group("/sessions/:sessionName", reqSession)
+	sess := grp.Group("/sessions/:sessionId", reqSession)
 
 	// 2. Session lifecycle
 	sess.Get("/", sessionHandler.Get)

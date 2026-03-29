@@ -9,14 +9,14 @@ import (
 
 func RequiredSession(sessionRepo *repo.SessionRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		sessionName := c.Params("sessionName")
-		if sessionName == "" {
-			return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "sessionName is required in URL path"))
+		sessionId := c.Params("sessionId")
+		if sessionId == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "sessionId is required in URL path"))
 		}
 
-		session, err := sessionRepo.FindByName(c.Context(), sessionName)
+		session, err := sessionRepo.FindByName(c.Context(), sessionId)
 		if err != nil {
-			session, err = sessionRepo.FindByID(c.Context(), sessionName)
+			session, err = sessionRepo.FindByID(c.Context(), sessionId)
 			if err != nil {
 				return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "Session not found"))
 			}

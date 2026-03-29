@@ -2,6 +2,6 @@ package dto
 
 type SessionCreateReq struct {
 	Name     string                 `json:"name"`
-	APIKey   string                 `json:"apiKey,omitempty"`
+	Token    string                 `json:"token,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }

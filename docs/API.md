@@ -16,10 +16,10 @@ Default port: `3000` (configurable via `PORT` env var).
 
 ## Authentication
 
-All endpoints (except `/health`) require an `Authorization` header:
+All endpoints (except `/health`) require a `Token` header:
 
 ```
-Authorization: Bearer <token>
+Token: <token>
 ```
 
 Two token types are accepted:
@@ -32,6 +32,8 @@ Two token types are accepted:
 ---
 
 ## Response Format
+
+HTTP status codes are the source of truth (`2xx` = success, `4xx`/`5xx` = error). The `success` boolean mirrors the status code.
 
 ### Success
 ```json
@@ -83,7 +85,7 @@ curl http://localhost:3000/health
 
 ## Sessions
 
-Session-scoped routes use the pattern `/sessions/:sessionName/...` where `:sessionName` is the unique name given at creation.
+Session-scoped routes use the pattern `/sessions/:sessionId/...` where `:sessionId` is the unique name given at creation.
 
 ### Create Session *(Admin only)*
 
@@ -91,7 +93,7 @@ Session-scoped routes use the pattern `/sessions/:sessionName/...` where `:sessi
 
 ```bash
 curl -X POST http://localhost:3000/sessions \
-  -H 'Authorization: Bearer ADMIN_TOKEN' \
+  -H 'Token: ADMIN_TOKEN' \
   -H 'Content-Type: application/json' \
   -d '{"name": "my-session", "metadata": {"owner": "john"}}'
 ```
@@ -100,10 +102,12 @@ curl -X POST http://localhost:3000/sessions \
 ```json
 {
   "name": "my-session",
-  "apiKey": "optional-custom-key",
+  "token": "optional-custom-token",
   "metadata": {}
 }
 ```
+
+> `token` is optional. If omitted, a token is auto-generated (`sk_<uuid>`).
 
 **Response:**
 ```json
@@ -112,7 +116,7 @@ curl -X POST http://localhost:3000/sessions \
   "data": {
     "id": "uuid",
     "name": "my-session",
-    "apiKey": "generated-or-custom-key",
+    "token": "sk_generated-or-custom-token",
     "status": "disconnected",
     "connected": 0,
     "createdAt": "2026-03-29T00:00:00Z",
@@ -130,42 +134,47 @@ curl -X POST http://localhost:3000/sessions \
 
 ```bash
 curl http://localhost:3000/sessions \
-  -H 'Authorization: Bearer ADMIN_TOKEN'
+  -H 'Token: ADMIN_TOKEN'
 ```
 
 ---
 
 ### Get Session
 
-`GET /sessions/:sessionName`
+`GET /sessions/:sessionId`
+
+> `:sessionId` accepts either the session **UUID** or the session **name**.
 
 ```bash
 curl http://localhost:3000/sessions/my-session \
-  -H 'Authorization: Bearer SESSION_KEY'
+  -H 'Token: SESSION_KEY'
+# or by UUID:
+curl http://localhost:3000/sessions/550e8400-e29b-41d4-a716-446655440000 \
+  -H 'Token: SESSION_KEY'
 ```
 
 ---
 
 ### Delete Session
 
-`DELETE /sessions/:sessionName`
+`DELETE /sessions/:sessionId`
 
 ```bash
 curl -X DELETE http://localhost:3000/sessions/my-session \
-  -H 'Authorization: Bearer SESSION_KEY'
+  -H 'Token: SESSION_KEY'
 ```
 
 ---
 
 ### Connect Session
 
-`POST /sessions/:sessionName/connect`
+`POST /sessions/:sessionId/connect`
 
 Connects the session. If the device is not yet paired, returns status `PAIRING` and begins generating QR codes (poll `/qr` to retrieve them).
 
 ```bash
 curl -X POST http://localhost:3000/sessions/my-session/connect \
-  -H 'Authorization: Bearer SESSION_KEY'
+  -H 'Token: SESSION_KEY'
 ```
 
 **Response:**
@@ -183,24 +192,24 @@ Status values: `PAIRING` | `CONNECTING` | `CONNECTED`
 
 ### Disconnect Session
 
-`POST /sessions/:sessionName/disconnect`
+`POST /sessions/:sessionId/disconnect`
 
 ```bash
 curl -X POST http://localhost:3000/sessions/my-session/disconnect \
-  -H 'Authorization: Bearer SESSION_KEY'
+  -H 'Token: SESSION_KEY'
 ```
 
 ---
 
 ### Get QR Code
 
-`GET /sessions/:sessionName/qr`
+`GET /sessions/:sessionId/qr`
 
 Call `/connect` first, then poll this endpoint until the QR is available. Returns the raw QR string and a base64 PNG image.
 
 ```bash
 curl http://localhost:3000/sessions/my-session/qr \
-  -H 'Authorization: Bearer SESSION_KEY'
+  -H 'Token: SESSION_KEY'
 ```
 
 **Response:**
@@ -219,7 +228,7 @@ curl http://localhost:3000/sessions/my-session/qr \
 
 ## Messages
 
-All message endpoints: `POST /sessions/:sessionName/messages/<type>`
+All message endpoints: `POST /sessions/:sessionId/messages/<type>`
 
 The `jid` field accepts either a **phone number** (e.g. `5511999999999`) or a **full JID** (e.g. `5511999999999@s.whatsapp.net` or `120362023605733675@g.us`).
 
@@ -227,11 +236,11 @@ The `jid` field accepts either a **phone number** (e.g. `5511999999999`) or a **
 
 ### Send Text
 
-`POST /sessions/:sessionName/messages/text`
+`POST /sessions/:sessionId/messages/text`
 
 ```bash
 curl -X POST http://localhost:3000/sessions/my-session/messages/text \
-  -H 'Authorization: Bearer SESSION_KEY' \
+  -H 'Token: SESSION_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"jid": "5511999999999", "text": "Hello!"}'
 ```
@@ -257,14 +266,14 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/text \
 
 ### Send Image / Video / Document / Audio
 
-`POST /sessions/:sessionName/messages/image`
-`POST /sessions/:sessionName/messages/video`
-`POST /sessions/:sessionName/messages/document`
-`POST /sessions/:sessionName/messages/audio`
+`POST /sessions/:sessionId/messages/image`
+`POST /sessions/:sessionId/messages/video`
+`POST /sessions/:sessionId/messages/document`
+`POST /sessions/:sessionId/messages/audio`
 
 ```bash
 curl -X POST http://localhost:3000/sessions/my-session/messages/image \
-  -H 'Authorization: Bearer SESSION_KEY' \
+  -H 'Token: SESSION_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"jid":"5511999999999","mimeType":"image/jpeg","base64":"<base64>","caption":"Look at this"}'
 ```
@@ -284,7 +293,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/image \
 
 ### Send Sticker
 
-`POST /sessions/:sessionName/messages/sticker`
+`POST /sessions/:sessionId/messages/sticker`
 
 ```json
 {
@@ -298,7 +307,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/image \
 
 ### Send Contact
 
-`POST /sessions/:sessionName/messages/contact`
+`POST /sessions/:sessionId/messages/contact`
 
 ```json
 {
@@ -312,7 +321,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/image \
 
 ### Send Location
 
-`POST /sessions/:sessionName/messages/location`
+`POST /sessions/:sessionId/messages/location`
 
 ```json
 {
@@ -328,7 +337,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/image \
 
 ### Send Poll
 
-`POST /sessions/:sessionName/messages/poll`
+`POST /sessions/:sessionId/messages/poll`
 
 ```json
 {
@@ -345,7 +354,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/image \
 
 ### Send Link Preview
 
-`POST /sessions/:sessionName/messages/link`
+`POST /sessions/:sessionId/messages/link`
 
 ```json
 {
@@ -360,7 +369,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/image \
 
 ### Edit Message
 
-`POST /sessions/:sessionName/messages/edit`
+`POST /sessions/:sessionId/messages/edit`
 
 ```json
 {
@@ -374,7 +383,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/image \
 
 ### Delete Message
 
-`POST /sessions/:sessionName/messages/delete`
+`POST /sessions/:sessionId/messages/delete`
 
 Revokes the message for all recipients.
 
@@ -389,7 +398,7 @@ Revokes the message for all recipients.
 
 ### React to Message
 
-`POST /sessions/:sessionName/messages/reaction`
+`POST /sessions/:sessionId/messages/reaction`
 
 Pass an empty `reaction` string to remove an existing reaction.
 
@@ -405,7 +414,7 @@ Pass an empty `reaction` string to remove an existing reaction.
 
 ### Mark Message as Read
 
-`POST /sessions/:sessionName/messages/read`
+`POST /sessions/:sessionId/messages/read`
 
 ```json
 {
@@ -418,7 +427,7 @@ Pass an empty `reaction` string to remove an existing reaction.
 
 ### Set Typing / Recording Presence
 
-`POST /sessions/:sessionName/messages/presence`
+`POST /sessions/:sessionId/messages/presence`
 
 ```json
 {
@@ -435,18 +444,18 @@ Pass an empty `reaction` string to remove an existing reaction.
 
 ### List Contacts
 
-`GET /sessions/:sessionName/contacts`
+`GET /sessions/:sessionId/contacts`
 
 ```bash
 curl http://localhost:3000/sessions/my-session/contacts \
-  -H 'Authorization: Bearer SESSION_KEY'
+  -H 'Token: SESSION_KEY'
 ```
 
 ---
 
 ### Check Contacts on WhatsApp
 
-`POST /sessions/:sessionName/contacts/check`
+`POST /sessions/:sessionId/contacts/check`
 
 ```json
 {
@@ -469,7 +478,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Get Contact Avatar
 
-`POST /sessions/:sessionName/contacts/avatar`
+`POST /sessions/:sessionId/contacts/avatar`
 
 ```json
 {
@@ -492,7 +501,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Block Contact
 
-`POST /sessions/:sessionName/contacts/block`
+`POST /sessions/:sessionId/contacts/block`
 
 ```json
 { "jid": "5511999999999@s.whatsapp.net" }
@@ -502,7 +511,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Unblock Contact
 
-`POST /sessions/:sessionName/contacts/unblock`
+`POST /sessions/:sessionId/contacts/unblock`
 
 ```json
 { "jid": "5511999999999@s.whatsapp.net" }
@@ -512,13 +521,13 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Get Blocklist
 
-`GET /sessions/:sessionName/contacts/blocklist`
+`GET /sessions/:sessionId/contacts/blocklist`
 
 ---
 
 ### Get User Info
 
-`POST /sessions/:sessionName/contacts/info`
+`POST /sessions/:sessionId/contacts/info`
 
 ```json
 {
@@ -530,13 +539,13 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Get Privacy Settings
 
-`GET /sessions/:sessionName/contacts/privacy`
+`GET /sessions/:sessionId/contacts/privacy`
 
 ---
 
 ### Set Profile Picture
 
-`POST /sessions/:sessionName/contacts/profile-picture`
+`POST /sessions/:sessionId/contacts/profile-picture`
 
 ```json
 {
@@ -550,13 +559,13 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### List Groups
 
-`GET /sessions/:sessionName/groups`
+`GET /sessions/:sessionId/groups`
 
 ---
 
 ### Create Group
 
-`POST /sessions/:sessionName/groups/create`
+`POST /sessions/:sessionId/groups/create`
 
 ```json
 {
@@ -569,7 +578,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Get Group Info
 
-`POST /sessions/:sessionName/groups/info`
+`POST /sessions/:sessionId/groups/info`
 
 ```json
 { "groupJid": "120362023605733675@g.us" }
@@ -579,7 +588,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Get Group Info from Invite Link
 
-`POST /sessions/:sessionName/groups/invite-info`
+`POST /sessions/:sessionId/groups/invite-info`
 
 ```json
 { "inviteCode": "HffXhYmzzyJGec61oqMXiz" }
@@ -589,7 +598,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Join Group with Invite Link
 
-`POST /sessions/:sessionName/groups/join`
+`POST /sessions/:sessionId/groups/join`
 
 ```json
 { "inviteCode": "HffXhYmzzyJGec61oqMXiz" }
@@ -607,7 +616,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Get Invite Link
 
-`POST /sessions/:sessionName/groups/invite-link`
+`POST /sessions/:sessionId/groups/invite-link`
 
 ```json
 { "groupJid": "120362023605733675@g.us" }
@@ -617,7 +626,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Leave Group
 
-`POST /sessions/:sessionName/groups/leave`
+`POST /sessions/:sessionId/groups/leave`
 
 ```json
 { "groupJid": "120362023605733675@g.us" }
@@ -627,7 +636,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Update Participants
 
-`POST /sessions/:sessionName/groups/participants`
+`POST /sessions/:sessionId/groups/participants`
 
 ```json
 {
@@ -643,7 +652,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Get Join Requests
 
-`POST /sessions/:sessionName/groups/requests`
+`POST /sessions/:sessionId/groups/requests`
 
 ```json
 { "groupJid": "120362023605733675@g.us" }
@@ -653,7 +662,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Approve / Reject Join Requests
 
-`POST /sessions/:sessionName/groups/requests/action`
+`POST /sessions/:sessionId/groups/requests/action`
 
 ```json
 {
@@ -669,7 +678,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Update Group Name
 
-`POST /sessions/:sessionName/groups/name`
+`POST /sessions/:sessionId/groups/name`
 
 ```json
 {
@@ -682,7 +691,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Update Group Description
 
-`POST /sessions/:sessionName/groups/description`
+`POST /sessions/:sessionId/groups/description`
 
 ```json
 {
@@ -695,7 +704,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Update Group Photo
 
-`POST /sessions/:sessionName/groups/photo`
+`POST /sessions/:sessionId/groups/photo`
 
 ```json
 {
@@ -708,7 +717,7 @@ curl http://localhost:3000/sessions/my-session/contacts \
 
 ### Set Announce Mode
 
-`POST /sessions/:sessionName/groups/announce`
+`POST /sessions/:sessionId/groups/announce`
 
 Only admins can send messages when enabled.
 
@@ -723,7 +732,7 @@ Only admins can send messages when enabled.
 
 ### Set Locked Mode
 
-`POST /sessions/:sessionName/groups/locked`
+`POST /sessions/:sessionId/groups/locked`
 
 Only admins can edit group info when enabled.
 
@@ -738,7 +747,7 @@ Only admins can edit group info when enabled.
 
 ### Set Join Approval
 
-`POST /sessions/:sessionName/groups/join-approval`
+`POST /sessions/:sessionId/groups/join-approval`
 
 Requires admin approval for new members.
 
@@ -755,7 +764,7 @@ Requires admin approval for new members.
 
 ### Archive Chat
 
-`POST /sessions/:sessionName/chat/archive`
+`POST /sessions/:sessionId/chat/archive`
 
 ```json
 { "jid": "5511999999999@s.whatsapp.net" }
@@ -765,7 +774,7 @@ Requires admin approval for new members.
 
 ### Mute Chat
 
-`POST /sessions/:sessionName/chat/mute`
+`POST /sessions/:sessionId/chat/mute`
 
 ```json
 { "jid": "5511999999999@s.whatsapp.net" }
@@ -775,7 +784,7 @@ Requires admin approval for new members.
 
 ### Pin Chat
 
-`POST /sessions/:sessionName/chat/pin`
+`POST /sessions/:sessionId/chat/pin`
 
 ```json
 { "jid": "5511999999999@s.whatsapp.net" }
@@ -785,7 +794,7 @@ Requires admin approval for new members.
 
 ### Unpin Chat
 
-`POST /sessions/:sessionName/chat/unpin`
+`POST /sessions/:sessionId/chat/unpin`
 
 ```json
 { "jid": "5511999999999@s.whatsapp.net" }
@@ -799,7 +808,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 
 ### Add Label to Chat
 
-`POST /sessions/:sessionName/label/chat`
+`POST /sessions/:sessionId/label/chat`
 
 ```json
 {
@@ -812,7 +821,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 
 ### Remove Label from Chat
 
-`POST /sessions/:sessionName/unlabel/chat`
+`POST /sessions/:sessionId/unlabel/chat`
 
 ```json
 {
@@ -825,7 +834,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 
 ### Add Label to Message
 
-`POST /sessions/:sessionName/label/message`
+`POST /sessions/:sessionId/label/message`
 
 ```json
 {
@@ -839,7 +848,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 
 ### Remove Label from Message
 
-`POST /sessions/:sessionName/unlabel/message`
+`POST /sessions/:sessionId/unlabel/message`
 
 ```json
 {
@@ -853,7 +862,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 
 ### Edit Label
 
-`POST /sessions/:sessionName/label/edit`
+`POST /sessions/:sessionId/label/edit`
 
 ```json
 {
@@ -869,7 +878,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 
 ### Create Newsletter
 
-`POST /sessions/:sessionName/newsletter/create`
+`POST /sessions/:sessionId/newsletter/create`
 
 ```json
 {
@@ -883,7 +892,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 
 ### Get Newsletter Info
 
-`POST /sessions/:sessionName/newsletter/info?jid=<newsletterJid>`
+`POST /sessions/:sessionId/newsletter/info?jid=<newsletterJid>`
 
 ```bash
 curl "http://localhost:3000/sessions/my-session/newsletter/info?jid=120363166361227321@newsletter" \
@@ -894,19 +903,19 @@ curl "http://localhost:3000/sessions/my-session/newsletter/info?jid=120363166361
 
 ### Get Newsletter Info from Invite
 
-`POST /sessions/:sessionName/newsletter/invite?code=<inviteCode>`
+`POST /sessions/:sessionId/newsletter/invite?code=<inviteCode>`
 
 ---
 
 ### List Subscribed Newsletters
 
-`GET /sessions/:sessionName/newsletter/list`
+`GET /sessions/:sessionId/newsletter/list`
 
 ---
 
 ### Get Newsletter Messages
 
-`POST /sessions/:sessionName/newsletter/messages`
+`POST /sessions/:sessionId/newsletter/messages`
 
 ```json
 {
@@ -922,7 +931,7 @@ curl "http://localhost:3000/sessions/my-session/newsletter/info?jid=120363166361
 
 ### Subscribe to Newsletter
 
-`POST /sessions/:sessionName/newsletter/subscribe`
+`POST /sessions/:sessionId/newsletter/subscribe`
 
 ```json
 { "newsletterJid": "120363166361227321@newsletter" }
@@ -936,7 +945,7 @@ Communities are groups of groups in WhatsApp.
 
 ### Create Community
 
-`POST /sessions/:sessionName/community/create`
+`POST /sessions/:sessionId/community/create`
 
 ```json
 {
@@ -949,7 +958,7 @@ Communities are groups of groups in WhatsApp.
 
 ### Add Subgroup to Community
 
-`POST /sessions/:sessionName/community/participant/add`
+`POST /sessions/:sessionId/community/participant/add`
 
 ```json
 {
@@ -962,7 +971,7 @@ Communities are groups of groups in WhatsApp.
 
 ### Remove Subgroup from Community
 
-`POST /sessions/:sessionName/community/participant/remove`
+`POST /sessions/:sessionId/community/participant/remove`
 
 ```json
 {
@@ -979,7 +988,7 @@ Webhooks receive real-time event notifications for a session.
 
 ### Create Webhook
 
-`POST /sessions/:sessionName/webhooks`
+`POST /sessions/:sessionId/webhooks`
 
 ```json
 {
@@ -1010,17 +1019,17 @@ See [Supported Event Types](#supported-event-types) for all valid `events` value
 
 ### List Webhooks
 
-`GET /sessions/:sessionName/webhooks`
+`GET /sessions/:sessionId/webhooks`
 
 ---
 
 ### Delete Webhook
 
-`DELETE /sessions/:sessionName/webhooks/:wid`
+`DELETE /sessions/:sessionId/webhooks/:wid`
 
 ```bash
 curl -X DELETE http://localhost:3000/sessions/my-session/webhooks/webhook-uuid \
-  -H 'Authorization: Bearer SESSION_KEY'
+  -H 'Token: SESSION_KEY'
 ```
 
 ---

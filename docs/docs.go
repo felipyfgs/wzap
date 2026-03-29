@@ -3466,9 +3466,9 @@ const docTemplate = `{
     },
     "securityDefinitions": {
         "ApiKey": {
-            "description": "Session or admin token. Pass the token value directly in the Token header.",
+            "description": "Session or admin token. Pass the apiKey value directly in the ApiKey header.",
             "type": "apiKey",
-            "name": "Token",
+            "name": "ApiKey",
             "in": "header"
         }
     }

@@ -2226,9 +2226,9 @@ paths:
       - Labels
 securityDefinitions:
   ApiKey:
-    description: Session or admin token. Pass the token value directly in the Token
+    description: Session or admin token. Pass the apiKey value directly in the ApiKey
       header.
     in: header
-    name: Token
+    name: ApiKey
     type: apiKey
 swagger: "2.0"

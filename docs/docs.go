@@ -27,7 +27,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Archives a chat identified by JID, moving it out of the main chat list",
@@ -66,7 +66,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Mutes notifications for a chat identified by JID",
@@ -105,7 +105,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Pins a chat to the top of the chat list",
@@ -144,7 +144,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes a chat from the pinned position at the top of the chat list",
@@ -183,7 +183,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Community (a group of groups) with a name and optional description",
@@ -222,7 +222,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Adds one or more subgroups (by JID) as participants to an existing community",
@@ -261,7 +261,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes one or more subgroups (by JID) from an existing community",
@@ -300,7 +300,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns all contacts from the WhatsApp session",
@@ -325,7 +325,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Fetches the profile picture URL and picture ID for the given WhatsApp JID",
@@ -376,7 +376,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Blocks a WhatsApp contact by JID, preventing them from sending messages",
@@ -415,7 +415,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns the full list of JIDs currently blocked by the session",
@@ -440,7 +440,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Checks if phone numbers are registered on WhatsApp",
@@ -479,7 +479,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Fetches detailed user info (status, profile picture, devices) for one or more WhatsApp JIDs",
@@ -533,7 +533,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)",
@@ -558,7 +558,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the session account's WhatsApp profile picture with a base64-encoded image",
@@ -597,7 +597,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Unblocks a previously blocked WhatsApp contact by JID",
@@ -636,7 +636,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns all WhatsApp groups the session is part of",
@@ -661,7 +661,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sets whether only admins can send messages in the group",
@@ -700,7 +700,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Creates a new WhatsApp group with the given participants",
@@ -739,7 +739,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the description of the specified WhatsApp group",
@@ -778,7 +778,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get detailed information about a group by JID",
@@ -812,7 +812,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Previews a group's info using an invite code without joining",
@@ -846,7 +846,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Gets the invite link for a WhatsApp group, optionally resetting it",
@@ -900,7 +900,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Joins a group using an invite code",
@@ -939,7 +939,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Activates or deactivates the admin approval system for new members",
@@ -978,7 +978,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Leaves a specified WhatsApp group",
@@ -1014,7 +1014,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sets whether only admins can edit group info",
@@ -1053,7 +1053,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the name of the specified WhatsApp group",
@@ -1092,7 +1092,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Add, remove, promote or demote participants in a group",
@@ -1131,7 +1131,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the profile picture of the specified WhatsApp group",
@@ -1170,7 +1170,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get the list of participants that requested to join the group",
@@ -1206,7 +1206,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Approves or rejects participants that requested to join the group",
@@ -1265,7 +1265,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Applies a label to an entire chat conversation",
@@ -1304,7 +1304,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Edits an existing label's name, color, or marks it as deleted",
@@ -1343,7 +1343,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Applies a label to a specific message within a chat",
@@ -1382,7 +1382,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1420,7 +1420,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a vCard contact message via WhatsApp to the specified recipient",
@@ -1459,7 +1459,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Revokes a previously sent message for all recipients",
@@ -1498,7 +1498,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1536,7 +1536,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Edits an existing sent message by ID, replacing its text content",
@@ -1575,7 +1575,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1613,7 +1613,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a hyperlink preview message with optional title and description to the specified recipient",
@@ -1652,7 +1652,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a GPS location message with optional name and address to the specified recipient",
@@ -1691,7 +1691,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a poll with multiple choice options; selectable_count controls how many options a recipient may choose (0 = unlimited)",
@@ -1730,7 +1730,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a typing, recording, or paused presence indicator to a specific chat; presence values: typing, recording, paused",
@@ -1769,7 +1769,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Adds an emoji reaction to a message; pass an empty string for reaction to remove an existing reaction",
@@ -1808,7 +1808,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a read receipt for a specific message",
@@ -1847,7 +1847,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a base64-encoded sticker image to the specified recipient",
@@ -1886,7 +1886,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a text message via WhatsApp. If :id is omitted, session is identified from Bearer token.",
@@ -1925,7 +1925,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1963,7 +1963,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Newsletter (channel) with optional description and profile picture",
@@ -2002,7 +2002,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Retrieves metadata about a newsletter by its JID",
@@ -2036,7 +2036,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Retrieves newsletter metadata from an invite code without subscribing",
@@ -2070,7 +2070,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns all newsletters the current session is subscribed to",
@@ -2095,7 +2095,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Fetches messages from a newsletter; supports pagination via before_id cursor and count",
@@ -2134,7 +2134,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Subscribes the current session to a newsletter identified by its JID",
@@ -2174,144 +2174,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/session": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the session identified by the Bearer token (or query/header fallback)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Get current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Disconnects and deletes the current session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Delete current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/session/connect": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Connects a WhatsApp session (starts pairing if new)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Connect current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/session/disconnect": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Disconnects the active WhatsApp session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Disconnect current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/session/qr": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns a QR code for pairing a new WhatsApp device for current session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Get QR code for pair",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/sessions": {
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns all sessions (Admin) or just the authenticated session (User)",
+                "description": "Returns all sessions",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Sessions"
                 ],
-                "summary": "List sessions",
+                "summary": "List sessions (Admin Only)",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2324,10 +2201,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Creates a new WhatsApp session entry in the database. Returns the generated token.",
+                "description": "Creates a new session with an auto-generated or custom token",
                 "consumes": [
                     "application/json"
                 ],
@@ -2359,20 +2236,188 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIError"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/sessions/{id}/webhooks": {
+        "/sessions/{sessionId}": {
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns all webhooks for a session",
+                "description": "Returns the session identified by :sessionId (name or id)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Disconnects and deletes the session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Delete session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/connect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Connects a WhatsApp session (starts pairing if new)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Connect session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/disconnect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Disconnects the active WhatsApp session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Disconnect session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/qr": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns a QR code for pairing a new WhatsApp device",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get QR code for pairing",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/webhooks": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all webhooks for the session",
                 "produces": [
                     "application/json"
                 ],
@@ -2383,9 +2428,10 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -2400,10 +2446,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Registers a new webhook for a session",
+                "description": "Registers a new webhook for the session",
                 "consumes": [
                     "application/json"
                 ],
@@ -2417,9 +2463,10 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "description": "Webhook data",
@@ -2441,14 +2488,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/sessions/{id}/webhooks/{wid}": {
+        "/sessions/{sessionId}/webhooks/{wid}": {
             "delete": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Removes a webhook from a session",
+                "description": "Removes a webhook from the session",
                 "produces": [
                     "application/json"
                 ],
@@ -2459,9 +2506,10 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -2485,7 +2533,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes a label from a chat conversation",
@@ -2524,7 +2572,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes a label from a specific message",
@@ -2558,125 +2606,9 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/webhooks": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all webhooks for a session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "List webhooks",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Registers a new webhook for a session",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "Create a webhook",
-                "parameters": [
-                    {
-                        "description": "Webhook data",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateWebhookReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/webhooks/{wid}": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Removes a webhook from a session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "Delete a webhook",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Webhook ID",
-                        "name": "wid",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
-                        }
-                    }
-                }
-            }
         }
     },
     "definitions": {
-        "dto.APIError": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "dto.APIResponse": {
             "type": "object",
             "properties": {
@@ -2728,11 +2660,11 @@ const docTemplate = `{
         "dto.CommunityParticipantReq": {
             "type": "object",
             "required": [
-                "jid",
+                "communityJid",
                 "participants"
             ],
             "properties": {
-                "jid": {
+                "communityJid": {
                     "type": "string"
                 },
                 "participants": {
@@ -2765,7 +2697,6 @@ const docTemplate = `{
                     "example": "My Awesome Group"
                 },
                 "participants": {
-                    "description": "list of phone numbers",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -2790,7 +2721,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "picture": {
-                    "description": "base64",
                     "type": "string"
                 }
             }
@@ -2805,8 +2735,11 @@ const docTemplate = `{
                 "events": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/model.EventType"
                     }
+                },
+                "natsEnabled": {
+                    "type": "boolean"
                 },
                 "secret": {
                     "type": "string"
@@ -2819,14 +2752,14 @@ const docTemplate = `{
         "dto.DeleteMessageReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "to"
+                "jid",
+                "messageId"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "messageId": {
                     "type": "string"
                 }
             }
@@ -2854,18 +2787,18 @@ const docTemplate = `{
         "dto.EditMessageReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "text",
-                "to"
+                "jid",
+                "messageId",
+                "text"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
+                    "type": "string"
+                },
+                "messageId": {
                     "type": "string"
                 },
                 "text": {
-                    "type": "string"
-                },
-                "to": {
                     "type": "string"
                 }
             }
@@ -2928,10 +2861,10 @@ const docTemplate = `{
         "dto.GroupJoinReq": {
             "type": "object",
             "required": [
-                "invite_code"
+                "inviteCode"
             ],
             "properties": {
-                "invite_code": {
+                "inviteCode": {
                     "type": "string"
                 }
             }
@@ -2945,7 +2878,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "action": {
-                    "description": "add, remove, promote, demote",
                     "type": "string",
                     "example": "add"
                 },
@@ -2967,14 +2899,13 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "groupJid",
-                "photo_base64"
+                "photoBase64"
             ],
             "properties": {
                 "groupJid": {
                     "type": "string"
                 },
-                "photo_base64": {
-                    "description": "Base64 encoded image",
+                "photoBase64": {
                     "type": "string"
                 }
             }
@@ -2988,7 +2919,6 @@ const docTemplate = `{
             ],
             "properties": {
                 "action": {
-                    "description": "approve, reject",
                     "type": "string",
                     "example": "approve"
                 },
@@ -3072,14 +3002,14 @@ const docTemplate = `{
         "dto.MarkReadReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "to"
+                "jid",
+                "messageId"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "messageId": {
                     "type": "string"
                 }
             }
@@ -3087,16 +3017,16 @@ const docTemplate = `{
         "dto.NewsletterMessageReq": {
             "type": "object",
             "required": [
-                "jid"
+                "newsletterJid"
             ],
             "properties": {
-                "before_id": {
+                "beforeId": {
                     "type": "integer"
                 },
                 "count": {
                     "type": "integer"
                 },
-                "jid": {
+                "newsletterJid": {
                     "type": "string"
                 }
             }
@@ -3104,19 +3034,18 @@ const docTemplate = `{
         "dto.ReactMessageReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "reaction",
-                "to"
+                "jid",
+                "messageId",
+                "reaction"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
+                    "type": "string"
+                },
+                "messageId": {
                     "type": "string"
                 },
                 "reaction": {
-                    "description": "emoji or empty to remove",
-                    "type": "string"
-                },
-                "to": {
                     "type": "string"
                 }
             }
@@ -3124,15 +3053,15 @@ const docTemplate = `{
         "dto.SendContactReq": {
             "type": "object",
             "required": [
+                "jid",
                 "name",
-                "to",
                 "vcard"
             ],
             "properties": {
-                "name": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "name": {
                     "type": "string"
                 },
                 "vcard": {
@@ -3143,17 +3072,17 @@ const docTemplate = `{
         "dto.SendLinkReq": {
             "type": "object",
             "required": [
-                "to",
+                "jid",
                 "url"
             ],
             "properties": {
                 "description": {
                     "type": "string"
                 },
-                "title": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "title": {
                     "type": "string"
                 },
                 "url": {
@@ -3164,12 +3093,15 @@ const docTemplate = `{
         "dto.SendLocationReq": {
             "type": "object",
             "required": [
+                "jid",
                 "lat",
-                "lng",
-                "to"
+                "lng"
             ],
             "properties": {
                 "address": {
+                    "type": "string"
+                },
+                "jid": {
                     "type": "string"
                 },
                 "lat": {
@@ -3180,34 +3112,29 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
-                },
-                "to": {
-                    "type": "string"
                 }
             }
         },
         "dto.SendMediaReq": {
             "type": "object",
             "required": [
-                "mime_type",
-                "to"
+                "jid",
+                "mimeType"
             ],
             "properties": {
                 "base64": {
-                    "description": "For base64 upload",
                     "type": "string"
                 },
                 "caption": {
                     "type": "string"
                 },
                 "filename": {
-                    "description": "For documents",
                     "type": "string"
                 },
-                "mime_type": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "mimeType": {
                     "type": "string"
                 }
             }
@@ -3215,11 +3142,14 @@ const docTemplate = `{
         "dto.SendPollReq": {
             "type": "object",
             "required": [
+                "jid",
                 "name",
-                "options",
-                "to"
+                "options"
             ],
             "properties": {
+                "jid": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -3230,11 +3160,8 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "selectable_count": {
+                "selectableCount": {
                     "type": "integer"
-                },
-                "to": {
-                    "type": "string"
                 }
             }
         },
@@ -3242,17 +3169,17 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "base64",
-                "mime_type",
-                "to"
+                "jid",
+                "mimeType"
             ],
             "properties": {
                 "base64": {
                     "type": "string"
                 },
-                "mime_type": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "mimeType": {
                     "type": "string"
                 }
             }
@@ -3260,46 +3187,49 @@ const docTemplate = `{
         "dto.SendTextReq": {
             "type": "object",
             "required": [
-                "text",
-                "to"
+                "jid",
+                "text"
             ],
             "properties": {
-                "text": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
-                    "description": "Phone number or group JID",
+                "text": {
                     "type": "string"
                 }
             }
         },
         "dto.SessionCreateReq": {
             "type": "object",
-            "required": [
-                "id"
-            ],
             "properties": {
-                "id": {
+                "name": {
                     "type": "string"
                 },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
+                "proxy": {
+                    "$ref": "#/definitions/model.SessionProxy"
+                },
+                "settings": {
+                    "$ref": "#/definitions/model.SessionSettings"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "webhook": {
+                    "$ref": "#/definitions/dto.WebhookCreateInline"
                 }
             }
         },
         "dto.SetPresenceReq": {
             "type": "object",
             "required": [
-                "presence",
-                "to"
+                "jid",
+                "presence"
             ],
             "properties": {
-                "presence": {
-                    "description": "typing, recording, paused",
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "presence": {
                     "type": "string"
                 }
             }
@@ -3334,13 +3264,211 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "dto.WebhookCreateInline": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EventType"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventType": {
+            "type": "string",
+            "enum": [
+                "All",
+                "Message",
+                "UndecryptableMessage",
+                "MediaRetry",
+                "Receipt",
+                "DeleteForMe",
+                "Connected",
+                "Disconnected",
+                "ConnectFailure",
+                "LoggedOut",
+                "PairSuccess",
+                "PairError",
+                "QR",
+                "QRScannedWithoutMultidevice",
+                "StreamError",
+                "StreamReplaced",
+                "KeepAliveTimeout",
+                "KeepAliveRestored",
+                "ClientOutdated",
+                "TemporaryBan",
+                "CATRefreshError",
+                "ManualLoginReconnect",
+                "Contact",
+                "Picture",
+                "IdentityChange",
+                "UserAbout",
+                "PushName",
+                "BusinessName",
+                "GroupInfo",
+                "JoinedGroup",
+                "Presence",
+                "ChatPresence",
+                "Archive",
+                "Mute",
+                "Pin",
+                "Star",
+                "ClearChat",
+                "DeleteChat",
+                "MarkChatAsRead",
+                "UnarchiveChatsSetting",
+                "LabelEdit",
+                "LabelAssociationChat",
+                "LabelAssociationMessage",
+                "CallOffer",
+                "CallAccept",
+                "CallTerminate",
+                "CallOfferNotice",
+                "CallRelayLatency",
+                "CallPreAccept",
+                "CallReject",
+                "CallTransport",
+                "UnknownCallEvent",
+                "NewsletterJoin",
+                "NewsletterLeave",
+                "NewsletterMuteChange",
+                "NewsletterLiveUpdate",
+                "HistorySync",
+                "AppState",
+                "AppStateSyncComplete",
+                "AppStateSyncError",
+                "OfflineSyncCompleted",
+                "OfflineSyncPreview",
+                "PrivacySettings",
+                "PushNameSetting",
+                "UserStatusMute",
+                "BlocklistChange",
+                "Blocklist"
+            ],
+            "x-enum-varnames": [
+                "EventAll",
+                "EventMessage",
+                "EventUndecryptableMessage",
+                "EventMediaRetry",
+                "EventReceipt",
+                "EventDeleteForMe",
+                "EventConnected",
+                "EventDisconnected",
+                "EventConnectFailure",
+                "EventLoggedOut",
+                "EventPairSuccess",
+                "EventPairError",
+                "EventQR",
+                "EventQRScannedWithoutMultidevice",
+                "EventStreamError",
+                "EventStreamReplaced",
+                "EventKeepAliveTimeout",
+                "EventKeepAliveRestored",
+                "EventClientOutdated",
+                "EventTemporaryBan",
+                "EventCATRefreshError",
+                "EventManualLoginReconnect",
+                "EventContact",
+                "EventPicture",
+                "EventIdentityChange",
+                "EventUserAbout",
+                "EventPushName",
+                "EventBusinessName",
+                "EventGroupInfo",
+                "EventJoinedGroup",
+                "EventPresence",
+                "EventChatPresence",
+                "EventArchive",
+                "EventMute",
+                "EventPin",
+                "EventStar",
+                "EventClearChat",
+                "EventDeleteChat",
+                "EventMarkChatAsRead",
+                "EventUnarchiveChatsSetting",
+                "EventLabelEdit",
+                "EventLabelAssociationChat",
+                "EventLabelAssociationMessage",
+                "EventCallOffer",
+                "EventCallAccept",
+                "EventCallTerminate",
+                "EventCallOfferNotice",
+                "EventCallRelayLatency",
+                "EventCallPreAccept",
+                "EventCallReject",
+                "EventCallTransport",
+                "EventUnknownCallEvent",
+                "EventNewsletterJoin",
+                "EventNewsletterLeave",
+                "EventNewsletterMuteChange",
+                "EventNewsletterLiveUpdate",
+                "EventHistorySync",
+                "EventAppState",
+                "EventAppStateSyncComplete",
+                "EventAppStateSyncError",
+                "EventOfflineSyncCompleted",
+                "EventOfflineSyncPreview",
+                "EventPrivacySettings",
+                "EventPushNameSetting",
+                "EventUserStatusMute",
+                "EventBlocklistChange",
+                "EventBlocklist"
+            ]
+        },
+        "model.SessionProxy": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SessionSettings": {
+            "type": "object",
+            "properties": {
+                "alwaysOnline": {
+                    "type": "boolean"
+                },
+                "ignoreGroups": {
+                    "type": "boolean"
+                },
+                "ignoreStatus": {
+                    "type": "boolean"
+                },
+                "msgRejectCall": {
+                    "type": "string"
+                },
+                "readMessages": {
+                    "type": "boolean"
+                },
+                "rejectCall": {
+                    "type": "boolean"
+                }
+            }
         }
     },
     "securityDefinitions": {
-        "BearerAuth": {
-            "description": "API Key for authentication. Pass as: Bearer \u003cyour-api-key\u003e",
+        "ApiKeyAuth": {
+            "description": "Session or admin token. Pass the token value directly in the Token header.",
             "type": "apiKey",
-            "name": "Authorization",
+            "name": "Token",
             "in": "header"
         }
     }

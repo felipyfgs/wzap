@@ -19,7 +19,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Archives a chat identified by JID, moving it out of the main chat list",
@@ -40,7 +40,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -48,7 +48,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -58,7 +58,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Mutes notifications for a chat identified by JID",
@@ -79,7 +79,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -87,7 +87,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -97,7 +97,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Pins a chat to the top of the chat list",
@@ -118,7 +118,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -126,7 +126,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -136,7 +136,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes a chat from the pinned position at the top of the chat list",
@@ -157,7 +157,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -165,7 +165,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -175,7 +175,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Community (a group of groups) with a name and optional description",
@@ -196,7 +196,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateCommunityReq"
+                            "$ref": "#/definitions/dto.CreateCommunityReq"
                         }
                     }
                 ],
@@ -204,7 +204,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -214,7 +214,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Adds one or more subgroups (by JID) as participants to an existing community",
@@ -235,7 +235,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CommunityParticipantReq"
+                            "$ref": "#/definitions/dto.CommunityParticipantReq"
                         }
                     }
                 ],
@@ -243,7 +243,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -253,7 +253,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes one or more subgroups (by JID) from an existing community",
@@ -274,7 +274,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CommunityParticipantReq"
+                            "$ref": "#/definitions/dto.CommunityParticipantReq"
                         }
                     }
                 ],
@@ -282,7 +282,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -292,7 +292,7 @@
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns all contacts from the WhatsApp session",
@@ -307,7 +307,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -317,7 +317,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Fetches the profile picture URL and picture ID for the given WhatsApp JID",
@@ -338,7 +338,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GetAvatarReq"
+                            "$ref": "#/definitions/dto.GetAvatarReq"
                         }
                     }
                 ],
@@ -348,13 +348,13 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/model.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.GetAvatarResp"
+                                            "$ref": "#/definitions/dto.GetAvatarResp"
                                         }
                                     }
                                 }
@@ -368,7 +368,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Blocks a WhatsApp contact by JID, preventing them from sending messages",
@@ -389,7 +389,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.BlockContactReq"
+                            "$ref": "#/definitions/dto.BlockContactReq"
                         }
                     }
                 ],
@@ -397,7 +397,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -407,7 +407,7 @@
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns the full list of JIDs currently blocked by the session",
@@ -422,7 +422,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -432,7 +432,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Checks if phone numbers are registered on WhatsApp",
@@ -453,7 +453,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CheckContactReq"
+                            "$ref": "#/definitions/dto.CheckContactReq"
                         }
                     }
                 ],
@@ -461,7 +461,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -471,7 +471,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Fetches detailed user info (status, profile picture, devices) for one or more WhatsApp JIDs",
@@ -492,7 +492,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GetUserInfoReq"
+                            "$ref": "#/definitions/dto.GetUserInfoReq"
                         }
                     }
                 ],
@@ -502,7 +502,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/model.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -510,7 +510,7 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.UserInfoResp"
+                                                "$ref": "#/definitions/dto.UserInfoResp"
                                             }
                                         }
                                     }
@@ -525,7 +525,7 @@
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)",
@@ -540,7 +540,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -550,7 +550,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the session account's WhatsApp profile picture with a base64-encoded image",
@@ -571,7 +571,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SetProfilePictureReq"
+                            "$ref": "#/definitions/dto.SetProfilePictureReq"
                         }
                     }
                 ],
@@ -579,7 +579,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -589,7 +589,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Unblocks a previously blocked WhatsApp contact by JID",
@@ -610,7 +610,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.BlockContactReq"
+                            "$ref": "#/definitions/dto.BlockContactReq"
                         }
                     }
                 ],
@@ -618,7 +618,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -628,7 +628,7 @@
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns all WhatsApp groups the session is part of",
@@ -643,7 +643,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -653,7 +653,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sets whether only admins can send messages in the group",
@@ -674,7 +674,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupSettingReq"
+                            "$ref": "#/definitions/dto.GroupSettingReq"
                         }
                     }
                 ],
@@ -682,7 +682,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -692,7 +692,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Creates a new WhatsApp group with the given participants",
@@ -713,7 +713,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateGroupReq"
+                            "$ref": "#/definitions/dto.CreateGroupReq"
                         }
                     }
                 ],
@@ -721,7 +721,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -731,7 +731,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the description of the specified WhatsApp group",
@@ -752,7 +752,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupTextReq"
+                            "$ref": "#/definitions/dto.GroupTextReq"
                         }
                     }
                 ],
@@ -760,7 +760,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -770,7 +770,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get detailed information about a group by JID",
@@ -794,7 +794,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -804,7 +804,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Previews a group's info using an invite code without joining",
@@ -828,7 +828,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -838,7 +838,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Gets the invite link for a WhatsApp group, optionally resetting it",
@@ -856,7 +856,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJIDReq"
+                            "$ref": "#/definitions/dto.GroupJIDReq"
                         }
                     },
                     {
@@ -872,13 +872,13 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/model.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.GroupInviteLinkResp"
+                                            "$ref": "#/definitions/dto.GroupInviteLinkResp"
                                         }
                                     }
                                 }
@@ -892,7 +892,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Joins a group using an invite code",
@@ -913,7 +913,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJoinReq"
+                            "$ref": "#/definitions/dto.GroupJoinReq"
                         }
                     }
                 ],
@@ -921,7 +921,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -931,7 +931,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Activates or deactivates the admin approval system for new members",
@@ -952,7 +952,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupSettingReq"
+                            "$ref": "#/definitions/dto.GroupSettingReq"
                         }
                     }
                 ],
@@ -960,7 +960,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -970,7 +970,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Leaves a specified WhatsApp group",
@@ -988,7 +988,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJIDReq"
+                            "$ref": "#/definitions/dto.GroupJIDReq"
                         }
                     }
                 ],
@@ -996,7 +996,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1006,7 +1006,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sets whether only admins can edit group info",
@@ -1027,7 +1027,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupSettingReq"
+                            "$ref": "#/definitions/dto.GroupSettingReq"
                         }
                     }
                 ],
@@ -1035,7 +1035,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1045,7 +1045,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the name of the specified WhatsApp group",
@@ -1066,7 +1066,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupTextReq"
+                            "$ref": "#/definitions/dto.GroupTextReq"
                         }
                     }
                 ],
@@ -1074,7 +1074,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1084,7 +1084,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Add, remove, promote or demote participants in a group",
@@ -1105,7 +1105,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupParticipantReq"
+                            "$ref": "#/definitions/dto.GroupParticipantReq"
                         }
                     }
                 ],
@@ -1113,7 +1113,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1123,7 +1123,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Updates the profile picture of the specified WhatsApp group",
@@ -1144,7 +1144,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupPhotoReq"
+                            "$ref": "#/definitions/dto.GroupPhotoReq"
                         }
                     }
                 ],
@@ -1152,7 +1152,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1162,7 +1162,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Get the list of participants that requested to join the group",
@@ -1180,7 +1180,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJIDReq"
+                            "$ref": "#/definitions/dto.GroupJIDReq"
                         }
                     }
                 ],
@@ -1188,7 +1188,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1198,7 +1198,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Approves or rejects participants that requested to join the group",
@@ -1219,7 +1219,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupRequestActionReq"
+                            "$ref": "#/definitions/dto.GroupRequestActionReq"
                         }
                     }
                 ],
@@ -1227,7 +1227,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1247,7 +1247,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1257,7 +1257,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Applies a label to an entire chat conversation",
@@ -1278,7 +1278,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelChatReq"
+                            "$ref": "#/definitions/dto.LabelChatReq"
                         }
                     }
                 ],
@@ -1286,7 +1286,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1296,7 +1296,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Edits an existing label's name, color, or marks it as deleted",
@@ -1317,7 +1317,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.EditLabelReq"
+                            "$ref": "#/definitions/dto.EditLabelReq"
                         }
                     }
                 ],
@@ -1325,7 +1325,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1335,7 +1335,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Applies a label to a specific message within a chat",
@@ -1356,7 +1356,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelMessageReq"
+                            "$ref": "#/definitions/dto.LabelMessageReq"
                         }
                     }
                 ],
@@ -1364,7 +1364,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1374,7 +1374,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1394,7 +1394,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1402,7 +1402,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1412,7 +1412,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a vCard contact message via WhatsApp to the specified recipient",
@@ -1433,7 +1433,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendContactReq"
+                            "$ref": "#/definitions/dto.SendContactReq"
                         }
                     }
                 ],
@@ -1441,7 +1441,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1451,7 +1451,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Revokes a previously sent message for all recipients",
@@ -1472,7 +1472,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.DeleteMessageReq"
+                            "$ref": "#/definitions/dto.DeleteMessageReq"
                         }
                     }
                 ],
@@ -1480,7 +1480,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1490,7 +1490,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1510,7 +1510,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1518,7 +1518,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1528,7 +1528,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Edits an existing sent message by ID, replacing its text content",
@@ -1549,7 +1549,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.EditMessageReq"
+                            "$ref": "#/definitions/dto.EditMessageReq"
                         }
                     }
                 ],
@@ -1557,7 +1557,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1567,7 +1567,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1587,7 +1587,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1595,7 +1595,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1605,7 +1605,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a hyperlink preview message with optional title and description to the specified recipient",
@@ -1626,7 +1626,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendLinkReq"
+                            "$ref": "#/definitions/dto.SendLinkReq"
                         }
                     }
                 ],
@@ -1634,7 +1634,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1644,7 +1644,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a GPS location message with optional name and address to the specified recipient",
@@ -1665,7 +1665,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendLocationReq"
+                            "$ref": "#/definitions/dto.SendLocationReq"
                         }
                     }
                 ],
@@ -1673,7 +1673,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1683,7 +1683,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a poll with multiple choice options; selectable_count controls how many options a recipient may choose (0 = unlimited)",
@@ -1704,7 +1704,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendPollReq"
+                            "$ref": "#/definitions/dto.SendPollReq"
                         }
                     }
                 ],
@@ -1712,7 +1712,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1722,7 +1722,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a typing, recording, or paused presence indicator to a specific chat; presence values: typing, recording, paused",
@@ -1743,7 +1743,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SetPresenceReq"
+                            "$ref": "#/definitions/dto.SetPresenceReq"
                         }
                     }
                 ],
@@ -1751,7 +1751,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1761,7 +1761,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Adds an emoji reaction to a message; pass an empty string for reaction to remove an existing reaction",
@@ -1782,7 +1782,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ReactMessageReq"
+                            "$ref": "#/definitions/dto.ReactMessageReq"
                         }
                     }
                 ],
@@ -1790,7 +1790,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1800,7 +1800,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a read receipt for a specific message",
@@ -1821,7 +1821,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.MarkReadReq"
+                            "$ref": "#/definitions/dto.MarkReadReq"
                         }
                     }
                 ],
@@ -1829,7 +1829,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1839,7 +1839,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a base64-encoded sticker image to the specified recipient",
@@ -1860,7 +1860,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendStickerReq"
+                            "$ref": "#/definitions/dto.SendStickerReq"
                         }
                     }
                 ],
@@ -1868,7 +1868,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1878,7 +1878,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Sends a text message via WhatsApp. If :id is omitted, session is identified from Bearer token.",
@@ -1899,7 +1899,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendTextReq"
+                            "$ref": "#/definitions/dto.SendTextReq"
                         }
                     }
                 ],
@@ -1907,7 +1907,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1917,7 +1917,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "consumes": [
@@ -1937,7 +1937,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1945,7 +1945,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1955,7 +1955,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Newsletter (channel) with optional description and profile picture",
@@ -1976,7 +1976,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateNewsletterReq"
+                            "$ref": "#/definitions/dto.CreateNewsletterReq"
                         }
                     }
                 ],
@@ -1984,7 +1984,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1994,7 +1994,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Retrieves metadata about a newsletter by its JID",
@@ -2018,7 +2018,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2028,7 +2028,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Retrieves newsletter metadata from an invite code without subscribing",
@@ -2052,7 +2052,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2062,7 +2062,7 @@
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Returns all newsletters the current session is subscribed to",
@@ -2077,7 +2077,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2087,7 +2087,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Fetches messages from a newsletter; supports pagination via before_id cursor and count",
@@ -2108,7 +2108,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.NewsletterMessageReq"
+                            "$ref": "#/definitions/dto.NewsletterMessageReq"
                         }
                     }
                 ],
@@ -2116,7 +2116,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2126,7 +2126,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Subscribes the current session to a newsletter identified by its JID",
@@ -2160,130 +2160,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/session": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns the session identified by the Bearer token (or query/header fallback)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Get current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Disconnects and deletes the current session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Delete current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/session/connect": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Connects a WhatsApp session (starts pairing if new)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Connect current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/session/disconnect": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Disconnects the active WhatsApp session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Disconnect current session",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/session/qr": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns a QR code for pairing a new WhatsApp device for current session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Sessions"
-                ],
-                "summary": "Get QR code for pair",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2293,22 +2170,22 @@
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns all sessions (Admin) or just the authenticated session (User)",
+                "description": "Returns all sessions",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Sessions"
                 ],
-                "summary": "List sessions",
+                "summary": "List sessions (Admin Only)",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2316,10 +2193,10 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Creates a new WhatsApp session entry in the database. Returns the generated token.",
+                "description": "Creates a new session with an auto-generated or custom token",
                 "consumes": [
                     "application/json"
                 ],
@@ -2337,7 +2214,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SessionCreateReq"
+                            "$ref": "#/definitions/dto.SessionCreateReq"
                         }
                     }
                 ],
@@ -2345,26 +2222,194 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/model.APIError"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/sessions/{id}/webhooks": {
+        "/sessions/{sessionId}": {
             "get": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns all webhooks for a session",
+                "description": "Returns the session identified by :sessionId (name or id)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Disconnects and deletes the session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Delete session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/connect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Connects a WhatsApp session (starts pairing if new)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Connect session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/disconnect": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Disconnects the active WhatsApp session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Disconnect session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/qr": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns a QR code for pairing a new WhatsApp device",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get QR code for pairing",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/webhooks": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns all webhooks for the session",
                 "produces": [
                     "application/json"
                 ],
@@ -2375,16 +2420,17 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2392,10 +2438,10 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Registers a new webhook for a session",
+                "description": "Registers a new webhook for the session",
                 "consumes": [
                     "application/json"
                 ],
@@ -2409,9 +2455,10 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "description": "Webhook data",
@@ -2419,7 +2466,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateWebhookReq"
+                            "$ref": "#/definitions/dto.CreateWebhookReq"
                         }
                     }
                 ],
@@ -2427,20 +2474,20 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
             }
         },
-        "/sessions/{id}/webhooks/{wid}": {
+        "/sessions/{sessionId}/webhooks/{wid}": {
             "delete": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
-                "description": "Removes a webhook from a session",
+                "description": "Removes a webhook from the session",
                 "produces": [
                     "application/json"
                 ],
@@ -2451,9 +2498,10 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "type": "string",
@@ -2467,7 +2515,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2477,7 +2525,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes a label from a chat conversation",
@@ -2498,7 +2546,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelChatReq"
+                            "$ref": "#/definitions/dto.LabelChatReq"
                         }
                     }
                 ],
@@ -2506,7 +2554,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2516,7 +2564,7 @@
             "post": {
                 "security": [
                     {
-                        "BearerAuth": []
+                        "ApiKeyAuth": []
                     }
                 ],
                 "description": "Removes a label from a specific message",
@@ -2537,7 +2585,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelMessageReq"
+                            "$ref": "#/definitions/dto.LabelMessageReq"
                         }
                     }
                 ],
@@ -2545,109 +2593,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/webhooks": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns all webhooks for a session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "List webhooks",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Registers a new webhook for a session",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "Create a webhook",
-                "parameters": [
-                    {
-                        "description": "Webhook data",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.CreateWebhookReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/webhooks/{wid}": {
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Removes a webhook from a session",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Webhooks"
-                ],
-                "summary": "Delete a webhook",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID",
-                        "name": "id",
-                        "in": "path"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Webhook ID",
-                        "name": "wid",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2655,21 +2601,7 @@
         }
     },
     "definitions": {
-        "model.APIError": {
-            "type": "object",
-            "properties": {
-                "details": {
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "model.APIResponse": {
+        "dto.APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2681,7 +2613,7 @@
                 }
             }
         },
-        "model.BlockContactReq": {
+        "dto.BlockContactReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2692,7 +2624,7 @@
                 }
             }
         },
-        "model.ChatActionReq": {
+        "dto.ChatActionReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2703,7 +2635,7 @@
                 }
             }
         },
-        "model.CheckContactReq": {
+        "dto.CheckContactReq": {
             "type": "object",
             "required": [
                 "phones"
@@ -2717,14 +2649,14 @@
                 }
             }
         },
-        "model.CommunityParticipantReq": {
+        "dto.CommunityParticipantReq": {
             "type": "object",
             "required": [
-                "jid",
+                "communityJid",
                 "participants"
             ],
             "properties": {
-                "jid": {
+                "communityJid": {
                     "type": "string"
                 },
                 "participants": {
@@ -2735,7 +2667,7 @@
                 }
             }
         },
-        "model.CreateCommunityReq": {
+        "dto.CreateCommunityReq": {
             "type": "object",
             "required": [
                 "name"
@@ -2749,7 +2681,7 @@
                 }
             }
         },
-        "model.CreateGroupReq": {
+        "dto.CreateGroupReq": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2757,7 +2689,6 @@
                     "example": "My Awesome Group"
                 },
                 "participants": {
-                    "description": "list of phone numbers",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -2769,7 +2700,7 @@
                 }
             }
         },
-        "model.CreateNewsletterReq": {
+        "dto.CreateNewsletterReq": {
             "type": "object",
             "required": [
                 "name"
@@ -2782,12 +2713,11 @@
                     "type": "string"
                 },
                 "picture": {
-                    "description": "base64",
                     "type": "string"
                 }
             }
         },
-        "model.CreateWebhookReq": {
+        "dto.CreateWebhookReq": {
             "type": "object",
             "required": [
                 "events",
@@ -2797,8 +2727,11 @@
                 "events": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/model.EventType"
                     }
+                },
+                "natsEnabled": {
+                    "type": "boolean"
                 },
                 "secret": {
                     "type": "string"
@@ -2808,22 +2741,22 @@
                 }
             }
         },
-        "model.DeleteMessageReq": {
+        "dto.DeleteMessageReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "to"
+                "jid",
+                "messageId"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "messageId": {
                     "type": "string"
                 }
             }
         },
-        "model.EditLabelReq": {
+        "dto.EditLabelReq": {
             "type": "object",
             "required": [
                 "labelId"
@@ -2843,26 +2776,26 @@
                 }
             }
         },
-        "model.EditMessageReq": {
+        "dto.EditMessageReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "text",
-                "to"
+                "jid",
+                "messageId",
+                "text"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
+                    "type": "string"
+                },
+                "messageId": {
                     "type": "string"
                 },
                 "text": {
                     "type": "string"
-                },
-                "to": {
-                    "type": "string"
                 }
             }
         },
-        "model.GetAvatarReq": {
+        "dto.GetAvatarReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2873,7 +2806,7 @@
                 }
             }
         },
-        "model.GetAvatarResp": {
+        "dto.GetAvatarResp": {
             "type": "object",
             "properties": {
                 "id": {
@@ -2884,7 +2817,7 @@
                 }
             }
         },
-        "model.GetUserInfoReq": {
+        "dto.GetUserInfoReq": {
             "type": "object",
             "required": [
                 "jids"
@@ -2898,7 +2831,7 @@
                 }
             }
         },
-        "model.GroupInviteLinkResp": {
+        "dto.GroupInviteLinkResp": {
             "type": "object",
             "properties": {
                 "link": {
@@ -2906,7 +2839,7 @@
                 }
             }
         },
-        "model.GroupJIDReq": {
+        "dto.GroupJIDReq": {
             "type": "object",
             "required": [
                 "groupJid"
@@ -2917,18 +2850,18 @@
                 }
             }
         },
-        "model.GroupJoinReq": {
+        "dto.GroupJoinReq": {
             "type": "object",
             "required": [
-                "invite_code"
+                "inviteCode"
             ],
             "properties": {
-                "invite_code": {
+                "inviteCode": {
                     "type": "string"
                 }
             }
         },
-        "model.GroupParticipantReq": {
+        "dto.GroupParticipantReq": {
             "type": "object",
             "required": [
                 "action",
@@ -2937,7 +2870,6 @@
             ],
             "properties": {
                 "action": {
-                    "description": "add, remove, promote, demote",
                     "type": "string",
                     "example": "add"
                 },
@@ -2955,23 +2887,22 @@
                 }
             }
         },
-        "model.GroupPhotoReq": {
+        "dto.GroupPhotoReq": {
             "type": "object",
             "required": [
                 "groupJid",
-                "photo_base64"
+                "photoBase64"
             ],
             "properties": {
                 "groupJid": {
                     "type": "string"
                 },
-                "photo_base64": {
-                    "description": "Base64 encoded image",
+                "photoBase64": {
                     "type": "string"
                 }
             }
         },
-        "model.GroupRequestActionReq": {
+        "dto.GroupRequestActionReq": {
             "type": "object",
             "required": [
                 "action",
@@ -2980,7 +2911,6 @@
             ],
             "properties": {
                 "action": {
-                    "description": "approve, reject",
                     "type": "string",
                     "example": "approve"
                 },
@@ -2998,7 +2928,7 @@
                 }
             }
         },
-        "model.GroupSettingReq": {
+        "dto.GroupSettingReq": {
             "type": "object",
             "required": [
                 "groupJid"
@@ -3012,7 +2942,7 @@
                 }
             }
         },
-        "model.GroupTextReq": {
+        "dto.GroupTextReq": {
             "type": "object",
             "required": [
                 "groupJid",
@@ -3027,7 +2957,7 @@
                 }
             }
         },
-        "model.LabelChatReq": {
+        "dto.LabelChatReq": {
             "type": "object",
             "required": [
                 "jid",
@@ -3042,7 +2972,7 @@
                 }
             }
         },
-        "model.LabelMessageReq": {
+        "dto.LabelMessageReq": {
             "type": "object",
             "required": [
                 "jid",
@@ -3061,70 +2991,69 @@
                 }
             }
         },
-        "model.MarkReadReq": {
+        "dto.MarkReadReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "to"
+                "jid",
+                "messageId"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "messageId": {
                     "type": "string"
                 }
             }
         },
-        "model.NewsletterMessageReq": {
+        "dto.NewsletterMessageReq": {
             "type": "object",
             "required": [
-                "jid"
+                "newsletterJid"
             ],
             "properties": {
-                "before_id": {
+                "beforeId": {
                     "type": "integer"
                 },
                 "count": {
                     "type": "integer"
                 },
-                "jid": {
+                "newsletterJid": {
                     "type": "string"
                 }
             }
         },
-        "model.ReactMessageReq": {
+        "dto.ReactMessageReq": {
             "type": "object",
             "required": [
-                "message_id",
-                "reaction",
-                "to"
+                "jid",
+                "messageId",
+                "reaction"
             ],
             "properties": {
-                "message_id": {
+                "jid": {
+                    "type": "string"
+                },
+                "messageId": {
                     "type": "string"
                 },
                 "reaction": {
-                    "description": "emoji or empty to remove",
-                    "type": "string"
-                },
-                "to": {
                     "type": "string"
                 }
             }
         },
-        "model.SendContactReq": {
+        "dto.SendContactReq": {
             "type": "object",
             "required": [
+                "jid",
                 "name",
-                "to",
                 "vcard"
             ],
             "properties": {
-                "name": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "name": {
                     "type": "string"
                 },
                 "vcard": {
@@ -3132,20 +3061,20 @@
                 }
             }
         },
-        "model.SendLinkReq": {
+        "dto.SendLinkReq": {
             "type": "object",
             "required": [
-                "to",
+                "jid",
                 "url"
             ],
             "properties": {
                 "description": {
                     "type": "string"
                 },
-                "title": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "title": {
                     "type": "string"
                 },
                 "url": {
@@ -3153,15 +3082,18 @@
                 }
             }
         },
-        "model.SendLocationReq": {
+        "dto.SendLocationReq": {
             "type": "object",
             "required": [
+                "jid",
                 "lat",
-                "lng",
-                "to"
+                "lng"
             ],
             "properties": {
                 "address": {
+                    "type": "string"
+                },
+                "jid": {
                     "type": "string"
                 },
                 "lat": {
@@ -3172,46 +3104,44 @@
                 },
                 "name": {
                     "type": "string"
-                },
-                "to": {
-                    "type": "string"
                 }
             }
         },
-        "model.SendMediaReq": {
+        "dto.SendMediaReq": {
             "type": "object",
             "required": [
-                "mime_type",
-                "to"
+                "jid",
+                "mimeType"
             ],
             "properties": {
                 "base64": {
-                    "description": "For base64 upload",
                     "type": "string"
                 },
                 "caption": {
                     "type": "string"
                 },
                 "filename": {
-                    "description": "For documents",
                     "type": "string"
                 },
-                "mime_type": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "mimeType": {
                     "type": "string"
                 }
             }
         },
-        "model.SendPollReq": {
+        "dto.SendPollReq": {
             "type": "object",
             "required": [
+                "jid",
                 "name",
-                "options",
-                "to"
+                "options"
             ],
             "properties": {
+                "jid": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -3222,81 +3152,81 @@
                         "type": "string"
                     }
                 },
-                "selectable_count": {
+                "selectableCount": {
                     "type": "integer"
-                },
-                "to": {
-                    "type": "string"
                 }
             }
         },
-        "model.SendStickerReq": {
+        "dto.SendStickerReq": {
             "type": "object",
             "required": [
                 "base64",
-                "mime_type",
-                "to"
+                "jid",
+                "mimeType"
             ],
             "properties": {
                 "base64": {
                     "type": "string"
                 },
-                "mime_type": {
+                "jid": {
                     "type": "string"
                 },
-                "to": {
+                "mimeType": {
                     "type": "string"
                 }
             }
         },
-        "model.SendTextReq": {
+        "dto.SendTextReq": {
             "type": "object",
             "required": [
-                "text",
-                "to"
+                "jid",
+                "text"
             ],
             "properties": {
+                "jid": {
+                    "type": "string"
+                },
                 "text": {
                     "type": "string"
-                },
-                "to": {
-                    "description": "Phone number or group JID",
-                    "type": "string"
                 }
             }
         },
-        "model.SessionCreateReq": {
+        "dto.SessionCreateReq": {
             "type": "object",
-            "required": [
-                "id"
-            ],
             "properties": {
-                "id": {
+                "name": {
                     "type": "string"
                 },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
+                "proxy": {
+                    "$ref": "#/definitions/model.SessionProxy"
+                },
+                "settings": {
+                    "$ref": "#/definitions/model.SessionSettings"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "webhook": {
+                    "$ref": "#/definitions/dto.WebhookCreateInline"
                 }
             }
         },
-        "model.SetPresenceReq": {
+        "dto.SetPresenceReq": {
             "type": "object",
             "required": [
-                "presence",
-                "to"
+                "jid",
+                "presence"
             ],
             "properties": {
+                "jid": {
+                    "type": "string"
+                },
                 "presence": {
-                    "description": "typing, recording, paused",
-                    "type": "string"
-                },
-                "to": {
                     "type": "string"
                 }
             }
         },
-        "model.SetProfilePictureReq": {
+        "dto.SetProfilePictureReq": {
             "type": "object",
             "required": [
                 "base64"
@@ -3307,7 +3237,7 @@
                 }
             }
         },
-        "model.UserInfoResp": {
+        "dto.UserInfoResp": {
             "type": "object",
             "properties": {
                 "devices": {
@@ -3326,13 +3256,211 @@
                     "type": "string"
                 }
             }
+        },
+        "dto.WebhookCreateInline": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.EventType"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventType": {
+            "type": "string",
+            "enum": [
+                "All",
+                "Message",
+                "UndecryptableMessage",
+                "MediaRetry",
+                "Receipt",
+                "DeleteForMe",
+                "Connected",
+                "Disconnected",
+                "ConnectFailure",
+                "LoggedOut",
+                "PairSuccess",
+                "PairError",
+                "QR",
+                "QRScannedWithoutMultidevice",
+                "StreamError",
+                "StreamReplaced",
+                "KeepAliveTimeout",
+                "KeepAliveRestored",
+                "ClientOutdated",
+                "TemporaryBan",
+                "CATRefreshError",
+                "ManualLoginReconnect",
+                "Contact",
+                "Picture",
+                "IdentityChange",
+                "UserAbout",
+                "PushName",
+                "BusinessName",
+                "GroupInfo",
+                "JoinedGroup",
+                "Presence",
+                "ChatPresence",
+                "Archive",
+                "Mute",
+                "Pin",
+                "Star",
+                "ClearChat",
+                "DeleteChat",
+                "MarkChatAsRead",
+                "UnarchiveChatsSetting",
+                "LabelEdit",
+                "LabelAssociationChat",
+                "LabelAssociationMessage",
+                "CallOffer",
+                "CallAccept",
+                "CallTerminate",
+                "CallOfferNotice",
+                "CallRelayLatency",
+                "CallPreAccept",
+                "CallReject",
+                "CallTransport",
+                "UnknownCallEvent",
+                "NewsletterJoin",
+                "NewsletterLeave",
+                "NewsletterMuteChange",
+                "NewsletterLiveUpdate",
+                "HistorySync",
+                "AppState",
+                "AppStateSyncComplete",
+                "AppStateSyncError",
+                "OfflineSyncCompleted",
+                "OfflineSyncPreview",
+                "PrivacySettings",
+                "PushNameSetting",
+                "UserStatusMute",
+                "BlocklistChange",
+                "Blocklist"
+            ],
+            "x-enum-varnames": [
+                "EventAll",
+                "EventMessage",
+                "EventUndecryptableMessage",
+                "EventMediaRetry",
+                "EventReceipt",
+                "EventDeleteForMe",
+                "EventConnected",
+                "EventDisconnected",
+                "EventConnectFailure",
+                "EventLoggedOut",
+                "EventPairSuccess",
+                "EventPairError",
+                "EventQR",
+                "EventQRScannedWithoutMultidevice",
+                "EventStreamError",
+                "EventStreamReplaced",
+                "EventKeepAliveTimeout",
+                "EventKeepAliveRestored",
+                "EventClientOutdated",
+                "EventTemporaryBan",
+                "EventCATRefreshError",
+                "EventManualLoginReconnect",
+                "EventContact",
+                "EventPicture",
+                "EventIdentityChange",
+                "EventUserAbout",
+                "EventPushName",
+                "EventBusinessName",
+                "EventGroupInfo",
+                "EventJoinedGroup",
+                "EventPresence",
+                "EventChatPresence",
+                "EventArchive",
+                "EventMute",
+                "EventPin",
+                "EventStar",
+                "EventClearChat",
+                "EventDeleteChat",
+                "EventMarkChatAsRead",
+                "EventUnarchiveChatsSetting",
+                "EventLabelEdit",
+                "EventLabelAssociationChat",
+                "EventLabelAssociationMessage",
+                "EventCallOffer",
+                "EventCallAccept",
+                "EventCallTerminate",
+                "EventCallOfferNotice",
+                "EventCallRelayLatency",
+                "EventCallPreAccept",
+                "EventCallReject",
+                "EventCallTransport",
+                "EventUnknownCallEvent",
+                "EventNewsletterJoin",
+                "EventNewsletterLeave",
+                "EventNewsletterMuteChange",
+                "EventNewsletterLiveUpdate",
+                "EventHistorySync",
+                "EventAppState",
+                "EventAppStateSyncComplete",
+                "EventAppStateSyncError",
+                "EventOfflineSyncCompleted",
+                "EventOfflineSyncPreview",
+                "EventPrivacySettings",
+                "EventPushNameSetting",
+                "EventUserStatusMute",
+                "EventBlocklistChange",
+                "EventBlocklist"
+            ]
+        },
+        "model.SessionProxy": {
+            "type": "object",
+            "properties": {
+                "host": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "protocol": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SessionSettings": {
+            "type": "object",
+            "properties": {
+                "alwaysOnline": {
+                    "type": "boolean"
+                },
+                "ignoreGroups": {
+                    "type": "boolean"
+                },
+                "ignoreStatus": {
+                    "type": "boolean"
+                },
+                "msgRejectCall": {
+                    "type": "string"
+                },
+                "readMessages": {
+                    "type": "boolean"
+                },
+                "rejectCall": {
+                    "type": "boolean"
+                }
+            }
         }
     },
     "securityDefinitions": {
-        "BearerAuth": {
-            "description": "API Key for authentication. Pass as: Bearer \u003cyour-api-key\u003e",
+        "ApiKeyAuth": {
+            "description": "Session or admin token. Pass the token value directly in the Token header.",
             "type": "apiKey",
-            "name": "Authorization",
+            "name": "Token",
             "in": "header"
         }
     }

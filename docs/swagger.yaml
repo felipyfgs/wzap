@@ -1,14 +1,5 @@
 definitions:
-  model.APIError:
-    properties:
-      details:
-        type: string
-      error:
-        type: string
-      success:
-        type: boolean
-    type: object
-  model.APIResponse:
+  dto.APIResponse:
     properties:
       data: {}
       message:
@@ -16,21 +7,21 @@ definitions:
       success:
         type: boolean
     type: object
-  model.BlockContactReq:
+  dto.BlockContactReq:
     properties:
       jid:
         type: string
     required:
     - jid
     type: object
-  model.ChatActionReq:
+  dto.ChatActionReq:
     properties:
       jid:
         type: string
     required:
     - jid
     type: object
-  model.CheckContactReq:
+  dto.CheckContactReq:
     properties:
       phones:
         items:
@@ -39,19 +30,19 @@ definitions:
     required:
     - phones
     type: object
-  model.CommunityParticipantReq:
+  dto.CommunityParticipantReq:
     properties:
-      jid:
+      communityJid:
         type: string
       participants:
         items:
           type: string
         type: array
     required:
-    - jid
+    - communityJid
     - participants
     type: object
-  model.CreateCommunityReq:
+  dto.CreateCommunityReq:
     properties:
       description:
         type: string
@@ -60,13 +51,12 @@ definitions:
     required:
     - name
     type: object
-  model.CreateGroupReq:
+  dto.CreateGroupReq:
     properties:
       name:
         example: My Awesome Group
         type: string
       participants:
-        description: list of phone numbers
         example:
         - "5511999999999"
         - "5511888888888"
@@ -74,24 +64,25 @@ definitions:
           type: string
         type: array
     type: object
-  model.CreateNewsletterReq:
+  dto.CreateNewsletterReq:
     properties:
       description:
         type: string
       name:
         type: string
       picture:
-        description: base64
         type: string
     required:
     - name
     type: object
-  model.CreateWebhookReq:
+  dto.CreateWebhookReq:
     properties:
       events:
         items:
-          type: string
+          $ref: '#/definitions/model.EventType'
         type: array
+      natsEnabled:
+        type: boolean
       secret:
         type: string
       url:
@@ -100,17 +91,17 @@ definitions:
     - events
     - url
     type: object
-  model.DeleteMessageReq:
+  dto.DeleteMessageReq:
     properties:
-      message_id:
+      jid:
         type: string
-      to:
+      messageId:
         type: string
     required:
-    - message_id
-    - to
+    - jid
+    - messageId
     type: object
-  model.EditLabelReq:
+  dto.EditLabelReq:
     properties:
       color:
         type: integer
@@ -123,34 +114,34 @@ definitions:
     required:
     - labelId
     type: object
-  model.EditMessageReq:
+  dto.EditMessageReq:
     properties:
-      message_id:
+      jid:
+        type: string
+      messageId:
         type: string
       text:
         type: string
-      to:
-        type: string
     required:
-    - message_id
+    - jid
+    - messageId
     - text
-    - to
     type: object
-  model.GetAvatarReq:
+  dto.GetAvatarReq:
     properties:
       jid:
         type: string
     required:
     - jid
     type: object
-  model.GetAvatarResp:
+  dto.GetAvatarResp:
     properties:
       id:
         type: string
       url:
         type: string
     type: object
-  model.GetUserInfoReq:
+  dto.GetUserInfoReq:
     properties:
       jids:
         items:
@@ -159,29 +150,28 @@ definitions:
     required:
     - jids
     type: object
-  model.GroupInviteLinkResp:
+  dto.GroupInviteLinkResp:
     properties:
       link:
         type: string
     type: object
-  model.GroupJIDReq:
+  dto.GroupJIDReq:
     properties:
       groupJid:
         type: string
     required:
     - groupJid
     type: object
-  model.GroupJoinReq:
+  dto.GroupJoinReq:
     properties:
-      invite_code:
+      inviteCode:
         type: string
     required:
-    - invite_code
+    - inviteCode
     type: object
-  model.GroupParticipantReq:
+  dto.GroupParticipantReq:
     properties:
       action:
-        description: add, remove, promote, demote
         example: add
         type: string
       groupJid:
@@ -197,21 +187,19 @@ definitions:
     - groupJid
     - participants
     type: object
-  model.GroupPhotoReq:
+  dto.GroupPhotoReq:
     properties:
       groupJid:
         type: string
-      photo_base64:
-        description: Base64 encoded image
+      photoBase64:
         type: string
     required:
     - groupJid
-    - photo_base64
+    - photoBase64
     type: object
-  model.GroupRequestActionReq:
+  dto.GroupRequestActionReq:
     properties:
       action:
-        description: approve, reject
         example: approve
         type: string
       groupJid:
@@ -227,7 +215,7 @@ definitions:
     - groupJid
     - participants
     type: object
-  model.GroupSettingReq:
+  dto.GroupSettingReq:
     properties:
       enabled:
         type: boolean
@@ -236,7 +224,7 @@ definitions:
     required:
     - groupJid
     type: object
-  model.GroupTextReq:
+  dto.GroupTextReq:
     properties:
       groupJid:
         type: string
@@ -246,7 +234,7 @@ definitions:
     - groupJid
     - text
     type: object
-  model.LabelChatReq:
+  dto.LabelChatReq:
     properties:
       jid:
         type: string
@@ -256,7 +244,7 @@ definitions:
     - jid
     - labelId
     type: object
-  model.LabelMessageReq:
+  dto.LabelMessageReq:
     properties:
       jid:
         type: string
@@ -269,71 +257,72 @@ definitions:
     - labelId
     - messageId
     type: object
-  model.MarkReadReq:
+  dto.MarkReadReq:
     properties:
-      message_id:
-        type: string
-      to:
-        type: string
-    required:
-    - message_id
-    - to
-    type: object
-  model.NewsletterMessageReq:
-    properties:
-      before_id:
-        type: integer
-      count:
-        type: integer
       jid:
+        type: string
+      messageId:
         type: string
     required:
     - jid
+    - messageId
     type: object
-  model.ReactMessageReq:
+  dto.NewsletterMessageReq:
     properties:
-      message_id:
-        type: string
-      reaction:
-        description: emoji or empty to remove
-        type: string
-      to:
+      beforeId:
+        type: integer
+      count:
+        type: integer
+      newsletterJid:
         type: string
     required:
-    - message_id
-    - reaction
-    - to
+    - newsletterJid
     type: object
-  model.SendContactReq:
+  dto.ReactMessageReq:
     properties:
-      name:
+      jid:
         type: string
-      to:
+      messageId:
+        type: string
+      reaction:
+        type: string
+    required:
+    - jid
+    - messageId
+    - reaction
+    type: object
+  dto.SendContactReq:
+    properties:
+      jid:
+        type: string
+      name:
         type: string
       vcard:
         type: string
     required:
+    - jid
     - name
-    - to
     - vcard
     type: object
-  model.SendLinkReq:
+  dto.SendLinkReq:
     properties:
       description:
         type: string
-      title:
+      jid:
         type: string
-      to:
+      title:
         type: string
       url:
         type: string
     required:
-    - to
+    - jid
     - url
     type: object
-  model.SendLocationReq:
+  dto.SendLocationReq:
     properties:
       address:
+        type: string
+      jid:
         type: string
       lat:
         type: number
@@ -341,33 +330,31 @@ definitions:
         type: number
       name:
         type: string
-      to:
-        type: string
     required:
+    - jid
     - lat
     - lng
-    - to
     type: object
-  model.SendMediaReq:
+  dto.SendMediaReq:
     properties:
       base64:
-        description: For base64 upload
         type: string
       caption:
         type: string
       filename:
-        description: For documents
         type: string
-      mime_type:
+      jid:
         type: string
-      to:
+      mimeType:
         type: string
     required:
-    - mime_type
-    - to
+    - jid
+    - mimeType
     type: object
-  model.SendPollReq:
+  dto.SendPollReq:
     properties:
+      jid:
+        type: string
       name:
         type: string
       options:
@@ -375,68 +362,67 @@ definitions:
           type: string
         minItems: 2
         type: array
-      selectable_count:
+      selectableCount:
         type: integer
-      to:
-        type: string
     required:
+    - jid
     - name
     - options
-    - to
     type: object
-  model.SendStickerReq:
+  dto.SendStickerReq:
     properties:
       base64:
         type: string
-      mime_type:
+      jid:
         type: string
-      to:
+      mimeType:
         type: string
     required:
     - base64
-    - mime_type
-    - to
+    - jid
+    - mimeType
     type: object
-  model.SendTextReq:
+  dto.SendTextReq:
     properties:
+      jid:
+        type: string
       text:
         type: string
-      to:
-        description: Phone number or group JID
-        type: string
     required:
+    - jid
     - text
-    - to
     type: object
-  model.SessionCreateReq:
+  dto.SessionCreateReq:
     properties:
-      id:
+      name:
         type: string
-      metadata:
-        additionalProperties: true
-        type: object
-    required:
-    - id
+      proxy:
+        $ref: '#/definitions/model.SessionProxy'
+      settings:
+        $ref: '#/definitions/model.SessionSettings'
+      token:
+        type: string
+      webhook:
+        $ref: '#/definitions/dto.WebhookCreateInline'
     type: object
-  model.SetPresenceReq:
+  dto.SetPresenceReq:
     properties:
+      jid:
+        type: string
       presence:
-        description: typing, recording, paused
-        type: string
-      to:
         type: string
     required:
+    - jid
     - presence
-    - to
     type: object
-  model.SetProfilePictureReq:
+  dto.SetProfilePictureReq:
     properties:
       base64:
         type: string
     required:
     - base64
     type: object
-  model.UserInfoResp:
+  dto.UserInfoResp:
     properties:
       devices:
         items:
@@ -448,6 +434,181 @@ definitions:
         type: string
       status:
         type: string
+    type: object
+  dto.WebhookCreateInline:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/model.EventType'
+        type: array
+      url:
+        type: string
+    type: object
+  model.EventType:
+    enum:
+    - All
+    - Message
+    - UndecryptableMessage
+    - MediaRetry
+    - Receipt
+    - DeleteForMe
+    - Connected
+    - Disconnected
+    - ConnectFailure
+    - LoggedOut
+    - PairSuccess
+    - PairError
+    - QR
+    - QRScannedWithoutMultidevice
+    - StreamError
+    - StreamReplaced
+    - KeepAliveTimeout
+    - KeepAliveRestored
+    - ClientOutdated
+    - TemporaryBan
+    - CATRefreshError
+    - ManualLoginReconnect
+    - Contact
+    - Picture
+    - IdentityChange
+    - UserAbout
+    - PushName
+    - BusinessName
+    - GroupInfo
+    - JoinedGroup
+    - Presence
+    - ChatPresence
+    - Archive
+    - Mute
+    - Pin
+    - Star
+    - ClearChat
+    - DeleteChat
+    - MarkChatAsRead
+    - UnarchiveChatsSetting
+    - LabelEdit
+    - LabelAssociationChat
+    - LabelAssociationMessage
+    - CallOffer
+    - CallAccept
+    - CallTerminate
+    - CallOfferNotice
+    - CallRelayLatency
+    - CallPreAccept
+    - CallReject
+    - CallTransport
+    - UnknownCallEvent
+    - NewsletterJoin
+    - NewsletterLeave
+    - NewsletterMuteChange
+    - NewsletterLiveUpdate
+    - HistorySync
+    - AppState
+    - AppStateSyncComplete
+    - AppStateSyncError
+    - OfflineSyncCompleted
+    - OfflineSyncPreview
+    - PrivacySettings
+    - PushNameSetting
+    - UserStatusMute
+    - BlocklistChange
+    - Blocklist
+    type: string
+    x-enum-varnames:
+    - EventAll
+    - EventMessage
+    - EventUndecryptableMessage
+    - EventMediaRetry
+    - EventReceipt
+    - EventDeleteForMe
+    - EventConnected
+    - EventDisconnected
+    - EventConnectFailure
+    - EventLoggedOut
+    - EventPairSuccess
+    - EventPairError
+    - EventQR
+    - EventQRScannedWithoutMultidevice
+    - EventStreamError
+    - EventStreamReplaced
+    - EventKeepAliveTimeout
+    - EventKeepAliveRestored
+    - EventClientOutdated
+    - EventTemporaryBan
+    - EventCATRefreshError
+    - EventManualLoginReconnect
+    - EventContact
+    - EventPicture
+    - EventIdentityChange
+    - EventUserAbout
+    - EventPushName
+    - EventBusinessName
+    - EventGroupInfo
+    - EventJoinedGroup
+    - EventPresence
+    - EventChatPresence
+    - EventArchive
+    - EventMute
+    - EventPin
+    - EventStar
+    - EventClearChat
+    - EventDeleteChat
+    - EventMarkChatAsRead
+    - EventUnarchiveChatsSetting
+    - EventLabelEdit
+    - EventLabelAssociationChat
+    - EventLabelAssociationMessage
+    - EventCallOffer
+    - EventCallAccept
+    - EventCallTerminate
+    - EventCallOfferNotice
+    - EventCallRelayLatency
+    - EventCallPreAccept
+    - EventCallReject
+    - EventCallTransport
+    - EventUnknownCallEvent
+    - EventNewsletterJoin
+    - EventNewsletterLeave
+    - EventNewsletterMuteChange
+    - EventNewsletterLiveUpdate
+    - EventHistorySync
+    - EventAppState
+    - EventAppStateSyncComplete
+    - EventAppStateSyncError
+    - EventOfflineSyncCompleted
+    - EventOfflineSyncPreview
+    - EventPrivacySettings
+    - EventPushNameSetting
+    - EventUserStatusMute
+    - EventBlocklistChange
+    - EventBlocklist
+  model.SessionProxy:
+    properties:
+      host:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+      protocol:
+        type: string
+      username:
+        type: string
+    type: object
+  model.SessionSettings:
+    properties:
+      alwaysOnline:
+        type: boolean
+      ignoreGroups:
+        type: boolean
+      ignoreStatus:
+        type: boolean
+      msgRejectCall:
+        type: string
+      readMessages:
+        type: boolean
+      rejectCall:
+        type: boolean
     type: object
 info:
   contact:
@@ -473,16 +634,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.ChatActionReq'
+          $ref: '#/definitions/dto.ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Archive a chat
       tags:
       - Chat
@@ -497,16 +658,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.ChatActionReq'
+          $ref: '#/definitions/dto.ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Mute a chat
       tags:
       - Chat
@@ -521,16 +682,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.ChatActionReq'
+          $ref: '#/definitions/dto.ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Pin a chat
       tags:
       - Chat
@@ -546,16 +707,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.ChatActionReq'
+          $ref: '#/definitions/dto.ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Unpin a chat
       tags:
       - Chat
@@ -571,16 +732,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CreateCommunityReq'
+          $ref: '#/definitions/dto.CreateCommunityReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Create a community
       tags:
       - Community
@@ -596,16 +757,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CommunityParticipantReq'
+          $ref: '#/definitions/dto.CommunityParticipantReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Add subgroup to community
       tags:
       - Community
@@ -620,16 +781,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CommunityParticipantReq'
+          $ref: '#/definitions/dto.CommunityParticipantReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Remove subgroup from community
       tags:
       - Community
@@ -642,9 +803,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: List contacts
       tags:
       - Contacts
@@ -660,7 +821,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.GetAvatarReq'
+          $ref: '#/definitions/dto.GetAvatarReq'
       produces:
       - application/json
       responses:
@@ -668,13 +829,13 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/model.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/model.GetAvatarResp'
+                  $ref: '#/definitions/dto.GetAvatarResp'
               type: object
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get contact avatar
       tags:
       - Contacts
@@ -690,16 +851,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.BlockContactReq'
+          $ref: '#/definitions/dto.BlockContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Block a contact
       tags:
       - Contacts
@@ -712,9 +873,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get blocked contacts list
       tags:
       - Contacts
@@ -729,16 +890,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CheckContactReq'
+          $ref: '#/definitions/dto.CheckContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Check contacts on WhatsApp
       tags:
       - Contacts
@@ -754,7 +915,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.GetUserInfoReq'
+          $ref: '#/definitions/dto.GetUserInfoReq'
       produces:
       - application/json
       responses:
@@ -762,15 +923,15 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/model.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.UserInfoResp'
+                    $ref: '#/definitions/dto.UserInfoResp'
                   type: array
               type: object
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get user info for JIDs
       tags:
       - Contacts
@@ -784,9 +945,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get privacy settings
       tags:
       - Contacts
@@ -802,16 +963,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SetProfilePictureReq'
+          $ref: '#/definitions/dto.SetProfilePictureReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Set profile picture
       tags:
       - Contacts
@@ -826,16 +987,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.BlockContactReq'
+          $ref: '#/definitions/dto.BlockContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Unblock a contact
       tags:
       - Contacts
@@ -848,9 +1009,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: List joined groups
       tags:
       - Groups
@@ -865,16 +1026,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupSettingReq'
+          $ref: '#/definitions/dto.GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Set group announce mode
       tags:
       - Groups
@@ -889,16 +1050,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.CreateGroupReq'
+          $ref: '#/definitions/dto.CreateGroupReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Create a new group
       tags:
       - Groups
@@ -913,16 +1074,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupTextReq'
+          $ref: '#/definitions/dto.GroupTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Update group description
       tags:
       - Groups
@@ -941,9 +1102,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get group info
       tags:
       - Groups
@@ -962,9 +1123,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get group info from invite link
       tags:
       - Groups
@@ -978,7 +1139,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupJIDReq'
+          $ref: '#/definitions/dto.GroupJIDReq'
       - description: Reset the invite link
         in: query
         name: reset
@@ -990,13 +1151,13 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/model.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/model.GroupInviteLinkResp'
+                  $ref: '#/definitions/dto.GroupInviteLinkResp'
               type: object
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get group invite link
       tags:
       - Groups
@@ -1011,16 +1172,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupJoinReq'
+          $ref: '#/definitions/dto.GroupJoinReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Join group via link
       tags:
       - Groups
@@ -1035,16 +1196,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupSettingReq'
+          $ref: '#/definitions/dto.GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Set group join approval mode
       tags:
       - Groups
@@ -1057,16 +1218,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupJIDReq'
+          $ref: '#/definitions/dto.GroupJIDReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Leave group
       tags:
       - Groups
@@ -1081,16 +1242,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupSettingReq'
+          $ref: '#/definitions/dto.GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Set group locked mode
       tags:
       - Groups
@@ -1105,16 +1266,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupTextReq'
+          $ref: '#/definitions/dto.GroupTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Update group name
       tags:
       - Groups
@@ -1129,16 +1290,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupParticipantReq'
+          $ref: '#/definitions/dto.GroupParticipantReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Update group participants
       tags:
       - Groups
@@ -1153,16 +1314,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupPhotoReq'
+          $ref: '#/definitions/dto.GroupPhotoReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Update group photo
       tags:
       - Groups
@@ -1175,16 +1336,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupJIDReq'
+          $ref: '#/definitions/dto.GroupJIDReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get group join requests
       tags:
       - Groups
@@ -1199,16 +1360,16 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/model.GroupRequestActionReq'
+          $ref: '#/definitions/dto.GroupRequestActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Approve/Reject group join requests
       tags:
       - Groups
@@ -1221,7 +1382,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       summary: Health check
       tags:
       - Health
@@ -1236,16 +1397,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.LabelChatReq'
+          $ref: '#/definitions/dto.LabelChatReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Add label to chat
       tags:
       - Labels
@@ -1260,16 +1421,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.EditLabelReq'
+          $ref: '#/definitions/dto.EditLabelReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Edit a label
       tags:
       - Labels
@@ -1284,16 +1445,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.LabelMessageReq'
+          $ref: '#/definitions/dto.LabelMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Add label to message
       tags:
       - Labels
@@ -1307,16 +1468,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendMediaReq'
+          $ref: '#/definitions/dto.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send an audio message
       tags:
       - Messages
@@ -1331,16 +1492,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendContactReq'
+          $ref: '#/definitions/dto.SendContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a contact card
       tags:
       - Messages
@@ -1355,16 +1516,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.DeleteMessageReq'
+          $ref: '#/definitions/dto.DeleteMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Delete a sent message
       tags:
       - Messages
@@ -1378,16 +1539,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendMediaReq'
+          $ref: '#/definitions/dto.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a document
       tags:
       - Messages
@@ -1402,16 +1563,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.EditMessageReq'
+          $ref: '#/definitions/dto.EditMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Edit a sent message
       tags:
       - Messages
@@ -1425,16 +1586,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendMediaReq'
+          $ref: '#/definitions/dto.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send an image message
       tags:
       - Messages
@@ -1450,16 +1611,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendLinkReq'
+          $ref: '#/definitions/dto.SendLinkReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a link preview message
       tags:
       - Messages
@@ -1475,16 +1636,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendLocationReq'
+          $ref: '#/definitions/dto.SendLocationReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a location message
       tags:
       - Messages
@@ -1500,16 +1661,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendPollReq'
+          $ref: '#/definitions/dto.SendPollReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a poll message
       tags:
       - Messages
@@ -1525,16 +1686,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SetPresenceReq'
+          $ref: '#/definitions/dto.SetPresenceReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Set typing/recording presence
       tags:
       - Messages
@@ -1550,16 +1711,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.ReactMessageReq'
+          $ref: '#/definitions/dto.ReactMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: React to a message
       tags:
       - Messages
@@ -1574,16 +1735,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.MarkReadReq'
+          $ref: '#/definitions/dto.MarkReadReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Mark a message as read
       tags:
       - Messages
@@ -1598,16 +1759,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendStickerReq'
+          $ref: '#/definitions/dto.SendStickerReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a sticker
       tags:
       - Messages
@@ -1623,16 +1784,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendTextReq'
+          $ref: '#/definitions/dto.SendTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a text message
       tags:
       - Messages
@@ -1646,16 +1807,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SendMediaReq'
+          $ref: '#/definitions/dto.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Send a video message
       tags:
       - Messages
@@ -1671,16 +1832,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CreateNewsletterReq'
+          $ref: '#/definitions/dto.CreateNewsletterReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Create a newsletter
       tags:
       - Newsletter
@@ -1699,9 +1860,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get newsletter info
       tags:
       - Newsletter
@@ -1720,9 +1881,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get newsletter info from invite code
       tags:
       - Newsletter
@@ -1735,9 +1896,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: List subscribed newsletters
       tags:
       - Newsletter
@@ -1753,16 +1914,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.NewsletterMessageReq'
+          $ref: '#/definitions/dto.NewsletterMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Get newsletter messages
       tags:
       - Newsletter
@@ -1788,139 +1949,62 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Subscribe to a newsletter
       tags:
       - Newsletter
-  /session:
-    delete:
-      description: Disconnects and deletes the current session
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete current session
-      tags:
-      - Sessions
-    get:
-      description: Returns the session identified by the Bearer token (or query/header
-        fallback)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Get current session
-      tags:
-      - Sessions
-  /session/connect:
-    post:
-      description: Connects a WhatsApp session (starts pairing if new)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Connect current session
-      tags:
-      - Sessions
-  /session/disconnect:
-    post:
-      description: Disconnects the active WhatsApp session
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Disconnect current session
-      tags:
-      - Sessions
-  /session/qr:
-    get:
-      description: Returns a QR code for pairing a new WhatsApp device for current
-        session
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Get QR code for pair
-      tags:
-      - Sessions
   /sessions:
     get:
-      description: Returns all sessions (Admin) or just the authenticated session
-        (User)
+      description: Returns all sessions
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
-      summary: List sessions
+      - ApiKeyAuth: []
+      summary: List sessions (Admin Only)
       tags:
       - Sessions
     post:
       consumes:
       - application/json
-      description: Creates a new WhatsApp session entry in the database. Returns the
-        generated token.
+      description: Creates a new session with an auto-generated or custom token
       parameters:
       - description: Session data
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.SessionCreateReq'
+          $ref: '#/definitions/dto.SessionCreateReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/model.APIError'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Create a new session (Admin Only)
       tags:
       - Sessions
-  /sessions/{id}/webhooks:
-    get:
-      description: Returns all webhooks for a session
+  /sessions/{sessionId}:
+    delete:
+      description: Disconnects and deletes the session
       parameters:
-      - description: Session ID
+      - description: Session name or ID
         in: path
-        name: id
+        name: sessionId
+        required: true
         type: string
       produces:
       - application/json
@@ -1928,46 +2012,152 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
+      summary: Delete session
+      tags:
+      - Sessions
+    get:
+      description: Returns the session identified by :sessionId (name or id)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/connect:
+    post:
+      description: Connects a WhatsApp session (starts pairing if new)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Connect session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/disconnect:
+    post:
+      description: Disconnects the active WhatsApp session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Disconnect session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/qr:
+    get:
+      description: Returns a QR code for pairing a new WhatsApp device
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get QR code for pairing
+      tags:
+      - Sessions
+  /sessions/{sessionId}/webhooks:
+    get:
+      description: Returns all webhooks for the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      security:
+      - ApiKeyAuth: []
       summary: List webhooks
       tags:
       - Webhooks
     post:
       consumes:
       - application/json
-      description: Registers a new webhook for a session
+      description: Registers a new webhook for the session
       parameters:
-      - description: Session ID
+      - description: Session name or ID
         in: path
-        name: id
+        name: sessionId
+        required: true
         type: string
       - description: Webhook data
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.CreateWebhookReq'
+          $ref: '#/definitions/dto.CreateWebhookReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Create a webhook
       tags:
       - Webhooks
-  /sessions/{id}/webhooks/{wid}:
+  /sessions/{sessionId}/webhooks/{wid}:
     delete:
-      description: Removes a webhook from a session
+      description: Removes a webhook from the session
       parameters:
-      - description: Session ID
+      - description: Session name or ID
         in: path
-        name: id
+        name: sessionId
+        required: true
         type: string
       - description: Webhook ID
         in: path
@@ -1980,9 +2170,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Delete a webhook
       tags:
       - Webhooks
@@ -1997,16 +2187,16 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.LabelChatReq'
+          $ref: '#/definitions/dto.LabelChatReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Remove label from chat
       tags:
       - Labels
@@ -2021,86 +2211,24 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/model.LabelMessageReq'
+          $ref: '#/definitions/dto.LabelMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
       security:
-      - BearerAuth: []
+      - ApiKeyAuth: []
       summary: Remove label from message
       tags:
       - Labels
-  /webhooks:
-    get:
-      description: Returns all webhooks for a session
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: List webhooks
-      tags:
-      - Webhooks
-    post:
-      consumes:
-      - application/json
-      description: Registers a new webhook for a session
-      parameters:
-      - description: Webhook data
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/model.CreateWebhookReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Create a webhook
-      tags:
-      - Webhooks
-  /webhooks/{wid}:
-    delete:
-      description: Removes a webhook from a session
-      parameters:
-      - description: Session ID
-        in: path
-        name: id
-        type: string
-      - description: Webhook ID
-        in: path
-        name: wid
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.APIResponse'
-      security:
-      - BearerAuth: []
-      summary: Delete a webhook
-      tags:
-      - Webhooks
 securityDefinitions:
-  BearerAuth:
-    description: 'API Key for authentication. Pass as: Bearer <your-api-key>'
+  ApiKeyAuth:
+    description: Session or admin token. Pass the token value directly in the Token
+      header.
     in: header
-    name: Authorization
+    name: Token
     type: apiKey
 swagger: "2.0"

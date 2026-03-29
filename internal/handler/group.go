@@ -97,7 +97,7 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	
+
 	jid := c.Query("jid")
 	if jid == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Invalid Request", "jid query parameter is required"))
@@ -403,7 +403,7 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Invalid Request", err.Error()))
 	}
 	jid := req.GroupJID
-	
+
 	bytes, err := base64.StdEncoding.DecodeString(req.PhotoBase64)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Invalid Request", "failed to decode base64 photo"))

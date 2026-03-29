@@ -156,6 +156,256 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req mo
 	return resp.ID, nil
 }
 
+func (s *MessageService) SendContact(ctx context.Context, sessionID string, req model.SendContactReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	msg := &waProto.Message{
+		ContactMessage: &waProto.ContactMessage{
+			DisplayName: proto.String(req.Name),
+			Vcard:       proto.String(req.Vcard),
+		},
+	}
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to send contact message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req model.SendLocationReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	msg := &waProto.Message{
+		LocationMessage: &waProto.LocationMessage{
+			DegreesLatitude:  proto.Float64(req.Lat),
+			DegreesLongitude: proto.Float64(req.Lng),
+			Name:             proto.String(req.Name),
+			Address:          proto.String(req.Address),
+		},
+	}
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to send location message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req model.SendPollReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	msg := client.BuildPollCreation(req.Name, req.Options, req.SelectableCount)
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to send poll message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req model.SendStickerReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(req.Base64)
+	if err != nil {
+		return "", fmt.Errorf("invalid base64: %w", err)
+	}
+
+	uploaded, err := client.Upload(ctx, data, whatsmeow.MediaImage)
+	if err != nil {
+		return "", fmt.Errorf("failed to upload sticker: %w", err)
+	}
+
+	msg := &waProto.Message{
+		StickerMessage: &waProto.StickerMessage{
+			Mimetype:      proto.String(req.MimeType),
+			URL:           proto.String(uploaded.URL),
+			DirectPath:    proto.String(uploaded.DirectPath),
+			MediaKey:      uploaded.MediaKey,
+			FileEncSHA256: uploaded.FileEncSHA256,
+			FileSHA256:    uploaded.FileSHA256,
+			FileLength:    proto.Uint64(uint64(len(data))),
+		},
+	}
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to send sticker message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) SendLink(ctx context.Context, sessionID string, req model.SendLinkReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	msg := &waProto.Message{
+		ExtendedTextMessage: &waProto.ExtendedTextMessage{
+			Text:        proto.String(req.URL),
+			Title:       proto.String(req.Title),
+			Description: proto.String(req.Description),
+		},
+	}
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to send link message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req model.EditMessageReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	newMsg := &waProto.Message{
+		Conversation: proto.String(req.Text),
+	}
+
+	msg := client.BuildEdit(jid, req.MessageID, newMsg)
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to edit message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, req model.DeleteMessageReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	msg := client.BuildRevoke(jid, client.Store.ID, req.MessageID)
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to delete message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req model.ReactMessageReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return "", err
+	}
+
+	msg := client.BuildReaction(jid, client.Store.ID, req.MessageID, req.Reaction)
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to react message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req model.MarkReadReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return err
+	}
+
+	return client.MarkRead([]types.MessageID{req.MessageID}, time.Now(), jid, client.Store.ID)
+}
+
+func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req model.SetPresenceReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := parseJID(req.To)
+	if err != nil {
+		return err
+	}
+
+	var presence types.ChatPresence
+	switch req.Presence {
+	case "typing":
+		presence = types.ChatPresenceComposing
+	case "recording":
+		presence = types.ChatPresenceRecording
+	case "paused":
+		presence = types.ChatPresencePaused
+	default:
+		return fmt.Errorf("invalid presence type: %s", req.Presence)
+	}
+
+	return client.SendChatPresence(jid, presence, types.ChatPresenceMediaText)
+}
+
 func parseJID(target string) (types.JID, error) {
 	jid, err := types.ParseJID(target)
 	if err != nil {

@@ -18,30 +18,30 @@ type GroupJoinReq struct {
 }
 
 type GroupParticipantReq struct {
-	GroupJID string `json:"groupJid" validate:"required"`
+	GroupJID     string   `json:"groupJid" validate:"required"`
 	Participants []string `json:"participants" validate:"required" example:"5511999999999"`
 	Action       string   `json:"action" validate:"required" example:"add"` // add, remove, promote, demote
 }
 
 type GroupRequestActionReq struct {
-	GroupJID string `json:"groupJid" validate:"required"`
+	GroupJID     string   `json:"groupJid" validate:"required"`
 	Participants []string `json:"participants" validate:"required" example:"5511999999999"`
 	Action       string   `json:"action" validate:"required" example:"approve"` // approve, reject
 }
 
 type GroupTextReq struct {
 	GroupJID string `json:"groupJid" validate:"required"`
-	Text string `json:"text" validate:"required"`
+	Text     string `json:"text" validate:"required"`
 }
 
 type GroupPhotoReq struct {
-	GroupJID string `json:"groupJid" validate:"required"`
+	GroupJID    string `json:"groupJid" validate:"required"`
 	PhotoBase64 string `json:"photo_base64" validate:"required"` // Base64 encoded image
 }
 
 type GroupSettingReq struct {
 	GroupJID string `json:"groupJid" validate:"required"`
-	Enabled bool `json:"enabled"`
+	Enabled  bool   `json:"enabled"`
 }
 
 type JIDReq struct {

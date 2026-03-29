@@ -68,3 +68,126 @@ func (s *ContactService) List(ctx context.Context, sessionID string) ([]model.Co
 
 	return result, nil
 }
+
+func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req model.GetAvatarReq) (*model.GetAvatarResp, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	jid, err := types.ParseJID(req.JID)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := client.GetProfilePictureInfo(jid, &whatsmeow.GetProfilePictureParams{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get avatar: %w", err)
+	}
+
+	if info == nil {
+		return &model.GetAvatarResp{}, nil
+	}
+
+	return &model.GetAvatarResp{
+		URL: info.URL,
+		ID:  info.ID,
+	}, nil
+}
+
+func (s *ContactService) Block(ctx context.Context, sessionID string, req model.BlockContactReq) (*types.Blocklist, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	jid, err := types.ParseJID(req.JID)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.UpdateBlocklist(jid, "block")
+}
+
+func (s *ContactService) Unblock(ctx context.Context, sessionID string, req model.BlockContactReq) (*types.Blocklist, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	jid, err := types.ParseJID(req.JID)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.UpdateBlocklist(jid, "unblock")
+}
+
+func (s *ContactService) GetBlocklist(ctx context.Context, sessionID string) (*types.Blocklist, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.GetBlocklist()
+}
+
+func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req model.GetUserInfoReq) (map[string]model.UserInfoResp, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	var jids []types.JID
+	for _, jidStr := range req.JIDs {
+		jid, err := types.ParseJID(jidStr)
+		if err == nil {
+			jids = append(jids, jid)
+		}
+	}
+
+	info, err := client.GetUserInfo(jids)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user info: %w", err)
+	}
+
+	resp := make(map[string]model.UserInfoResp)
+	for jid, infoData := range info {
+		var devices []string
+		for _, dev := range infoData.Devices {
+			devices = append(devices, dev.Device.String())
+		}
+
+		resp[jid.String()] = model.UserInfoResp{
+			JID:     jid.String(),
+			Status:  infoData.Status,
+			Picture: infoData.PictureID,
+			Devices: devices,
+		}
+	}
+
+	return resp, nil
+}
+
+func (s *ContactService) GetPrivacySettings(ctx context.Context, sessionID string) (types.PrivacySettings, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return types.PrivacySettings{}, err
+	}
+
+	return client.GetPrivacySettings(), nil
+}
+
+func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string, req model.SetProfilePictureReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := base64.StdEncoding.DecodeString(req.Base64)
+	if err != nil {
+		return "", fmt.Errorf("invalid base64: %w", err)
+	}
+
+	return client.SetGroupPhoto(client.Store.ID, data)
+}

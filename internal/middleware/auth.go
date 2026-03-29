@@ -21,7 +21,7 @@ func Auth(cfg *config.Config, repo *repository.SessionRepository) fiber.Handler 
 		if authHeader == "" {
 			authHeader = c.Get("Token")
 		}
-		
+
 		if authHeader == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Missing Authorization or Token header"))
 		}

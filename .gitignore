@@ -24,7 +24,7 @@ wzap
 logs/
 *.log
 
-# Wameow sessions (contains sensitive data)
+# Whatsmeow sessions (contains sensitive data)
 sessions/
 *.session
 *.db
@@ -55,3 +55,7 @@ minio_data/
 *.crt
 *.csr
 ssl/
+
+# Kilo config (local)
+.kilo/
+AGENTS.md

@@ -20,7 +20,7 @@ services:
 
   # Storage: MinIO
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2024-01-13T07-53-03Z-cpuv1
     container_name: wzap_minio
     environment:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}

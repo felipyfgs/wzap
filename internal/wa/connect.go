@@ -15,10 +15,11 @@ import (
 
 	"wzap/internal/broker"
 	"wzap/internal/config"
+	"wzap/internal/dispatcher"
 	"wzap/internal/repo"
 )
 
-func NewManager(cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats) (*Manager, error) {
+func NewManager(cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats, d *dispatcher.Dispatcher) (*Manager, error) {
 	waLogger := waLog.Stdout("wzap", cfg.WALogLevel, true)
 
 	ctx := context.Background()
@@ -32,6 +33,7 @@ func NewManager(cfg *config.Config, sessionRepo *repo.SessionRepository, n *brok
 		sessionRepo: sessionRepo,
 		container:   container,
 		nats:        n,
+		dispatcher:  d,
 		cfg:         cfg,
 		waLog:       waLogger,
 	}, nil

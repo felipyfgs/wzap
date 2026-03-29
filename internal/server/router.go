@@ -1,8 +1,11 @@
 package server
 
 import (
+	"context"
+
 	"github.com/gofiber/swagger"
 
+	"wzap/internal/dispatcher"
 	"wzap/internal/handler"
 	"wzap/internal/middleware"
 	"wzap/internal/repo"
@@ -15,8 +18,12 @@ func (s *Server) SetupRoutes() error {
 	sessionRepo := repo.NewSessionRepository(s.db)
 	webhookRepo := repo.NewWebhookRepository(s.db)
 
+	// Initialize Dispatcher
+	disp := dispatcher.New(webhookRepo, s.nats)
+	go disp.StartConsumer(context.Background())
+
 	// Initialize Engine
-	engine, err := wa.NewManager(s.Config, sessionRepo, s.nats)
+	engine, err := wa.NewManager(s.Config, sessionRepo, s.nats, disp)
 	if err != nil {
 		return err
 	}

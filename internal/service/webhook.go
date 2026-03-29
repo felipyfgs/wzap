@@ -26,13 +26,14 @@ func (s *WebhookService) Create(ctx context.Context, sessionID string, req dto.C
 		events[i] = string(e)
 	}
 	webhook := &model.Webhook{
-		ID:        uuid.NewString(),
-		SessionID: sessionID,
-		URL:       req.URL,
-		Secret:    req.Secret,
-		Events:    events,
-		Enabled:   true,
-		CreatedAt: time.Now(),
+		ID:          uuid.NewString(),
+		SessionID:   sessionID,
+		URL:         req.URL,
+		Secret:      req.Secret,
+		Events:      events,
+		Enabled:     true,
+		NatsEnabled: req.NatsEnabled,
+		CreatedAt:   time.Now(),
 	}
 
 	if err := s.repo.Create(ctx, webhook); err != nil {

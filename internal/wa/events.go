@@ -99,8 +99,8 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	payload := map[string]interface{}{
 		"eventId":   uuid.NewString(),
 		"sessionId": sessionID,
-		"event":      eventType,
-		"timestamp":  time.Now().Format(time.RFC3339),
+		"event":     eventType,
+		"timestamp": time.Now().Format(time.RFC3339),
 	}
 	for k, v := range natsData {
 		payload[k] = v
@@ -108,12 +108,17 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 
 	bytes, err := json.Marshal(payload)
 	if err != nil {
-		log.Error().Err(err).Str("session", sessionID).Msg("Failed to marshal NATS event payload")
+		log.Error().Err(err).Str("session", sessionID).Msg("Failed to marshal event payload")
 		return
 	}
+
 	if m.nats != nil {
 		if err := m.nats.Publish(context.Background(), "wzap.events."+sessionID, bytes); err != nil {
 			log.Error().Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
 		}
+	}
+
+	if m.dispatcher != nil {
+		m.dispatcher.Dispatch(sessionID, eventType, bytes)
 	}
 }

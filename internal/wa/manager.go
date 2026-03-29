@@ -9,6 +9,7 @@ import (
 
 	"wzap/internal/broker"
 	"wzap/internal/config"
+	"wzap/internal/dispatcher"
 	"wzap/internal/repo"
 )
 
@@ -19,6 +20,7 @@ type Manager struct {
 	sessionRepo *repo.SessionRepository
 	container   *sqlstore.Container
 	nats        *broker.Nats
+	dispatcher  *dispatcher.Dispatcher
 	cfg         *config.Config
 	waLog       waLog.Logger
 }

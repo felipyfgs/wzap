@@ -1,0 +1,226 @@
+package dispatcher
+
+import (
+	"bytes"
+	"context"
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	"wzap/internal/broker"
+	"wzap/internal/model"
+	"wzap/internal/repo"
+
+	"github.com/nats-io/nats.go/jetstream"
+	"github.com/rs/zerolog/log"
+)
+
+const (
+	natsDeliverSubject = "wzap.webhook.deliver"
+	httpTimeout        = 10 * time.Second
+	maxDeliverAttempts = 5
+)
+
+type deliverMsg struct {
+	WebhookID string          `json:"webhookId"`
+	URL       string          `json:"url"`
+	Secret    string          `json:"secret"`
+	Payload   json.RawMessage `json:"payload"`
+}
+
+type Dispatcher struct {
+	webhookRepo *repo.WebhookRepository
+	nats        *broker.Nats
+	httpClient  *http.Client
+}
+
+func New(webhookRepo *repo.WebhookRepository, nats *broker.Nats) *Dispatcher {
+	return &Dispatcher{
+		webhookRepo: webhookRepo,
+		nats:        nats,
+		httpClient:  &http.Client{Timeout: httpTimeout},
+	}
+}
+
+// Dispatch looks up active webhooks for the session/event and delivers the payload.
+func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, payload []byte) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	webhooks, err := d.webhookRepo.FindActiveBySessionAndEvent(ctx, sessionID, string(eventType))
+	if err != nil {
+		log.Error().Err(err).Str("session", sessionID).Str("event", string(eventType)).Msg("Failed to fetch webhooks for dispatch")
+		return
+	}
+
+	for _, wh := range webhooks {
+		wh := wh
+		if wh.NatsEnabled && d.nats != nil {
+			d.publishToNats(wh, payload)
+		} else {
+			go d.deliverHTTP(wh.URL, wh.Secret, payload)
+		}
+	}
+}
+
+func (d *Dispatcher) publishToNats(wh model.Webhook, payload []byte) {
+	msg := deliverMsg{
+		WebhookID: wh.ID,
+		URL:       wh.URL,
+		Secret:    wh.Secret,
+		Payload:   payload,
+	}
+	data, err := json.Marshal(msg)
+	if err != nil {
+		log.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to marshal NATS webhook delivery message")
+		return
+	}
+	subject := natsDeliverSubject + "." + wh.ID
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := d.nats.Publish(ctx, subject, data); err != nil {
+		log.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to publish webhook delivery to NATS — falling back to direct dispatch")
+		go d.deliverHTTP(wh.URL, wh.Secret, payload)
+	}
+}
+
+func (d *Dispatcher) deliverHTTP(url, secret string, payload []byte) {
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payload))
+	if err != nil {
+		log.Error().Err(err).Str("url", url).Msg("Failed to build webhook HTTP request")
+		return
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	if secret != "" {
+		mac := hmac.New(sha256.New, []byte(secret))
+		mac.Write(payload)
+		req.Header.Set("X-Wzap-Signature", "sha256="+hex.EncodeToString(mac.Sum(nil)))
+	}
+
+	eventType := extractEventType(payload)
+	if eventType != "" {
+		req.Header.Set("X-Wzap-Event", eventType)
+	}
+
+	resp, err := d.httpClient.Do(req)
+	if err != nil {
+		log.Warn().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed")
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		log.Warn().Str("url", url).Int("status", resp.StatusCode).Msg("Webhook returned non-2xx status")
+	}
+}
+
+// StartConsumer starts the JetStream consumer that handles NATS-queued webhook deliveries.
+func (d *Dispatcher) StartConsumer(ctx context.Context) {
+	if d.nats == nil {
+		return
+	}
+
+	consumerCfg := jetstream.ConsumerConfig{
+		Name:          "webhook-dispatcher",
+		FilterSubject: natsDeliverSubject + ".>",
+		AckPolicy:     jetstream.AckExplicitPolicy,
+		MaxDeliver:    maxDeliverAttempts,
+		BackOff:       []time.Duration{10 * time.Second, 30 * time.Second, time.Minute, 5 * time.Minute},
+		AckWait:       15 * time.Second,
+	}
+
+	cons, err := d.nats.JS.CreateOrUpdateConsumer(ctx, "WZAP_WEBHOOKS", consumerCfg)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to create NATS webhook consumer — NATS-queued webhooks will fall back to direct dispatch")
+		return
+	}
+
+	msgCtx, err := cons.Messages()
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to subscribe to NATS webhook consumer")
+		return
+	}
+
+	log.Info().Msg("NATS webhook consumer started")
+
+	go func() {
+		defer msgCtx.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			msg, err := msgCtx.Next()
+			if err != nil {
+				if ctx.Err() != nil {
+					return
+				}
+				log.Warn().Err(err).Msg("NATS webhook consumer receive error")
+				continue
+			}
+
+			var dm deliverMsg
+			if err := json.Unmarshal(msg.Data(), &dm); err != nil {
+				log.Error().Err(err).Msg("Failed to unmarshal NATS webhook delivery message")
+				_ = msg.Term()
+				continue
+			}
+
+			if err := d.deliverHTTPWithErr(dm.URL, dm.Secret, dm.Payload); err != nil {
+				log.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Msg("NATS webhook delivery failed, will retry")
+				_ = msg.Nak()
+			} else {
+				_ = msg.Ack()
+			}
+		}
+	}()
+}
+
+func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) error {
+	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("build request: %w", err)
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	if secret != "" {
+		mac := hmac.New(sha256.New, []byte(secret))
+		mac.Write(payload)
+		req.Header.Set("X-Wzap-Signature", "sha256="+hex.EncodeToString(mac.Sum(nil)))
+	}
+
+	eventType := extractEventType(payload)
+	if eventType != "" {
+		req.Header.Set("X-Wzap-Event", eventType)
+	}
+
+	resp, err := d.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("http post: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("non-2xx status: %d", resp.StatusCode)
+	}
+	return nil
+}
+
+func extractEventType(payload []byte) string {
+	var m struct {
+		Event string `json:"event"`
+	}
+	if err := json.Unmarshal(payload, &m); err != nil {
+		return ""
+	}
+	return m.Event
+}

@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS "wzWebhooks" (
     "secret" VARCHAR(255),
     "events" JSONB NOT NULL DEFAULT '[]',
     "enabled" BOOLEAN NOT NULL DEFAULT true,
+    "natsEnabled" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

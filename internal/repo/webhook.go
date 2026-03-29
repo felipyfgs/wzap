@@ -18,9 +18,9 @@ func NewWebhookRepository(db *pgxpool.Pool) *WebhookRepository {
 }
 
 func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error {
-	query := `INSERT INTO "wzWebhooks" ("id", "sessionId", "url", "secret", "events", "enabled", "createdAt")
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.Enabled, w.CreatedAt)
+	query := `INSERT INTO "wzWebhooks" ("id", "sessionId", "url", "secret", "events", "enabled", "natsEnabled", "createdAt")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.Enabled, w.NatsEnabled, w.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert webhook: %w", err)
 	}
@@ -28,7 +28,7 @@ func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error 
 }
 
 func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID string) ([]model.Webhook, error) {
-	query := `SELECT "id", "sessionId", "url", COALESCE("secret", ''), "events", "enabled", "createdAt", "updatedAt"
+	query := `SELECT "id", "sessionId", "url", COALESCE("secret", ''), "events", "enabled", "natsEnabled", "createdAt", "updatedAt"
 		FROM "wzWebhooks" WHERE "sessionId" = $1 ORDER BY "createdAt" DESC`
 
 	rows, err := r.db.Query(ctx, query, sessionID)
@@ -40,12 +40,36 @@ func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID strin
 	var webhooks []model.Webhook
 	for rows.Next() {
 		var w model.Webhook
-		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
+		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NatsEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
 			return nil, err
 		}
 		webhooks = append(webhooks, w)
 	}
 	return webhooks, nil
+}
+
+func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, sessionID string, eventType string) ([]model.Webhook, error) {
+	query := `SELECT "id", "sessionId", "url", COALESCE("secret", ''), "events", "enabled", "natsEnabled", "createdAt", "updatedAt"
+		FROM "wzWebhooks"
+		WHERE "sessionId" = $1
+		  AND "enabled" = true
+		  AND ("events" @> $2::jsonb OR "events" @> '["All"]'::jsonb)`
+
+	rows, err := r.db.Query(ctx, query, sessionID, `["`+eventType+`"]`)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query active webhooks: %w", err)
+	}
+	defer rows.Close()
+
+	var webhooks []model.Webhook
+	for rows.Next() {
+		var w model.Webhook
+		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NatsEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
+			return nil, err
+		}
+		webhooks = append(webhooks, w)
+	}
+	return webhooks, rows.Err()
 }
 
 func (r *WebhookRepository) Delete(ctx context.Context, sessionID, webhookID string) error {

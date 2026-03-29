@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"wzap/internal/config"
+
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/rs/zerolog/log"
-	"wzap/internal/config"
 )
 
 type Nats struct {
@@ -39,13 +40,24 @@ func New(cfg *config.Config) (*Nats, error) {
 		Name:     "WZAP_EVENTS",
 		Subjects: []string{"wzap.events.>"},
 		Storage:  jetstream.FileStorage,
-		MaxAge:   7 * 24 * time.Hour, // Keep events for 7 days
+		MaxAge:   7 * 24 * time.Hour,
 	}
 
 	_, err = js.CreateOrUpdateStream(ctx, streamConfig)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to create/update NATS stream, you may need to configure JetStream")
-		// Not returning error here as the connection is still valid, maybe just publishing
+		log.Warn().Err(err).Msg("Failed to create/update NATS WZAP_EVENTS stream")
+	}
+
+	webhookStreamConfig := jetstream.StreamConfig{
+		Name:     "WZAP_WEBHOOKS",
+		Subjects: []string{"wzap.webhook.>"},
+		Storage:  jetstream.FileStorage,
+		MaxAge:   24 * time.Hour,
+	}
+
+	_, err = js.CreateOrUpdateStream(ctx, webhookStreamConfig)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to create/update NATS WZAP_WEBHOOKS stream")
 	}
 
 	log.Info().Msg("Successfully connected to NATS JetStream")

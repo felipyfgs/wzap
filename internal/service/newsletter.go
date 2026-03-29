@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
 	"wzap/internal/wa"
+
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 )
 
 type NewsletterService struct {
@@ -80,7 +81,7 @@ func (s *NewsletterService) Messages(ctx context.Context, sessionID string, req 
 		return nil, err
 	}
 
-	jid, err := types.ParseJID(req.JID)
+	jid, err := types.ParseJID(req.NewsletterJID)
 	if err != nil {
 		return nil, err
 	}

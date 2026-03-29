@@ -7,7 +7,11 @@ type CreateNewsletterReq struct {
 }
 
 type NewsletterMessageReq struct {
-	JID      string `json:"jid" validate:"required"`
-	Count    int    `json:"count"`
-	BeforeID int    `json:"beforeId"`
+	NewsletterJID string `json:"newsletterJid" validate:"required"`
+	Count         int    `json:"count"`
+	BeforeID      int    `json:"beforeId"`
+}
+
+type NewsletterSubscribeReq struct {
+	NewsletterJID string `json:"newsletterJid" validate:"required"`
 }

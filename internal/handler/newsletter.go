@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type NewsletterHandler struct {
@@ -13,7 +14,6 @@ type NewsletterHandler struct {
 func NewNewsletterHandler(newsletterSvc *service.NewsletterService) *NewsletterHandler {
 	return &NewsletterHandler{newsletterSvc: newsletterSvc}
 }
-
 
 // Create godoc
 // @Summary     Create a newsletter
@@ -152,13 +152,11 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	var req struct {
-		JID string `json:"jid"`
-	}
+	var req dto.NewsletterSubscribeReq
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
-	if err := h.newsletterSvc.Subscribe(c.Context(), id, req.JID); err != nil {
+	if err := h.newsletterSvc.Subscribe(c.Context(), id, req.NewsletterJID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
 	return c.JSON(dto.SuccessResp(nil, "Subscribed to newsletter"))

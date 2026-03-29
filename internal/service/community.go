@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
 	"wzap/internal/wa"
+
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 )
 
 type CommunityService struct {
@@ -45,7 +46,7 @@ func (s *CommunityService) updateParticipant(ctx context.Context, sessionID stri
 		return nil, err
 	}
 
-	jid, err := types.ParseJID(req.JID)
+	jid, err := types.ParseJID(req.CommunityJID)
 	if err != nil {
 		return nil, err
 	}

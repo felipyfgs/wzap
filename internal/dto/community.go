@@ -6,6 +6,6 @@ type CreateCommunityReq struct {
 }
 
 type CommunityParticipantReq struct {
-	JID          string   `json:"jid" validate:"required"`
+	CommunityJID string   `json:"communityJid" validate:"required"`
 	Participants []string `json:"participants" validate:"required"`
 }

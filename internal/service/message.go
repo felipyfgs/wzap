@@ -36,7 +36,7 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 		return "", fmt.Errorf("client not connected")
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -78,7 +78,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		return "", fmt.Errorf("client not connected")
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -164,7 +164,7 @@ func (s *MessageService) SendContact(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -190,7 +190,7 @@ func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -218,7 +218,7 @@ func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -239,7 +239,7 @@ func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -280,7 +280,7 @@ func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -307,7 +307,7 @@ func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -332,7 +332,7 @@ func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, re
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -353,7 +353,7 @@ func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return "", err
 	}
@@ -374,7 +374,7 @@ func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req dto
 		return err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return err
 	}
@@ -388,7 +388,7 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 		return err
 	}
 
-	jid, err := parseJID(req.To)
+	jid, err := parseJID(req.JID)
 	if err != nil {
 		return err
 	}

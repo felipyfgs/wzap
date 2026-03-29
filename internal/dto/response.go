@@ -1,4 +1,4 @@
-package model
+package dto
 
 type APIResponse struct {
 	Success bool        `json:"success"`

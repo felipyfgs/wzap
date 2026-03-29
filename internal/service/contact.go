@@ -9,6 +9,7 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
+	"wzap/internal/dto"
 	"wzap/internal/model"
 	"wzap/internal/whatsapp"
 )
@@ -21,7 +22,7 @@ func NewContactService(engine *whatsapp.Engine) *ContactService {
 	return &ContactService{engine: engine}
 }
 
-func (s *ContactService) CheckContacts(ctx context.Context, sessionID string, req model.CheckContactReq) ([]model.CheckContactResp, error) {
+func (s *ContactService) CheckContacts(ctx context.Context, sessionID string, req dto.CheckContactReq) ([]dto.CheckContactResp, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -35,9 +36,9 @@ func (s *ContactService) CheckContacts(ctx context.Context, sessionID string, re
 		return nil, fmt.Errorf("failed to check contacts: %w", err)
 	}
 
-	var results []model.CheckContactResp
+	var results []dto.CheckContactResp
 	for _, check := range resp {
-		results = append(results, model.CheckContactResp{
+		results = append(results, dto.CheckContactResp{
 			Exists:      check.IsIn,
 			JID:         check.JID.String(),
 			PhoneNumber: strings.TrimSuffix(check.JID.User, "@s.whatsapp.net"),
@@ -73,7 +74,7 @@ func (s *ContactService) List(ctx context.Context, sessionID string) ([]model.Co
 	return result, nil
 }
 
-func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req model.GetAvatarReq) (*model.GetAvatarResp, error) {
+func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req dto.GetAvatarReq) (*dto.GetAvatarResp, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -90,16 +91,16 @@ func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req mo
 	}
 
 	if info == nil {
-		return &model.GetAvatarResp{}, nil
+		return &dto.GetAvatarResp{}, nil
 	}
 
-	return &model.GetAvatarResp{
+	return &dto.GetAvatarResp{
 		URL: info.URL,
 		ID:  info.ID,
 	}, nil
 }
 
-func (s *ContactService) Block(ctx context.Context, sessionID string, req model.BlockContactReq) (*types.Blocklist, error) {
+func (s *ContactService) Block(ctx context.Context, sessionID string, req dto.BlockContactReq) (*types.Blocklist, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -113,7 +114,7 @@ func (s *ContactService) Block(ctx context.Context, sessionID string, req model.
 	return client.UpdateBlocklist(ctx, jid, events.BlocklistChangeActionBlock)
 }
 
-func (s *ContactService) Unblock(ctx context.Context, sessionID string, req model.BlockContactReq) (*types.Blocklist, error) {
+func (s *ContactService) Unblock(ctx context.Context, sessionID string, req dto.BlockContactReq) (*types.Blocklist, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -136,7 +137,7 @@ func (s *ContactService) GetBlocklist(ctx context.Context, sessionID string) (*t
 	return client.GetBlocklist(ctx)
 }
 
-func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req model.GetUserInfoReq) (map[string]model.UserInfoResp, error) {
+func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req dto.GetUserInfoReq) (map[string]dto.UserInfoResp, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -155,14 +156,14 @@ func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req 
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
 
-	resp := make(map[string]model.UserInfoResp)
+	resp := make(map[string]dto.UserInfoResp)
 	for jid, infoData := range info {
 		var devices []string
 		for _, dev := range infoData.Devices {
 			devices = append(devices, fmt.Sprintf("%d", dev.Device))
 		}
 
-		resp[jid.String()] = model.UserInfoResp{
+		resp[jid.String()] = dto.UserInfoResp{
 			JID:     jid.String(),
 			Status:  infoData.Status,
 			Picture: infoData.PictureID,
@@ -184,7 +185,7 @@ func (s *ContactService) GetPrivacySettings(ctx context.Context, sessionID strin
 	return settings, nil
 }
 
-func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string, req model.SetProfilePictureReq) (string, error) {
+func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string, req dto.SetProfilePictureReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err

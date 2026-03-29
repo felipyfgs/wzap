@@ -1,8 +1,8 @@
-package api
+package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/service"
 )
 
@@ -14,31 +14,25 @@ func NewContactHandler(contactSvc *service.ContactService) *ContactHandler {
 	return &ContactHandler{contactSvc: contactSvc}
 }
 
-func (h *ContactHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if val := c.Locals("sessionId"); val != nil {
-		return val.(string), nil
-	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
-}
 
 // List godoc
 // @Summary     List contacts
 // @Description Returns all contacts from the WhatsApp session
 // @Tags        Contacts
 // @Produce     json
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts [get]
 func (h *ContactHandler) List(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
 	contacts, err := h.contactSvc.List(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("List Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(contacts, "Contacts retrieved"))
+	return c.JSON(dto.SuccessResp(contacts, "Contacts retrieved"))
 }
 
 // Check godoc
@@ -47,26 +41,26 @@ func (h *ContactHandler) List(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.CheckContactReq true "Phone numbers"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.CheckContactReq true "Phone numbers"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts/check [post]
 func (h *ContactHandler) Check(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.CheckContactReq
+	var req dto.CheckContactReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 
 	results, err := h.contactSvc.CheckContacts(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Check Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Check Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(results, "Contacts checked"))
+	return c.JSON(dto.SuccessResp(results, "Contacts checked"))
 }
 
 // GetAvatar godoc
@@ -75,24 +69,24 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.GetAvatarReq true "JID payload"
-// @Success     200  {object} model.APIResponse{data=model.GetAvatarResp}
+// @Param       body body     dto.GetAvatarReq true "JID payload"
+// @Success     200  {object} dto.APIResponse{data=dto.GetAvatarResp}
 // @Security    BearerAuth
 // @Router      /contacts/avatar [post]
 func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.GetAvatarReq
+	var req dto.GetAvatarReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	resp, err := h.contactSvc.GetAvatar(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(resp, "Avatar retrieved"))
+	return c.JSON(dto.SuccessResp(resp, "Avatar retrieved"))
 }
 
 // Block godoc
@@ -101,24 +95,24 @@ func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.BlockContactReq true "JID payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.BlockContactReq true "JID payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts/block [post]
 func (h *ContactHandler) Block(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.BlockContactReq
+	var req dto.BlockContactReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	resp, err := h.contactSvc.Block(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(resp, "Contact blocked"))
+	return c.JSON(dto.SuccessResp(resp, "Contact blocked"))
 }
 
 // Unblock godoc
@@ -127,24 +121,24 @@ func (h *ContactHandler) Block(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.BlockContactReq true "JID payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.BlockContactReq true "JID payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts/unblock [post]
 func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.BlockContactReq
+	var req dto.BlockContactReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	resp, err := h.contactSvc.Unblock(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(resp, "Contact unblocked"))
+	return c.JSON(dto.SuccessResp(resp, "Contact unblocked"))
 }
 
 // GetBlocklist godoc
@@ -152,19 +146,19 @@ func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 // @Description Returns the full list of JIDs currently blocked by the session
 // @Tags        Contacts
 // @Produce     json
-// @Success     200  {object} model.APIResponse
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts/blocklist [get]
 func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
 	resp, err := h.contactSvc.GetBlocklist(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(resp, "Blocklist retrieved"))
+	return c.JSON(dto.SuccessResp(resp, "Blocklist retrieved"))
 }
 
 // GetUserInfo godoc
@@ -173,24 +167,24 @@ func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.GetUserInfoReq true "JIDs payload"
-// @Success     200  {object} model.APIResponse{data=[]model.UserInfoResp}
+// @Param       body body     dto.GetUserInfoReq true "JIDs payload"
+// @Success     200  {object} dto.APIResponse{data=[]dto.UserInfoResp}
 // @Security    BearerAuth
 // @Router      /contacts/info [post]
 func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.GetUserInfoReq
+	var req dto.GetUserInfoReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	resp, err := h.contactSvc.GetUserInfo(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(resp, "User info retrieved"))
+	return c.JSON(dto.SuccessResp(resp, "User info retrieved"))
 }
 
 // GetPrivacySettings godoc
@@ -198,19 +192,19 @@ func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 // @Description Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)
 // @Tags        Contacts
 // @Produce     json
-// @Success     200  {object} model.APIResponse
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts/privacy [get]
 func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
 	resp, err := h.contactSvc.GetPrivacySettings(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(resp, "Privacy settings retrieved"))
+	return c.JSON(dto.SuccessResp(resp, "Privacy settings retrieved"))
 }
 
 // SetProfilePicture godoc
@@ -219,22 +213,22 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SetProfilePictureReq true "Base64 image payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SetProfilePictureReq true "Base64 image payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts/profile-picture [post]
 func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SetProfilePictureReq
+	var req dto.SetProfilePictureReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	resp, err := h.contactSvc.SetProfilePicture(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"picture_id": resp}, "Profile picture set"))
+	return c.JSON(dto.SuccessResp(map[string]string{"picture_id": resp}, "Profile picture set"))
 }

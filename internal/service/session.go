@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	"wzap/internal/dto"
 	"wzap/internal/model"
 	"wzap/internal/repo"
 	"wzap/internal/whatsapp"
@@ -28,7 +29,7 @@ func NewSessionService(r *repo.SessionRepository, engine *whatsapp.Engine) *Sess
 	}
 }
 
-func (s *SessionService) Create(ctx context.Context, req model.SessionCreateReq) (*model.Session, error) {
+func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (*model.Session, error) {
 	if req.Name == "" {
 		return nil, fmt.Errorf("name is required")
 	}

@@ -1,7 +1,7 @@
-package api
+package handler
 
 import (
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -22,23 +22,23 @@ func NewWebhookHandler(webhookSvc *service.WebhookService) *WebhookHandler {
 // @Accept      json
 // @Produce     json
 // @Param       sessionName path     string                 true "Session name or ID"
-// @Param       body        body     model.CreateWebhookReq true "Webhook data"
-// @Success     200  {object} model.APIResponse
+// @Param       body        body     dto.CreateWebhookReq true "Webhook data"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName}/webhooks [post]
 func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 	sessionID := c.Locals("sessionId").(string)
-	var req model.CreateWebhookReq
+	var req dto.CreateWebhookReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 
 	webhook, err := h.webhookSvc.Create(c.Context(), sessionID, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Create Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Create Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(webhook, "Webhook created"))
+	return c.JSON(dto.SuccessResp(webhook, "Webhook created"))
 }
 
 // List godoc
@@ -47,17 +47,17 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 // @Tags        Webhooks
 // @Produce     json
 // @Param       sessionName path string true "Session name or ID"
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName}/webhooks [get]
 func (h *WebhookHandler) List(c *fiber.Ctx) error {
 	sessionID := c.Locals("sessionId").(string)
 	webhooks, err := h.webhookSvc.List(c.Context(), sessionID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("List Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(webhooks, "Webhooks retrieved"))
+	return c.JSON(dto.SuccessResp(webhooks, "Webhooks retrieved"))
 }
 
 // Delete godoc
@@ -67,7 +67,7 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionName path string true "Session name or ID"
 // @Param       wid         path string true "Webhook ID"
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName}/webhooks/{wid} [delete]
 func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
@@ -75,8 +75,8 @@ func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
 	webhookID := c.Params("wid")
 
 	if err := h.webhookSvc.Delete(c.Context(), sessionID, webhookID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Delete Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Delete Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(nil, "Webhook deleted"))
+	return c.JSON(dto.SuccessResp(nil, "Webhook deleted"))
 }

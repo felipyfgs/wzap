@@ -1,8 +1,8 @@
-package api
+package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/service"
 )
 
@@ -14,12 +14,6 @@ func NewCommunityHandler(communitySvc *service.CommunityService) *CommunityHandl
 	return &CommunityHandler{communitySvc: communitySvc}
 }
 
-func (h *CommunityHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if val := c.Locals("sessionId"); val != nil {
-		return val.(string), nil
-	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
-}
 
 // Create godoc
 // @Summary     Create a community
@@ -27,24 +21,24 @@ func (h *CommunityHandler) getSessionID(c *fiber.Ctx) (string, error) {
 // @Tags        Community
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.CreateCommunityReq true "Community payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.CreateCommunityReq true "Community payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /community/create [post]
 func (h *CommunityHandler) Create(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.CreateCommunityReq
+	var req dto.CreateCommunityReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	group, err := h.communitySvc.Create(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(group, "Community created"))
+	return c.JSON(dto.SuccessResp(group, "Community created"))
 }
 
 // AddParticipant godoc
@@ -53,24 +47,24 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 // @Tags        Community
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.CommunityParticipantReq true "Community participant payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.CommunityParticipantReq true "Community participant payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /community/participant/add [post]
 func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.CommunityParticipantReq
+	var req dto.CommunityParticipantReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	participants, err := h.communitySvc.AddParticipant(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(participants, "Participant added to community"))
+	return c.JSON(dto.SuccessResp(participants, "Participant added to community"))
 }
 
 // RemoveParticipant godoc
@@ -79,22 +73,22 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 // @Tags        Community
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.CommunityParticipantReq true "Community participant payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.CommunityParticipantReq true "Community participant payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /community/participant/remove [post]
 func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.CommunityParticipantReq
+	var req dto.CommunityParticipantReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	participants, err := h.communitySvc.RemoveParticipant(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(participants, "Participant removed from community"))
+	return c.JSON(dto.SuccessResp(participants, "Participant removed from community"))
 }

@@ -1,10 +1,10 @@
-package api
+package handler
 
 import (
 	"encoding/base64"
 	"errors"
 
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/service"
 	"wzap/internal/whatsapp"
 
@@ -31,27 +31,27 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *whatsapp.Engi
 // @Tags        Sessions
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SessionCreateReq true "Session data"
-// @Success     200  {object} model.APIResponse
-// @Failure     400  {object} model.APIResponse
+// @Param       body body     dto.SessionCreateReq true "Session data"
+// @Success     200  {object} dto.APIResponse
+// @Failure     400  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions [post]
 func (h *SessionHandler) Create(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
-		return c.Status(fiber.StatusForbidden).JSON(model.ErrorResp("Forbidden", "Admin access required"))
+		return c.Status(fiber.StatusForbidden).JSON(dto.ErrorResp("Forbidden", "Admin access required"))
 	}
 
-	var req model.SessionCreateReq
+	var req dto.SessionCreateReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 
 	session, err := h.sessionSvc.Create(c.Context(), req)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(model.SuccessResp(session, "Session created"))
+	return c.Status(fiber.StatusCreated).JSON(dto.SuccessResp(session, "Session created"))
 }
 
 // List godoc
@@ -59,20 +59,20 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 // @Description Returns all sessions
 // @Tags        Sessions
 // @Produce     json
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions [get]
 func (h *SessionHandler) List(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
-		return c.Status(fiber.StatusForbidden).JSON(model.ErrorResp("Forbidden", "Admin access required"))
+		return c.Status(fiber.StatusForbidden).JSON(dto.ErrorResp("Forbidden", "Admin access required"))
 	}
 
 	sessions, err := h.sessionSvc.List(c.Context())
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(sessions, "Sessions retrieved"))
+	return c.JSON(dto.SuccessResp(sessions, "Sessions retrieved"))
 }
 
 // Get godoc
@@ -81,17 +81,17 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionName path string true "Session name or ID"
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName} [get]
 func (h *SessionHandler) Get(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 	session, err := h.sessionSvc.Get(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", err.Error()))
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(session, "Session retrieved"))
+	return c.JSON(dto.SuccessResp(session, "Session retrieved"))
 }
 
 // Delete godoc
@@ -100,16 +100,16 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionName path string true "Session name or ID"
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName} [delete]
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 	if err := h.sessionSvc.Delete(c.Context(), id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(nil, "Session deleted"))
+	return c.JSON(dto.SuccessResp(nil, "Session deleted"))
 }
 
 // Connect godoc
@@ -118,7 +118,7 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionName path string true "Session name or ID"
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName}/connect [post]
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
@@ -127,9 +127,9 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 	client, qrChan, err := h.engine.Connect(c.Context(), id)
 	if err != nil {
 		if errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
-			return c.Status(fiber.StatusConflict).JSON(model.ErrorResp("Conflict", "A QR code connection is already pending for this session"))
+			return c.Status(fiber.StatusConflict).JSON(dto.ErrorResp("Conflict", "A QR code connection is already pending for this session"))
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Connection Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Connection Error", err.Error()))
 	}
 
 	status := "CONNECTED"
@@ -139,7 +139,7 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 		status = "CONNECTING"
 	}
 
-	return c.JSON(model.SuccessResp(map[string]string{"status": status}, "Connection initiated"))
+	return c.JSON(dto.SuccessResp(map[string]string{"status": status}, "Connection initiated"))
 }
 
 // Disconnect godoc
@@ -148,16 +148,16 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionName path string true "Session name or ID"
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 	if err := h.engine.Disconnect(id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Disconnect Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(nil, "Disconnected successfully"))
+	return c.JSON(dto.SuccessResp(nil, "Disconnected successfully"))
 }
 
 // QR godoc
@@ -166,7 +166,7 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionName path string true "Session name or ID"
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /sessions/{sessionName}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
@@ -174,11 +174,11 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 
 	qrCode, err := h.engine.GetQRCode(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", err.Error()))
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}
 
 	if qrCode == "" {
-		return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", "No QR code available. Call connect first, then poll this endpoint."))
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "No QR code available. Call connect first, then poll this endpoint."))
 	}
 
 	imageBytes, imgErr := qrcode.Encode(qrCode, qrcode.Medium, 256)
@@ -187,7 +187,7 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 		qrBase64 = "data:image/png;base64," + base64.StdEncoding.EncodeToString(imageBytes)
 	}
 
-	return c.JSON(model.SuccessResp(map[string]interface{}{
+	return c.JSON(dto.SuccessResp(map[string]interface{}{
 		"qr":    qrCode,
 		"image": qrBase64,
 	}, "QR Code retrieved"))

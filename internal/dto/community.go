@@ -1,4 +1,4 @@
-package model
+package dto
 
 type CreateCommunityReq struct {
 	Name        string `json:"name" validate:"required"`

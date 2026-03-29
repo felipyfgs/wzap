@@ -6,7 +6,7 @@ import (
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/whatsapp"
 )
 
@@ -18,7 +18,7 @@ func NewCommunityService(engine *whatsapp.Engine) *CommunityService {
 	return &CommunityService{engine: engine}
 }
 
-func (s *CommunityService) Create(ctx context.Context, sessionID string, req model.CreateCommunityReq) (*types.GroupInfo, error) {
+func (s *CommunityService) Create(ctx context.Context, sessionID string, req dto.CreateCommunityReq) (*types.GroupInfo, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -31,15 +31,15 @@ func (s *CommunityService) Create(ctx context.Context, sessionID string, req mod
 	return client.CreateGroup(ctx, reqCreate)
 }
 
-func (s *CommunityService) AddParticipant(ctx context.Context, sessionID string, req model.CommunityParticipantReq) ([]types.GroupParticipant, error) {
+func (s *CommunityService) AddParticipant(ctx context.Context, sessionID string, req dto.CommunityParticipantReq) ([]types.GroupParticipant, error) {
 	return s.updateParticipant(ctx, sessionID, req, whatsmeow.ParticipantChangeAdd)
 }
 
-func (s *CommunityService) RemoveParticipant(ctx context.Context, sessionID string, req model.CommunityParticipantReq) ([]types.GroupParticipant, error) {
+func (s *CommunityService) RemoveParticipant(ctx context.Context, sessionID string, req dto.CommunityParticipantReq) ([]types.GroupParticipant, error) {
 	return s.updateParticipant(ctx, sessionID, req, whatsmeow.ParticipantChangeRemove)
 }
 
-func (s *CommunityService) updateParticipant(ctx context.Context, sessionID string, req model.CommunityParticipantReq, action whatsmeow.ParticipantChange) ([]types.GroupParticipant, error) {
+func (s *CommunityService) updateParticipant(ctx context.Context, sessionID string, req dto.CommunityParticipantReq, action whatsmeow.ParticipantChange) ([]types.GroupParticipant, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err

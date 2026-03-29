@@ -1,8 +1,8 @@
-package api
+package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/service"
 )
 
@@ -14,12 +14,6 @@ func NewNewsletterHandler(newsletterSvc *service.NewsletterService) *NewsletterH
 	return &NewsletterHandler{newsletterSvc: newsletterSvc}
 }
 
-func (h *NewsletterHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if val := c.Locals("sessionId"); val != nil {
-		return val.(string), nil
-	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
-}
 
 // Create godoc
 // @Summary     Create a newsletter
@@ -27,24 +21,24 @@ func (h *NewsletterHandler) getSessionID(c *fiber.Ctx) (string, error) {
 // @Tags        Newsletter
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.CreateNewsletterReq true "Newsletter payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.CreateNewsletterReq true "Newsletter payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /newsletter/create [post]
 func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.CreateNewsletterReq
+	var req dto.CreateNewsletterReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	meta, err := h.newsletterSvc.Create(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(meta, "Newsletter created"))
+	return c.JSON(dto.SuccessResp(meta, "Newsletter created"))
 }
 
 // Info godoc
@@ -53,23 +47,23 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 // @Tags        Newsletter
 // @Produce     json
 // @Param       jid query string true "Newsletter JID"
-// @Success     200  {object} model.APIResponse
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /newsletter/info [post]
 func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
 	jid := c.Query("jid")
 	if jid == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", "jid is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "jid is required"))
 	}
 	meta, err := h.newsletterSvc.GetInfo(c.Context(), id, jid)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(meta, "Newsletter info retrieved"))
+	return c.JSON(dto.SuccessResp(meta, "Newsletter info retrieved"))
 }
 
 // Invite godoc
@@ -78,23 +72,23 @@ func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 // @Tags        Newsletter
 // @Produce     json
 // @Param       code query string true "Newsletter invite code"
-// @Success     200  {object} model.APIResponse
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /newsletter/invite [post]
 func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
 	code := c.Query("code")
 	if code == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", "code is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "code is required"))
 	}
 	meta, err := h.newsletterSvc.GetInvite(c.Context(), id, code)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(meta, "Newsletter invite info retrieved"))
+	return c.JSON(dto.SuccessResp(meta, "Newsletter invite info retrieved"))
 }
 
 // List godoc
@@ -102,19 +96,19 @@ func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 // @Description Returns all newsletters the current session is subscribed to
 // @Tags        Newsletter
 // @Produce     json
-// @Success     200  {object} model.APIResponse
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /newsletter/list [get]
 func (h *NewsletterHandler) List(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
 	newsletters, err := h.newsletterSvc.List(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(newsletters, "Subscribed newsletters retrieved"))
+	return c.JSON(dto.SuccessResp(newsletters, "Subscribed newsletters retrieved"))
 }
 
 // Messages godoc
@@ -123,24 +117,24 @@ func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 // @Tags        Newsletter
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.NewsletterMessageReq true "Messages pagination payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.NewsletterMessageReq true "Messages pagination payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /newsletter/messages [post]
 func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.NewsletterMessageReq
+	var req dto.NewsletterMessageReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgs, err := h.newsletterSvc.Messages(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(msgs, "Newsletter messages retrieved"))
+	return c.JSON(dto.SuccessResp(msgs, "Newsletter messages retrieved"))
 }
 
 // Subscribe godoc
@@ -150,11 +144,11 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     object{jid=string} true "Newsletter JID payload"
-// @Success     200  {object} model.APIResponse
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /newsletter/subscribe [post]
 func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
@@ -162,10 +156,10 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 		JID string `json:"jid"`
 	}
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.newsletterSvc.Subscribe(c.Context(), id, req.JID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Subscribed to newsletter"))
+	return c.JSON(dto.SuccessResp(nil, "Subscribed to newsletter"))
 }

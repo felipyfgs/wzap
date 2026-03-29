@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"go.mau.fi/whatsmeow/appstate"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/whatsapp"
 )
 
@@ -17,7 +17,7 @@ func NewChatService(engine *whatsapp.Engine) *ChatService {
 	return &ChatService{engine: engine}
 }
 
-func (s *ChatService) Archive(ctx context.Context, sessionID string, req model.ChatActionReq) error {
+func (s *ChatService) Archive(ctx context.Context, sessionID string, req dto.ChatActionReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (s *ChatService) Archive(ctx context.Context, sessionID string, req model.C
 	return client.SendAppState(ctx, patch)
 }
 
-func (s *ChatService) Mute(ctx context.Context, sessionID string, req model.ChatActionReq) error {
+func (s *ChatService) Mute(ctx context.Context, sessionID string, req dto.ChatActionReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (s *ChatService) Mute(ctx context.Context, sessionID string, req model.Chat
 	return client.SendAppState(ctx, patch)
 }
 
-func (s *ChatService) Pin(ctx context.Context, sessionID string, req model.ChatActionReq) error {
+func (s *ChatService) Pin(ctx context.Context, sessionID string, req dto.ChatActionReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (s *ChatService) Pin(ctx context.Context, sessionID string, req model.ChatA
 	return client.SendAppState(ctx, patch)
 }
 
-func (s *ChatService) Unpin(ctx context.Context, sessionID string, req model.ChatActionReq) error {
+func (s *ChatService) Unpin(ctx context.Context, sessionID string, req dto.ChatActionReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err

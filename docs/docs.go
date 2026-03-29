@@ -48,7 +48,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -56,7 +56,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -87,7 +87,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -95,7 +95,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -126,7 +126,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -134,7 +134,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -165,7 +165,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ChatActionReq"
+                            "$ref": "#/definitions/dto.ChatActionReq"
                         }
                     }
                 ],
@@ -173,7 +173,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -204,7 +204,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateCommunityReq"
+                            "$ref": "#/definitions/dto.CreateCommunityReq"
                         }
                     }
                 ],
@@ -212,7 +212,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -243,7 +243,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CommunityParticipantReq"
+                            "$ref": "#/definitions/dto.CommunityParticipantReq"
                         }
                     }
                 ],
@@ -251,7 +251,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -282,7 +282,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CommunityParticipantReq"
+                            "$ref": "#/definitions/dto.CommunityParticipantReq"
                         }
                     }
                 ],
@@ -290,7 +290,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -315,7 +315,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -346,7 +346,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GetAvatarReq"
+                            "$ref": "#/definitions/dto.GetAvatarReq"
                         }
                     }
                 ],
@@ -356,13 +356,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/model.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.GetAvatarResp"
+                                            "$ref": "#/definitions/dto.GetAvatarResp"
                                         }
                                     }
                                 }
@@ -397,7 +397,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.BlockContactReq"
+                            "$ref": "#/definitions/dto.BlockContactReq"
                         }
                     }
                 ],
@@ -405,7 +405,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -430,7 +430,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -461,7 +461,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CheckContactReq"
+                            "$ref": "#/definitions/dto.CheckContactReq"
                         }
                     }
                 ],
@@ -469,7 +469,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -500,7 +500,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GetUserInfoReq"
+                            "$ref": "#/definitions/dto.GetUserInfoReq"
                         }
                     }
                 ],
@@ -510,7 +510,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/model.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -518,7 +518,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.UserInfoResp"
+                                                "$ref": "#/definitions/dto.UserInfoResp"
                                             }
                                         }
                                     }
@@ -548,7 +548,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -579,7 +579,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SetProfilePictureReq"
+                            "$ref": "#/definitions/dto.SetProfilePictureReq"
                         }
                     }
                 ],
@@ -587,7 +587,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -618,7 +618,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.BlockContactReq"
+                            "$ref": "#/definitions/dto.BlockContactReq"
                         }
                     }
                 ],
@@ -626,7 +626,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -651,7 +651,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -682,7 +682,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupSettingReq"
+                            "$ref": "#/definitions/dto.GroupSettingReq"
                         }
                     }
                 ],
@@ -690,7 +690,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -721,7 +721,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateGroupReq"
+                            "$ref": "#/definitions/dto.CreateGroupReq"
                         }
                     }
                 ],
@@ -729,7 +729,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -760,7 +760,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupTextReq"
+                            "$ref": "#/definitions/dto.GroupTextReq"
                         }
                     }
                 ],
@@ -768,7 +768,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -802,7 +802,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -836,7 +836,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -864,7 +864,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJIDReq"
+                            "$ref": "#/definitions/dto.GroupJIDReq"
                         }
                     },
                     {
@@ -880,13 +880,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/model.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/model.GroupInviteLinkResp"
+                                            "$ref": "#/definitions/dto.GroupInviteLinkResp"
                                         }
                                     }
                                 }
@@ -921,7 +921,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJoinReq"
+                            "$ref": "#/definitions/dto.GroupJoinReq"
                         }
                     }
                 ],
@@ -929,7 +929,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -960,7 +960,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupSettingReq"
+                            "$ref": "#/definitions/dto.GroupSettingReq"
                         }
                     }
                 ],
@@ -968,7 +968,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -996,7 +996,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJIDReq"
+                            "$ref": "#/definitions/dto.GroupJIDReq"
                         }
                     }
                 ],
@@ -1004,7 +1004,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1035,7 +1035,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupSettingReq"
+                            "$ref": "#/definitions/dto.GroupSettingReq"
                         }
                     }
                 ],
@@ -1043,7 +1043,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1074,7 +1074,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupTextReq"
+                            "$ref": "#/definitions/dto.GroupTextReq"
                         }
                     }
                 ],
@@ -1082,7 +1082,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1113,7 +1113,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupParticipantReq"
+                            "$ref": "#/definitions/dto.GroupParticipantReq"
                         }
                     }
                 ],
@@ -1121,7 +1121,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1152,7 +1152,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupPhotoReq"
+                            "$ref": "#/definitions/dto.GroupPhotoReq"
                         }
                     }
                 ],
@@ -1160,7 +1160,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1188,7 +1188,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupJIDReq"
+                            "$ref": "#/definitions/dto.GroupJIDReq"
                         }
                     }
                 ],
@@ -1196,7 +1196,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1227,7 +1227,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.GroupRequestActionReq"
+                            "$ref": "#/definitions/dto.GroupRequestActionReq"
                         }
                     }
                 ],
@@ -1235,7 +1235,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1255,7 +1255,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1286,7 +1286,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelChatReq"
+                            "$ref": "#/definitions/dto.LabelChatReq"
                         }
                     }
                 ],
@@ -1294,7 +1294,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1325,7 +1325,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.EditLabelReq"
+                            "$ref": "#/definitions/dto.EditLabelReq"
                         }
                     }
                 ],
@@ -1333,7 +1333,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1364,7 +1364,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelMessageReq"
+                            "$ref": "#/definitions/dto.LabelMessageReq"
                         }
                     }
                 ],
@@ -1372,7 +1372,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1402,7 +1402,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1410,7 +1410,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1441,7 +1441,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendContactReq"
+                            "$ref": "#/definitions/dto.SendContactReq"
                         }
                     }
                 ],
@@ -1449,7 +1449,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1480,7 +1480,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.DeleteMessageReq"
+                            "$ref": "#/definitions/dto.DeleteMessageReq"
                         }
                     }
                 ],
@@ -1488,7 +1488,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1518,7 +1518,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1526,7 +1526,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1557,7 +1557,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.EditMessageReq"
+                            "$ref": "#/definitions/dto.EditMessageReq"
                         }
                     }
                 ],
@@ -1565,7 +1565,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1595,7 +1595,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1603,7 +1603,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1634,7 +1634,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendLinkReq"
+                            "$ref": "#/definitions/dto.SendLinkReq"
                         }
                     }
                 ],
@@ -1642,7 +1642,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1673,7 +1673,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendLocationReq"
+                            "$ref": "#/definitions/dto.SendLocationReq"
                         }
                     }
                 ],
@@ -1681,7 +1681,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1712,7 +1712,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendPollReq"
+                            "$ref": "#/definitions/dto.SendPollReq"
                         }
                     }
                 ],
@@ -1720,7 +1720,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1751,7 +1751,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SetPresenceReq"
+                            "$ref": "#/definitions/dto.SetPresenceReq"
                         }
                     }
                 ],
@@ -1759,7 +1759,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1790,7 +1790,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.ReactMessageReq"
+                            "$ref": "#/definitions/dto.ReactMessageReq"
                         }
                     }
                 ],
@@ -1798,7 +1798,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1829,7 +1829,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.MarkReadReq"
+                            "$ref": "#/definitions/dto.MarkReadReq"
                         }
                     }
                 ],
@@ -1837,7 +1837,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1868,7 +1868,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendStickerReq"
+                            "$ref": "#/definitions/dto.SendStickerReq"
                         }
                     }
                 ],
@@ -1876,7 +1876,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1907,7 +1907,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendTextReq"
+                            "$ref": "#/definitions/dto.SendTextReq"
                         }
                     }
                 ],
@@ -1915,7 +1915,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1945,7 +1945,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SendMediaReq"
+                            "$ref": "#/definitions/dto.SendMediaReq"
                         }
                     }
                 ],
@@ -1953,7 +1953,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -1984,7 +1984,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateNewsletterReq"
+                            "$ref": "#/definitions/dto.CreateNewsletterReq"
                         }
                     }
                 ],
@@ -1992,7 +1992,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2026,7 +2026,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2060,7 +2060,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2085,7 +2085,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2116,7 +2116,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.NewsletterMessageReq"
+                            "$ref": "#/definitions/dto.NewsletterMessageReq"
                         }
                     }
                 ],
@@ -2124,7 +2124,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2168,7 +2168,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2193,7 +2193,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2216,7 +2216,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2241,7 +2241,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2266,7 +2266,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2291,7 +2291,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2316,7 +2316,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2345,7 +2345,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.SessionCreateReq"
+                            "$ref": "#/definitions/dto.SessionCreateReq"
                         }
                     }
                 ],
@@ -2353,13 +2353,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/model.APIError"
+                            "$ref": "#/definitions/dto.APIError"
                         }
                     }
                 }
@@ -2392,7 +2392,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2427,7 +2427,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateWebhookReq"
+                            "$ref": "#/definitions/dto.CreateWebhookReq"
                         }
                     }
                 ],
@@ -2435,7 +2435,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2475,7 +2475,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2506,7 +2506,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelChatReq"
+                            "$ref": "#/definitions/dto.LabelChatReq"
                         }
                     }
                 ],
@@ -2514,7 +2514,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2545,7 +2545,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.LabelMessageReq"
+                            "$ref": "#/definitions/dto.LabelMessageReq"
                         }
                     }
                 ],
@@ -2553,7 +2553,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2578,7 +2578,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2607,7 +2607,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.CreateWebhookReq"
+                            "$ref": "#/definitions/dto.CreateWebhookReq"
                         }
                     }
                 ],
@@ -2615,7 +2615,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2655,7 +2655,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     }
                 }
@@ -2663,7 +2663,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "model.APIError": {
+        "dto.APIError": {
             "type": "object",
             "properties": {
                 "details": {
@@ -2677,7 +2677,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.APIResponse": {
+        "dto.APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2689,7 +2689,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.BlockContactReq": {
+        "dto.BlockContactReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2700,7 +2700,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.ChatActionReq": {
+        "dto.ChatActionReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2711,7 +2711,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CheckContactReq": {
+        "dto.CheckContactReq": {
             "type": "object",
             "required": [
                 "phones"
@@ -2725,7 +2725,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CommunityParticipantReq": {
+        "dto.CommunityParticipantReq": {
             "type": "object",
             "required": [
                 "jid",
@@ -2743,7 +2743,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CreateCommunityReq": {
+        "dto.CreateCommunityReq": {
             "type": "object",
             "required": [
                 "name"
@@ -2757,7 +2757,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CreateGroupReq": {
+        "dto.CreateGroupReq": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2777,7 +2777,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CreateNewsletterReq": {
+        "dto.CreateNewsletterReq": {
             "type": "object",
             "required": [
                 "name"
@@ -2795,7 +2795,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.CreateWebhookReq": {
+        "dto.CreateWebhookReq": {
             "type": "object",
             "required": [
                 "events",
@@ -2816,7 +2816,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.DeleteMessageReq": {
+        "dto.DeleteMessageReq": {
             "type": "object",
             "required": [
                 "message_id",
@@ -2831,7 +2831,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.EditLabelReq": {
+        "dto.EditLabelReq": {
             "type": "object",
             "required": [
                 "labelId"
@@ -2851,7 +2851,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.EditMessageReq": {
+        "dto.EditMessageReq": {
             "type": "object",
             "required": [
                 "message_id",
@@ -2870,7 +2870,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GetAvatarReq": {
+        "dto.GetAvatarReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2881,7 +2881,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GetAvatarResp": {
+        "dto.GetAvatarResp": {
             "type": "object",
             "properties": {
                 "id": {
@@ -2892,7 +2892,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GetUserInfoReq": {
+        "dto.GetUserInfoReq": {
             "type": "object",
             "required": [
                 "jids"
@@ -2906,7 +2906,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupInviteLinkResp": {
+        "dto.GroupInviteLinkResp": {
             "type": "object",
             "properties": {
                 "link": {
@@ -2914,7 +2914,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupJIDReq": {
+        "dto.GroupJIDReq": {
             "type": "object",
             "required": [
                 "groupJid"
@@ -2925,7 +2925,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupJoinReq": {
+        "dto.GroupJoinReq": {
             "type": "object",
             "required": [
                 "invite_code"
@@ -2936,7 +2936,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupParticipantReq": {
+        "dto.GroupParticipantReq": {
             "type": "object",
             "required": [
                 "action",
@@ -2963,7 +2963,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupPhotoReq": {
+        "dto.GroupPhotoReq": {
             "type": "object",
             "required": [
                 "groupJid",
@@ -2979,7 +2979,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupRequestActionReq": {
+        "dto.GroupRequestActionReq": {
             "type": "object",
             "required": [
                 "action",
@@ -3006,7 +3006,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupSettingReq": {
+        "dto.GroupSettingReq": {
             "type": "object",
             "required": [
                 "groupJid"
@@ -3020,7 +3020,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.GroupTextReq": {
+        "dto.GroupTextReq": {
             "type": "object",
             "required": [
                 "groupJid",
@@ -3035,7 +3035,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.LabelChatReq": {
+        "dto.LabelChatReq": {
             "type": "object",
             "required": [
                 "jid",
@@ -3050,7 +3050,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.LabelMessageReq": {
+        "dto.LabelMessageReq": {
             "type": "object",
             "required": [
                 "jid",
@@ -3069,7 +3069,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.MarkReadReq": {
+        "dto.MarkReadReq": {
             "type": "object",
             "required": [
                 "message_id",
@@ -3084,7 +3084,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.NewsletterMessageReq": {
+        "dto.NewsletterMessageReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -3101,7 +3101,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.ReactMessageReq": {
+        "dto.ReactMessageReq": {
             "type": "object",
             "required": [
                 "message_id",
@@ -3121,7 +3121,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SendContactReq": {
+        "dto.SendContactReq": {
             "type": "object",
             "required": [
                 "name",
@@ -3140,7 +3140,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SendLinkReq": {
+        "dto.SendLinkReq": {
             "type": "object",
             "required": [
                 "to",
@@ -3161,7 +3161,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SendLocationReq": {
+        "dto.SendLocationReq": {
             "type": "object",
             "required": [
                 "lat",
@@ -3186,7 +3186,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SendMediaReq": {
+        "dto.SendMediaReq": {
             "type": "object",
             "required": [
                 "mime_type",
@@ -3212,7 +3212,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SendPollReq": {
+        "dto.SendPollReq": {
             "type": "object",
             "required": [
                 "name",
@@ -3238,7 +3238,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SendStickerReq": {
+        "dto.SendStickerReq": {
             "type": "object",
             "required": [
                 "base64",
@@ -3257,7 +3257,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SendTextReq": {
+        "dto.SendTextReq": {
             "type": "object",
             "required": [
                 "text",
@@ -3273,7 +3273,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SessionCreateReq": {
+        "dto.SessionCreateReq": {
             "type": "object",
             "required": [
                 "id"
@@ -3288,7 +3288,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SetPresenceReq": {
+        "dto.SetPresenceReq": {
             "type": "object",
             "required": [
                 "presence",
@@ -3304,7 +3304,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SetProfilePictureReq": {
+        "dto.SetProfilePictureReq": {
             "type": "object",
             "required": [
                 "base64"
@@ -3315,7 +3315,7 @@ const docTemplate = `{
                 }
             }
         },
-        "model.UserInfoResp": {
+        "dto.UserInfoResp": {
             "type": "object",
             "properties": {
                 "devices": {

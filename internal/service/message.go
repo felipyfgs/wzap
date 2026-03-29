@@ -15,7 +15,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
 
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/whatsapp"
 )
 
@@ -27,7 +27,7 @@ func NewMessageService(engine *whatsapp.Engine) *MessageService {
 	return &MessageService{engine: engine}
 }
 
-func (s *MessageService) SendText(ctx context.Context, sessionID string, req model.SendTextReq) (string, error) {
+func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto.SendTextReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -53,23 +53,23 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req mod
 	return resp.ID, nil
 }
 
-func (s *MessageService) SendImage(ctx context.Context, sessionID string, req model.SendMediaReq) (string, error) {
+func (s *MessageService) SendImage(ctx context.Context, sessionID string, req dto.SendMediaReq) (string, error) {
 	return s.sendMedia(ctx, sessionID, req, whatsmeow.MediaImage)
 }
 
-func (s *MessageService) SendVideo(ctx context.Context, sessionID string, req model.SendMediaReq) (string, error) {
+func (s *MessageService) SendVideo(ctx context.Context, sessionID string, req dto.SendMediaReq) (string, error) {
 	return s.sendMedia(ctx, sessionID, req, whatsmeow.MediaVideo)
 }
 
-func (s *MessageService) SendDocument(ctx context.Context, sessionID string, req model.SendMediaReq) (string, error) {
+func (s *MessageService) SendDocument(ctx context.Context, sessionID string, req dto.SendMediaReq) (string, error) {
 	return s.sendMedia(ctx, sessionID, req, whatsmeow.MediaDocument)
 }
 
-func (s *MessageService) SendAudio(ctx context.Context, sessionID string, req model.SendMediaReq) (string, error) {
+func (s *MessageService) SendAudio(ctx context.Context, sessionID string, req dto.SendMediaReq) (string, error) {
 	return s.sendMedia(ctx, sessionID, req, whatsmeow.MediaAudio)
 }
 
-func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req model.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
+func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dto.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -158,7 +158,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req mo
 	return resp.ID, nil
 }
 
-func (s *MessageService) SendContact(ctx context.Context, sessionID string, req model.SendContactReq) (string, error) {
+func (s *MessageService) SendContact(ctx context.Context, sessionID string, req dto.SendContactReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -184,7 +184,7 @@ func (s *MessageService) SendContact(ctx context.Context, sessionID string, req 
 	return resp.ID, nil
 }
 
-func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req model.SendLocationReq) (string, error) {
+func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req dto.SendLocationReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -212,7 +212,7 @@ func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req
 	return resp.ID, nil
 }
 
-func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req model.SendPollReq) (string, error) {
+func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req dto.SendPollReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -233,7 +233,7 @@ func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req mod
 	return resp.ID, nil
 }
 
-func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req model.SendStickerReq) (string, error) {
+func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req dto.SendStickerReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -274,7 +274,7 @@ func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req 
 	return resp.ID, nil
 }
 
-func (s *MessageService) SendLink(ctx context.Context, sessionID string, req model.SendLinkReq) (string, error) {
+func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto.SendLinkReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -301,7 +301,7 @@ func (s *MessageService) SendLink(ctx context.Context, sessionID string, req mod
 	return resp.ID, nil
 }
 
-func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req model.EditMessageReq) (string, error) {
+func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req dto.EditMessageReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -326,7 +326,7 @@ func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req 
 	return resp.ID, nil
 }
 
-func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, req model.DeleteMessageReq) (string, error) {
+func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, req dto.DeleteMessageReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -347,7 +347,7 @@ func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, re
 	return resp.ID, nil
 }
 
-func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req model.ReactMessageReq) (string, error) {
+func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req dto.ReactMessageReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -368,7 +368,7 @@ func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req
 	return resp.ID, nil
 }
 
-func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req model.MarkReadReq) error {
+func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req dto.MarkReadReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -382,7 +382,7 @@ func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req mod
 	return client.MarkRead(ctx, []types.MessageID{req.MessageID}, time.Now(), jid, *client.Store.ID)
 }
 
-func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req model.SetPresenceReq) error {
+func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req dto.SetPresenceReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err

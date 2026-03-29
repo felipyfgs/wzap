@@ -12,9 +12,3 @@ type Webhook struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
-
-type CreateWebhookReq struct {
-	URL    string   `json:"url" validate:"required,url"`
-	Secret string   `json:"secret,omitempty"`
-	Events []string `json:"events" validate:"required"`
-}

@@ -14,9 +14,3 @@ type Session struct {
 	CreatedAt time.Time              `json:"createdAt"`
 	UpdatedAt time.Time              `json:"updatedAt"`
 }
-
-type SessionCreateReq struct {
-	Name     string                 `json:"name"`
-	ApiKey   string                 `json:"apiKey,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}

@@ -1,4 +1,4 @@
-package model
+package dto
 
 type LabelChatReq struct {
 	JID     string `json:"jid" validate:"required"`

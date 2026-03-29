@@ -1,9 +1,9 @@
-package model
+package dto
 
 type CreateNewsletterReq struct {
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description"`
-	Picture     string `json:"picture"` // base64
+	Picture     string `json:"picture"`
 }
 
 type NewsletterMessageReq struct {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog/log"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 )
 
 func Recovery() fiber.Handler {
@@ -23,7 +23,7 @@ func Recovery() fiber.Handler {
 					Str("stack", string(debug.Stack())).
 					Msg("panic recovered")
 
-				c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+				c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 			}
 		}()
 		return c.Next()

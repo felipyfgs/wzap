@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"wzap/internal/config"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/repo"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +23,7 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 		}
 
 		if authHeader == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Missing Authorization or Token header"))
+			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing Authorization or Token header"))
 		}
 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
@@ -41,6 +41,6 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 			return c.Next()
 		}
 
-		return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Invalid API Key or Session Token"))
+		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Invalid API Key or Session Token"))
 	}
 }

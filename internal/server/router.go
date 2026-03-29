@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/gofiber/swagger"
 
-	"wzap/internal/api"
+	"wzap/internal/handler"
 	"wzap/internal/middleware"
 	"wzap/internal/repo"
 	"wzap/internal/service"
@@ -33,16 +33,16 @@ func (s *Server) SetupRoutes() error {
 	chatSvc := service.NewChatService(engine)
 
 	// Initialize Handlers
-	healthHandler := api.NewHealthHandler(s.db != nil, s.nats != nil, s.minio != nil)
-	sessionHandler := api.NewSessionHandler(sessionSvc, engine)
-	messageHandler := api.NewMessageHandler(messageSvc)
-	contactHandler := api.NewContactHandler(contactSvc)
-	groupHandler := api.NewGroupHandler(groupSvc)
-	webhookHandler := api.NewWebhookHandler(webhookSvc)
-	labelHandler := api.NewLabelHandler(labelSvc)
-	newsletterHandler := api.NewNewsletterHandler(newsletterSvc)
-	communityHandler := api.NewCommunityHandler(communitySvc)
-	chatHandler := api.NewChatHandler(chatSvc)
+	healthHandler := handler.NewHealthHandler(s.db != nil, s.nats != nil, s.minio != nil)
+	sessionHandler := handler.NewSessionHandler(sessionSvc, engine)
+	messageHandler := handler.NewMessageHandler(messageSvc)
+	contactHandler := handler.NewContactHandler(contactSvc)
+	groupHandler := handler.NewGroupHandler(groupSvc)
+	webhookHandler := handler.NewWebhookHandler(webhookSvc)
+	labelHandler := handler.NewLabelHandler(labelSvc)
+	newsletterHandler := handler.NewNewsletterHandler(newsletterSvc)
+	communityHandler := handler.NewCommunityHandler(communitySvc)
+	chatHandler := handler.NewChatHandler(chatSvc)
 
 	// Swagger UI (No Auth)
 	s.App.Get("/swagger/*", swagger.HandlerDefault)

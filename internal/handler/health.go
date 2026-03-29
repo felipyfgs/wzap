@@ -1,8 +1,9 @@
-package api
+package handler
 
 import (
+	"wzap/internal/dto"
+
 	"github.com/gofiber/fiber/v2"
-	"wzap/internal/model"
 )
 
 type HealthHandler struct {
@@ -20,7 +21,7 @@ func NewHealthHandler(db, nats, minio bool) *HealthHandler {
 // @Description Returns the health status of the API and its dependencies
 // @Tags        Health
 // @Produce     json
-// @Success     200 {object} model.APIResponse
+// @Success     200 {object} dto.APIResponse
 // @Router      /health [get]
 func (h *HealthHandler) Check(c *fiber.Ctx) error {
 	status := map[string]interface{}{
@@ -31,5 +32,5 @@ func (h *HealthHandler) Check(c *fiber.Ctx) error {
 			"minio":    h.minioConn,
 		},
 	}
-	return c.JSON(model.SuccessResp(status, "wzap is running"))
+	return c.JSON(dto.SuccessResp(status, "wzap is running"))
 }

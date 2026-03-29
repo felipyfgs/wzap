@@ -8,6 +8,7 @@ import (
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
+	"wzap/internal/dto"
 	"wzap/internal/model"
 	"wzap/internal/whatsapp"
 )
@@ -57,7 +58,7 @@ func (s *GroupService) List(ctx context.Context, sessionID string) ([]model.Grou
 	return result, nil
 }
 
-func (s *GroupService) CreateGroup(ctx context.Context, sessionID string, req model.CreateGroupReq) (*model.Group, error) {
+func (s *GroupService) CreateGroup(ctx context.Context, sessionID string, req dto.CreateGroupReq) (*model.Group, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err

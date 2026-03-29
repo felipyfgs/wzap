@@ -7,7 +7,7 @@ import (
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/whatsapp"
 )
 
@@ -19,7 +19,7 @@ func NewNewsletterService(engine *whatsapp.Engine) *NewsletterService {
 	return &NewsletterService{engine: engine}
 }
 
-func (s *NewsletterService) Create(ctx context.Context, sessionID string, req model.CreateNewsletterReq) (*types.NewsletterMetadata, error) {
+func (s *NewsletterService) Create(ctx context.Context, sessionID string, req dto.CreateNewsletterReq) (*types.NewsletterMetadata, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (s *NewsletterService) List(ctx context.Context, sessionID string) ([]*type
 	return client.GetSubscribedNewsletters(ctx)
 }
 
-func (s *NewsletterService) Messages(ctx context.Context, sessionID string, req model.NewsletterMessageReq) ([]*types.NewsletterMessage, error) {
+func (s *NewsletterService) Messages(ctx context.Context, sessionID string, req dto.NewsletterMessageReq) ([]*types.NewsletterMessage, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err

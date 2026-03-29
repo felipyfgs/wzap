@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"wzap/internal/dto"
 	"wzap/internal/model"
 	"wzap/internal/repo"
 
@@ -19,7 +20,7 @@ func NewWebhookService(repo *repo.WebhookRepository) *WebhookService {
 	return &WebhookService{repo: repo}
 }
 
-func (s *WebhookService) Create(ctx context.Context, sessionID string, req model.CreateWebhookReq) (*model.Webhook, error) {
+func (s *WebhookService) Create(ctx context.Context, sessionID string, req dto.CreateWebhookReq) (*model.Webhook, error) {
 	webhook := &model.Webhook{
 		ID:        uuid.NewString(),
 		SessionID: sessionID,

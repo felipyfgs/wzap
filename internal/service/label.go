@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"go.mau.fi/whatsmeow/appstate"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/whatsapp"
 )
 
@@ -16,7 +16,7 @@ func NewLabelService(engine *whatsapp.Engine) *LabelService {
 	return &LabelService{engine: engine}
 }
 
-func (s *LabelService) AddToChat(ctx context.Context, sessionID string, req model.LabelChatReq) error {
+func (s *LabelService) AddToChat(ctx context.Context, sessionID string, req dto.LabelChatReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -32,7 +32,7 @@ func (s *LabelService) AddToChat(ctx context.Context, sessionID string, req mode
 	return client.SendAppState(ctx, patch)
 }
 
-func (s *LabelService) RemoveFromChat(ctx context.Context, sessionID string, req model.LabelChatReq) error {
+func (s *LabelService) RemoveFromChat(ctx context.Context, sessionID string, req dto.LabelChatReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -47,7 +47,7 @@ func (s *LabelService) RemoveFromChat(ctx context.Context, sessionID string, req
 	return client.SendAppState(ctx, patch)
 }
 
-func (s *LabelService) AddToMessage(ctx context.Context, sessionID string, req model.LabelMessageReq) error {
+func (s *LabelService) AddToMessage(ctx context.Context, sessionID string, req dto.LabelMessageReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func (s *LabelService) AddToMessage(ctx context.Context, sessionID string, req m
 	return client.SendAppState(ctx, patch)
 }
 
-func (s *LabelService) RemoveFromMessage(ctx context.Context, sessionID string, req model.LabelMessageReq) error {
+func (s *LabelService) RemoveFromMessage(ctx context.Context, sessionID string, req dto.LabelMessageReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func (s *LabelService) RemoveFromMessage(ctx context.Context, sessionID string, 
 	return client.SendAppState(ctx, patch)
 }
 
-func (s *LabelService) EditLabel(ctx context.Context, sessionID string, req model.EditLabelReq) error {
+func (s *LabelService) EditLabel(ctx context.Context, sessionID string, req dto.EditLabelReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err

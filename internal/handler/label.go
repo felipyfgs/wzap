@@ -1,8 +1,8 @@
-package api
+package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/service"
 )
 
@@ -14,12 +14,6 @@ func NewLabelHandler(labelSvc *service.LabelService) *LabelHandler {
 	return &LabelHandler{labelSvc: labelSvc}
 }
 
-func (h *LabelHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if val := c.Locals("sessionId"); val != nil {
-		return val.(string), nil
-	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
-}
 
 // AddToChat godoc
 // @Summary     Add label to chat
@@ -27,23 +21,23 @@ func (h *LabelHandler) getSessionID(c *fiber.Ctx) (string, error) {
 // @Tags        Labels
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.LabelChatReq true "Label chat payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.LabelChatReq true "Label chat payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /label/chat [post]
 func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.LabelChatReq
+	var req dto.LabelChatReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.labelSvc.AddToChat(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Label added to chat"))
+	return c.JSON(dto.SuccessResp(nil, "Label added to chat"))
 }
 
 // RemoveFromChat godoc
@@ -52,23 +46,23 @@ func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
 // @Tags        Labels
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.LabelChatReq true "Label chat payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.LabelChatReq true "Label chat payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /unlabel/chat [post]
 func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.LabelChatReq
+	var req dto.LabelChatReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.labelSvc.RemoveFromChat(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Label removed from chat"))
+	return c.JSON(dto.SuccessResp(nil, "Label removed from chat"))
 }
 
 // AddToMessage godoc
@@ -77,23 +71,23 @@ func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
 // @Tags        Labels
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.LabelMessageReq true "Label message payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.LabelMessageReq true "Label message payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /label/message [post]
 func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.LabelMessageReq
+	var req dto.LabelMessageReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.labelSvc.AddToMessage(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Label added to message"))
+	return c.JSON(dto.SuccessResp(nil, "Label added to message"))
 }
 
 // RemoveFromMessage godoc
@@ -102,23 +96,23 @@ func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
 // @Tags        Labels
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.LabelMessageReq true "Label message payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.LabelMessageReq true "Label message payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /unlabel/message [post]
 func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.LabelMessageReq
+	var req dto.LabelMessageReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.labelSvc.RemoveFromMessage(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Label removed from message"))
+	return c.JSON(dto.SuccessResp(nil, "Label removed from message"))
 }
 
 // EditLabel godoc
@@ -127,21 +121,21 @@ func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
 // @Tags        Labels
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.EditLabelReq true "Edit label payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.EditLabelReq true "Edit label payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /label/edit [post]
 func (h *LabelHandler) EditLabel(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.EditLabelReq
+	var req dto.EditLabelReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.labelSvc.EditLabel(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Label edited"))
+	return c.JSON(dto.SuccessResp(nil, "Label edited"))
 }

@@ -1,10 +1,10 @@
-package api
+package handler
 
 import (
 	"context"
 
 	"github.com/gofiber/fiber/v2"
-	"wzap/internal/model"
+	"wzap/internal/dto"
 	"wzap/internal/service"
 )
 
@@ -16,12 +16,6 @@ func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
 	return &MessageHandler{msgSvc: msgSvc}
 }
 
-func (h *MessageHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if val := c.Locals("sessionId"); val != nil {
-		return val.(string), nil
-	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
-}
 
 // SendText godoc
 // @Summary     Send a text message
@@ -29,26 +23,26 @@ func (h *MessageHandler) getSessionID(c *fiber.Ctx) (string, error) {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendTextReq true "Message payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendTextReq true "Message payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/text [post]
 func (h *MessageHandler) SendText(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SendTextReq
+	var req dto.SendTextReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 
 	msgID, err := h.msgSvc.SendText(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Text message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Text message sent"))
 }
 
 // SendImage godoc
@@ -56,8 +50,8 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendMediaReq true "Media payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendMediaReq true "Media payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/image [post]
 func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
@@ -69,8 +63,8 @@ func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendMediaReq true "Media payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendMediaReq true "Media payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/video [post]
 func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
@@ -82,8 +76,8 @@ func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendMediaReq true "Media payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendMediaReq true "Media payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/document [post]
 func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
@@ -95,34 +89,34 @@ func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendMediaReq true "Media payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendMediaReq true "Media payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/audio [post]
 func (h *MessageHandler) SendAudio(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendAudio)
 }
 
-func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, string, model.SendMediaReq) (string, error)) error {
-	id, err := h.getSessionID(c)
+func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, string, dto.SendMediaReq) (string, error)) error {
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SendMediaReq
+	var req dto.SendMediaReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 
 	if req.Base64 == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", "base64 media data is required"))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "base64 media data is required"))
 	}
 
 	msgID, err := sendFunc(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
 
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Media message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Media message sent"))
 }
 
 // SendContact godoc
@@ -131,24 +125,24 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendContactReq true "Contact payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendContactReq true "Contact payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/contact [post]
 func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SendContactReq
+	var req dto.SendContactReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.SendContact(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Contact message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Contact message sent"))
 }
 
 // SendLocation godoc
@@ -157,24 +151,24 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendLocationReq true "Location payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendLocationReq true "Location payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/location [post]
 func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SendLocationReq
+	var req dto.SendLocationReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.SendLocation(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Location message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Location message sent"))
 }
 
 // SendPoll godoc
@@ -183,24 +177,24 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendPollReq true "Poll payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendPollReq true "Poll payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/poll [post]
 func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SendPollReq
+	var req dto.SendPollReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.SendPoll(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Poll message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Poll message sent"))
 }
 
 // SendSticker godoc
@@ -209,24 +203,24 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendStickerReq true "Sticker payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendStickerReq true "Sticker payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/sticker [post]
 func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SendStickerReq
+	var req dto.SendStickerReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.SendSticker(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Sticker message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Sticker message sent"))
 }
 
 // SendLink godoc
@@ -235,24 +229,24 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SendLinkReq true "Link payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SendLinkReq true "Link payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/link [post]
 func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SendLinkReq
+	var req dto.SendLinkReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.SendLink(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Link message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Link message sent"))
 }
 
 // EditMessage godoc
@@ -261,24 +255,24 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.EditMessageReq true "Edit payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.EditMessageReq true "Edit payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/edit [post]
 func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.EditMessageReq
+	var req dto.EditMessageReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.EditMessage(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Message edited"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Message edited"))
 }
 
 // DeleteMessage godoc
@@ -287,24 +281,24 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.DeleteMessageReq true "Delete payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.DeleteMessageReq true "Delete payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/delete [post]
 func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.DeleteMessageReq
+	var req dto.DeleteMessageReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.DeleteMessage(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Message deleted"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Message deleted"))
 }
 
 // ReactMessage godoc
@@ -313,24 +307,24 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.ReactMessageReq true "Reaction payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.ReactMessageReq true "Reaction payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/reaction [post]
 func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.ReactMessageReq
+	var req dto.ReactMessageReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	msgID, err := h.msgSvc.ReactMessage(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(map[string]string{"message_id": msgID}, "Message reacted"))
+	return c.JSON(dto.SuccessResp(map[string]string{"message_id": msgID}, "Message reacted"))
 }
 
 // MarkRead godoc
@@ -339,23 +333,23 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.MarkReadReq true "Mark read payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.MarkReadReq true "Mark read payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/read [post]
 func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.MarkReadReq
+	var req dto.MarkReadReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.msgSvc.MarkRead(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Message marked as read"))
+	return c.JSON(dto.SuccessResp(nil, "Message marked as read"))
 }
 
 // SetPresence godoc
@@ -364,21 +358,21 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       body body     model.SetPresenceReq true "Presence payload"
-// @Success     200  {object} model.APIResponse
+// @Param       body body     dto.SetPresenceReq true "Presence payload"
+// @Success     200  {object} dto.APIResponse
 // @Security    BearerAuth
 // @Router      /messages/presence [post]
 func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
+	id, err := getSessionID(c)
 	if err != nil {
 		return err
 	}
-	var req model.SetPresenceReq
+	var req dto.SetPresenceReq
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 	if err := h.msgSvc.SetPresence(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Send Error", err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(model.SuccessResp(nil, "Presence set"))
+	return c.JSON(dto.SuccessResp(nil, "Presence set"))
 }

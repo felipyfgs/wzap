@@ -4,13 +4,99 @@ wzap is a multi-session WhatsApp REST API built on [whatsmeow](https://github.co
 
 ---
 
+## Table of Contents
+
+- [Base URL](#base-url)
+- [Authentication](#authentication)
+- [Response Format](#response-format)
+- [Health](#health)
+  - [Health Check](#health-check)
+- [Sessions](#sessions)
+  - [Create Session](#create-session-admin-only)
+  - [List Sessions](#list-sessions-admin-only)
+  - [Get Session](#get-session)
+  - [Delete Session](#delete-session)
+  - [Connect Session](#connect-session)
+  - [Disconnect Session](#disconnect-session)
+  - [Get QR Code](#get-qr-code)
+- [Messages](#messages)
+  - [Send Text](#send-text)
+  - [Send Image / Video / Document / Audio](#send-image--video--document--audio)
+  - [Send Sticker](#send-sticker)
+  - [Send Contact](#send-contact)
+  - [Send Location](#send-location)
+  - [Send Poll](#send-poll)
+  - [Send Link Preview](#send-link-preview)
+  - [Edit Message](#edit-message)
+  - [Delete Message](#delete-message)
+  - [React to Message](#react-to-message)
+  - [Mark Message as Read](#mark-message-as-read)
+  - [Set Typing / Recording Presence](#set-typing--recording-presence)
+- [Contacts](#contacts)
+  - [List Contacts](#list-contacts)
+  - [Check Contacts on WhatsApp](#check-contacts-on-whatsapp)
+  - [Get Contact Avatar](#get-contact-avatar)
+  - [Block Contact](#block-contact)
+  - [Unblock Contact](#unblock-contact)
+  - [Get Blocklist](#get-blocklist)
+  - [Get User Info](#get-user-info)
+  - [Get Privacy Settings](#get-privacy-settings)
+  - [Set Profile Picture](#set-profile-picture)
+- [Groups](#groups)
+  - [List Groups](#list-groups)
+  - [Create Group](#create-group)
+  - [Get Group Info](#get-group-info)
+  - [Get Group Info from Invite Link](#get-group-info-from-invite-link)
+  - [Join Group with Invite Link](#join-group-with-invite-link)
+  - [Get Invite Link](#get-invite-link)
+  - [Leave Group](#leave-group)
+  - [Update Participants](#update-participants)
+  - [Get Join Requests](#get-join-requests)
+  - [Approve / Reject Join Requests](#approve--reject-join-requests)
+  - [Update Group Name](#update-group-name)
+  - [Update Group Description](#update-group-description)
+  - [Update Group Photo](#update-group-photo)
+  - [Set Announce Mode](#set-announce-mode)
+  - [Set Locked Mode](#set-locked-mode)
+  - [Set Join Approval](#set-join-approval)
+- [Chat](#chat)
+  - [Archive Chat](#archive-chat)
+  - [Mute Chat](#mute-chat)
+  - [Pin Chat](#pin-chat)
+  - [Unpin Chat](#unpin-chat)
+- [Labels](#labels)
+  - [Add Label to Chat](#add-label-to-chat)
+  - [Remove Label from Chat](#remove-label-from-chat)
+  - [Add Label to Message](#add-label-to-message)
+  - [Remove Label from Message](#remove-label-from-message)
+  - [Edit Label](#edit-label)
+- [Newsletter (WhatsApp Channels)](#newsletter-whatsapp-channels)
+  - [Create Newsletter](#create-newsletter)
+  - [Get Newsletter Info](#get-newsletter-info)
+  - [Get Newsletter Info from Invite](#get-newsletter-info-from-invite)
+  - [List Subscribed Newsletters](#list-subscribed-newsletters)
+  - [Get Newsletter Messages](#get-newsletter-messages)
+  - [Subscribe to Newsletter](#subscribe-to-newsletter)
+- [Community](#community)
+  - [Create Community](#create-community)
+  - [Add Subgroup to Community](#add-subgroup-to-community)
+  - [Remove Subgroup from Community](#remove-subgroup-from-community)
+- [Webhooks](#webhooks)
+  - [Create Webhook](#create-webhook)
+  - [List Webhooks](#list-webhooks)
+  - [Delete Webhook](#delete-webhook)
+- [Webhook Payload](#webhook-payload)
+- [Supported Event Types](#supported-event-types)
+
+---
+
 ## Base URL
 
 ```
 http://<host>:<port>
 ```
 
-Default port: `3000` (configurable via `PORT` env var).
+Default port: `8080` (configurable via `PORT` env var).
 
 ---
 
@@ -26,8 +112,8 @@ Two token types are accepted:
 
 | Type | Value | Access |
 |---|---|---|
-| **Admin** | `API_KEY` env var | Full access — session management + all session routes |
-| **Session** | Session `apiKey` | Scoped to that session only |
+| **Admin** | `API_TOKEN` env var | Full access — session management + all session routes |
+| **Session** | Session `token` | Scoped to that session only |
 
 ---
 
@@ -62,7 +148,7 @@ HTTP status codes are the source of truth (`2xx` = success, `4xx`/`5xx` = error)
 `GET /health` — No authentication required.
 
 ```bash
-curl http://localhost:3000/health
+curl http://localhost:8080/health
 ```
 
 **Response:**
@@ -92,7 +178,7 @@ Session-scoped routes use the pattern `/sessions/:sessionId/...` where `:session
 `POST /sessions`
 
 ```bash
-curl -X POST http://localhost:3000/sessions \
+curl -X POST http://localhost:8080/sessions \
   -H 'Token: ADMIN_TOKEN' \
   -H 'Content-Type: application/json' \
   -d '{"name": "my-session", "metadata": {"owner": "john"}}'
@@ -133,7 +219,7 @@ curl -X POST http://localhost:3000/sessions \
 `GET /sessions`
 
 ```bash
-curl http://localhost:3000/sessions \
+curl http://localhost:8080/sessions \
   -H 'Token: ADMIN_TOKEN'
 ```
 
@@ -146,10 +232,10 @@ curl http://localhost:3000/sessions \
 > `:sessionId` accepts either the session **UUID** or the session **name**.
 
 ```bash
-curl http://localhost:3000/sessions/my-session \
+curl http://localhost:8080/sessions/my-session \
   -H 'Token: SESSION_KEY'
 # or by UUID:
-curl http://localhost:3000/sessions/550e8400-e29b-41d4-a716-446655440000 \
+curl http://localhost:8080/sessions/550e8400-e29b-41d4-a716-446655440000 \
   -H 'Token: SESSION_KEY'
 ```
 
@@ -160,7 +246,7 @@ curl http://localhost:3000/sessions/550e8400-e29b-41d4-a716-446655440000 \
 `DELETE /sessions/:sessionId`
 
 ```bash
-curl -X DELETE http://localhost:3000/sessions/my-session \
+curl -X DELETE http://localhost:8080/sessions/my-session \
   -H 'Token: SESSION_KEY'
 ```
 
@@ -173,7 +259,7 @@ curl -X DELETE http://localhost:3000/sessions/my-session \
 Connects the session. If the device is not yet paired, returns status `PAIRING` and begins generating QR codes (poll `/qr` to retrieve them).
 
 ```bash
-curl -X POST http://localhost:3000/sessions/my-session/connect \
+curl -X POST http://localhost:8080/sessions/my-session/connect \
   -H 'Token: SESSION_KEY'
 ```
 
@@ -195,7 +281,7 @@ Status values: `PAIRING` | `CONNECTING` | `CONNECTED`
 `POST /sessions/:sessionId/disconnect`
 
 ```bash
-curl -X POST http://localhost:3000/sessions/my-session/disconnect \
+curl -X POST http://localhost:8080/sessions/my-session/disconnect \
   -H 'Token: SESSION_KEY'
 ```
 
@@ -208,7 +294,7 @@ curl -X POST http://localhost:3000/sessions/my-session/disconnect \
 Call `/connect` first, then poll this endpoint until the QR is available. Returns the raw QR string and a base64 PNG image.
 
 ```bash
-curl http://localhost:3000/sessions/my-session/qr \
+curl http://localhost:8080/sessions/my-session/qr \
   -H 'Token: SESSION_KEY'
 ```
 
@@ -239,7 +325,7 @@ The `jid` field accepts either a **phone number** (e.g. `5511999999999`) or a **
 `POST /sessions/:sessionId/messages/text`
 
 ```bash
-curl -X POST http://localhost:3000/sessions/my-session/messages/text \
+curl -X POST http://localhost:8080/sessions/my-session/messages/text \
   -H 'Token: SESSION_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"jid": "5511999999999", "text": "Hello!"}'
@@ -272,7 +358,7 @@ curl -X POST http://localhost:3000/sessions/my-session/messages/text \
 `POST /sessions/:sessionId/messages/audio`
 
 ```bash
-curl -X POST http://localhost:3000/sessions/my-session/messages/image \
+curl -X POST http://localhost:8080/sessions/my-session/messages/image \
   -H 'Token: SESSION_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"jid":"5511999999999","mimeType":"image/jpeg","base64":"<base64>","caption":"Look at this"}'
@@ -447,7 +533,7 @@ Pass an empty `reaction` string to remove an existing reaction.
 `GET /sessions/:sessionId/contacts`
 
 ```bash
-curl http://localhost:3000/sessions/my-session/contacts \
+curl http://localhost:8080/sessions/my-session/contacts \
   -H 'Token: SESSION_KEY'
 ```
 
@@ -895,8 +981,8 @@ Labels are a WhatsApp Business feature for organizing chats.
 `POST /sessions/:sessionId/newsletter/info?jid=<newsletterJid>`
 
 ```bash
-curl "http://localhost:3000/sessions/my-session/newsletter/info?jid=120363166361227321@newsletter" \
-  -H 'Authorization: Bearer SESSION_KEY'
+curl "http://localhost:8080/sessions/my-session/newsletter/info?jid=120363166361227321@newsletter" \
+  -H 'Token: SESSION_TOKEN'
 ```
 
 ---
@@ -1028,7 +1114,7 @@ See [Supported Event Types](#supported-event-types) for all valid `events` value
 `DELETE /sessions/:sessionId/webhooks/:wid`
 
 ```bash
-curl -X DELETE http://localhost:3000/sessions/my-session/webhooks/webhook-uuid \
+curl -X DELETE http://localhost:8080/sessions/my-session/webhooks/webhook-uuid \
   -H 'Token: SESSION_KEY'
 ```
 

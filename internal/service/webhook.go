@@ -21,12 +21,16 @@ func NewWebhookService(repo *repo.WebhookRepository) *WebhookService {
 }
 
 func (s *WebhookService) Create(ctx context.Context, sessionID string, req dto.CreateWebhookReq) (*model.Webhook, error) {
+	events := make([]string, len(req.Events))
+	for i, e := range req.Events {
+		events[i] = string(e)
+	}
 	webhook := &model.Webhook{
 		ID:        uuid.NewString(),
 		SessionID: sessionID,
 		URL:       req.URL,
 		Secret:    req.Secret,
-		Events:    req.Events,
+		Events:    events,
 		Enabled:   true,
 		CreatedAt: time.Now(),
 	}

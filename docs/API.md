@@ -233,7 +233,6 @@ curl -X POST http://localhost:8080/sessions \
     },
     "webhook": {
       "id": "uuid",
-      "sessionId": "uuid",
       "url": "https://my-server.com/hook",
       "events": ["Message", "Connected", "Disconnected"],
       "enabled": true,

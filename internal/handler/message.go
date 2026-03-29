@@ -16,7 +16,6 @@ func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
 	return &MessageHandler{msgSvc: msgSvc}
 }
 
-
 // SendText godoc
 // @Summary     Send a text message
 // @Description Sends a text message via WhatsApp. If :id is omitted, session is identified from Bearer token.

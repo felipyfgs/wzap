@@ -119,6 +119,6 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	}
 
 	if m.dispatcher != nil {
-		m.dispatcher.Dispatch(sessionID, eventType, bytes)
+		go m.dispatcher.Dispatch(sessionID, eventType, bytes)
 	}
 }

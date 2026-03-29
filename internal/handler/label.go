@@ -14,7 +14,6 @@ func NewLabelHandler(labelSvc *service.LabelService) *LabelHandler {
 	return &LabelHandler{labelSvc: labelSvc}
 }
 
-
 // AddToChat godoc
 // @Summary     Add label to chat
 // @Description Applies a label to an entire chat conversation

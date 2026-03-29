@@ -16,7 +16,6 @@ func NewGroupHandler(groupSvc *service.GroupService) *GroupHandler {
 	return &GroupHandler{groupSvc: groupSvc}
 }
 
-
 // List godoc
 // @Summary     List joined groups
 // @Description Returns all WhatsApp groups the session is part of

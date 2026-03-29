@@ -14,7 +14,6 @@ func NewContactHandler(contactSvc *service.ContactService) *ContactHandler {
 	return &ContactHandler{contactSvc: contactSvc}
 }
 
-
 // List godoc
 // @Summary     List contacts
 // @Description Returns all contacts from the WhatsApp session

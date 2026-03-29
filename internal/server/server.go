@@ -19,9 +19,11 @@ type Server struct {
 	App    *fiber.App
 	Config *config.Config
 
-	db    *pgxpool.Pool
-	nats  *broker.Nats
-	minio *storage.Minio
+	db     *pgxpool.Pool
+	nats   *broker.Nats
+	minio  *storage.Minio
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 func New(cfg *config.Config, dbPool *pgxpool.Pool, n *broker.Nats, m *storage.Minio) *Server {
@@ -49,12 +51,16 @@ func New(cfg *config.Config, dbPool *pgxpool.Pool, n *broker.Nats, m *storage.Mi
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return &Server{
 		App:    app,
 		Config: cfg,
 		db:     dbPool,
 		nats:   n,
 		minio:  m,
+		ctx:    ctx,
+		cancel: cancel,
 	}
 }
 
@@ -66,6 +72,7 @@ func (s *Server) Start() error {
 
 func (s *Server) Shutdown(ctx context.Context) error {
 	log.Info().Msg("Shutting down API server")
+	s.cancel()
 
 	// Fiber shutdown might block, we wrap it in a channel with context timeout
 	done := make(chan error, 1)

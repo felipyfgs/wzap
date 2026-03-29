@@ -8,31 +8,31 @@ const EventAll EventType = "All"
 
 // Messages
 const (
-	EventMessage             EventType = "Message"
+	EventMessage              EventType = "Message"
 	EventUndecryptableMessage EventType = "UndecryptableMessage"
-	EventMediaRetry          EventType = "MediaRetry"
-	EventReceipt             EventType = "Receipt"
-	EventDeleteForMe         EventType = "DeleteForMe"
+	EventMediaRetry           EventType = "MediaRetry"
+	EventReceipt              EventType = "Receipt"
+	EventDeleteForMe          EventType = "DeleteForMe"
 )
 
 // Connection / Session lifecycle
 const (
-	EventConnected                  EventType = "Connected"
-	EventDisconnected               EventType = "Disconnected"
-	EventConnectFailure             EventType = "ConnectFailure"
-	EventLoggedOut                  EventType = "LoggedOut"
-	EventPairSuccess                EventType = "PairSuccess"
-	EventPairError                  EventType = "PairError"
-	EventQR                         EventType = "QR"
+	EventConnected                   EventType = "Connected"
+	EventDisconnected                EventType = "Disconnected"
+	EventConnectFailure              EventType = "ConnectFailure"
+	EventLoggedOut                   EventType = "LoggedOut"
+	EventPairSuccess                 EventType = "PairSuccess"
+	EventPairError                   EventType = "PairError"
+	EventQR                          EventType = "QR"
 	EventQRScannedWithoutMultidevice EventType = "QRScannedWithoutMultidevice"
-	EventStreamError                EventType = "StreamError"
-	EventStreamReplaced             EventType = "StreamReplaced"
-	EventKeepAliveTimeout           EventType = "KeepAliveTimeout"
-	EventKeepAliveRestored          EventType = "KeepAliveRestored"
-	EventClientOutdated             EventType = "ClientOutdated"
-	EventTemporaryBan               EventType = "TemporaryBan"
-	EventCATRefreshError            EventType = "CATRefreshError"
-	EventManualLoginReconnect       EventType = "ManualLoginReconnect"
+	EventStreamError                 EventType = "StreamError"
+	EventStreamReplaced              EventType = "StreamReplaced"
+	EventKeepAliveTimeout            EventType = "KeepAliveTimeout"
+	EventKeepAliveRestored           EventType = "KeepAliveRestored"
+	EventClientOutdated              EventType = "ClientOutdated"
+	EventTemporaryBan                EventType = "TemporaryBan"
+	EventCATRefreshError             EventType = "CATRefreshError"
+	EventManualLoginReconnect        EventType = "ManualLoginReconnect"
 )
 
 // Contacts & Identity
@@ -59,21 +59,21 @@ const (
 
 // Chat state
 const (
-	EventArchive             EventType = "Archive"
-	EventMute                EventType = "Mute"
-	EventPin                 EventType = "Pin"
-	EventStar                EventType = "Star"
-	EventClearChat           EventType = "ClearChat"
-	EventDeleteChat          EventType = "DeleteChat"
-	EventMarkChatAsRead      EventType = "MarkChatAsRead"
+	EventArchive               EventType = "Archive"
+	EventMute                  EventType = "Mute"
+	EventPin                   EventType = "Pin"
+	EventStar                  EventType = "Star"
+	EventClearChat             EventType = "ClearChat"
+	EventDeleteChat            EventType = "DeleteChat"
+	EventMarkChatAsRead        EventType = "MarkChatAsRead"
 	EventUnarchiveChatsSetting EventType = "UnarchiveChatsSetting"
 )
 
 // Labels
 const (
-	EventLabelEdit                EventType = "LabelEdit"
-	EventLabelAssociationChat     EventType = "LabelAssociationChat"
-	EventLabelAssociationMessage  EventType = "LabelAssociationMessage"
+	EventLabelEdit               EventType = "LabelEdit"
+	EventLabelAssociationChat    EventType = "LabelAssociationChat"
+	EventLabelAssociationMessage EventType = "LabelAssociationMessage"
 )
 
 // Calls
@@ -91,29 +91,29 @@ const (
 
 // Newsletter (WhatsApp Channels)
 const (
-	EventNewsletterJoin        EventType = "NewsletterJoin"
-	EventNewsletterLeave       EventType = "NewsletterLeave"
-	EventNewsletterMuteChange  EventType = "NewsletterMuteChange"
-	EventNewsletterLiveUpdate  EventType = "NewsletterLiveUpdate"
+	EventNewsletterJoin       EventType = "NewsletterJoin"
+	EventNewsletterLeave      EventType = "NewsletterLeave"
+	EventNewsletterMuteChange EventType = "NewsletterMuteChange"
+	EventNewsletterLiveUpdate EventType = "NewsletterLiveUpdate"
 )
 
 // Sync
 const (
-	EventHistorySync         EventType = "HistorySync"
-	EventAppState            EventType = "AppState"
+	EventHistorySync          EventType = "HistorySync"
+	EventAppState             EventType = "AppState"
 	EventAppStateSyncComplete EventType = "AppStateSyncComplete"
-	EventAppStateSyncError   EventType = "AppStateSyncError"
+	EventAppStateSyncError    EventType = "AppStateSyncError"
 	EventOfflineSyncCompleted EventType = "OfflineSyncCompleted"
-	EventOfflineSyncPreview  EventType = "OfflineSyncPreview"
+	EventOfflineSyncPreview   EventType = "OfflineSyncPreview"
 )
 
 // Privacy & Settings
 const (
-	EventPrivacySettings  EventType = "PrivacySettings"
-	EventPushNameSetting  EventType = "PushNameSetting"
-	EventUserStatusMute   EventType = "UserStatusMute"
-	EventBlocklistChange  EventType = "BlocklistChange"
-	EventBlocklist        EventType = "Blocklist"
+	EventPrivacySettings EventType = "PrivacySettings"
+	EventPushNameSetting EventType = "PushNameSetting"
+	EventUserStatusMute  EventType = "UserStatusMute"
+	EventBlocklistChange EventType = "BlocklistChange"
+	EventBlocklist       EventType = "Blocklist"
 )
 
 // ValidEventTypes is the set of all supported event type values.

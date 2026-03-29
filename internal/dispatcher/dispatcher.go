@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -60,7 +61,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	for _, wh := range webhooks {
 		wh := wh
 		if wh.NatsEnabled && d.nats != nil {
-			d.publishToNats(wh, payload)
+			go d.publishToNats(wh, payload)
 		} else {
 			go d.deliverHTTP(wh.URL, wh.Secret, payload)
 		}
@@ -89,34 +90,8 @@ func (d *Dispatcher) publishToNats(wh model.Webhook, payload []byte) {
 }
 
 func (d *Dispatcher) deliverHTTP(url, secret string, payload []byte) {
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payload))
-	if err != nil {
-		log.Error().Err(err).Str("url", url).Msg("Failed to build webhook HTTP request")
-		return
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-
-	if secret != "" {
-		mac := hmac.New(sha256.New, []byte(secret))
-		mac.Write(payload)
-		req.Header.Set("X-Wzap-Signature", "sha256="+hex.EncodeToString(mac.Sum(nil)))
-	}
-
-	eventType := extractEventType(payload)
-	if eventType != "" {
-		req.Header.Set("X-Wzap-Event", eventType)
-	}
-
-	resp, err := d.httpClient.Do(req)
-	if err != nil {
+	if err := d.deliverHTTPWithErr(url, secret, payload); err != nil {
 		log.Warn().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed")
-		return
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		log.Warn().Str("url", url).Int("status", resp.StatusCode).Msg("Webhook returned non-2xx status")
 	}
 }
 
@@ -208,6 +183,7 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 		return fmt.Errorf("http post: %w", err)
 	}
 	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("non-2xx status: %d", resp.StatusCode)

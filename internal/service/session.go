@@ -63,11 +63,19 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	resp := &dto.SessionCreatedResp{Session: *session}
 
 	if req.Webhook != nil && req.Webhook.URL != "" {
+		events := make([]string, 0, len(req.Webhook.Events))
+		for _, e := range req.Webhook.Events {
+			if !model.ValidEventTypes[e] {
+				log.Warn().Str("event", string(e)).Str("session", session.ID).Msg("Skipping invalid event type in inline webhook")
+				continue
+			}
+			events = append(events, string(e))
+		}
 		wh := &model.Webhook{
 			ID:        uuid.NewString(),
 			SessionID: session.ID,
 			URL:       req.Webhook.URL,
-			Events:    req.Webhook.Events,
+			Events:    events,
 			Enabled:   true,
 			CreatedAt: now,
 		}

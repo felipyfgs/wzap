@@ -18,9 +18,9 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 }
 
 func (r *SessionRepository) Create(ctx context.Context, session *model.Session) error {
-	query := `INSERT INTO "wzSessions" ("id", "name", "token", "status", "proxy", "settings", "metadata", "createdAt", "updatedAt")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
-	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.Token, session.Status, session.Proxy, session.Settings, session.Metadata, session.CreatedAt, session.UpdatedAt)
+	query := `INSERT INTO "wzSessions" ("id", "name", "token", "status", "proxy", "settings", "createdAt", "updatedAt")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.Token, session.Status, session.Proxy, session.Settings, session.CreatedAt, session.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert session: %w", err)
 	}
@@ -29,7 +29,7 @@ func (r *SessionRepository) Create(ctx context.Context, session *model.Session) 
 
 func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error) {
 	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "metadata", "createdAt", "updatedAt"
+		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
 		FROM "wzSessions" ORDER BY "createdAt" DESC`
 
 	rows, err := r.db.Query(ctx, query)
@@ -41,7 +41,7 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 	var sessions []model.Session
 	for rows.Next() {
 		var s model.Session
-		if err := rows.Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.Metadata, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan session: %w", err)
 		}
 		sessions = append(sessions, s)
@@ -51,11 +51,11 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 
 func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Session, error) {
 	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "metadata", "createdAt", "updatedAt"
+		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
 		FROM "wzSessions" WHERE "id" = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.Metadata, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found: %w", err)
 	}
@@ -64,11 +64,11 @@ func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Ses
 
 func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model.Session, error) {
 	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "metadata", "createdAt", "updatedAt"
+		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
 		FROM "wzSessions" WHERE "name" = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.Metadata, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found: %w", err)
 	}
@@ -77,11 +77,11 @@ func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model
 
 func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*model.Session, error) {
 	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "metadata", "createdAt", "updatedAt"
+		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
 		FROM "wzSessions" WHERE "token" = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, token).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.Metadata, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, token).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found for token: %w", err)
 	}

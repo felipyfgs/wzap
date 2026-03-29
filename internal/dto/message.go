@@ -1,12 +1,12 @@
 package dto
 
 type SendTextReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID  string `json:"jid" validate:"required"`
 	Text string `json:"text" validate:"required"`
 }
 
 type SendMediaReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID      string `json:"jid" validate:"required"`
 	MimeType string `json:"mimeType" validate:"required"`
 	Caption  string `json:"caption"`
 	Filename string `json:"filename"`
@@ -14,7 +14,7 @@ type SendMediaReq struct {
 }
 
 type SendContactReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID   string `json:"jid" validate:"required"`
 	Name  string `json:"name" validate:"required"`
 	Vcard string `json:"vcard" validate:"required"`
 }
@@ -35,41 +35,41 @@ type SendPollReq struct {
 }
 
 type SendStickerReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID      string `json:"jid" validate:"required"`
 	MimeType string `json:"mimeType" validate:"required"`
 	Base64   string `json:"base64" validate:"required"`
 }
 
 type SendLinkReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID         string `json:"jid" validate:"required"`
 	URL         string `json:"url" validate:"required"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 }
 
 type EditMessageReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID       string `json:"jid" validate:"required"`
 	MessageID string `json:"messageId" validate:"required"`
 	Text      string `json:"text" validate:"required"`
 }
 
 type DeleteMessageReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID       string `json:"jid" validate:"required"`
 	MessageID string `json:"messageId" validate:"required"`
 }
 
 type ReactMessageReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID       string `json:"jid" validate:"required"`
 	MessageID string `json:"messageId" validate:"required"`
 	Reaction  string `json:"reaction" validate:"required"`
 }
 
 type MarkReadReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID       string `json:"jid" validate:"required"`
 	MessageID string `json:"messageId" validate:"required"`
 }
 
 type SetPresenceReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID      string `json:"jid" validate:"required"`
 	Presence string `json:"presence" validate:"required"`
 }

@@ -3,8 +3,8 @@ package dto
 import "wzap/internal/model"
 
 type WebhookCreateInline struct {
-	URL    string   `json:"url"`
-	Events []string `json:"events,omitempty"`
+	URL    string            `json:"url"`
+	Events []model.EventType `json:"events,omitempty"`
 }
 
 type SessionCreateReq struct {

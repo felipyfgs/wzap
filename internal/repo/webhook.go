@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"wzap/internal/model"
@@ -45,7 +46,7 @@ func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID strin
 		}
 		webhooks = append(webhooks, w)
 	}
-	return webhooks, nil
+	return webhooks, rows.Err()
 }
 
 func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, sessionID string, eventType string) ([]model.Webhook, error) {
@@ -55,7 +56,8 @@ func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, ses
 		  AND "enabled" = true
 		  AND ("events" @> $2::jsonb OR "events" @> '["All"]'::jsonb)`
 
-	rows, err := r.db.Query(ctx, query, sessionID, `["`+eventType+`"]`)
+	eventJSON, _ := json.Marshal([]string{eventType})
+	rows, err := r.db.Query(ctx, query, sessionID, eventJSON)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query active webhooks: %w", err)
 	}

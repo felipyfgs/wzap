@@ -14,7 +14,6 @@ func NewChatHandler(chatSvc *service.ChatService) *ChatHandler {
 	return &ChatHandler{chatSvc: chatSvc}
 }
 
-
 // Archive godoc
 // @Summary     Archive a chat
 // @Description Archives a chat identified by JID, moving it out of the main chat list

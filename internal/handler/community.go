@@ -14,7 +14,6 @@ func NewCommunityHandler(communitySvc *service.CommunityService) *CommunityHandl
 	return &CommunityHandler{communitySvc: communitySvc}
 }
 
-
 // Create godoc
 // @Summary     Create a community
 // @Description Creates a new WhatsApp Community (a group of groups) with a name and optional description

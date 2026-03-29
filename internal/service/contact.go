@@ -11,14 +11,14 @@ import (
 	"go.mau.fi/whatsmeow/types/events"
 	"wzap/internal/dto"
 	"wzap/internal/model"
-	"wzap/internal/whatsapp"
+	"wzap/internal/wa"
 )
 
 type ContactService struct {
-	engine *whatsapp.Engine
+	engine *wa.Manager
 }
 
-func NewContactService(engine *whatsapp.Engine) *ContactService {
+func NewContactService(engine *wa.Manager) *ContactService {
 	return &ContactService{engine: engine}
 }
 

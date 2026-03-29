@@ -6,7 +6,7 @@ import (
 
 	"wzap/internal/dto"
 	"wzap/internal/service"
-	"wzap/internal/whatsapp"
+	"wzap/internal/wa"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
@@ -15,10 +15,10 @@ import (
 
 type SessionHandler struct {
 	sessionSvc *service.SessionService
-	engine     *whatsapp.Engine
+	engine     *wa.Manager
 }
 
-func NewSessionHandler(sessionSvc *service.SessionService, engine *whatsapp.Engine) *SessionHandler {
+func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *SessionHandler {
 	return &SessionHandler{
 		sessionSvc: sessionSvc,
 		engine:     engine,

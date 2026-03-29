@@ -5,14 +5,14 @@ import (
 
 	"go.mau.fi/whatsmeow/appstate"
 	"wzap/internal/dto"
-	"wzap/internal/whatsapp"
+	"wzap/internal/wa"
 )
 
 type LabelService struct {
-	engine *whatsapp.Engine
+	engine *wa.Manager
 }
 
-func NewLabelService(engine *whatsapp.Engine) *LabelService {
+func NewLabelService(engine *wa.Manager) *LabelService {
 	return &LabelService{engine: engine}
 }
 

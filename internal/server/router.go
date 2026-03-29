@@ -7,7 +7,7 @@ import (
 	"wzap/internal/middleware"
 	"wzap/internal/repo"
 	"wzap/internal/service"
-	"wzap/internal/whatsapp"
+	"wzap/internal/wa"
 )
 
 func (s *Server) SetupRoutes() error {
@@ -16,7 +16,7 @@ func (s *Server) SetupRoutes() error {
 	webhookRepo := repo.NewWebhookRepository(s.db)
 
 	// Initialize Engine
-	engine, err := whatsapp.NewEngine(s.Config, sessionRepo, s.nats)
+	engine, err := wa.NewManager(s.Config, sessionRepo, s.nats)
 	if err != nil {
 		return err
 	}

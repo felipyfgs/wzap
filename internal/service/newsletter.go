@@ -8,14 +8,14 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
-	"wzap/internal/whatsapp"
+	"wzap/internal/wa"
 )
 
 type NewsletterService struct {
-	engine *whatsapp.Engine
+	engine *wa.Manager
 }
 
-func NewNewsletterService(engine *whatsapp.Engine) *NewsletterService {
+func NewNewsletterService(engine *wa.Manager) *NewsletterService {
 	return &NewsletterService{engine: engine}
 }
 

@@ -9,7 +9,7 @@ import (
 	"wzap/internal/dto"
 	"wzap/internal/model"
 	"wzap/internal/repo"
-	"wzap/internal/whatsapp"
+	"wzap/internal/wa"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
@@ -19,10 +19,10 @@ var sessionNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 type SessionService struct {
 	repo   *repo.SessionRepository
-	engine *whatsapp.Engine
+	engine *wa.Manager
 }
 
-func NewSessionService(r *repo.SessionRepository, engine *whatsapp.Engine) *SessionService {
+func NewSessionService(r *repo.SessionRepository, engine *wa.Manager) *SessionService {
 	return &SessionService{
 		repo:   r,
 		engine: engine,

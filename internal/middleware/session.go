@@ -1,22 +1,31 @@
 package middleware
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/model"
 	"wzap/internal/repository"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func RequiredSession(sessionRepo *repository.SessionRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		val := c.Locals("userId")
-		if val == nil || val.(string) == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "User token required in Authorization or Token header"))
+		sessionName := c.Params("sessionName")
+		if sessionName == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", "sessionName is required in URL path"))
 		}
 
-		userID := val.(string)
-		session, err := sessionRepo.FindByUserID(c.Context(), userID)
+		session, err := sessionRepo.FindByName(c.Context(), sessionName)
 		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", "No session found for this user"))
+			session, err = sessionRepo.FindByID(c.Context(), sessionName)
+			if err != nil {
+				return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", "Session not found"))
+			}
+		}
+
+		if c.Locals("authRole") == "session" {
+			if c.Locals("sessionId") != session.ID {
+				return c.Status(fiber.StatusForbidden).JSON(model.ErrorResp("Forbidden", "Token not authorized for this session"))
+			}
 		}
 
 		c.Locals("sessionId", session.ID)

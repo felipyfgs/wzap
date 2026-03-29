@@ -4,7 +4,7 @@ import "time"
 
 type Webhook struct {
 	ID        string    `json:"id"`
-	UserID    string    `json:"userId"`
+	SessionID string    `json:"sessionId"`
 	URL       string    `json:"url"`
 	Secret    string    `json:"secret,omitempty"`
 	Events    []string  `json:"events"`

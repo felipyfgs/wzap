@@ -11,38 +11,12 @@ END;
 $$ language 'plpgsql';
 
 -- =====================================================
--- Users Table (wuzapi-inspired)
--- =====================================================
-CREATE TABLE IF NOT EXISTS "wzUsers" (
-    "id" VARCHAR(100) PRIMARY KEY,
-    "name" VARCHAR(255) NOT NULL DEFAULT '',
-    "token" VARCHAR(255) NOT NULL UNIQUE,
-    "webhook" VARCHAR(2048) NOT NULL DEFAULT '',
-    "events" TEXT NOT NULL DEFAULT '',
-    "expiration" INTEGER DEFAULT 0,
-    "proxyUrl" TEXT DEFAULT '',
-    "history" INTEGER DEFAULT 0,
-    "hmacKey" BYTEA,
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS "idxWzUsersToken" ON "wzUsers" ("token");
-
-DROP TRIGGER IF EXISTS "updateWzUsersUpdatedAt" ON "wzUsers";
-CREATE TRIGGER "updateWzUsersUpdatedAt"
-    BEFORE UPDATE ON "wzUsers"
-    FOR EACH ROW
-    EXECUTE FUNCTION "updateUpdatedAtColumn"();
-
-COMMENT ON TABLE "wzUsers" IS 'User instances that own WhatsApp sessions';
-
--- =====================================================
--- Sessions Table (WhatsApp connection state)
+-- Sessions Table (primary auth entity)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS "wzSessions" (
     "id" VARCHAR(100) PRIMARY KEY,
-    "userId" VARCHAR(100) NOT NULL REFERENCES "wzUsers"("id") ON DELETE CASCADE,
+    "name" VARCHAR(100) NOT NULL UNIQUE,
+    "apiKey" VARCHAR(255) NOT NULL UNIQUE,
     "jid" VARCHAR(255) DEFAULT '',
     "qrCode" TEXT DEFAULT '',
     "connected" INTEGER DEFAULT 0,
@@ -52,7 +26,8 @@ CREATE TABLE IF NOT EXISTS "wzSessions" (
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS "idxWzSessionsUserId" ON "wzSessions" ("userId");
+CREATE INDEX IF NOT EXISTS "idxWzSessionsName" ON "wzSessions" ("name");
+CREATE INDEX IF NOT EXISTS "idxWzSessionsApiKey" ON "wzSessions" ("apiKey");
 CREATE INDEX IF NOT EXISTS "idxWzSessionsStatus" ON "wzSessions" ("status");
 CREATE INDEX IF NOT EXISTS "idxWzSessionsConnected" ON "wzSessions" ("connected");
 
@@ -67,6 +42,8 @@ CREATE TRIGGER "updateWzSessionsUpdatedAt"
     EXECUTE FUNCTION "updateUpdatedAtColumn"();
 
 COMMENT ON TABLE "wzSessions" IS 'WhatsApp sessions managed by wzap';
+COMMENT ON COLUMN "wzSessions"."name" IS 'Unique URL-safe session identifier (^[a-zA-Z0-9_-]+$)';
+COMMENT ON COLUMN "wzSessions"."apiKey" IS 'Bearer token for session-scoped authentication';
 COMMENT ON COLUMN "wzSessions"."jid" IS 'WhatsApp device JID from whatsmeow (set after pairing)';
 
 -- =====================================================
@@ -74,7 +51,7 @@ COMMENT ON COLUMN "wzSessions"."jid" IS 'WhatsApp device JID from whatsmeow (set
 -- =====================================================
 CREATE TABLE IF NOT EXISTS "wzWebhooks" (
     "id" VARCHAR(100) PRIMARY KEY,
-    "userId" VARCHAR(100) NOT NULL REFERENCES "wzUsers"("id") ON DELETE CASCADE,
+    "sessionId" VARCHAR(100) NOT NULL REFERENCES "wzSessions"("id") ON DELETE CASCADE,
     "url" VARCHAR(2048) NOT NULL,
     "secret" VARCHAR(255),
     "events" JSONB NOT NULL DEFAULT '[]',
@@ -83,7 +60,7 @@ CREATE TABLE IF NOT EXISTS "wzWebhooks" (
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS "idxWzWebhooksUserId" ON "wzWebhooks" ("userId");
+CREATE INDEX IF NOT EXISTS "idxWzWebhooksSessionId" ON "wzWebhooks" ("sessionId");
 CREATE INDEX IF NOT EXISTS "idxWzWebhooksEnabled" ON "wzWebhooks" ("enabled");
 
 DROP TRIGGER IF EXISTS "updateWzWebhooksUpdatedAt" ON "wzWebhooks";
@@ -92,4 +69,4 @@ CREATE TRIGGER "updateWzWebhooksUpdatedAt"
     FOR EACH ROW
     EXECUTE FUNCTION "updateUpdatedAtColumn"();
 
-COMMENT ON TABLE "wzWebhooks" IS 'Webhook configurations for users';
+COMMENT ON TABLE "wzWebhooks" IS 'Webhook configurations per session';

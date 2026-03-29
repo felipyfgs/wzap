@@ -4,11 +4,12 @@ import (
 	"encoding/base64"
 	"errors"
 
+	"wzap/internal/model"
+	"wzap/internal/service"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
 	"go.mau.fi/whatsmeow"
-	"wzap/internal/model"
-	"wzap/internal/service"
 )
 
 type SessionHandler struct {
@@ -23,18 +24,38 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *service.Engin
 	}
 }
 
-func (h *SessionHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if val := c.Locals("sessionId"); val != nil {
-		return val.(string), nil
+// Create godoc
+// @Summary     Create a new session (Admin Only)
+// @Description Creates a new session with an auto-generated or custom apiKey
+// @Tags        Sessions
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.SessionCreateReq true "Session data"
+// @Success     200  {object} model.APIResponse
+// @Failure     400  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /sessions [post]
+func (h *SessionHandler) Create(c *fiber.Ctx) error {
+	if c.Locals("authRole") != "admin" {
+		return c.Status(fiber.StatusForbidden).JSON(model.ErrorResp("Forbidden", "Admin access required"))
 	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
+
+	var req model.SessionCreateReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+	}
+
+	session, err := h.sessionSvc.Create(c.Context(), req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(model.SuccessResp(session, "Session created"))
 }
 
-
-
 // List godoc
-// @Summary     List sessions
-// @Description Returns all sessions (Admin) or just the authenticated session (User)
+// @Summary     List sessions (Admin Only)
+// @Description Returns all sessions
 // @Tags        Sessions
 // @Produce     json
 // @Success     200 {object} model.APIResponse
@@ -54,18 +75,16 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 }
 
 // Get godoc
-// @Summary     Get current session
-// @Description Returns the session identified by the Bearer token (or query/header fallback)
+// @Summary     Get session
+// @Description Returns the session identified by :sessionName (name or id)
 // @Tags        Sessions
 // @Produce     json
+// @Param       sessionName path string true "Session name or ID"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
-// @Router      /session [get]
+// @Router      /sessions/{sessionName} [get]
 func (h *SessionHandler) Get(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
-	if err != nil {
-		return err
-	}
+	id := c.Locals("sessionId").(string)
 	session, err := h.sessionSvc.Get(c.Context(), id)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", err.Error()))
@@ -75,20 +94,17 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 }
 
 // Delete godoc
-// @Summary     Delete current session
-// @Description Disconnects and deletes the current session
+// @Summary     Delete session
+// @Description Disconnects and deletes the session
 // @Tags        Sessions
 // @Produce     json
+// @Param       sessionName path string true "Session name or ID"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
-// @Router      /session [delete]
+// @Router      /sessions/{sessionName} [delete]
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
-	if err != nil {
-		return err
-	}
-	err = h.sessionSvc.Delete(c.Context(), id)
-	if err != nil {
+	id := c.Locals("sessionId").(string)
+	if err := h.sessionSvc.Delete(c.Context(), id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
 	}
 
@@ -96,22 +112,16 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 }
 
 // Connect godoc
-// @Summary     Connect current session
+// @Summary     Connect session
 // @Description Connects a WhatsApp session (starts pairing if new)
 // @Tags        Sessions
 // @Produce     json
+// @Param       sessionName path string true "Session name or ID"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
-// @Router      /session/connect [post]
+// @Router      /sessions/{sessionName}/connect [post]
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
-	if err != nil {
-		return err
-	}
-	_, err = h.sessionSvc.Get(c.Context(), id)
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", "Session not found"))
-	}
+	id := c.Locals("sessionId").(string)
 
 	client, qrChan, err := h.engine.Connect(c.Context(), id)
 	if err != nil {
@@ -132,20 +142,17 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 }
 
 // Disconnect godoc
-// @Summary     Disconnect current session
+// @Summary     Disconnect session
 // @Description Disconnects the active WhatsApp session
 // @Tags        Sessions
 // @Produce     json
+// @Param       sessionName path string true "Session name or ID"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
-// @Router      /session/disconnect [post]
+// @Router      /sessions/{sessionName}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
-	if err != nil {
-		return err
-	}
-	err = h.engine.Disconnect(id)
-	if err != nil {
+	id := c.Locals("sessionId").(string)
+	if err := h.engine.Disconnect(id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Disconnect Error", err.Error()))
 	}
 
@@ -153,18 +160,16 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 }
 
 // QR godoc
-// @Summary     Get QR code for pair
-// @Description Returns a QR code for pairing a new WhatsApp device for current session
+// @Summary     Get QR code for pairing
+// @Description Returns a QR code for pairing a new WhatsApp device
 // @Tags        Sessions
 // @Produce     json
+// @Param       sessionName path string true "Session name or ID"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
-// @Router      /session/qr [get]
+// @Router      /sessions/{sessionName}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
-	id, err := h.getSessionID(c)
-	if err != nil {
-		return err
-	}
+	id := c.Locals("sessionId").(string)
 
 	qrCode, err := h.engine.GetQRCode(c.Context(), id)
 	if err != nil {
@@ -172,7 +177,7 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	}
 
 	if qrCode == "" {
-		return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", "No QR code available. Call /session/connect first, then poll this endpoint."))
+		return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", "No QR code available. Call connect first, then poll this endpoint."))
 	}
 
 	imageBytes, imgErr := qrcode.Encode(qrCode, qrcode.Medium, 256)

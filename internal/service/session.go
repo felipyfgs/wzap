@@ -2,11 +2,18 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"time"
 
-	"github.com/rs/zerolog/log"
 	"wzap/internal/model"
 	"wzap/internal/repository"
+
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
 )
+
+var sessionNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 type SessionService struct {
 	repo   *repository.SessionRepository
@@ -20,16 +27,43 @@ func NewSessionService(repo *repository.SessionRepository, engine *Engine) *Sess
 	}
 }
 
+func (s *SessionService) Create(ctx context.Context, req model.SessionCreateReq) (*model.Session, error) {
+	if req.Name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+	if !sessionNameRegex.MatchString(req.Name) {
+		return nil, fmt.Errorf("name must contain only letters, numbers, hyphens and underscores")
+	}
+
+	apiKey := req.ApiKey
+	if apiKey == "" {
+		apiKey = "sk_" + uuid.NewString()
+	}
+
+	now := time.Now()
+	session := &model.Session{
+		ID:        uuid.NewString(),
+		Name:      req.Name,
+		ApiKey:    apiKey,
+		Status:    "disconnected",
+		Metadata:  req.Metadata,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	if err := s.repo.Create(ctx, session); err != nil {
+		return nil, fmt.Errorf("failed to create session: %w", err)
+	}
+
+	return session, nil
+}
+
 func (s *SessionService) List(ctx context.Context) ([]model.Session, error) {
 	return s.repo.FindAll(ctx)
 }
 
 func (s *SessionService) Get(ctx context.Context, id string) (*model.Session, error) {
 	return s.repo.FindByID(ctx, id)
-}
-
-func (s *SessionService) GetByUserID(ctx context.Context, userID string) (*model.Session, error) {
-	return s.repo.FindByUserID(ctx, userID)
 }
 
 func (s *SessionService) Delete(ctx context.Context, id string) error {

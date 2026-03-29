@@ -4,7 +4,8 @@ import "time"
 
 type Session struct {
 	ID        string                 `json:"id"`
-	UserID    string                 `json:"userId"`
+	Name      string                 `json:"name"`
+	ApiKey    string                 `json:"apiKey,omitempty"`
 	Jid       string                 `json:"jid,omitempty"`
 	QrCode    string                 `json:"qrCode,omitempty"`
 	Connected int                    `json:"connected"`
@@ -15,5 +16,7 @@ type Session struct {
 }
 
 type SessionCreateReq struct {
+	Name     string                 `json:"name"`
+	ApiKey   string                 `json:"apiKey,omitempty"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }

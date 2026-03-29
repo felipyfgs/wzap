@@ -37,7 +37,7 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 	if err := h.chatSvc.Archive(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Chat archived"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // Mute godoc
@@ -62,7 +62,7 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 	if err := h.chatSvc.Mute(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Chat muted"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // Pin godoc
@@ -87,7 +87,7 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 	if err := h.chatSvc.Pin(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Chat pinned"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // Unpin godoc
@@ -112,5 +112,5 @@ func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 	if err := h.chatSvc.Unpin(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Chat unpinned"))
+	return c.JSON(dto.SuccessResp(nil))
 }

@@ -126,7 +126,7 @@ HTTP status codes are the source of truth (`2xx` = success, `4xx`/`5xx` = error)
 {
   "success": true,
   "data": { ... },
-  "message": "Human-readable message"
+  "message": "success"
 }
 ```
 
@@ -135,7 +135,7 @@ HTTP status codes are the source of truth (`2xx` = success, `4xx`/`5xx` = error)
 {
   "success": false,
   "error": "Error type",
-  "details": "Details about the error"
+  "message": "Details about the error"
 }
 ```
 
@@ -154,7 +154,6 @@ curl http://localhost:8080/health
 **Response:**
 ```json
 {
-  "success": true,
   "data": {
     "status": "UP",
     "services": {
@@ -163,7 +162,7 @@ curl http://localhost:8080/health
       "minio": true
     }
   },
-  "message": "wzap is running"
+  "message": "success"
 }
 ```
 
@@ -198,7 +197,6 @@ curl -X POST http://localhost:8080/sessions \
 **Response:**
 ```json
 {
-  "success": true,
   "data": {
     "id": "uuid",
     "name": "my-session",
@@ -208,7 +206,7 @@ curl -X POST http://localhost:8080/sessions \
     "createdAt": "2026-03-29T00:00:00Z",
     "updatedAt": "2026-03-29T00:00:00Z"
   },
-  "message": "Session created"
+  "message": "success"
 }
 ```
 
@@ -266,9 +264,8 @@ curl -X POST http://localhost:8080/sessions/my-session/connect \
 **Response:**
 ```json
 {
-  "success": true,
   "data": { "status": "PAIRING" },
-  "message": "Connection initiated"
+  "message": "success"
 }
 ```
 
@@ -301,12 +298,11 @@ curl http://localhost:8080/sessions/my-session/qr \
 **Response:**
 ```json
 {
-  "success": true,
   "data": {
     "qr": "2@raw-qr-string...",
     "image": "data:image/png;base64,iVBORw0K..."
   },
-  "message": "QR Code retrieved"
+  "message": "success"
 }
 ```
 
@@ -342,9 +338,8 @@ curl -X POST http://localhost:8080/sessions/my-session/messages/text \
 **Response:**
 ```json
 {
-  "success": true,
   "data": { "messageId": "ABCDEF123456" },
-  "message": "Text message sent"
+  "message": "success"
 }
 ```
 
@@ -552,7 +547,6 @@ curl http://localhost:8080/sessions/my-session/contacts \
 **Response:**
 ```json
 {
-  "success": true,
   "data": [
     { "exists": true, "jid": "5511999999999@s.whatsapp.net", "phoneNumber": "5511999999999" },
     { "exists": false, "phoneNumber": "5511888888888" }
@@ -575,7 +569,6 @@ curl http://localhost:8080/sessions/my-session/contacts \
 **Response:**
 ```json
 {
-  "success": true,
   "data": {
     "url": "https://pps.whatsapp.net/v/...",
     "id": "123456789"
@@ -693,7 +686,6 @@ curl http://localhost:8080/sessions/my-session/contacts \
 **Response:**
 ```json
 {
-  "success": true,
   "data": { "jid": "120362023605733675@g.us" }
 }
 ```
@@ -1089,7 +1081,6 @@ See [Supported Event Types](#supported-event-types) for all valid `events` value
 **Response:**
 ```json
 {
-  "success": true,
   "data": {
     "id": "uuid",
     "sessionId": "session-uuid",

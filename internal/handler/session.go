@@ -51,7 +51,7 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(dto.SuccessResp(session, "Session created"))
+	return c.Status(fiber.StatusCreated).JSON(dto.SuccessResp(session))
 }
 
 // List godoc
@@ -72,7 +72,7 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(sessions, "Sessions retrieved"))
+	return c.JSON(dto.SuccessResp(sessions))
 }
 
 // Get godoc
@@ -91,7 +91,7 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(session, "Session retrieved"))
+	return c.JSON(dto.SuccessResp(session))
 }
 
 // Delete godoc
@@ -109,7 +109,7 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(nil, "Session deleted"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // Connect godoc
@@ -139,7 +139,7 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 		status = "CONNECTING"
 	}
 
-	return c.JSON(dto.SuccessResp(map[string]string{"status": status}, "Connection initiated"))
+	return c.JSON(dto.SuccessResp(map[string]string{"status": status}))
 }
 
 // Disconnect godoc
@@ -157,7 +157,7 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(nil, "Disconnected successfully"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // QR godoc
@@ -190,5 +190,5 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	return c.JSON(dto.SuccessResp(map[string]interface{}{
 		"qr":    qrCode,
 		"image": qrBase64,
-	}, "QR Code retrieved"))
+	}))
 }

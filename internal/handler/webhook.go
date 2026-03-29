@@ -38,7 +38,7 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Create Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(webhook, "Webhook created"))
+	return c.JSON(dto.SuccessResp(webhook))
 }
 
 // List godoc
@@ -57,7 +57,7 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(webhooks, "Webhooks retrieved"))
+	return c.JSON(dto.SuccessResp(webhooks))
 }
 
 // Delete godoc
@@ -78,5 +78,5 @@ func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Delete Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(nil, "Webhook deleted"))
+	return c.JSON(dto.SuccessResp(nil))
 }

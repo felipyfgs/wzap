@@ -38,7 +38,7 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(group, "Community created"))
+	return c.JSON(dto.SuccessResp(group))
 }
 
 // AddParticipant godoc
@@ -64,7 +64,7 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(participants, "Participant added to community"))
+	return c.JSON(dto.SuccessResp(participants))
 }
 
 // RemoveParticipant godoc
@@ -90,5 +90,5 @@ func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(participants, "Participant removed from community"))
+	return c.JSON(dto.SuccessResp(participants))
 }

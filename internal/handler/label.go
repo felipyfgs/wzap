@@ -37,7 +37,7 @@ func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
 	if err := h.labelSvc.AddToChat(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Label added to chat"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // RemoveFromChat godoc
@@ -62,7 +62,7 @@ func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
 	if err := h.labelSvc.RemoveFromChat(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Label removed from chat"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // AddToMessage godoc
@@ -87,7 +87,7 @@ func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
 	if err := h.labelSvc.AddToMessage(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Label added to message"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // RemoveFromMessage godoc
@@ -112,7 +112,7 @@ func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
 	if err := h.labelSvc.RemoveFromMessage(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Label removed from message"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // EditLabel godoc
@@ -137,5 +137,5 @@ func (h *LabelHandler) EditLabel(c *fiber.Ctx) error {
 	if err := h.labelSvc.EditLabel(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Label edited"))
+	return c.JSON(dto.SuccessResp(nil))
 }

@@ -32,5 +32,5 @@ func (h *HealthHandler) Check(c *fiber.Ctx) error {
 			"minio":    h.minioConn,
 		},
 	}
-	return c.JSON(dto.SuccessResp(status, "wzap is running"))
+	return c.JSON(dto.SuccessResp(status))
 }

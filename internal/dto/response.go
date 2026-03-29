@@ -3,27 +3,27 @@ package dto
 type APIResponse struct {
 	Success bool        `json:"success"`
 	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message,omitempty"`
+	Message string      `json:"message"`
 }
 
 type APIError struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"`
-	Details string `json:"details,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
-func SuccessResp(data interface{}, msg string) APIResponse {
+func SuccessResp(data interface{}) APIResponse {
 	return APIResponse{
 		Success: true,
 		Data:    data,
-		Message: msg,
+		Message: "success",
 	}
 }
 
-func ErrorResp(err string, details string) APIError {
+func ErrorResp(err string, message string) APIError {
 	return APIError{
 		Success: false,
 		Error:   err,
-		Details: details,
+		Message: message,
 	}
 }

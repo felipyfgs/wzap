@@ -38,7 +38,7 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(meta, "Newsletter created"))
+	return c.JSON(dto.SuccessResp(meta))
 }
 
 // Info godoc
@@ -63,7 +63,7 @@ func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(meta, "Newsletter info retrieved"))
+	return c.JSON(dto.SuccessResp(meta))
 }
 
 // Invite godoc
@@ -88,7 +88,7 @@ func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(meta, "Newsletter invite info retrieved"))
+	return c.JSON(dto.SuccessResp(meta))
 }
 
 // List godoc
@@ -108,7 +108,7 @@ func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(newsletters, "Subscribed newsletters retrieved"))
+	return c.JSON(dto.SuccessResp(newsletters))
 }
 
 // Messages godoc
@@ -134,7 +134,7 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(msgs, "Newsletter messages retrieved"))
+	return c.JSON(dto.SuccessResp(msgs))
 }
 
 // Subscribe godoc
@@ -159,5 +159,5 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 	if err := h.newsletterSvc.Subscribe(c.Context(), id, req.NewsletterJID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Subscribed to newsletter"))
+	return c.JSON(dto.SuccessResp(nil))
 }

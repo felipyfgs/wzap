@@ -34,7 +34,7 @@ func (h *GroupHandler) List(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(groups, "Groups retrieved"))
+	return c.JSON(dto.SuccessResp(groups))
 }
 
 // Create godoc
@@ -65,7 +65,7 @@ func (h *GroupHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Create Group Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(group, "Group created successfully"))
+	return c.JSON(dto.SuccessResp(group))
 }
 
 // Info godoc
@@ -92,7 +92,7 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Group Info Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(group, "Group info retrieved"))
+	return c.JSON(dto.SuccessResp(group))
 }
 
 // GetInviteLink godoc
@@ -121,7 +121,7 @@ func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Invite Link Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(dto.GroupInviteLinkResp{Link: link}, "Invite link retrieved"))
+	return c.JSON(dto.SuccessResp(dto.GroupInviteLinkResp{Link: link}))
 }
 
 // GetInfoFromLink godoc
@@ -147,7 +147,7 @@ func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Info From Link Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(group, "Group info retrieved from link"))
+	return c.JSON(dto.SuccessResp(group))
 }
 
 // JoinWithLink godoc
@@ -175,7 +175,7 @@ func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Join Group Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(fiber.Map{"jid": jid}, "Joined group successfully"))
+	return c.JSON(dto.SuccessResp(fiber.Map{"jid": jid}))
 }
 
 // Leave godoc
@@ -202,7 +202,7 @@ func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Leave Group Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Left group successfully"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // UpdateParticipants godoc
@@ -232,7 +232,7 @@ func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Participants Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(res, "Participants updated successfully"))
+	return c.JSON(dto.SuccessResp(res))
 }
 
 // GetRequests godoc
@@ -259,7 +259,7 @@ func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Requests Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(res, "Join requests retrieved"))
+	return c.JSON(dto.SuccessResp(res))
 }
 
 // UpdateRequests godoc
@@ -289,7 +289,7 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Requests Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(res, "Join requests updated successfully"))
+	return c.JSON(dto.SuccessResp(res))
 }
 
 // UpdateName godoc
@@ -321,7 +321,7 @@ func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 	if err := h.groupSvc.UpdateName(c.Context(), id, jid, req.Text); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Name Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Group name updated successfully"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // UpdateDescription godoc
@@ -353,7 +353,7 @@ func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 	if err := h.groupSvc.UpdateDescription(c.Context(), id, jid, req.Text); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Description Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Group description updated successfully"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // UpdatePhoto godoc
@@ -388,7 +388,7 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Photo Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(fiber.Map{"pictureId": picID}, "Group photo updated successfully"))
+	return c.JSON(dto.SuccessResp(fiber.Map{"pictureId": picID}))
 }
 
 // SetAnnounce godoc
@@ -420,7 +420,7 @@ func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 	if err := h.groupSvc.SetAnnounce(c.Context(), id, jid, req.Enabled); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Announce Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Group announce setting updated successfully"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // SetLocked godoc
@@ -452,7 +452,7 @@ func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 	if err := h.groupSvc.SetLocked(c.Context(), id, jid, req.Enabled); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Locked Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Group locked setting updated successfully"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // SetJoinApproval godoc
@@ -484,5 +484,5 @@ func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 	if err := h.groupSvc.SetJoinApproval(c.Context(), id, jid, req.Enabled); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Join Approval Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Group join approval setting updated successfully"))
+	return c.JSON(dto.SuccessResp(nil))
 }

@@ -42,7 +42,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Text message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // SendImage godoc
@@ -116,7 +116,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Media message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // SendContact godoc
@@ -142,7 +142,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Contact message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // SendLocation godoc
@@ -168,7 +168,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Location message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // SendPoll godoc
@@ -194,7 +194,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Poll message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // SendSticker godoc
@@ -220,7 +220,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Sticker message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // SendLink godoc
@@ -246,7 +246,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Link message sent"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // EditMessage godoc
@@ -272,7 +272,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Message edited"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // DeleteMessage godoc
@@ -298,7 +298,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Message deleted"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // ReactMessage godoc
@@ -324,7 +324,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}, "Message reacted"))
+	return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
 }
 
 // MarkRead godoc
@@ -349,7 +349,7 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 	if err := h.msgSvc.MarkRead(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Message marked as read"))
+	return c.JSON(dto.SuccessResp(nil))
 }
 
 // SetPresence godoc
@@ -374,5 +374,5 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 	if err := h.msgSvc.SetPresence(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(nil, "Presence set"))
+	return c.JSON(dto.SuccessResp(nil))
 }

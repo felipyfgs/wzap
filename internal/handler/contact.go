@@ -32,7 +32,7 @@ func (h *ContactHandler) List(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(contacts, "Contacts retrieved"))
+	return c.JSON(dto.SuccessResp(contacts))
 }
 
 // Check godoc
@@ -60,7 +60,7 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Check Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(results, "Contacts checked"))
+	return c.JSON(dto.SuccessResp(results))
 }
 
 // GetAvatar godoc
@@ -86,7 +86,7 @@ func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(resp, "Avatar retrieved"))
+	return c.JSON(dto.SuccessResp(resp))
 }
 
 // Block godoc
@@ -112,7 +112,7 @@ func (h *ContactHandler) Block(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(resp, "Contact blocked"))
+	return c.JSON(dto.SuccessResp(resp))
 }
 
 // Unblock godoc
@@ -138,7 +138,7 @@ func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(resp, "Contact unblocked"))
+	return c.JSON(dto.SuccessResp(resp))
 }
 
 // GetBlocklist godoc
@@ -158,7 +158,7 @@ func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(resp, "Blocklist retrieved"))
+	return c.JSON(dto.SuccessResp(resp))
 }
 
 // GetUserInfo godoc
@@ -184,7 +184,7 @@ func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(resp, "User info retrieved"))
+	return c.JSON(dto.SuccessResp(resp))
 }
 
 // GetPrivacySettings godoc
@@ -204,7 +204,7 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(resp, "Privacy settings retrieved"))
+	return c.JSON(dto.SuccessResp(resp))
 }
 
 // SetProfilePicture godoc
@@ -230,5 +230,5 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"pictureId": resp}, "Profile picture set"))
+	return c.JSON(dto.SuccessResp(map[string]string{"pictureId": resp}))
 }

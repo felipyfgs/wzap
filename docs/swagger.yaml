@@ -394,14 +394,14 @@ definitions:
     type: object
   dto.SessionCreateReq:
     properties:
+      apiKey:
+        type: string
       name:
         type: string
       proxy:
         $ref: '#/definitions/model.SessionProxy'
       settings:
         $ref: '#/definitions/model.SessionSettings'
-      token:
-        type: string
       webhook:
         $ref: '#/definitions/dto.WebhookCreateInline'
     type: object
@@ -643,7 +643,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Archive a chat
       tags:
       - Chat
@@ -667,7 +667,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Mute a chat
       tags:
       - Chat
@@ -691,7 +691,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Pin a chat
       tags:
       - Chat
@@ -716,7 +716,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Unpin a chat
       tags:
       - Chat
@@ -741,7 +741,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Create a community
       tags:
       - Community
@@ -766,7 +766,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Add subgroup to community
       tags:
       - Community
@@ -790,7 +790,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Remove subgroup from community
       tags:
       - Community
@@ -805,7 +805,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: List contacts
       tags:
       - Contacts
@@ -835,7 +835,7 @@ paths:
                   $ref: '#/definitions/dto.GetAvatarResp'
               type: object
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get contact avatar
       tags:
       - Contacts
@@ -860,7 +860,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Block a contact
       tags:
       - Contacts
@@ -875,7 +875,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get blocked contacts list
       tags:
       - Contacts
@@ -899,7 +899,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Check contacts on WhatsApp
       tags:
       - Contacts
@@ -931,7 +931,7 @@ paths:
                   type: array
               type: object
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get user info for JIDs
       tags:
       - Contacts
@@ -947,7 +947,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get privacy settings
       tags:
       - Contacts
@@ -972,7 +972,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Set profile picture
       tags:
       - Contacts
@@ -996,7 +996,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Unblock a contact
       tags:
       - Contacts
@@ -1011,7 +1011,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: List joined groups
       tags:
       - Groups
@@ -1035,7 +1035,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Set group announce mode
       tags:
       - Groups
@@ -1059,7 +1059,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Create a new group
       tags:
       - Groups
@@ -1083,7 +1083,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Update group description
       tags:
       - Groups
@@ -1104,7 +1104,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get group info
       tags:
       - Groups
@@ -1125,7 +1125,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get group info from invite link
       tags:
       - Groups
@@ -1157,7 +1157,7 @@ paths:
                   $ref: '#/definitions/dto.GroupInviteLinkResp'
               type: object
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get group invite link
       tags:
       - Groups
@@ -1181,7 +1181,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Join group via link
       tags:
       - Groups
@@ -1205,7 +1205,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Set group join approval mode
       tags:
       - Groups
@@ -1227,7 +1227,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Leave group
       tags:
       - Groups
@@ -1251,7 +1251,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Set group locked mode
       tags:
       - Groups
@@ -1275,7 +1275,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Update group name
       tags:
       - Groups
@@ -1299,7 +1299,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Update group participants
       tags:
       - Groups
@@ -1323,7 +1323,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Update group photo
       tags:
       - Groups
@@ -1345,7 +1345,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get group join requests
       tags:
       - Groups
@@ -1369,7 +1369,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Approve/Reject group join requests
       tags:
       - Groups
@@ -1406,7 +1406,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Add label to chat
       tags:
       - Labels
@@ -1430,7 +1430,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Edit a label
       tags:
       - Labels
@@ -1454,7 +1454,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Add label to message
       tags:
       - Labels
@@ -1477,7 +1477,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send an audio message
       tags:
       - Messages
@@ -1501,7 +1501,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a contact card
       tags:
       - Messages
@@ -1525,7 +1525,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Delete a sent message
       tags:
       - Messages
@@ -1548,7 +1548,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a document
       tags:
       - Messages
@@ -1572,7 +1572,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Edit a sent message
       tags:
       - Messages
@@ -1595,7 +1595,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send an image message
       tags:
       - Messages
@@ -1620,7 +1620,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a link preview message
       tags:
       - Messages
@@ -1645,7 +1645,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a location message
       tags:
       - Messages
@@ -1670,7 +1670,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a poll message
       tags:
       - Messages
@@ -1695,7 +1695,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Set typing/recording presence
       tags:
       - Messages
@@ -1720,7 +1720,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: React to a message
       tags:
       - Messages
@@ -1744,7 +1744,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Mark a message as read
       tags:
       - Messages
@@ -1768,7 +1768,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a sticker
       tags:
       - Messages
@@ -1777,7 +1777,7 @@ paths:
       consumes:
       - application/json
       description: Sends a text message via WhatsApp. If :id is omitted, session is
-        identified from Bearer token.
+        identified from ApiKey.
       parameters:
       - description: Message payload
         in: body
@@ -1793,7 +1793,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a text message
       tags:
       - Messages
@@ -1816,7 +1816,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Send a video message
       tags:
       - Messages
@@ -1841,7 +1841,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Create a newsletter
       tags:
       - Newsletter
@@ -1862,7 +1862,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get newsletter info
       tags:
       - Newsletter
@@ -1883,7 +1883,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get newsletter info from invite code
       tags:
       - Newsletter
@@ -1898,7 +1898,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: List subscribed newsletters
       tags:
       - Newsletter
@@ -1923,7 +1923,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get newsletter messages
       tags:
       - Newsletter
@@ -1951,7 +1951,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Subscribe to a newsletter
       tags:
       - Newsletter
@@ -1966,14 +1966,14 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: List sessions (Admin Only)
       tags:
       - Sessions
     post:
       consumes:
       - application/json
-      description: Creates a new session with an auto-generated or custom token
+      description: Creates a new session with an auto-generated or custom apiKey
       parameters:
       - description: Session data
         in: body
@@ -1993,7 +1993,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Create a new session (Admin Only)
       tags:
       - Sessions
@@ -2014,7 +2014,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Delete session
       tags:
       - Sessions
@@ -2034,7 +2034,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get session
       tags:
       - Sessions
@@ -2055,7 +2055,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Connect session
       tags:
       - Sessions
@@ -2076,7 +2076,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Disconnect session
       tags:
       - Sessions
@@ -2097,7 +2097,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Get QR code for pairing
       tags:
       - Sessions
@@ -2118,7 +2118,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: List webhooks
       tags:
       - Webhooks
@@ -2146,7 +2146,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Create a webhook
       tags:
       - Webhooks
@@ -2172,7 +2172,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Delete a webhook
       tags:
       - Webhooks
@@ -2196,7 +2196,7 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Remove label from chat
       tags:
       - Labels
@@ -2220,12 +2220,12 @@ paths:
           schema:
             $ref: '#/definitions/dto.APIResponse'
       security:
-      - ApiKeyAuth: []
+      - ApiKey: []
       summary: Remove label from message
       tags:
       - Labels
 securityDefinitions:
-  ApiKeyAuth:
+  ApiKey:
     description: Session or admin token. Pass the token value directly in the Token
       header.
     in: header

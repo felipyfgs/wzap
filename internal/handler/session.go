@@ -27,14 +27,14 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *
 
 // Create godoc
 // @Summary     Create a new session (Admin Only)
-// @Description Creates a new session with an auto-generated or custom token
+// @Description Creates a new session with an auto-generated or custom apiKey
 // @Tags        Sessions
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SessionCreateReq true "Session data"
 // @Success     200  {object} dto.APIResponse
 // @Failure     400  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /sessions [post]
 func (h *SessionHandler) Create(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
@@ -60,7 +60,7 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /sessions [get]
 func (h *SessionHandler) List(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
@@ -82,7 +82,7 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /sessions/{sessionId} [get]
 func (h *SessionHandler) Get(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
@@ -101,7 +101,7 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /sessions/{sessionId} [delete]
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
@@ -119,7 +119,7 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /sessions/{sessionId}/connect [post]
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
@@ -149,7 +149,7 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /sessions/{sessionId}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
@@ -167,7 +167,7 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /sessions/{sessionId}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)

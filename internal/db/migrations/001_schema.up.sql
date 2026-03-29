@@ -16,7 +16,7 @@ $$ language 'plpgsql';
 CREATE TABLE IF NOT EXISTS "wzSessions" (
     "id" VARCHAR(100) PRIMARY KEY,
     "name" VARCHAR(100) NOT NULL UNIQUE,
-    "token" VARCHAR(255) NOT NULL UNIQUE,
+    "apiKey" VARCHAR(255) NOT NULL UNIQUE,
     "jid" VARCHAR(255) DEFAULT '',
     "qrCode" TEXT DEFAULT '',
     "connected" INTEGER DEFAULT 0,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS "wzSessions" (
 );
 
 CREATE INDEX IF NOT EXISTS "idxWzSessionsName" ON "wzSessions" ("name");
-CREATE INDEX IF NOT EXISTS "idxWzSessionsToken" ON "wzSessions" ("token");
+CREATE UNIQUE INDEX IF NOT EXISTS "idxWzSessionsApiKey" ON "wzSessions" ("apiKey");
 CREATE INDEX IF NOT EXISTS "idxWzSessionsStatus" ON "wzSessions" ("status");
 CREATE INDEX IF NOT EXISTS "idxWzSessionsConnected" ON "wzSessions" ("connected");
 
@@ -45,7 +45,7 @@ CREATE TRIGGER "updateWzSessionsUpdatedAt"
 
 COMMENT ON TABLE "wzSessions" IS 'WhatsApp sessions managed by wzap';
 COMMENT ON COLUMN "wzSessions"."name" IS 'Unique URL-safe session identifier (^[a-zA-Z0-9_-]+$)';
-COMMENT ON COLUMN "wzSessions"."token" IS 'Token for session-scoped authentication';
+COMMENT ON COLUMN "wzSessions"."apiKey" IS 'API key for session-scoped authentication';
 COMMENT ON COLUMN "wzSessions"."jid" IS 'WhatsApp device JID from whatsmeow (set after pairing)';
 
 -- =====================================================

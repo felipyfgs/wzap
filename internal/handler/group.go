@@ -22,7 +22,7 @@ func NewGroupHandler(groupSvc *service.GroupService) *GroupHandler {
 // @Tags        Groups
 // @Produce     json
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups [get]
 func (h *GroupHandler) List(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -44,7 +44,7 @@ func (h *GroupHandler) List(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.CreateGroupReq true "Group properties"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/create [post]
 func (h *GroupHandler) Create(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -74,7 +74,7 @@ func (h *GroupHandler) Create(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       jid query string true "Group JID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/info [post]
 func (h *GroupHandler) Info(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -102,7 +102,7 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 // @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Param       reset query bool false "Reset the invite link"
 // @Success     200 {object} dto.APIResponse{data=dto.GroupInviteLinkResp}
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/invite-link [post]
 func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -130,7 +130,7 @@ func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       code query string true "Invite Code"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/invite-info [post]
 func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -157,7 +157,7 @@ func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupJoinReq true "Invite Code"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/join [post]
 func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -184,7 +184,7 @@ func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/leave [post]
 func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -212,7 +212,7 @@ func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupParticipantReq true "Participants and action"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/participants [post]
 func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -241,7 +241,7 @@ func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/requests [post]
 func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -269,7 +269,7 @@ func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupRequestActionReq true "Participants and action (approve/reject)"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/requests/action [post]
 func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -299,7 +299,7 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupTextReq true "New name"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/name [post]
 func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -331,7 +331,7 @@ func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupTextReq true "New description"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/description [post]
 func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -363,7 +363,7 @@ func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupPhotoReq true "Base64 encoded photo"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/photo [post]
 func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -398,7 +398,7 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupSettingReq true "Enabled state"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/announce [post]
 func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -430,7 +430,7 @@ func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupSettingReq true "Enabled state"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/locked [post]
 func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -462,7 +462,7 @@ func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupSettingReq true "Enabled state"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /groups/join-approval [post]
 func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

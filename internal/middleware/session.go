@@ -24,7 +24,7 @@ func RequiredSession(sessionRepo *repo.SessionRepository) fiber.Handler {
 
 		if c.Locals("authRole") == "session" {
 			if c.Locals("sessionId") != session.ID {
-				return c.Status(fiber.StatusForbidden).JSON(dto.ErrorResp("Forbidden", "Token not authorized for this session"))
+				return c.Status(fiber.StatusForbidden).JSON(dto.ErrorResp("Forbidden", "ApiKey not authorized for this session"))
 			}
 		}
 

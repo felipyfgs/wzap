@@ -22,7 +22,7 @@ func NewChatHandler(chatSvc *service.ChatService) *ChatHandler {
 // @Produce     json
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /chat/archive [post]
 func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -47,7 +47,7 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /chat/mute [post]
 func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -72,7 +72,7 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /chat/pin [post]
 func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -97,7 +97,7 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /chat/unpin [post]
 func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

@@ -10,7 +10,7 @@ import (
 type Config struct {
 	Port        string
 	ServerHost  string
-	APIToken    string
+	APIKey      string
 	LogLevel    string
 	Environment string
 
@@ -34,7 +34,7 @@ func Load() *Config {
 	return &Config{
 		Port:        getEnv("PORT", "8080"),
 		ServerHost:  getEnv("SERVER_HOST", "0.0.0.0"),
-		APIToken:    getEnv("API_TOKEN", ""),
+		APIKey:      getEnv("API_KEY", ""),
 		LogLevel:    getEnv("LOG_LEVEL", "info"),
 		Environment: getEnv("ENVIRONMENT", "development"),
 

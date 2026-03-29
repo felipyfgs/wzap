@@ -22,7 +22,7 @@ func NewCommunityHandler(communitySvc *service.CommunityService) *CommunityHandl
 // @Produce     json
 // @Param       body body     dto.CreateCommunityReq true "Community payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /community/create [post]
 func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -48,7 +48,7 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.CommunityParticipantReq true "Community participant payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /community/participant/add [post]
 func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -74,7 +74,7 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.CommunityParticipantReq true "Community participant payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /community/participant/remove [post]
 func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

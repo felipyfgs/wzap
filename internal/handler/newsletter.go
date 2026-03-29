@@ -23,7 +23,7 @@ func NewNewsletterHandler(newsletterSvc *service.NewsletterService) *NewsletterH
 // @Produce     json
 // @Param       body body     dto.CreateNewsletterReq true "Newsletter payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /newsletter/create [post]
 func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -48,7 +48,7 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       jid query string true "Newsletter JID"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /newsletter/info [post]
 func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -73,7 +73,7 @@ func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       code query string true "Newsletter invite code"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /newsletter/invite [post]
 func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -97,7 +97,7 @@ func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 // @Tags        Newsletter
 // @Produce     json
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /newsletter/list [get]
 func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -119,7 +119,7 @@ func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.NewsletterMessageReq true "Messages pagination payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /newsletter/messages [post]
 func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -145,7 +145,7 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     object{jid=string} true "Newsletter JID payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKeyAuth
+// @Security    ApiKey
 // @Router      /newsletter/subscribe [post]
 func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

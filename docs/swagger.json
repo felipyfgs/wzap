@@ -19,7 +19,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Archives a chat identified by JID, moving it out of the main chat list",
@@ -58,7 +58,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Mutes notifications for a chat identified by JID",
@@ -97,7 +97,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Pins a chat to the top of the chat list",
@@ -136,7 +136,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a chat from the pinned position at the top of the chat list",
@@ -175,7 +175,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Community (a group of groups) with a name and optional description",
@@ -214,7 +214,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Adds one or more subgroups (by JID) as participants to an existing community",
@@ -253,7 +253,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes one or more subgroups (by JID) from an existing community",
@@ -292,7 +292,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all contacts from the WhatsApp session",
@@ -317,7 +317,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Fetches the profile picture URL and picture ID for the given WhatsApp JID",
@@ -368,7 +368,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Blocks a WhatsApp contact by JID, preventing them from sending messages",
@@ -407,7 +407,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns the full list of JIDs currently blocked by the session",
@@ -432,7 +432,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Checks if phone numbers are registered on WhatsApp",
@@ -471,7 +471,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Fetches detailed user info (status, profile picture, devices) for one or more WhatsApp JIDs",
@@ -525,7 +525,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)",
@@ -550,7 +550,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the session account's WhatsApp profile picture with a base64-encoded image",
@@ -589,7 +589,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Unblocks a previously blocked WhatsApp contact by JID",
@@ -628,7 +628,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all WhatsApp groups the session is part of",
@@ -653,7 +653,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sets whether only admins can send messages in the group",
@@ -692,7 +692,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Creates a new WhatsApp group with the given participants",
@@ -731,7 +731,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the description of the specified WhatsApp group",
@@ -770,7 +770,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Get detailed information about a group by JID",
@@ -804,7 +804,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Previews a group's info using an invite code without joining",
@@ -838,7 +838,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Gets the invite link for a WhatsApp group, optionally resetting it",
@@ -892,7 +892,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Joins a group using an invite code",
@@ -931,7 +931,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Activates or deactivates the admin approval system for new members",
@@ -970,7 +970,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Leaves a specified WhatsApp group",
@@ -1006,7 +1006,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sets whether only admins can edit group info",
@@ -1045,7 +1045,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the name of the specified WhatsApp group",
@@ -1084,7 +1084,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Add, remove, promote or demote participants in a group",
@@ -1123,7 +1123,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the profile picture of the specified WhatsApp group",
@@ -1162,7 +1162,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Get the list of participants that requested to join the group",
@@ -1198,7 +1198,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Approves or rejects participants that requested to join the group",
@@ -1257,7 +1257,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Applies a label to an entire chat conversation",
@@ -1296,7 +1296,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Edits an existing label's name, color, or marks it as deleted",
@@ -1335,7 +1335,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Applies a label to a specific message within a chat",
@@ -1374,7 +1374,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1412,7 +1412,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a vCard contact message via WhatsApp to the specified recipient",
@@ -1451,7 +1451,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Revokes a previously sent message for all recipients",
@@ -1490,7 +1490,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1528,7 +1528,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Edits an existing sent message by ID, replacing its text content",
@@ -1567,7 +1567,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1605,7 +1605,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a hyperlink preview message with optional title and description to the specified recipient",
@@ -1644,7 +1644,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a GPS location message with optional name and address to the specified recipient",
@@ -1683,7 +1683,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a poll with multiple choice options; selectable_count controls how many options a recipient may choose (0 = unlimited)",
@@ -1722,7 +1722,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a typing, recording, or paused presence indicator to a specific chat; presence values: typing, recording, paused",
@@ -1761,7 +1761,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Adds an emoji reaction to a message; pass an empty string for reaction to remove an existing reaction",
@@ -1800,7 +1800,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a read receipt for a specific message",
@@ -1839,7 +1839,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a base64-encoded sticker image to the specified recipient",
@@ -1878,10 +1878,10 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
-                "description": "Sends a text message via WhatsApp. If :id is omitted, session is identified from Bearer token.",
+                "description": "Sends a text message via WhatsApp. If :id is omitted, session is identified from ApiKey.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1917,7 +1917,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1955,7 +1955,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Newsletter (channel) with optional description and profile picture",
@@ -1994,7 +1994,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Retrieves metadata about a newsletter by its JID",
@@ -2028,7 +2028,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Retrieves newsletter metadata from an invite code without subscribing",
@@ -2062,7 +2062,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all newsletters the current session is subscribed to",
@@ -2087,7 +2087,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Fetches messages from a newsletter; supports pagination via before_id cursor and count",
@@ -2126,7 +2126,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Subscribes the current session to a newsletter identified by its JID",
@@ -2170,7 +2170,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all sessions",
@@ -2193,10 +2193,10 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
-                "description": "Creates a new session with an auto-generated or custom token",
+                "description": "Creates a new session with an auto-generated or custom apiKey",
                 "consumes": [
                     "application/json"
                 ],
@@ -2238,7 +2238,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns the session identified by :sessionId (name or id)",
@@ -2270,7 +2270,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Disconnects and deletes the session",
@@ -2304,7 +2304,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Connects a WhatsApp session (starts pairing if new)",
@@ -2338,7 +2338,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Disconnects the active WhatsApp session",
@@ -2372,7 +2372,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns a QR code for pairing a new WhatsApp device",
@@ -2406,7 +2406,7 @@
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all webhooks for the session",
@@ -2438,7 +2438,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Registers a new webhook for the session",
@@ -2484,7 +2484,7 @@
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a webhook from the session",
@@ -2525,7 +2525,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a label from a chat conversation",
@@ -2564,7 +2564,7 @@
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a label from a specific message",
@@ -3194,6 +3194,9 @@
         "dto.SessionCreateReq": {
             "type": "object",
             "properties": {
+                "apiKey": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -3202,9 +3205,6 @@
                 },
                 "settings": {
                     "$ref": "#/definitions/model.SessionSettings"
-                },
-                "token": {
-                    "type": "string"
                 },
                 "webhook": {
                     "$ref": "#/definitions/dto.WebhookCreateInline"
@@ -3457,7 +3457,7 @@
         }
     },
     "securityDefinitions": {
-        "ApiKeyAuth": {
+        "ApiKey": {
             "description": "Session or admin token. Pass the token value directly in the Token header.",
             "type": "apiKey",
             "name": "Token",

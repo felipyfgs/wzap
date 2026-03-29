@@ -10,22 +10,22 @@ import (
 
 func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		if cfg.APIToken == "" {
+		if cfg.APIKey == "" {
 			c.Locals("authRole", "admin")
 			return c.Next()
 		}
 
-		token := c.Get("Token")
+		token := c.Get("ApiKey")
 		if token == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing Token header"))
+			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing ApiKey header"))
 		}
 
-		if token == cfg.APIToken {
+		if token == cfg.APIKey {
 			c.Locals("authRole", "admin")
 			return c.Next()
 		}
 
-		session, err := sessionRepo.FindByToken(c.Context(), token)
+		session, err := sessionRepo.FindByAPIKey(c.Context(), token)
 		if err == nil {
 			c.Locals("authRole", "session")
 			c.Locals("sessionId", session.ID)

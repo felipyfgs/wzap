@@ -27,7 +27,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Archives a chat identified by JID, moving it out of the main chat list",
@@ -66,7 +66,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Mutes notifications for a chat identified by JID",
@@ -105,7 +105,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Pins a chat to the top of the chat list",
@@ -144,7 +144,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a chat from the pinned position at the top of the chat list",
@@ -183,7 +183,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Community (a group of groups) with a name and optional description",
@@ -222,7 +222,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Adds one or more subgroups (by JID) as participants to an existing community",
@@ -261,7 +261,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes one or more subgroups (by JID) from an existing community",
@@ -300,7 +300,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all contacts from the WhatsApp session",
@@ -325,7 +325,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Fetches the profile picture URL and picture ID for the given WhatsApp JID",
@@ -376,7 +376,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Blocks a WhatsApp contact by JID, preventing them from sending messages",
@@ -415,7 +415,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns the full list of JIDs currently blocked by the session",
@@ -440,7 +440,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Checks if phone numbers are registered on WhatsApp",
@@ -479,7 +479,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Fetches detailed user info (status, profile picture, devices) for one or more WhatsApp JIDs",
@@ -533,7 +533,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)",
@@ -558,7 +558,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the session account's WhatsApp profile picture with a base64-encoded image",
@@ -597,7 +597,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Unblocks a previously blocked WhatsApp contact by JID",
@@ -636,7 +636,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all WhatsApp groups the session is part of",
@@ -661,7 +661,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sets whether only admins can send messages in the group",
@@ -700,7 +700,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Creates a new WhatsApp group with the given participants",
@@ -739,7 +739,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the description of the specified WhatsApp group",
@@ -778,7 +778,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Get detailed information about a group by JID",
@@ -812,7 +812,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Previews a group's info using an invite code without joining",
@@ -846,7 +846,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Gets the invite link for a WhatsApp group, optionally resetting it",
@@ -900,7 +900,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Joins a group using an invite code",
@@ -939,7 +939,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Activates or deactivates the admin approval system for new members",
@@ -978,7 +978,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Leaves a specified WhatsApp group",
@@ -1014,7 +1014,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sets whether only admins can edit group info",
@@ -1053,7 +1053,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the name of the specified WhatsApp group",
@@ -1092,7 +1092,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Add, remove, promote or demote participants in a group",
@@ -1131,7 +1131,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Updates the profile picture of the specified WhatsApp group",
@@ -1170,7 +1170,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Get the list of participants that requested to join the group",
@@ -1206,7 +1206,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Approves or rejects participants that requested to join the group",
@@ -1265,7 +1265,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Applies a label to an entire chat conversation",
@@ -1304,7 +1304,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Edits an existing label's name, color, or marks it as deleted",
@@ -1343,7 +1343,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Applies a label to a specific message within a chat",
@@ -1382,7 +1382,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1420,7 +1420,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a vCard contact message via WhatsApp to the specified recipient",
@@ -1459,7 +1459,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Revokes a previously sent message for all recipients",
@@ -1498,7 +1498,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1536,7 +1536,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Edits an existing sent message by ID, replacing its text content",
@@ -1575,7 +1575,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1613,7 +1613,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a hyperlink preview message with optional title and description to the specified recipient",
@@ -1652,7 +1652,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a GPS location message with optional name and address to the specified recipient",
@@ -1691,7 +1691,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a poll with multiple choice options; selectable_count controls how many options a recipient may choose (0 = unlimited)",
@@ -1730,7 +1730,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a typing, recording, or paused presence indicator to a specific chat; presence values: typing, recording, paused",
@@ -1769,7 +1769,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Adds an emoji reaction to a message; pass an empty string for reaction to remove an existing reaction",
@@ -1808,7 +1808,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a read receipt for a specific message",
@@ -1847,7 +1847,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Sends a base64-encoded sticker image to the specified recipient",
@@ -1886,10 +1886,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
-                "description": "Sends a text message via WhatsApp. If :id is omitted, session is identified from Bearer token.",
+                "description": "Sends a text message via WhatsApp. If :id is omitted, session is identified from ApiKey.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1925,7 +1925,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "consumes": [
@@ -1963,7 +1963,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Newsletter (channel) with optional description and profile picture",
@@ -2002,7 +2002,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Retrieves metadata about a newsletter by its JID",
@@ -2036,7 +2036,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Retrieves newsletter metadata from an invite code without subscribing",
@@ -2070,7 +2070,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all newsletters the current session is subscribed to",
@@ -2095,7 +2095,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Fetches messages from a newsletter; supports pagination via before_id cursor and count",
@@ -2134,7 +2134,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Subscribes the current session to a newsletter identified by its JID",
@@ -2178,7 +2178,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all sessions",
@@ -2201,10 +2201,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
-                "description": "Creates a new session with an auto-generated or custom token",
+                "description": "Creates a new session with an auto-generated or custom apiKey",
                 "consumes": [
                     "application/json"
                 ],
@@ -2246,7 +2246,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns the session identified by :sessionId (name or id)",
@@ -2278,7 +2278,7 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Disconnects and deletes the session",
@@ -2312,7 +2312,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Connects a WhatsApp session (starts pairing if new)",
@@ -2346,7 +2346,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Disconnects the active WhatsApp session",
@@ -2380,7 +2380,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns a QR code for pairing a new WhatsApp device",
@@ -2414,7 +2414,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Returns all webhooks for the session",
@@ -2446,7 +2446,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Registers a new webhook for the session",
@@ -2492,7 +2492,7 @@ const docTemplate = `{
             "delete": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a webhook from the session",
@@ -2533,7 +2533,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a label from a chat conversation",
@@ -2572,7 +2572,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKeyAuth": []
+                        "ApiKey": []
                     }
                 ],
                 "description": "Removes a label from a specific message",
@@ -3202,6 +3202,9 @@ const docTemplate = `{
         "dto.SessionCreateReq": {
             "type": "object",
             "properties": {
+                "apiKey": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -3210,9 +3213,6 @@ const docTemplate = `{
                 },
                 "settings": {
                     "$ref": "#/definitions/model.SessionSettings"
-                },
-                "token": {
-                    "type": "string"
                 },
                 "webhook": {
                     "$ref": "#/definitions/dto.WebhookCreateInline"
@@ -3465,7 +3465,7 @@ const docTemplate = `{
         }
     },
     "securityDefinitions": {
-        "ApiKeyAuth": {
+        "ApiKey": {
             "description": "Session or admin token. Pass the token value directly in the Token header.",
             "type": "apiKey",
             "name": "Token",

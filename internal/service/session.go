@@ -18,14 +18,16 @@ import (
 var sessionNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 type SessionService struct {
-	repo   *repo.SessionRepository
-	engine *wa.Manager
+	repo        *repo.SessionRepository
+	webhookRepo *repo.WebhookRepository
+	engine      *wa.Manager
 }
 
-func NewSessionService(r *repo.SessionRepository, engine *wa.Manager) *SessionService {
+func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager) *SessionService {
 	return &SessionService{
-		repo:   r,
-		engine: engine,
+		repo:        r,
+		webhookRepo: webhookRepo,
+		engine:      engine,
 	}
 }
 
@@ -48,13 +50,28 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		Name:      req.Name,
 		Token:     token,
 		Status:    "disconnected",
-		Metadata:  req.Metadata,
+		Proxy:     req.Proxy,
+		Settings:  req.Settings,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
 
 	if err := s.repo.Create(ctx, session); err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
+	}
+
+	if req.Webhook != nil && req.Webhook.URL != "" {
+		wh := &model.Webhook{
+			ID:        uuid.NewString(),
+			SessionID: session.ID,
+			URL:       req.Webhook.URL,
+			Events:    req.Webhook.Events,
+			Enabled:   true,
+			CreatedAt: now,
+		}
+		if err := s.webhookRepo.Create(ctx, wh); err != nil {
+			log.Warn().Err(err).Str("session", session.ID).Msg("Failed to create inline webhook")
+		}
 	}
 
 	return session, nil

@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS "wzSessions" (
     "qrCode" TEXT DEFAULT '',
     "connected" INTEGER DEFAULT 0,
     "status" VARCHAR(50) NOT NULL DEFAULT 'disconnected',
+    "proxy" JSONB NOT NULL DEFAULT '{}',
+    "settings" JSONB NOT NULL DEFAULT '{}',
     "metadata" JSONB,
     "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()

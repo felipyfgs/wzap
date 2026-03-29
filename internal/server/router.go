@@ -22,7 +22,7 @@ func (s *Server) SetupRoutes() error {
 	}
 
 	// Initialize Services
-	sessionSvc := service.NewSessionService(sessionRepo, engine)
+	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine)
 	messageSvc := service.NewMessageService(engine)
 	contactSvc := service.NewContactService(engine)
 	groupSvc := service.NewGroupService(engine)

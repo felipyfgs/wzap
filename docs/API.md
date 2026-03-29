@@ -180,7 +180,7 @@ Session-scoped routes use the pattern `/sessions/:sessionId/...` where `:session
 curl -X POST http://localhost:8080/sessions \
   -H 'Token: ADMIN_TOKEN' \
   -H 'Content-Type: application/json' \
-  -d '{"name": "my-session", "metadata": {"owner": "john"}}'
+  -d '{"name": "my-session"}'
 ```
 
 **Body:**
@@ -188,21 +188,49 @@ curl -X POST http://localhost:8080/sessions \
 {
   "name": "my-session",
   "token": "optional-custom-token",
-  "metadata": {}
+  "proxy": {
+    "host": "proxy.example.com",
+    "port": 3128,
+    "protocol": "http",
+    "username": "",
+    "password": ""
+  },
+  "webhook": {
+    "url": "https://my-server.com/hook",
+    "events": ["Message", "Connected", "Disconnected"]
+  },
+  "settings": {
+    "alwaysOnline": false,
+    "rejectCall": false,
+    "msgRejectCall": "",
+    "readMessages": false,
+    "ignoreGroups": false,
+    "ignoreStatus": false
+  }
 }
 ```
 
-> `token` is optional. If omitted, a token is auto-generated (`sk_<uuid>`).
+> All fields except `name` are optional. `token` is auto-generated as `sk_<uuid>` if omitted. If `webhook.url` is provided, a webhook entry is automatically created for the session.
 
 **Response:**
 ```json
 {
+  "success": true,
   "data": {
     "id": "uuid",
     "name": "my-session",
     "token": "sk_generated-or-custom-token",
+    "proxy": { "host": "", "port": 0, "protocol": "", "username": "", "password": "" },
     "status": "disconnected",
     "connected": 0,
+    "settings": {
+      "alwaysOnline": false,
+      "rejectCall": false,
+      "msgRejectCall": "",
+      "readMessages": false,
+      "ignoreGroups": false,
+      "ignoreStatus": false
+    },
     "createdAt": "2026-03-29T00:00:00Z",
     "updatedAt": "2026-03-29T00:00:00Z"
   },

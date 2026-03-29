@@ -21,11 +21,11 @@ func NewWebhookHandler(webhookSvc *service.WebhookService) *WebhookHandler {
 // @Tags        Webhooks
 // @Accept      json
 // @Produce     json
-// @Param       sessionName path     string                 true "Session name or ID"
+// @Param       sessionId   path     string                 true "Session name or ID"
 // @Param       body        body     dto.CreateWebhookReq true "Webhook data"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName}/webhooks [post]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId}/webhooks [post]
 func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 	sessionID := c.Locals("sessionId").(string)
 	var req dto.CreateWebhookReq
@@ -46,10 +46,10 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 // @Description Returns all webhooks for the session
 // @Tags        Webhooks
 // @Produce     json
-// @Param       sessionName path string true "Session name or ID"
+// @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName}/webhooks [get]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId}/webhooks [get]
 func (h *WebhookHandler) List(c *fiber.Ctx) error {
 	sessionID := c.Locals("sessionId").(string)
 	webhooks, err := h.webhookSvc.List(c.Context(), sessionID)
@@ -65,11 +65,11 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 // @Description Removes a webhook from the session
 // @Tags        Webhooks
 // @Produce     json
-// @Param       sessionName path string true "Session name or ID"
+// @Param       sessionId   path string true "Session name or ID"
 // @Param       wid         path string true "Webhook ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName}/webhooks/{wid} [delete]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId}/webhooks/{wid} [delete]
 func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
 	sessionID := c.Locals("sessionId").(string)
 	webhookID := c.Params("wid")

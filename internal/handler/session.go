@@ -27,14 +27,14 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *
 
 // Create godoc
 // @Summary     Create a new session (Admin Only)
-// @Description Creates a new session with an auto-generated or custom apiKey
+// @Description Creates a new session with an auto-generated or custom token
 // @Tags        Sessions
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SessionCreateReq true "Session data"
 // @Success     200  {object} dto.APIResponse
 // @Failure     400  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /sessions [post]
 func (h *SessionHandler) Create(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
@@ -60,7 +60,7 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /sessions [get]
 func (h *SessionHandler) List(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
@@ -77,13 +77,13 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 
 // Get godoc
 // @Summary     Get session
-// @Description Returns the session identified by :sessionName (name or id)
+// @Description Returns the session identified by :sessionId (name or id)
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionName path string true "Session name or ID"
+// @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName} [get]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId} [get]
 func (h *SessionHandler) Get(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 	session, err := h.sessionSvc.Get(c.Context(), id)
@@ -99,10 +99,10 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 // @Description Disconnects and deletes the session
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionName path string true "Session name or ID"
+// @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName} [delete]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId} [delete]
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 	if err := h.sessionSvc.Delete(c.Context(), id); err != nil {
@@ -117,10 +117,10 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 // @Description Connects a WhatsApp session (starts pairing if new)
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionName path string true "Session name or ID"
+// @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName}/connect [post]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId}/connect [post]
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 
@@ -147,10 +147,10 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 // @Description Disconnects the active WhatsApp session
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionName path string true "Session name or ID"
+// @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName}/disconnect [post]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 	if err := h.engine.Disconnect(id); err != nil {
@@ -165,10 +165,10 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 // @Description Returns a QR code for pairing a new WhatsApp device
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionName path string true "Session name or ID"
+// @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
-// @Router      /sessions/{sessionName}/qr [get]
+// @Security    ApiKeyAuth
+// @Router      /sessions/{sessionId}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	id := c.Locals("sessionId").(string)
 

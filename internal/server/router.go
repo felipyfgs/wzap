@@ -57,7 +57,7 @@ func (s *Server) SetupRoutes() error {
 	grp.Post("/sessions", sessionHandler.Create) // Admin only
 	grp.Get("/sessions", sessionHandler.List)    // Admin only
 
-	// Session-scoped routes — :sessionName resolved by RequiredSession middleware
+	// Session-scoped routes — :sessionId resolved by RequiredSession middleware
 	reqSession := middleware.RequiredSession(sessionRepo)
 	sess := grp.Group("/sessions/:sessionId", reqSession)
 

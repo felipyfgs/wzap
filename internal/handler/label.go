@@ -23,7 +23,7 @@ func NewLabelHandler(labelSvc *service.LabelService) *LabelHandler {
 // @Produce     json
 // @Param       body body     dto.LabelChatReq true "Label chat payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /label/chat [post]
 func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -48,7 +48,7 @@ func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.LabelChatReq true "Label chat payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /unlabel/chat [post]
 func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -73,7 +73,7 @@ func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.LabelMessageReq true "Label message payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /label/message [post]
 func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -98,7 +98,7 @@ func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.LabelMessageReq true "Label message payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /unlabel/message [post]
 func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -123,7 +123,7 @@ func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.EditLabelReq true "Edit label payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /label/edit [post]
 func (h *LabelHandler) EditLabel(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

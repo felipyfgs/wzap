@@ -21,7 +21,7 @@ func NewContactHandler(contactSvc *service.ContactService) *ContactHandler {
 // @Tags        Contacts
 // @Produce     json
 // @Success     200 {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts [get]
 func (h *ContactHandler) List(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -43,7 +43,7 @@ func (h *ContactHandler) List(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.CheckContactReq true "Phone numbers"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/check [post]
 func (h *ContactHandler) Check(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -71,7 +71,7 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.GetAvatarReq true "JID payload"
 // @Success     200  {object} dto.APIResponse{data=dto.GetAvatarResp}
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/avatar [post]
 func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -97,7 +97,7 @@ func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.BlockContactReq true "JID payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/block [post]
 func (h *ContactHandler) Block(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -123,7 +123,7 @@ func (h *ContactHandler) Block(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.BlockContactReq true "JID payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/unblock [post]
 func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -147,7 +147,7 @@ func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Produce     json
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/blocklist [get]
 func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -169,7 +169,7 @@ func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.GetUserInfoReq true "JIDs payload"
 // @Success     200  {object} dto.APIResponse{data=[]dto.UserInfoResp}
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/info [post]
 func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -193,7 +193,7 @@ func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Produce     json
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/privacy [get]
 func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -215,7 +215,7 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       body body     dto.SetProfilePictureReq true "Base64 image payload"
 // @Success     200  {object} dto.APIResponse
-// @Security    BearerAuth
+// @Security    ApiKeyAuth
 // @Router      /contacts/profile-picture [post]
 func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

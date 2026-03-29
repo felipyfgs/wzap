@@ -9,13 +9,14 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/model"
+	"wzap/internal/whatsapp"
 )
 
 type GroupService struct {
-	engine *Engine
+	engine *whatsapp.Engine
 }
 
-func NewGroupService(engine *Engine) *GroupService {
+func NewGroupService(engine *whatsapp.Engine) *GroupService {
 	return &GroupService{engine: engine}
 }
 

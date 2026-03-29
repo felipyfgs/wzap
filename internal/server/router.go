@@ -3,19 +3,20 @@ package server
 import (
 	"github.com/gofiber/swagger"
 
-	"wzap/internal/handler"
+	"wzap/internal/api"
 	"wzap/internal/middleware"
-	"wzap/internal/repository"
+	"wzap/internal/repo"
 	"wzap/internal/service"
+	"wzap/internal/whatsapp"
 )
 
 func (s *Server) SetupRoutes() error {
 	// Initialize Repositories
-	sessionRepo := repository.NewSessionRepository(s.db)
-	webhookRepo := repository.NewWebhookRepository(s.db)
+	sessionRepo := repo.NewSessionRepository(s.db)
+	webhookRepo := repo.NewWebhookRepository(s.db)
 
 	// Initialize Engine
-	engine, err := service.NewEngine(s.Config, sessionRepo, s.nats)
+	engine, err := whatsapp.NewEngine(s.Config, sessionRepo, s.nats)
 	if err != nil {
 		return err
 	}
@@ -32,16 +33,16 @@ func (s *Server) SetupRoutes() error {
 	chatSvc := service.NewChatService(engine)
 
 	// Initialize Handlers
-	healthHandler := handler.NewHealthHandler(s.db != nil, s.nats != nil, s.minio != nil)
-	sessionHandler := handler.NewSessionHandler(sessionSvc, engine)
-	messageHandler := handler.NewMessageHandler(messageSvc)
-	contactHandler := handler.NewContactHandler(contactSvc)
-	groupHandler := handler.NewGroupHandler(groupSvc)
-	webhookHandler := handler.NewWebhookHandler(webhookSvc)
-	labelHandler := handler.NewLabelHandler(labelSvc)
-	newsletterHandler := handler.NewNewsletterHandler(newsletterSvc)
-	communityHandler := handler.NewCommunityHandler(communitySvc)
-	chatHandler := handler.NewChatHandler(chatSvc)
+	healthHandler := api.NewHealthHandler(s.db != nil, s.nats != nil, s.minio != nil)
+	sessionHandler := api.NewSessionHandler(sessionSvc, engine)
+	messageHandler := api.NewMessageHandler(messageSvc)
+	contactHandler := api.NewContactHandler(contactSvc)
+	groupHandler := api.NewGroupHandler(groupSvc)
+	webhookHandler := api.NewWebhookHandler(webhookSvc)
+	labelHandler := api.NewLabelHandler(labelSvc)
+	newsletterHandler := api.NewNewsletterHandler(newsletterSvc)
+	communityHandler := api.NewCommunityHandler(communitySvc)
+	chatHandler := api.NewChatHandler(chatSvc)
 
 	// Swagger UI (No Auth)
 	s.App.Get("/swagger/*", swagger.HandlerDefault)
@@ -50,15 +51,15 @@ func (s *Server) SetupRoutes() error {
 	s.App.Get("/health", healthHandler.Check)
 
 	// API Group with Auth (admin token or session apiKey)
-	api := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))
+	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))
 
 	// 1. Session Management
-	api.Post("/sessions", sessionHandler.Create) // Admin only
-	api.Get("/sessions", sessionHandler.List)    // Admin only
+	grp.Post("/sessions", sessionHandler.Create) // Admin only
+	grp.Get("/sessions", sessionHandler.List)    // Admin only
 
 	// Session-scoped routes — :sessionName resolved by RequiredSession middleware
 	reqSession := middleware.RequiredSession(sessionRepo)
-	sess := api.Group("/sessions/:sessionName", reqSession)
+	sess := grp.Group("/sessions/:sessionName", reqSession)
 
 	// 2. Session lifecycle
 	sess.Get("/", sessionHandler.Get)

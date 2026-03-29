@@ -16,13 +16,14 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"wzap/internal/model"
+	"wzap/internal/whatsapp"
 )
 
 type MessageService struct {
-	engine *Engine
+	engine *whatsapp.Engine
 }
 
-func NewMessageService(engine *Engine) *MessageService {
+func NewMessageService(engine *whatsapp.Engine) *MessageService {
 	return &MessageService{engine: engine}
 }
 

@@ -5,12 +5,12 @@ import (
 
 	"wzap/internal/config"
 	"wzap/internal/model"
-	"wzap/internal/repository"
+	"wzap/internal/repo"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func Auth(cfg *config.Config, sessionRepo *repository.SessionRepository) fiber.Handler {
+func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if cfg.APIKey == "" {
 			c.Locals("authRole", "admin")

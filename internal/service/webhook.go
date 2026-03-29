@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"wzap/internal/model"
-	"wzap/internal/repository"
+	"wzap/internal/repo"
 
 	"github.com/google/uuid"
 )
 
 type WebhookService struct {
-	repo *repository.WebhookRepository
+	repo *repo.WebhookRepository
 }
 
-func NewWebhookService(repo *repository.WebhookRepository) *WebhookService {
+func NewWebhookService(repo *repo.WebhookRepository) *WebhookService {
 	return &WebhookService{repo: repo}
 }
 

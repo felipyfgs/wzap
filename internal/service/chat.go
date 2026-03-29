@@ -6,13 +6,14 @@ import (
 
 	"go.mau.fi/whatsmeow/appstate"
 	"wzap/internal/model"
+	"wzap/internal/whatsapp"
 )
 
 type ChatService struct {
-	engine *Engine
+	engine *whatsapp.Engine
 }
 
-func NewChatService(engine *Engine) *ChatService {
+func NewChatService(engine *whatsapp.Engine) *ChatService {
 	return &ChatService{engine: engine}
 }
 

@@ -9,9 +9,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/rs/zerolog/log"
 
+	"wzap/internal/broker"
 	"wzap/internal/config"
 	"wzap/internal/middleware"
-	"wzap/internal/queue"
 	"wzap/internal/storage"
 )
 
@@ -20,11 +20,11 @@ type Server struct {
 	Config *config.Config
 
 	db    *pgxpool.Pool
-	nats  *queue.Nats
+	nats  *broker.Nats
 	minio *storage.Minio
 }
 
-func New(cfg *config.Config, dbPool *pgxpool.Pool, n *queue.Nats, m *storage.Minio) *Server {
+func New(cfg *config.Config, dbPool *pgxpool.Pool, n *broker.Nats, m *storage.Minio) *Server {
 	app := fiber.New(fiber.Config{
 		ServerHeader:          "wzap",
 		DisableStartupMessage: true,

@@ -1,4 +1,4 @@
-package service
+package whatsapp
 
 import (
 	"context"
@@ -20,22 +20,22 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 
 	"wzap/internal/config"
-	"wzap/internal/queue"
-	"wzap/internal/repository"
+	"wzap/internal/broker"
+	"wzap/internal/repo"
 )
 
 type Engine struct {
 	clients map[string]*whatsmeow.Client
 	mu      sync.RWMutex
 
-	sessionRepo *repository.SessionRepository
+	sessionRepo *repo.SessionRepository
 	container   *sqlstore.Container
-	nats        *queue.Nats
+	nats        *broker.Nats
 	cfg         *config.Config
 	waLog       waLog.Logger
 }
 
-func NewEngine(cfg *config.Config, sessionRepo *repository.SessionRepository, n *queue.Nats) (*Engine, error) {
+func NewEngine(cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats) (*Engine, error) {
 	waLogger := waLog.Stdout("wzap", cfg.WALogLevel, true)
 
 	ctx := context.Background()

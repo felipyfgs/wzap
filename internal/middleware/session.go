@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"wzap/internal/model"
-	"wzap/internal/repository"
+	"wzap/internal/repo"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-func RequiredSession(sessionRepo *repository.SessionRepository) fiber.Handler {
+func RequiredSession(sessionRepo *repo.SessionRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		sessionName := c.Params("sessionName")
 		if sessionName == "" {

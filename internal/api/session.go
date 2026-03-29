@@ -1,4 +1,4 @@
-package handler
+package api
 
 import (
 	"encoding/base64"
@@ -6,6 +6,7 @@ import (
 
 	"wzap/internal/model"
 	"wzap/internal/service"
+	"wzap/internal/whatsapp"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
@@ -14,10 +15,10 @@ import (
 
 type SessionHandler struct {
 	sessionSvc *service.SessionService
-	engine     *service.Engine
+	engine     *whatsapp.Engine
 }
 
-func NewSessionHandler(sessionSvc *service.SessionService, engine *service.Engine) *SessionHandler {
+func NewSessionHandler(sessionSvc *service.SessionService, engine *whatsapp.Engine) *SessionHandler {
 	return &SessionHandler{
 		sessionSvc: sessionSvc,
 		engine:     engine,

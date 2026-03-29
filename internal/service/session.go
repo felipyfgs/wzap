@@ -31,7 +31,7 @@ func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepos
 	}
 }
 
-func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (*model.Session, error) {
+func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (*dto.SessionCreatedResp, error) {
 	if req.Name == "" {
 		return nil, fmt.Errorf("name is required")
 	}
@@ -60,6 +60,8 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
+	resp := &dto.SessionCreatedResp{Session: *session}
+
 	if req.Webhook != nil && req.Webhook.URL != "" {
 		wh := &model.Webhook{
 			ID:        uuid.NewString(),
@@ -71,10 +73,12 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		}
 		if err := s.webhookRepo.Create(ctx, wh); err != nil {
 			log.Warn().Err(err).Str("session", session.ID).Msg("Failed to create inline webhook")
+		} else {
+			resp.Webhook = wh
 		}
 	}
 
-	return session, nil
+	return resp, nil
 }
 
 func (s *SessionService) List(ctx context.Context) ([]model.Session, error) {

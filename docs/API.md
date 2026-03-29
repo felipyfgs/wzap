@@ -231,12 +231,22 @@ curl -X POST http://localhost:8080/sessions \
       "ignoreGroups": false,
       "ignoreStatus": false
     },
+    "webhook": {
+      "id": "uuid",
+      "sessionId": "uuid",
+      "url": "https://my-server.com/hook",
+      "events": ["Message", "Connected", "Disconnected"],
+      "enabled": true,
+      "createdAt": "2026-03-29T00:00:00Z"
+    },
     "createdAt": "2026-03-29T00:00:00Z",
     "updatedAt": "2026-03-29T00:00:00Z"
   },
   "message": "success"
 }
 ```
+
+> `webhook` only appears in the response if a `webhook.url` was provided in the request.
 
 ---
 

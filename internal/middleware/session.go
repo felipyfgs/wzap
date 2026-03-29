@@ -3,17 +3,23 @@ package middleware
 import (
 	"github.com/gofiber/fiber/v2"
 	"wzap/internal/model"
+	"wzap/internal/repository"
 )
 
-// RequiredSession ensures that a valid session ID is present in the request.
-// It relies completely on the Auth middleware parsing the session.
-func RequiredSession() fiber.Handler {
+func RequiredSession(sessionRepo *repository.SessionRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Enforce that the Auth middleware successfully matched the Bearer token to a session
-		if val := c.Locals("session_id"); val != nil && val.(string) != "" {
-			return c.Next()
+		val := c.Locals("userId")
+		if val == nil || val.(string) == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "User token required in Authorization or Token header"))
 		}
 
-		return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Session token required in Authorization or Token header"))
+		userID := val.(string)
+		session, err := sessionRepo.FindByUserID(c.Context(), userID)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(model.ErrorResp("Not Found", "No session found for this user"))
+		}
+
+		c.Locals("sessionId", session.ID)
+		return c.Next()
 	}
 }

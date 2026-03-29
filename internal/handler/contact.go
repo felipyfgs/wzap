@@ -15,16 +15,10 @@ func NewContactHandler(contactSvc *service.ContactService) *ContactHandler {
 }
 
 func (h *ContactHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if id := c.Params("id"); id != "" {
-		return id, nil
-	}
-	if val := c.Locals("session_id"); val != nil {
+	if val := c.Locals("sessionId"); val != nil {
 		return val.(string), nil
 	}
-	if id := c.Get("X-Session-ID"); id != "" {
-		return id, nil
-	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required (auth token, or header X-Session-ID)")
+	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
 }
 
 // List godoc
@@ -32,7 +26,6 @@ func (h *ContactHandler) getSessionID(c *fiber.Ctx) (string, error) {
 // @Description Returns all contacts from the WhatsApp session
 // @Tags        Contacts
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
 // @Router      /contacts [get]
@@ -54,7 +47,6 @@ func (h *ContactHandler) List(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       body body     model.CheckContactReq true "Phone numbers"
 // @Success     200  {object} model.APIResponse
 // @Security    BearerAuth
@@ -75,4 +67,174 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(model.SuccessResp(results, "Contacts checked"))
+}
+
+// GetAvatar godoc
+// @Summary     Get contact avatar
+// @Description Fetches the profile picture URL and picture ID for the given WhatsApp JID
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.GetAvatarReq true "JID payload"
+// @Success     200  {object} model.APIResponse{data=model.GetAvatarResp}
+// @Security    BearerAuth
+// @Router      /contacts/avatar [post]
+func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
+	id, err := h.getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req model.GetAvatarReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+	}
+	resp, err := h.contactSvc.GetAvatar(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(model.SuccessResp(resp, "Avatar retrieved"))
+}
+
+// Block godoc
+// @Summary     Block a contact
+// @Description Blocks a WhatsApp contact by JID, preventing them from sending messages
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.BlockContactReq true "JID payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /contacts/block [post]
+func (h *ContactHandler) Block(c *fiber.Ctx) error {
+	id, err := h.getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req model.BlockContactReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+	}
+	resp, err := h.contactSvc.Block(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(model.SuccessResp(resp, "Contact blocked"))
+}
+
+// Unblock godoc
+// @Summary     Unblock a contact
+// @Description Unblocks a previously blocked WhatsApp contact by JID
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.BlockContactReq true "JID payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /contacts/unblock [post]
+func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
+	id, err := h.getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req model.BlockContactReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+	}
+	resp, err := h.contactSvc.Unblock(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(model.SuccessResp(resp, "Contact unblocked"))
+}
+
+// GetBlocklist godoc
+// @Summary     Get blocked contacts list
+// @Description Returns the full list of JIDs currently blocked by the session
+// @Tags        Contacts
+// @Produce     json
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /contacts/blocklist [get]
+func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
+	id, err := h.getSessionID(c)
+	if err != nil {
+		return err
+	}
+	resp, err := h.contactSvc.GetBlocklist(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(model.SuccessResp(resp, "Blocklist retrieved"))
+}
+
+// GetUserInfo godoc
+// @Summary     Get user info for JIDs
+// @Description Fetches detailed user info (status, profile picture, devices) for one or more WhatsApp JIDs
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.GetUserInfoReq true "JIDs payload"
+// @Success     200  {object} model.APIResponse{data=[]model.UserInfoResp}
+// @Security    BearerAuth
+// @Router      /contacts/info [post]
+func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
+	id, err := h.getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req model.GetUserInfoReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+	}
+	resp, err := h.contactSvc.GetUserInfo(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(model.SuccessResp(resp, "User info retrieved"))
+}
+
+// GetPrivacySettings godoc
+// @Summary     Get privacy settings
+// @Description Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)
+// @Tags        Contacts
+// @Produce     json
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /contacts/privacy [get]
+func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
+	id, err := h.getSessionID(c)
+	if err != nil {
+		return err
+	}
+	resp, err := h.contactSvc.GetPrivacySettings(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(model.SuccessResp(resp, "Privacy settings retrieved"))
+}
+
+// SetProfilePicture godoc
+// @Summary     Set profile picture
+// @Description Updates the session account's WhatsApp profile picture with a base64-encoded image
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.SetProfilePictureReq true "Base64 image payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /contacts/profile-picture [post]
+func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
+	id, err := h.getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req model.SetProfilePictureReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
+	}
+	resp, err := h.contactSvc.SetProfilePicture(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(model.SuccessResp(map[string]string{"picture_id": resp}, "Profile picture set"))
 }

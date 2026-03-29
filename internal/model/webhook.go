@@ -3,14 +3,14 @@ package model
 import "time"
 
 type Webhook struct {
-	ID        string    `json:"id" db:"id"`
-	SessionID string    `json:"session_id" db:"session_id"`
-	URL       string    `json:"url" db:"url"`
-	Secret    string    `json:"secret,omitempty" db:"secret"`
-	Events    []string  `json:"events" db:"events"`
-	Enabled   bool      `json:"enabled" db:"enabled"`
-	CreatedAt time.Time `json:"created_at" db:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	ID        string    `json:"id"`
+	UserID    string    `json:"userId"`
+	URL       string    `json:"url"`
+	Secret    string    `json:"secret,omitempty"`
+	Events    []string  `json:"events"`
+	Enabled   bool      `json:"enabled"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type CreateWebhookReq struct {

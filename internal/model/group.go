@@ -36,7 +36,7 @@ type GroupTextReq struct {
 
 type GroupPhotoReq struct {
 	GroupJID    string `json:"groupJid" validate:"required"`
-	PhotoBase64 string `json:"photo_base64" validate:"required"` // Base64 encoded image
+	PhotoBase64 string `json:"photoBase64" validate:"required"` // Base64 encoded image
 }
 
 type GroupSettingReq struct {

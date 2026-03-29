@@ -14,15 +14,11 @@ func NewWebhookHandler(webhookSvc *service.WebhookService) *WebhookHandler {
 	return &WebhookHandler{webhookSvc: webhookSvc}
 }
 
-func (h *WebhookHandler) getSessionID(c *fiber.Ctx) string {
-	id := c.Params("id")
-	if id == "" {
-		val := c.Locals("session_id")
-		if val != nil {
-			return val.(string)
-		}
+func (h *WebhookHandler) getUserID(c *fiber.Ctx) string {
+	if val := c.Locals("userId"); val != nil {
+		return val.(string)
 	}
-	return id
+	return ""
 }
 
 // Create godoc
@@ -38,7 +34,7 @@ func (h *WebhookHandler) getSessionID(c *fiber.Ctx) string {
 // @Router      /webhooks [post]
 // @Router      /sessions/{id}/webhooks [post]
 func (h *WebhookHandler) Create(c *fiber.Ctx) error {
-	id := h.getSessionID(c)
+	id := h.getUserID(c)
 	var req model.CreateWebhookReq
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(model.ErrorResp("Bad Request", err.Error()))
@@ -63,7 +59,7 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 // @Router      /webhooks [get]
 // @Router      /sessions/{id}/webhooks [get]
 func (h *WebhookHandler) List(c *fiber.Ctx) error {
-	id := h.getSessionID(c)
+	id := h.getUserID(c)
 	webhooks, err := h.webhookSvc.List(c.Context(), id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(model.ErrorResp("List Error", err.Error()))
@@ -84,7 +80,7 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 // @Router      /webhooks/{wid} [delete]
 // @Router      /sessions/{id}/webhooks/{wid} [delete]
 func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
-	id := h.getSessionID(c)
+	id := h.getUserID(c)
 	webhookID := c.Params("wid")
 
 	err := h.webhookSvc.Delete(c.Context(), id, webhookID)

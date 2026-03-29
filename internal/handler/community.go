@@ -15,18 +15,22 @@ func NewCommunityHandler(communitySvc *service.CommunityService) *CommunityHandl
 }
 
 func (h *CommunityHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if id := c.Params("id"); id != "" {
-		return id, nil
-	}
-	if val := c.Locals("session_id"); val != nil {
+	if val := c.Locals("sessionId"); val != nil {
 		return val.(string), nil
-	}
-	if id := c.Get("X-Session-ID"); id != "" {
-		return id, nil
 	}
 	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
 }
 
+// Create godoc
+// @Summary     Create a community
+// @Description Creates a new WhatsApp Community (a group of groups) with a name and optional description
+// @Tags        Community
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.CreateCommunityReq true "Community payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /community/create [post]
 func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -43,6 +47,16 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(group, "Community created"))
 }
 
+// AddParticipant godoc
+// @Summary     Add subgroup to community
+// @Description Adds one or more subgroups (by JID) as participants to an existing community
+// @Tags        Community
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.CommunityParticipantReq true "Community participant payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /community/participant/add [post]
 func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -59,6 +73,16 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(participants, "Participant added to community"))
 }
 
+// RemoveParticipant godoc
+// @Summary     Remove subgroup from community
+// @Description Removes one or more subgroups (by JID) from an existing community
+// @Tags        Community
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.CommunityParticipantReq true "Community participant payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /community/participant/remove [post]
 func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {

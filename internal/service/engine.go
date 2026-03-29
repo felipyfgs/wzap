@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq" // PostgreSQL driver required by whatsmeow sqlstore
+	"github.com/mdp/qrterminal/v3"
 	"github.com/rs/zerolog/log"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
@@ -85,11 +87,11 @@ func (e *Engine) ReconnectAll(ctx context.Context) error {
 			continue
 		}
 
-		if err := e.sessionRepo.SetConnected(ctx, sessionID, true); err != nil {
+		if err := e.sessionRepo.SetConnected(ctx, sessionID, 1); err != nil {
 			log.Error().Err(err).Str("session", sessionID).Msg("Failed to set connected status")
 		}
-		if err := e.sessionRepo.UpdateStatus(ctx, sessionID, "READY"); err != nil {
-			log.Error().Err(err).Str("session", sessionID).Msg("Failed to update status to READY")
+		if err := e.sessionRepo.UpdateStatus(ctx, sessionID, "connected"); err != nil {
+			log.Error().Err(err).Str("session", sessionID).Msg("Failed to update status to connected")
 		}
 		log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Reconnected session")
 	}
@@ -110,6 +112,9 @@ func (e *Engine) GetClient(sessionID string) (*whatsmeow.Client, error) {
 }
 
 // Connect connects or pairs a session.
+// For new devices (not yet paired), it starts a background goroutine that
+// consumes the QR channel and saves each QR code to the database.
+// Use GetQRCode to retrieve the latest QR from DB.
 func (e *Engine) Connect(ctx context.Context, sessionID string) (*whatsmeow.Client, <-chan whatsmeow.QRChannelItem, error) {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -123,8 +128,7 @@ func (e *Engine) Connect(ctx context.Context, sessionID string) (*whatsmeow.Clie
 		return client, nil, err
 	}
 
-	// Check if session has a saved device JID
-	deviceJID, err := e.sessionRepo.GetDeviceJID(ctx, sessionID)
+	deviceJID, err := e.sessionRepo.GetJid(ctx, sessionID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("session not found: %w", err)
 	}
@@ -154,23 +158,31 @@ func (e *Engine) Connect(ctx context.Context, sessionID string) (*whatsmeow.Clie
 
 	// Event handler for connection lifecycle
 	client.AddEventHandler(func(evt interface{}) {
-		switch evt.(type) {
+		switch v := evt.(type) {
 		case *events.Connected:
 			if client.Store.ID != nil {
 				jidStr := client.Store.ID.String()
-				if err := e.sessionRepo.UpdateDeviceJID(ctx, sessionID, jidStr); err != nil {
-					log.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update device JID")
+				if err := e.sessionRepo.UpdateJid(context.Background(), sessionID, jidStr); err != nil {
+					log.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid")
 				}
 				log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Session paired")
 			}
+		case *events.PairSuccess:
+			jidStr := v.ID.String()
+			if err := e.sessionRepo.UpdateJid(context.Background(), sessionID, jidStr); err != nil {
+				log.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid on pair")
+			}
+			_ = e.sessionRepo.UpdateQrCode(context.Background(), sessionID, "")
+			log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("QR pairing successful")
 		case *events.Disconnected:
-			if err := e.sessionRepo.SetConnected(context.Background(), sessionID, false); err != nil {
+			if err := e.sessionRepo.SetConnected(context.Background(), sessionID, 0); err != nil {
 				log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
 			}
 		case *events.LoggedOut:
 			if err := e.sessionRepo.ClearDevice(context.Background(), sessionID); err != nil {
 				log.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
 			}
+			_ = e.sessionRepo.UpdateQrCode(context.Background(), sessionID, "")
 		}
 	})
 
@@ -181,12 +193,61 @@ func (e *Engine) Connect(ctx context.Context, sessionID string) (*whatsmeow.Clie
 		if qrErr != nil {
 			return nil, nil, fmt.Errorf("failed to get QR channel: %w", qrErr)
 		}
-		err = client.Connect()
-		return client, qrChan, err
+		if err = client.Connect(); err != nil {
+			return nil, nil, err
+		}
+
+		_ = e.sessionRepo.UpdateStatus(context.Background(), sessionID, "connecting")
+
+		go e.consumeQRChannel(sessionID, qrChan)
+
+		return client, qrChan, nil
 	}
 
 	err = client.Connect()
 	return client, nil, err
+}
+
+// consumeQRChannel reads QR events in background and saves raw QR text to DB.
+func (e *Engine) consumeQRChannel(sessionID string, qrChan <-chan whatsmeow.QRChannelItem) {
+	for evt := range qrChan {
+		switch evt.Event {
+		case "code":
+			qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
+			fmt.Println("QR code:", evt.Code)
+
+			if err := e.sessionRepo.UpdateQrCode(context.Background(), sessionID, evt.Code); err != nil {
+				log.Error().Err(err).Str("session", sessionID).Msg("Failed to save QR code to database")
+			}
+			log.Info().Str("session", sessionID).Msg("QR code saved to database")
+
+		case "timeout":
+			log.Warn().Str("session", sessionID).Msg("QR code timed out")
+			_ = e.sessionRepo.UpdateQrCode(context.Background(), sessionID, "")
+			_ = e.sessionRepo.UpdateStatus(context.Background(), sessionID, "disconnected")
+
+			e.mu.Lock()
+			if client, exists := e.clients[sessionID]; exists {
+				client.Disconnect()
+				delete(e.clients, sessionID)
+			}
+			e.mu.Unlock()
+
+		case "success":
+			log.Info().Str("session", sessionID).Msg("QR pairing completed")
+			_ = e.sessionRepo.UpdateQrCode(context.Background(), sessionID, "")
+			_ = e.sessionRepo.UpdateStatus(context.Background(), sessionID, "connected")
+		}
+	}
+}
+
+// GetQRCode reads the latest QR code from the database.
+func (e *Engine) GetQRCode(ctx context.Context, sessionID string) (string, error) {
+	session, err := e.sessionRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", fmt.Errorf("session not found: %w", err)
+	}
+	return session.QrCode, nil
 }
 
 // Disconnect disconnects a session.
@@ -200,7 +261,7 @@ func (e *Engine) Disconnect(sessionID string) error {
 		delete(e.clients, sessionID)
 	}
 
-	if err := e.sessionRepo.SetConnected(context.Background(), sessionID, false); err != nil {
+	if err := e.sessionRepo.SetConnected(context.Background(), sessionID, 0); err != nil {
 		log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
 	}
 	return nil

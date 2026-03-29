@@ -9,5 +9,5 @@ type CreateNewsletterReq struct {
 type NewsletterMessageReq struct {
 	JID      string `json:"jid" validate:"required"`
 	Count    int    `json:"count"`
-	BeforeID int    `json:"before_id"`
+	BeforeID int    `json:"beforeId"`
 }

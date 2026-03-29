@@ -17,16 +17,10 @@ func NewGroupHandler(groupSvc *service.GroupService) *GroupHandler {
 }
 
 func (h *GroupHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if id := c.Params("id"); id != "" {
-		return id, nil
-	}
-	if val := c.Locals("session_id"); val != nil {
+	if val := c.Locals("sessionId"); val != nil {
 		return val.(string), nil
 	}
-	if id := c.Get("X-Session-ID"); id != "" {
-		return id, nil
-	}
-	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required (path :id, auth token, or header X-Session-ID)")
+	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
 }
 
 // List godoc
@@ -34,7 +28,6 @@ func (h *GroupHandler) getSessionID(c *fiber.Ctx) (string, error) {
 // @Description Returns all WhatsApp groups the session is part of
 // @Tags        Groups
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
 // @Router      /groups [get]
@@ -56,7 +49,6 @@ func (h *GroupHandler) List(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.CreateGroupReq true "Group properties"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -87,11 +79,10 @@ func (h *GroupHandler) Create(c *fiber.Ctx) error {
 // @Description Get detailed information about a group by JID
 // @Tags        Groups
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       jid query string true "Group JID"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
-// @Router      /groups/info [get]
+// @Router      /groups/info [post]
 func (h *GroupHandler) Info(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -115,7 +106,6 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 // @Description Gets the invite link for a WhatsApp group, optionally resetting it
 // @Tags        Groups
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupJIDReq true "Target Group JID Payload"
 // @Param       reset query bool false "Reset the invite link"
 // @Success     200 {object} model.APIResponse{data=model.GroupInviteLinkResp}
@@ -145,11 +135,10 @@ func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 // @Description Previews a group's info using an invite code without joining
 // @Tags        Groups
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       code query string true "Invite Code"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
-// @Router      /groups/invite-info [get]
+// @Router      /groups/invite-info [post]
 func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -173,7 +162,6 @@ func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupJoinReq true "Invite Code"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -201,7 +189,6 @@ func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 // @Description Leaves a specified WhatsApp group
 // @Tags        Groups
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -230,7 +217,6 @@ func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupParticipantReq true "Participants and action"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -260,7 +246,6 @@ func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 // @Description Get the list of participants that requested to join the group
 // @Tags        Groups
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -289,7 +274,6 @@ func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupRequestActionReq true "Participants and action (approve/reject)"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -320,7 +304,6 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupTextReq true "New name"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -353,7 +336,6 @@ func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupTextReq true "New description"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -386,7 +368,6 @@ func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupPhotoReq true "Base64 encoded photo"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -422,7 +403,6 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupSettingReq true "Enabled state"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -455,7 +435,6 @@ func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupSettingReq true "Enabled state"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth
@@ -488,7 +467,6 @@ func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 // @Tags        Groups
 // @Accept      json
 // @Produce     json
-// @Param       X-Session-ID header string false "Session ID (Admin fallback)"
 // @Param       request body model.GroupSettingReq true "Enabled state"
 // @Success     200 {object} model.APIResponse
 // @Security    BearerAuth

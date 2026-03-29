@@ -15,18 +15,22 @@ func NewNewsletterHandler(newsletterSvc *service.NewsletterService) *NewsletterH
 }
 
 func (h *NewsletterHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if id := c.Params("id"); id != "" {
-		return id, nil
-	}
-	if val := c.Locals("session_id"); val != nil {
+	if val := c.Locals("sessionId"); val != nil {
 		return val.(string), nil
-	}
-	if id := c.Get("X-Session-ID"); id != "" {
-		return id, nil
 	}
 	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
 }
 
+// Create godoc
+// @Summary     Create a newsletter
+// @Description Creates a new WhatsApp Newsletter (channel) with optional description and profile picture
+// @Tags        Newsletter
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.CreateNewsletterReq true "Newsletter payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /newsletter/create [post]
 func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -43,6 +47,15 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(meta, "Newsletter created"))
 }
 
+// Info godoc
+// @Summary     Get newsletter info
+// @Description Retrieves metadata about a newsletter by its JID
+// @Tags        Newsletter
+// @Produce     json
+// @Param       jid query string true "Newsletter JID"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /newsletter/info [post]
 func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -59,6 +72,15 @@ func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(meta, "Newsletter info retrieved"))
 }
 
+// Invite godoc
+// @Summary     Get newsletter info from invite code
+// @Description Retrieves newsletter metadata from an invite code without subscribing
+// @Tags        Newsletter
+// @Produce     json
+// @Param       code query string true "Newsletter invite code"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /newsletter/invite [post]
 func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -75,6 +97,14 @@ func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(meta, "Newsletter invite info retrieved"))
 }
 
+// List godoc
+// @Summary     List subscribed newsletters
+// @Description Returns all newsletters the current session is subscribed to
+// @Tags        Newsletter
+// @Produce     json
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /newsletter/list [get]
 func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -87,6 +117,16 @@ func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(newsletters, "Subscribed newsletters retrieved"))
 }
 
+// Messages godoc
+// @Summary     Get newsletter messages
+// @Description Fetches messages from a newsletter; supports pagination via before_id cursor and count
+// @Tags        Newsletter
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.NewsletterMessageReq true "Messages pagination payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /newsletter/messages [post]
 func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -103,6 +143,16 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(msgs, "Newsletter messages retrieved"))
 }
 
+// Subscribe godoc
+// @Summary     Subscribe to a newsletter
+// @Description Subscribes the current session to a newsletter identified by its JID
+// @Tags        Newsletter
+// @Accept      json
+// @Produce     json
+// @Param       body body     object{jid=string} true "Newsletter JID payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /newsletter/subscribe [post]
 func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {

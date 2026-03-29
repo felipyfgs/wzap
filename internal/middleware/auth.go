@@ -9,11 +9,10 @@ import (
 	"wzap/internal/repository"
 )
 
-func Auth(cfg *config.Config, repo *repository.SessionRepository) fiber.Handler {
+func Auth(cfg *config.Config, userRepo *repository.UserRepository) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// If both are empty, no auth
 		if cfg.APIKey == "" {
-			c.Locals("auth_role", "admin")
+			c.Locals("authRole", "admin")
 			return c.Next()
 		}
 
@@ -29,27 +28,24 @@ func Auth(cfg *config.Config, repo *repository.SessionRepository) fiber.Handler 
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		token = strings.TrimSpace(token)
 
-		// 1. Check Global Admin Key
 		if token == cfg.APIKey {
-			c.Locals("auth_role", "admin")
+			c.Locals("authRole", "admin")
 			return c.Next()
 		}
 
-		// 2. Check Session-specific Key
-		session, err := repo.FindByAPIKey(c.Context(), token)
+		user, err := userRepo.FindByToken(c.Context(), token)
 		if err == nil {
-			c.Locals("auth_role", "session")
-			c.Locals("session_id", session.ID)
+			c.Locals("authRole", "user")
+			c.Locals("userId", user.ID)
 
-			// Security check: if :id is in URL, it MUST match token's session ID
 			pathID := c.Params("id")
-			if pathID != "" && pathID != session.ID {
-				return c.Status(fiber.StatusForbidden).JSON(model.ErrorResp("Forbidden", "Token not authorized for this session ID"))
+			if pathID != "" && pathID != user.ID {
+				return c.Status(fiber.StatusForbidden).JSON(model.ErrorResp("Forbidden", "Token not authorized for this user ID"))
 			}
 
 			return c.Next()
 		}
 
-		return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Invalid API Key or Session Token"))
+		return c.Status(fiber.StatusUnauthorized).JSON(model.ErrorResp("Unauthorized", "Invalid API Key or User Token"))
 	}
 }

@@ -15,18 +15,22 @@ func NewChatHandler(chatSvc *service.ChatService) *ChatHandler {
 }
 
 func (h *ChatHandler) getSessionID(c *fiber.Ctx) (string, error) {
-	if id := c.Params("id"); id != "" {
-		return id, nil
-	}
-	if val := c.Locals("session_id"); val != nil {
+	if val := c.Locals("sessionId"); val != nil {
 		return val.(string), nil
-	}
-	if id := c.Get("X-Session-ID"); id != "" {
-		return id, nil
 	}
 	return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
 }
 
+// Archive godoc
+// @Summary     Archive a chat
+// @Description Archives a chat identified by JID, moving it out of the main chat list
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.ChatActionReq true "Chat JID payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /chat/archive [post]
 func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -42,6 +46,16 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(nil, "Chat archived"))
 }
 
+// Mute godoc
+// @Summary     Mute a chat
+// @Description Mutes notifications for a chat identified by JID
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.ChatActionReq true "Chat JID payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /chat/mute [post]
 func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -57,6 +71,16 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(nil, "Chat muted"))
 }
 
+// Pin godoc
+// @Summary     Pin a chat
+// @Description Pins a chat to the top of the chat list
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.ChatActionReq true "Chat JID payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /chat/pin [post]
 func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {
@@ -72,6 +96,16 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 	return c.JSON(model.SuccessResp(nil, "Chat pinned"))
 }
 
+// Unpin godoc
+// @Summary     Unpin a chat
+// @Description Removes a chat from the pinned position at the top of the chat list
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     model.ChatActionReq true "Chat JID payload"
+// @Success     200  {object} model.APIResponse
+// @Security    BearerAuth
+// @Router      /chat/unpin [post]
 func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 	id, err := h.getSessionID(c)
 	if err != nil {

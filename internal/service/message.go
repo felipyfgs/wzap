@@ -7,6 +7,7 @@ import (
 	"mime"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"go.mau.fi/whatsmeow"
@@ -335,7 +336,7 @@ func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, re
 		return "", err
 	}
 
-	msg := client.BuildRevoke(jid, client.Store.ID, req.MessageID)
+	msg := client.BuildRevoke(jid, *client.Store.ID, req.MessageID)
 
 	resp, err := client.SendMessage(ctx, jid, msg)
 	if err != nil {
@@ -356,7 +357,7 @@ func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	msg := client.BuildReaction(jid, client.Store.ID, req.MessageID, req.Reaction)
+	msg := client.BuildReaction(jid, *client.Store.ID, req.MessageID, req.Reaction)
 
 	resp, err := client.SendMessage(ctx, jid, msg)
 	if err != nil {
@@ -377,7 +378,7 @@ func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req mod
 		return err
 	}
 
-	return client.MarkRead([]types.MessageID{req.MessageID}, time.Now(), jid, client.Store.ID)
+	return client.MarkRead(ctx, []types.MessageID{req.MessageID}, time.Now(), jid, *client.Store.ID)
 }
 
 func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req model.SetPresenceReq) error {
@@ -392,18 +393,22 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 	}
 
 	var presence types.ChatPresence
+	var media types.ChatPresenceMedia
 	switch req.Presence {
 	case "typing":
 		presence = types.ChatPresenceComposing
+		media = types.ChatPresenceMediaText
 	case "recording":
-		presence = types.ChatPresenceRecording
+		presence = types.ChatPresenceComposing
+		media = types.ChatPresenceMediaAudio
 	case "paused":
 		presence = types.ChatPresencePaused
+		media = types.ChatPresenceMediaText
 	default:
 		return fmt.Errorf("invalid presence type: %s", req.Presence)
 	}
 
-	return client.SendChatPresence(jid, presence, types.ChatPresenceMediaText)
+	return client.SendChatPresence(ctx, jid, presence, media)
 }
 
 func parseJID(target string) (types.JID, error) {

@@ -38,7 +38,7 @@ func (s *NewsletterService) Create(ctx context.Context, sessionID string, req mo
 		Picture:     pictureBytes,
 	}
 
-	return client.CreateNewsletter(params)
+	return client.CreateNewsletter(ctx, params)
 }
 
 func (s *NewsletterService) GetInfo(ctx context.Context, sessionID string, jidStr string) (*types.NewsletterMetadata, error) {
@@ -52,7 +52,7 @@ func (s *NewsletterService) GetInfo(ctx context.Context, sessionID string, jidSt
 		return nil, err
 	}
 
-	return client.GetNewsletterInfo(jid)
+	return client.GetNewsletterInfo(ctx, jid)
 }
 
 func (s *NewsletterService) GetInvite(ctx context.Context, sessionID string, code string) (*types.NewsletterMetadata, error) {
@@ -61,7 +61,7 @@ func (s *NewsletterService) GetInvite(ctx context.Context, sessionID string, cod
 		return nil, err
 	}
 
-	return client.GetNewsletterInfoWithInvite(code)
+	return client.GetNewsletterInfoWithInvite(ctx, code)
 }
 
 func (s *NewsletterService) List(ctx context.Context, sessionID string) ([]*types.NewsletterMetadata, error) {
@@ -70,7 +70,7 @@ func (s *NewsletterService) List(ctx context.Context, sessionID string) ([]*type
 		return nil, err
 	}
 
-	return client.GetSubscribedNewsletters()
+	return client.GetSubscribedNewsletters(ctx)
 }
 
 func (s *NewsletterService) Messages(ctx context.Context, sessionID string, req model.NewsletterMessageReq) ([]*types.NewsletterMessage, error) {
@@ -89,7 +89,7 @@ func (s *NewsletterService) Messages(ctx context.Context, sessionID string, req 
 		Before: types.MessageServerID(req.BeforeID),
 	}
 
-	return client.GetNewsletterMessages(jid, params)
+	return client.GetNewsletterMessages(ctx, jid, params)
 }
 
 func (s *NewsletterService) Subscribe(ctx context.Context, sessionID string, jidStr string) error {
@@ -103,5 +103,5 @@ func (s *NewsletterService) Subscribe(ctx context.Context, sessionID string, jid
 		return err
 	}
 
-	return client.FollowNewsletter(jid)
+	return client.FollowNewsletter(ctx, jid)
 }

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"go.mau.fi/whatsmeow"
@@ -25,11 +24,10 @@ func (s *CommunityService) Create(ctx context.Context, sessionID string, req mod
 	}
 
 	reqCreate := whatsmeow.ReqCreateGroup{
-		Name:        req.Name,
-		IsCommunity: true,
+		Name: req.Name,
 	}
 
-	return client.CreateGroup(reqCreate)
+	return client.CreateGroup(ctx, reqCreate)
 }
 
 func (s *CommunityService) AddParticipant(ctx context.Context, sessionID string, req model.CommunityParticipantReq) ([]types.GroupParticipant, error) {
@@ -64,5 +62,5 @@ func (s *CommunityService) updateParticipant(ctx context.Context, sessionID stri
 		}
 	}
 
-	return client.UpdateGroupParticipants(jid, jids, action)
+	return client.UpdateGroupParticipants(ctx, jid, jids, action)
 }

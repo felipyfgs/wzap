@@ -2,10 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"strings"
 
+	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	"wzap/internal/model"
 )
 
@@ -26,7 +29,7 @@ func (s *ContactService) CheckContacts(ctx context.Context, sessionID string, re
 		return nil, fmt.Errorf("client not connected")
 	}
 
-	resp, err := client.IsOnWhatsApp(req.Phones)
+	resp, err := client.IsOnWhatsApp(ctx, req.Phones)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check contacts: %w", err)
 	}
@@ -80,7 +83,7 @@ func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req mo
 		return nil, err
 	}
 
-	info, err := client.GetProfilePictureInfo(jid, &whatsmeow.GetProfilePictureParams{})
+	info, err := client.GetProfilePictureInfo(ctx, jid, &whatsmeow.GetProfilePictureParams{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get avatar: %w", err)
 	}
@@ -106,7 +109,7 @@ func (s *ContactService) Block(ctx context.Context, sessionID string, req model.
 		return nil, err
 	}
 
-	return client.UpdateBlocklist(jid, "block")
+	return client.UpdateBlocklist(ctx, jid, events.BlocklistChangeActionBlock)
 }
 
 func (s *ContactService) Unblock(ctx context.Context, sessionID string, req model.BlockContactReq) (*types.Blocklist, error) {
@@ -120,7 +123,7 @@ func (s *ContactService) Unblock(ctx context.Context, sessionID string, req mode
 		return nil, err
 	}
 
-	return client.UpdateBlocklist(jid, "unblock")
+	return client.UpdateBlocklist(ctx, jid, events.BlocklistChangeActionUnblock)
 }
 
 func (s *ContactService) GetBlocklist(ctx context.Context, sessionID string) (*types.Blocklist, error) {
@@ -129,7 +132,7 @@ func (s *ContactService) GetBlocklist(ctx context.Context, sessionID string) (*t
 		return nil, err
 	}
 
-	return client.GetBlocklist()
+	return client.GetBlocklist(ctx)
 }
 
 func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req model.GetUserInfoReq) (map[string]model.UserInfoResp, error) {
@@ -146,7 +149,7 @@ func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req 
 		}
 	}
 
-	info, err := client.GetUserInfo(jids)
+	info, err := client.GetUserInfo(ctx, jids)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user info: %w", err)
 	}
@@ -155,7 +158,7 @@ func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req 
 	for jid, infoData := range info {
 		var devices []string
 		for _, dev := range infoData.Devices {
-			devices = append(devices, dev.Device.String())
+			devices = append(devices, fmt.Sprintf("%d", dev.Device))
 		}
 
 		resp[jid.String()] = model.UserInfoResp{
@@ -175,7 +178,9 @@ func (s *ContactService) GetPrivacySettings(ctx context.Context, sessionID strin
 		return types.PrivacySettings{}, err
 	}
 
-	return client.GetPrivacySettings(), nil
+	// client.GetPrivacySettings only returns types.PrivacySettings
+	settings := client.GetPrivacySettings(ctx)
+	return settings, nil
 }
 
 func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string, req model.SetProfilePictureReq) (string, error) {
@@ -189,5 +194,5 @@ func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string
 		return "", fmt.Errorf("invalid base64: %w", err)
 	}
 
-	return client.SetGroupPhoto(client.Store.ID, data)
+	return client.SetGroupPhoto(ctx, *client.Store.ID, data)
 }

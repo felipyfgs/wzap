@@ -23,6 +23,279 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/chat/archive": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Archives a chat identified by JID, moving it out of the main chat list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Archive a chat",
+                "parameters": [
+                    {
+                        "description": "Chat JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ChatActionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/mute": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mutes notifications for a chat identified by JID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Mute a chat",
+                "parameters": [
+                    {
+                        "description": "Chat JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ChatActionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/pin": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Pins a chat to the top of the chat list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Pin a chat",
+                "parameters": [
+                    {
+                        "description": "Chat JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ChatActionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/unpin": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a chat from the pinned position at the top of the chat list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Unpin a chat",
+                "parameters": [
+                    {
+                        "description": "Chat JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ChatActionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/community/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new WhatsApp Community (a group of groups) with a name and optional description",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Community"
+                ],
+                "summary": "Create a community",
+                "parameters": [
+                    {
+                        "description": "Community payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateCommunityReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/community/participant/add": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds one or more subgroups (by JID) as participants to an existing community",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Community"
+                ],
+                "summary": "Add subgroup to community",
+                "parameters": [
+                    {
+                        "description": "Community participant payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CommunityParticipantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/community/participant/remove": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes one or more subgroups (by JID) from an existing community",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Community"
+                ],
+                "summary": "Remove subgroup from community",
+                "parameters": [
+                    {
+                        "description": "Community participant payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CommunityParticipantReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/contacts": {
             "get": {
                 "security": [
@@ -38,19 +311,126 @@ const docTemplate = `{
                     "Contacts"
                 ],
                 "summary": "List contacts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/avatar": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches the profile picture URL and picture ID for the given WhatsApp JID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Get contact avatar",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
+                        "description": "JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.GetAvatarReq"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.GetAvatarResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/block": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Blocks a WhatsApp contact by JID, preventing them from sending messages",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Block a contact",
+                "parameters": [
+                    {
+                        "description": "JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.BlockContactReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/blocklist": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns the full list of JIDs currently blocked by the session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Get blocked contacts list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -76,18 +456,12 @@ const docTemplate = `{
                 "summary": "Check contacts on WhatsApp",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Phone numbers",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.CheckContactReq"
+                            "$ref": "#/definitions/model.CheckContactReq"
                         }
                     }
                 ],
@@ -95,7 +469,164 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/info": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches detailed user info (status, profile picture, devices) for one or more WhatsApp JIDs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Get user info for JIDs",
+                "parameters": [
+                    {
+                        "description": "JIDs payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.GetUserInfoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/model.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.UserInfoResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/privacy": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Get privacy settings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/profile-picture": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates the session account's WhatsApp profile picture with a base64-encoded image",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Set profile picture",
+                "parameters": [
+                    {
+                        "description": "Base64 image payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetProfilePictureReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/contacts/unblock": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Unblocks a previously blocked WhatsApp contact by JID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Unblock a contact",
+                "parameters": [
+                    {
+                        "description": "JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.BlockContactReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -116,19 +647,11 @@ const docTemplate = `{
                     "Groups"
                 ],
                 "summary": "List joined groups",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -154,18 +677,12 @@ const docTemplate = `{
                 "summary": "Set group announce mode",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Enabled state",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupSettingReq"
+                            "$ref": "#/definitions/model.GroupSettingReq"
                         }
                     }
                 ],
@@ -173,7 +690,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -199,18 +716,12 @@ const docTemplate = `{
                 "summary": "Create a new group",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Group properties",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.CreateGroupReq"
+                            "$ref": "#/definitions/model.CreateGroupReq"
                         }
                     }
                 ],
@@ -218,7 +729,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -244,18 +755,12 @@ const docTemplate = `{
                 "summary": "Update group description",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "New description",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupTextReq"
+                            "$ref": "#/definitions/model.GroupTextReq"
                         }
                     }
                 ],
@@ -263,14 +768,14 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
             }
         },
         "/groups/info": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -287,12 +792,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
                         "description": "Group JID",
                         "name": "jid",
                         "in": "query",
@@ -303,14 +802,14 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
             }
         },
         "/groups/invite-info": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
@@ -327,12 +826,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
-                        "type": "string",
                         "description": "Invite Code",
                         "name": "code",
                         "in": "query",
@@ -343,7 +836,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -366,18 +859,12 @@ const docTemplate = `{
                 "summary": "Get group invite link",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Target Group JID Payload",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupJIDReq"
+                            "$ref": "#/definitions/model.GroupJIDReq"
                         }
                     },
                     {
@@ -393,13 +880,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                                    "$ref": "#/definitions/model.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/wzap_internal_model.GroupInviteLinkResp"
+                                            "$ref": "#/definitions/model.GroupInviteLinkResp"
                                         }
                                     }
                                 }
@@ -429,18 +916,12 @@ const docTemplate = `{
                 "summary": "Join group via link",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Invite Code",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupJoinReq"
+                            "$ref": "#/definitions/model.GroupJoinReq"
                         }
                     }
                 ],
@@ -448,7 +929,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -474,18 +955,12 @@ const docTemplate = `{
                 "summary": "Set group join approval mode",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Enabled state",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupSettingReq"
+                            "$ref": "#/definitions/model.GroupSettingReq"
                         }
                     }
                 ],
@@ -493,7 +968,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -516,18 +991,12 @@ const docTemplate = `{
                 "summary": "Leave group",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Target Group JID Payload",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupJIDReq"
+                            "$ref": "#/definitions/model.GroupJIDReq"
                         }
                     }
                 ],
@@ -535,7 +1004,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -561,18 +1030,12 @@ const docTemplate = `{
                 "summary": "Set group locked mode",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Enabled state",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupSettingReq"
+                            "$ref": "#/definitions/model.GroupSettingReq"
                         }
                     }
                 ],
@@ -580,7 +1043,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -606,18 +1069,12 @@ const docTemplate = `{
                 "summary": "Update group name",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "New name",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupTextReq"
+                            "$ref": "#/definitions/model.GroupTextReq"
                         }
                     }
                 ],
@@ -625,7 +1082,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -651,18 +1108,12 @@ const docTemplate = `{
                 "summary": "Update group participants",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Participants and action",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupParticipantReq"
+                            "$ref": "#/definitions/model.GroupParticipantReq"
                         }
                     }
                 ],
@@ -670,7 +1121,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -696,18 +1147,12 @@ const docTemplate = `{
                 "summary": "Update group photo",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Base64 encoded photo",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupPhotoReq"
+                            "$ref": "#/definitions/model.GroupPhotoReq"
                         }
                     }
                 ],
@@ -715,7 +1160,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -738,18 +1183,12 @@ const docTemplate = `{
                 "summary": "Get group join requests",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Target Group JID Payload",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupJIDReq"
+                            "$ref": "#/definitions/model.GroupJIDReq"
                         }
                     }
                 ],
@@ -757,7 +1196,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -783,18 +1222,12 @@ const docTemplate = `{
                 "summary": "Approve/Reject group join requests",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Participants and action (approve/reject)",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.GroupRequestActionReq"
+                            "$ref": "#/definitions/model.GroupRequestActionReq"
                         }
                     }
                 ],
@@ -802,7 +1235,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -822,7 +1255,124 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/label/chat": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Applies a label to an entire chat conversation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Labels"
+                ],
+                "summary": "Add label to chat",
+                "parameters": [
+                    {
+                        "description": "Label chat payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LabelChatReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/label/edit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Edits an existing label's name, color, or marks it as deleted",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Labels"
+                ],
+                "summary": "Edit a label",
+                "parameters": [
+                    {
+                        "description": "Edit label payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EditLabelReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/label/message": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Applies a label to a specific message within a chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Labels"
+                ],
+                "summary": "Add label to message",
+                "parameters": [
+                    {
+                        "description": "Label message payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LabelMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -847,18 +1397,12 @@ const docTemplate = `{
                 "summary": "Send an audio message",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Media payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.SendMediaReq"
+                            "$ref": "#/definitions/model.SendMediaReq"
                         }
                     }
                 ],
@@ -866,7 +1410,85 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/contact": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a vCard contact message via WhatsApp to the specified recipient",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a contact card",
+                "parameters": [
+                    {
+                        "description": "Contact payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SendContactReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/delete": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revokes a previously sent message for all recipients",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Delete a sent message",
+                "parameters": [
+                    {
+                        "description": "Delete payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.DeleteMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -891,18 +1513,12 @@ const docTemplate = `{
                 "summary": "Send a document",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Media payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.SendMediaReq"
+                            "$ref": "#/definitions/model.SendMediaReq"
                         }
                     }
                 ],
@@ -910,7 +1526,46 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/edit": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Edits an existing sent message by ID, replacing its text content",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Edit a sent message",
+                "parameters": [
+                    {
+                        "description": "Edit payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EditMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -935,18 +1590,12 @@ const docTemplate = `{
                 "summary": "Send an image message",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Media payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.SendMediaReq"
+                            "$ref": "#/definitions/model.SendMediaReq"
                         }
                     }
                 ],
@@ -954,7 +1603,280 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/link": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a hyperlink preview message with optional title and description to the specified recipient",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a link preview message",
+                "parameters": [
+                    {
+                        "description": "Link payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SendLinkReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/location": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a GPS location message with optional name and address to the specified recipient",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a location message",
+                "parameters": [
+                    {
+                        "description": "Location payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SendLocationReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/poll": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a poll with multiple choice options; selectable_count controls how many options a recipient may choose (0 = unlimited)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a poll message",
+                "parameters": [
+                    {
+                        "description": "Poll payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SendPollReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/presence": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a typing, recording, or paused presence indicator to a specific chat; presence values: typing, recording, paused",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Set typing/recording presence",
+                "parameters": [
+                    {
+                        "description": "Presence payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SetPresenceReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/reaction": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Adds an emoji reaction to a message; pass an empty string for reaction to remove an existing reaction",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "React to a message",
+                "parameters": [
+                    {
+                        "description": "Reaction payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.ReactMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/read": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a read receipt for a specific message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Mark a message as read",
+                "parameters": [
+                    {
+                        "description": "Mark read payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.MarkReadReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/sticker": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends a base64-encoded sticker image to the specified recipient",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a sticker",
+                "parameters": [
+                    {
+                        "description": "Sticker payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.SendStickerReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -980,18 +1902,12 @@ const docTemplate = `{
                 "summary": "Send a text message",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Message payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.SendTextReq"
+                            "$ref": "#/definitions/model.SendTextReq"
                         }
                     }
                 ],
@@ -999,7 +1915,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1024,18 +1940,12 @@ const docTemplate = `{
                 "summary": "Send a video message",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    },
-                    {
                         "description": "Media payload",
                         "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.SendMediaReq"
+                            "$ref": "#/definitions/model.SendMediaReq"
                         }
                     }
                 ],
@@ -1043,7 +1953,222 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new WhatsApp Newsletter (channel) with optional description and profile picture",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Create a newsletter",
+                "parameters": [
+                    {
+                        "description": "Newsletter payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.CreateNewsletterReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/info": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves metadata about a newsletter by its JID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Get newsletter info",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Newsletter JID",
+                        "name": "jid",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/invite": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves newsletter metadata from an invite code without subscribing",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Get newsletter info from invite code",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Newsletter invite code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/list": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns all newsletters the current session is subscribed to",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "List subscribed newsletters",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/messages": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches messages from a newsletter; supports pagination via before_id cursor and count",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Get newsletter messages",
+                "parameters": [
+                    {
+                        "description": "Messages pagination payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NewsletterMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/subscribe": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Subscribes the current session to a newsletter identified by its JID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Subscribe to a newsletter",
+                "parameters": [
+                    {
+                        "description": "Newsletter JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "jid": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1064,19 +2189,11 @@ const docTemplate = `{
                     "Sessions"
                 ],
                 "summary": "Get current session",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1095,19 +2212,11 @@ const docTemplate = `{
                     "Sessions"
                 ],
                 "summary": "Delete current session",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1128,19 +2237,11 @@ const docTemplate = `{
                     "Sessions"
                 ],
                 "summary": "Connect current session",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1161,19 +2262,11 @@ const docTemplate = `{
                     "Sessions"
                 ],
                 "summary": "Disconnect current session",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1194,19 +2287,11 @@ const docTemplate = `{
                     "Sessions"
                 ],
                 "summary": "Get QR code for pair",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session ID (Admin fallback)",
-                        "name": "X-Session-ID",
-                        "in": "header"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1231,7 +2316,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1242,7 +2327,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates a new WhatsApp session entry in the database. Returns the generated api_key.",
+                "description": "Creates a new WhatsApp session entry in the database. Returns the generated token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1260,7 +2345,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.SessionCreateReq"
+                            "$ref": "#/definitions/model.SessionCreateReq"
                         }
                     }
                 ],
@@ -1268,13 +2353,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIError"
+                            "$ref": "#/definitions/model.APIError"
                         }
                     }
                 }
@@ -1307,7 +2392,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1342,7 +2427,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.CreateWebhookReq"
+                            "$ref": "#/definitions/model.CreateWebhookReq"
                         }
                     }
                 ],
@@ -1350,7 +2435,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1390,7 +2475,85 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/unlabel/chat": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a label from a chat conversation",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Labels"
+                ],
+                "summary": "Remove label from chat",
+                "parameters": [
+                    {
+                        "description": "Label chat payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LabelChatReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/unlabel/message": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Removes a label from a specific message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Labels"
+                ],
+                "summary": "Remove label from message",
+                "parameters": [
+                    {
+                        "description": "Label message payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.LabelMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1415,7 +2578,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1444,7 +2607,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.CreateWebhookReq"
+                            "$ref": "#/definitions/model.CreateWebhookReq"
                         }
                     }
                 ],
@@ -1452,7 +2615,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1492,7 +2655,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/wzap_internal_model.APIResponse"
+                            "$ref": "#/definitions/model.APIResponse"
                         }
                     }
                 }
@@ -1500,7 +2663,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "wzap_internal_model.APIError": {
+        "model.APIError": {
             "type": "object",
             "properties": {
                 "details": {
@@ -1514,7 +2677,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.APIResponse": {
+        "model.APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -1526,7 +2689,29 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.CheckContactReq": {
+        "model.BlockContactReq": {
+            "type": "object",
+            "required": [
+                "jid"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ChatActionReq": {
+            "type": "object",
+            "required": [
+                "jid"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CheckContactReq": {
             "type": "object",
             "required": [
                 "phones"
@@ -1540,7 +2725,39 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.CreateGroupReq": {
+        "model.CommunityParticipantReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "participants"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "model.CreateCommunityReq": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateGroupReq": {
             "type": "object",
             "properties": {
                 "name": {
@@ -1560,7 +2777,25 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.CreateWebhookReq": {
+        "model.CreateNewsletterReq": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "picture": {
+                    "description": "base64",
+                    "type": "string"
+                }
+            }
+        },
+        "model.CreateWebhookReq": {
             "type": "object",
             "required": [
                 "events",
@@ -1581,7 +2816,97 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupInviteLinkResp": {
+        "model.DeleteMessageReq": {
+            "type": "object",
+            "required": [
+                "message_id",
+                "to"
+            ],
+            "properties": {
+                "message_id": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EditLabelReq": {
+            "type": "object",
+            "required": [
+                "labelId"
+            ],
+            "properties": {
+                "color": {
+                    "type": "integer"
+                },
+                "deleted": {
+                    "type": "boolean"
+                },
+                "labelId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EditMessageReq": {
+            "type": "object",
+            "required": [
+                "message_id",
+                "text",
+                "to"
+            ],
+            "properties": {
+                "message_id": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.GetAvatarReq": {
+            "type": "object",
+            "required": [
+                "jid"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.GetAvatarResp": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.GetUserInfoReq": {
+            "type": "object",
+            "required": [
+                "jids"
+            ],
+            "properties": {
+                "jids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "model.GroupInviteLinkResp": {
             "type": "object",
             "properties": {
                 "link": {
@@ -1589,7 +2914,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupJIDReq": {
+        "model.GroupJIDReq": {
             "type": "object",
             "required": [
                 "groupJid"
@@ -1600,7 +2925,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupJoinReq": {
+        "model.GroupJoinReq": {
             "type": "object",
             "required": [
                 "invite_code"
@@ -1611,7 +2936,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupParticipantReq": {
+        "model.GroupParticipantReq": {
             "type": "object",
             "required": [
                 "action",
@@ -1638,7 +2963,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupPhotoReq": {
+        "model.GroupPhotoReq": {
             "type": "object",
             "required": [
                 "groupJid",
@@ -1654,7 +2979,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupRequestActionReq": {
+        "model.GroupRequestActionReq": {
             "type": "object",
             "required": [
                 "action",
@@ -1681,7 +3006,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupSettingReq": {
+        "model.GroupSettingReq": {
             "type": "object",
             "required": [
                 "groupJid"
@@ -1695,7 +3020,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.GroupTextReq": {
+        "model.GroupTextReq": {
             "type": "object",
             "required": [
                 "groupJid",
@@ -1710,7 +3035,158 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.SendMediaReq": {
+        "model.LabelChatReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "labelId"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "labelId": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.LabelMessageReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "labelId",
+                "messageId"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "labelId": {
+                    "type": "string"
+                },
+                "messageId": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.MarkReadReq": {
+            "type": "object",
+            "required": [
+                "message_id",
+                "to"
+            ],
+            "properties": {
+                "message_id": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.NewsletterMessageReq": {
+            "type": "object",
+            "required": [
+                "jid"
+            ],
+            "properties": {
+                "before_id": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "jid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ReactMessageReq": {
+            "type": "object",
+            "required": [
+                "message_id",
+                "reaction",
+                "to"
+            ],
+            "properties": {
+                "message_id": {
+                    "type": "string"
+                },
+                "reaction": {
+                    "description": "emoji or empty to remove",
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendContactReq": {
+            "type": "object",
+            "required": [
+                "name",
+                "to",
+                "vcard"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                },
+                "vcard": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendLinkReq": {
+            "type": "object",
+            "required": [
+                "to",
+                "url"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendLocationReq": {
+            "type": "object",
+            "required": [
+                "lat",
+                "lng",
+                "to"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendMediaReq": {
             "type": "object",
             "required": [
                 "mime_type",
@@ -1736,7 +3212,52 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.SendTextReq": {
+        "model.SendPollReq": {
+            "type": "object",
+            "required": [
+                "name",
+                "options",
+                "to"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "options": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "selectable_count": {
+                    "type": "integer"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendStickerReq": {
+            "type": "object",
+            "required": [
+                "base64",
+                "mime_type",
+                "to"
+            ],
+            "properties": {
+                "base64": {
+                    "type": "string"
+                },
+                "mime_type": {
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SendTextReq": {
             "type": "object",
             "required": [
                 "text",
@@ -1752,7 +3273,7 @@ const docTemplate = `{
                 }
             }
         },
-        "wzap_internal_model.SessionCreateReq": {
+        "model.SessionCreateReq": {
             "type": "object",
             "required": [
                 "id"
@@ -1764,6 +3285,53 @@ const docTemplate = `{
                 "metadata": {
                     "type": "object",
                     "additionalProperties": true
+                }
+            }
+        },
+        "model.SetPresenceReq": {
+            "type": "object",
+            "required": [
+                "presence",
+                "to"
+            ],
+            "properties": {
+                "presence": {
+                    "description": "typing, recording, paused",
+                    "type": "string"
+                },
+                "to": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.SetProfilePictureReq": {
+            "type": "object",
+            "required": [
+                "base64"
+            ],
+            "properties": {
+                "base64": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UserInfoResp": {
+            "type": "object",
+            "properties": {
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "picture": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         }

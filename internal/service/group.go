@@ -110,7 +110,7 @@ func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID s
 		return nil, fmt.Errorf("invalid group JID: %w", err)
 	}
 
-	info, err := client.GetGroupInfo(jid)
+	info, err := client.GetGroupInfo(ctx, jid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get group info: %w", err)
 	}
@@ -146,7 +146,7 @@ func (s *GroupService) GetInviteLink(ctx context.Context, sessionID string, grou
 		return "", fmt.Errorf("invalid group JID: %w", err)
 	}
 
-	link, err := client.GetGroupInviteLink(jid, reset)
+	link, err := client.GetGroupInviteLink(ctx, jid, reset)
 	if err != nil {
 		return "", fmt.Errorf("failed to get group invite link: %w", err)
 	}
@@ -168,7 +168,7 @@ func (s *GroupService) LeaveGroup(ctx context.Context, sessionID string, groupJI
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
 
-	if err := client.LeaveGroup(jid); err != nil {
+	if err := client.LeaveGroup(ctx, jid); err != nil {
 		return fmt.Errorf("failed to leave group: %w", err)
 	}
 	return nil
@@ -183,7 +183,7 @@ func (s *GroupService) GetInfoFromLink(ctx context.Context, sessionID string, in
 		return nil, fmt.Errorf("client not connected")
 	}
 
-	info, err := client.GetGroupInfoFromLink(inviteCode)
+	info, err := client.GetGroupInfoFromLink(ctx, inviteCode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get group info from link: %w", err)
 	}
@@ -205,7 +205,7 @@ func (s *GroupService) JoinWithLink(ctx context.Context, sessionID string, invit
 		return "", fmt.Errorf("client not connected")
 	}
 
-	jid, err := client.JoinGroupWithLink(inviteCode)
+	jid, err := client.JoinGroupWithLink(ctx, inviteCode)
 	if err != nil {
 		return "", fmt.Errorf("failed to join group: %w", err)
 	}
@@ -254,7 +254,7 @@ func (s *GroupService) UpdateParticipants(ctx context.Context, sessionID, groupJ
 		}
 	}
 
-	return client.UpdateGroupParticipants(jid, jids, act)
+	return client.UpdateGroupParticipants(ctx, jid, jids, act)
 }
 
 func (s *GroupService) GetRequestParticipants(ctx context.Context, sessionID, groupJID string) ([]types.GroupParticipantRequest, error) {
@@ -271,7 +271,7 @@ func (s *GroupService) GetRequestParticipants(ctx context.Context, sessionID, gr
 		return nil, fmt.Errorf("invalid group JID: %w", err)
 	}
 
-	return client.GetGroupRequestParticipants(jid)
+	return client.GetGroupRequestParticipants(ctx, jid)
 }
 
 func (s *GroupService) UpdateRequestParticipants(ctx context.Context, sessionID, groupJID string, participants []string, action string) ([]types.GroupParticipant, error) {
@@ -311,7 +311,7 @@ func (s *GroupService) UpdateRequestParticipants(ctx context.Context, sessionID,
 		}
 	}
 
-	return client.UpdateGroupRequestParticipants(jid, jids, act)
+	return client.UpdateGroupRequestParticipants(ctx, jid, jids, act)
 }
 
 func (s *GroupService) UpdateName(ctx context.Context, sessionID, groupJID, name string) error {
@@ -327,7 +327,7 @@ func (s *GroupService) UpdateName(ctx context.Context, sessionID, groupJID, name
 	if err != nil {
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
-	return client.SetGroupName(jid, name)
+	return client.SetGroupName(ctx, jid, name)
 }
 
 func (s *GroupService) UpdateDescription(ctx context.Context, sessionID, groupJID, description string) error {
@@ -343,7 +343,7 @@ func (s *GroupService) UpdateDescription(ctx context.Context, sessionID, groupJI
 	if err != nil {
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
-	return client.SetGroupDescription(jid, description)
+	return client.SetGroupDescription(ctx, jid, description)
 }
 
 func (s *GroupService) UpdatePhoto(ctx context.Context, sessionID, groupJID string, photoBytes []byte) (string, error) {
@@ -359,7 +359,7 @@ func (s *GroupService) UpdatePhoto(ctx context.Context, sessionID, groupJID stri
 	if err != nil {
 		return "", fmt.Errorf("invalid group JID: %w", err)
 	}
-	return client.SetGroupPhoto(jid, photoBytes)
+	return client.SetGroupPhoto(ctx, jid, photoBytes)
 }
 
 func (s *GroupService) SetAnnounce(ctx context.Context, sessionID, groupJID string, announce bool) error {
@@ -375,7 +375,7 @@ func (s *GroupService) SetAnnounce(ctx context.Context, sessionID, groupJID stri
 	if err != nil {
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
-	return client.SetGroupAnnounce(jid, announce)
+	return client.SetGroupAnnounce(ctx, jid, announce)
 }
 
 func (s *GroupService) SetLocked(ctx context.Context, sessionID, groupJID string, locked bool) error {
@@ -391,7 +391,7 @@ func (s *GroupService) SetLocked(ctx context.Context, sessionID, groupJID string
 	if err != nil {
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
-	return client.SetGroupLocked(jid, locked)
+	return client.SetGroupLocked(ctx, jid, locked)
 }
 
 func (s *GroupService) SetJoinApproval(ctx context.Context, sessionID, groupJID string, approval bool) error {
@@ -407,5 +407,5 @@ func (s *GroupService) SetJoinApproval(ctx context.Context, sessionID, groupJID 
 	if err != nil {
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
-	return client.SetGroupJoinApprovalMode(jid, approval)
+	return client.SetGroupJoinApprovalMode(ctx, jid, approval)
 }

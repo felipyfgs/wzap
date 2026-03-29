@@ -1,5 +1,5 @@
 definitions:
-  wzap_internal_model.APIError:
+  model.APIError:
     properties:
       details:
         type: string
@@ -8,7 +8,7 @@ definitions:
       success:
         type: boolean
     type: object
-  wzap_internal_model.APIResponse:
+  model.APIResponse:
     properties:
       data: {}
       message:
@@ -16,7 +16,21 @@ definitions:
       success:
         type: boolean
     type: object
-  wzap_internal_model.CheckContactReq:
+  model.BlockContactReq:
+    properties:
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
+  model.ChatActionReq:
+    properties:
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
+  model.CheckContactReq:
     properties:
       phones:
         items:
@@ -25,7 +39,28 @@ definitions:
     required:
     - phones
     type: object
-  wzap_internal_model.CreateGroupReq:
+  model.CommunityParticipantReq:
+    properties:
+      jid:
+        type: string
+      participants:
+        items:
+          type: string
+        type: array
+    required:
+    - jid
+    - participants
+    type: object
+  model.CreateCommunityReq:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  model.CreateGroupReq:
     properties:
       name:
         example: My Awesome Group
@@ -39,7 +74,19 @@ definitions:
           type: string
         type: array
     type: object
-  wzap_internal_model.CreateWebhookReq:
+  model.CreateNewsletterReq:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      picture:
+        description: base64
+        type: string
+    required:
+    - name
+    type: object
+  model.CreateWebhookReq:
     properties:
       events:
         items:
@@ -53,26 +100,85 @@ definitions:
     - events
     - url
     type: object
-  wzap_internal_model.GroupInviteLinkResp:
+  model.DeleteMessageReq:
+    properties:
+      message_id:
+        type: string
+      to:
+        type: string
+    required:
+    - message_id
+    - to
+    type: object
+  model.EditLabelReq:
+    properties:
+      color:
+        type: integer
+      deleted:
+        type: boolean
+      labelId:
+        type: string
+      name:
+        type: string
+    required:
+    - labelId
+    type: object
+  model.EditMessageReq:
+    properties:
+      message_id:
+        type: string
+      text:
+        type: string
+      to:
+        type: string
+    required:
+    - message_id
+    - text
+    - to
+    type: object
+  model.GetAvatarReq:
+    properties:
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
+  model.GetAvatarResp:
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+    type: object
+  model.GetUserInfoReq:
+    properties:
+      jids:
+        items:
+          type: string
+        type: array
+    required:
+    - jids
+    type: object
+  model.GroupInviteLinkResp:
     properties:
       link:
         type: string
     type: object
-  wzap_internal_model.GroupJIDReq:
+  model.GroupJIDReq:
     properties:
       groupJid:
         type: string
     required:
     - groupJid
     type: object
-  wzap_internal_model.GroupJoinReq:
+  model.GroupJoinReq:
     properties:
       invite_code:
         type: string
     required:
     - invite_code
     type: object
-  wzap_internal_model.GroupParticipantReq:
+  model.GroupParticipantReq:
     properties:
       action:
         description: add, remove, promote, demote
@@ -91,7 +197,7 @@ definitions:
     - groupJid
     - participants
     type: object
-  wzap_internal_model.GroupPhotoReq:
+  model.GroupPhotoReq:
     properties:
       groupJid:
         type: string
@@ -102,7 +208,7 @@ definitions:
     - groupJid
     - photo_base64
     type: object
-  wzap_internal_model.GroupRequestActionReq:
+  model.GroupRequestActionReq:
     properties:
       action:
         description: approve, reject
@@ -121,7 +227,7 @@ definitions:
     - groupJid
     - participants
     type: object
-  wzap_internal_model.GroupSettingReq:
+  model.GroupSettingReq:
     properties:
       enabled:
         type: boolean
@@ -130,7 +236,7 @@ definitions:
     required:
     - groupJid
     type: object
-  wzap_internal_model.GroupTextReq:
+  model.GroupTextReq:
     properties:
       groupJid:
         type: string
@@ -140,7 +246,109 @@ definitions:
     - groupJid
     - text
     type: object
-  wzap_internal_model.SendMediaReq:
+  model.LabelChatReq:
+    properties:
+      jid:
+        type: string
+      labelId:
+        type: string
+    required:
+    - jid
+    - labelId
+    type: object
+  model.LabelMessageReq:
+    properties:
+      jid:
+        type: string
+      labelId:
+        type: string
+      messageId:
+        type: string
+    required:
+    - jid
+    - labelId
+    - messageId
+    type: object
+  model.MarkReadReq:
+    properties:
+      message_id:
+        type: string
+      to:
+        type: string
+    required:
+    - message_id
+    - to
+    type: object
+  model.NewsletterMessageReq:
+    properties:
+      before_id:
+        type: integer
+      count:
+        type: integer
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
+  model.ReactMessageReq:
+    properties:
+      message_id:
+        type: string
+      reaction:
+        description: emoji or empty to remove
+        type: string
+      to:
+        type: string
+    required:
+    - message_id
+    - reaction
+    - to
+    type: object
+  model.SendContactReq:
+    properties:
+      name:
+        type: string
+      to:
+        type: string
+      vcard:
+        type: string
+    required:
+    - name
+    - to
+    - vcard
+    type: object
+  model.SendLinkReq:
+    properties:
+      description:
+        type: string
+      title:
+        type: string
+      to:
+        type: string
+      url:
+        type: string
+    required:
+    - to
+    - url
+    type: object
+  model.SendLocationReq:
+    properties:
+      address:
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      name:
+        type: string
+      to:
+        type: string
+    required:
+    - lat
+    - lng
+    - to
+    type: object
+  model.SendMediaReq:
     properties:
       base64:
         description: For base64 upload
@@ -158,7 +366,38 @@ definitions:
     - mime_type
     - to
     type: object
-  wzap_internal_model.SendTextReq:
+  model.SendPollReq:
+    properties:
+      name:
+        type: string
+      options:
+        items:
+          type: string
+        minItems: 2
+        type: array
+      selectable_count:
+        type: integer
+      to:
+        type: string
+    required:
+    - name
+    - options
+    - to
+    type: object
+  model.SendStickerReq:
+    properties:
+      base64:
+        type: string
+      mime_type:
+        type: string
+      to:
+        type: string
+    required:
+    - base64
+    - mime_type
+    - to
+    type: object
+  model.SendTextReq:
     properties:
       text:
         type: string
@@ -169,7 +408,7 @@ definitions:
     - text
     - to
     type: object
-  wzap_internal_model.SessionCreateReq:
+  model.SessionCreateReq:
     properties:
       id:
         type: string
@@ -178,6 +417,37 @@ definitions:
         type: object
     required:
     - id
+    type: object
+  model.SetPresenceReq:
+    properties:
+      presence:
+        description: typing, recording, paused
+        type: string
+      to:
+        type: string
+    required:
+    - presence
+    - to
+    type: object
+  model.SetProfilePictureReq:
+    properties:
+      base64:
+        type: string
+    required:
+    - base64
+    type: object
+  model.UserInfoResp:
+    properties:
+      devices:
+        items:
+          type: string
+        type: array
+      jid:
+        type: string
+      picture:
+        type: string
+      status:
+        type: string
     type: object
 info:
   contact:
@@ -191,24 +461,261 @@ info:
   title: wzap API
   version: "1.0"
 paths:
-  /contacts:
-    get:
-      description: Returns all contacts from the WhatsApp session
+  /chat/archive:
+    post:
+      consumes:
+      - application/json
+      description: Archives a chat identified by JID, moving it out of the main chat
+        list
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Archive a chat
+      tags:
+      - Chat
+  /chat/mute:
+    post:
+      consumes:
+      - application/json
+      description: Mutes notifications for a chat identified by JID
+      parameters:
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Mute a chat
+      tags:
+      - Chat
+  /chat/pin:
+    post:
+      consumes:
+      - application/json
+      description: Pins a chat to the top of the chat list
+      parameters:
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Pin a chat
+      tags:
+      - Chat
+  /chat/unpin:
+    post:
+      consumes:
+      - application/json
+      description: Removes a chat from the pinned position at the top of the chat
+        list
+      parameters:
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Unpin a chat
+      tags:
+      - Chat
+  /community/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp Community (a group of groups) with a name
+        and optional description
+      parameters:
+      - description: Community payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateCommunityReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a community
+      tags:
+      - Community
+  /community/participant/add:
+    post:
+      consumes:
+      - application/json
+      description: Adds one or more subgroups (by JID) as participants to an existing
+        community
+      parameters:
+      - description: Community participant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CommunityParticipantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Add subgroup to community
+      tags:
+      - Community
+  /community/participant/remove:
+    post:
+      consumes:
+      - application/json
+      description: Removes one or more subgroups (by JID) from an existing community
+      parameters:
+      - description: Community participant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CommunityParticipantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove subgroup from community
+      tags:
+      - Community
+  /contacts:
+    get:
+      description: Returns all contacts from the WhatsApp session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: List contacts
+      tags:
+      - Contacts
+  /contacts/avatar:
+    post:
+      consumes:
+      - application/json
+      description: Fetches the profile picture URL and picture ID for the given WhatsApp
+        JID
+      parameters:
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.GetAvatarReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/model.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.GetAvatarResp'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get contact avatar
+      tags:
+      - Contacts
+  /contacts/block:
+    post:
+      consumes:
+      - application/json
+      description: Blocks a WhatsApp contact by JID, preventing them from sending
+        messages
+      parameters:
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.BlockContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Block a contact
+      tags:
+      - Contacts
+  /contacts/blocklist:
+    get:
+      description: Returns the full list of JIDs currently blocked by the session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get blocked contacts list
       tags:
       - Contacts
   /contacts/check:
@@ -217,43 +724,131 @@ paths:
       - application/json
       description: Checks if phone numbers are registered on WhatsApp
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Phone numbers
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.CheckContactReq'
+          $ref: '#/definitions/model.CheckContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Check contacts on WhatsApp
       tags:
       - Contacts
-  /groups:
-    get:
-      description: Returns all WhatsApp groups the session is part of
+  /contacts/info:
+    post:
+      consumes:
+      - application/json
+      description: Fetches detailed user info (status, profile picture, devices) for
+        one or more WhatsApp JIDs
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
+      - description: JIDs payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.GetUserInfoReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            allOf:
+            - $ref: '#/definitions/model.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.UserInfoResp'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
+      summary: Get user info for JIDs
+      tags:
+      - Contacts
+  /contacts/privacy:
+    get:
+      description: Retrieves the current session's WhatsApp privacy settings (last-seen,
+        profile photo, status visibility)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get privacy settings
+      tags:
+      - Contacts
+  /contacts/profile-picture:
+    post:
+      consumes:
+      - application/json
+      description: Updates the session account's WhatsApp profile picture with a base64-encoded
+        image
+      parameters:
+      - description: Base64 image payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetProfilePictureReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Set profile picture
+      tags:
+      - Contacts
+  /contacts/unblock:
+    post:
+      consumes:
+      - application/json
+      description: Unblocks a previously blocked WhatsApp contact by JID
+      parameters:
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.BlockContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Unblock a contact
+      tags:
+      - Contacts
+  /groups:
+    get:
+      description: Returns all WhatsApp groups the session is part of
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: List joined groups
@@ -265,23 +860,19 @@ paths:
       - application/json
       description: Sets whether only admins can send messages in the group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Enabled state
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupSettingReq'
+          $ref: '#/definitions/model.GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Set group announce mode
@@ -293,23 +884,19 @@ paths:
       - application/json
       description: Creates a new WhatsApp group with the given participants
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Group properties
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.CreateGroupReq'
+          $ref: '#/definitions/model.CreateGroupReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Create a new group
@@ -321,36 +908,28 @@ paths:
       - application/json
       description: Updates the description of the specified WhatsApp group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: New description
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupTextReq'
+          $ref: '#/definitions/model.GroupTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Update group description
       tags:
       - Groups
   /groups/info:
-    get:
+    post:
       description: Get detailed information about a group by JID
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Group JID
         in: query
         name: jid
@@ -362,20 +941,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Get group info
       tags:
       - Groups
   /groups/invite-info:
-    get:
+    post:
       description: Previews a group's info using an invite code without joining
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Invite Code
         in: query
         name: code
@@ -387,7 +962,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Get group info from invite link
@@ -398,16 +973,12 @@ paths:
       description: Gets the invite link for a WhatsApp group, optionally resetting
         it
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Target Group JID Payload
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupJIDReq'
+          $ref: '#/definitions/model.GroupJIDReq'
       - description: Reset the invite link
         in: query
         name: reset
@@ -419,10 +990,10 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/wzap_internal_model.APIResponse'
+            - $ref: '#/definitions/model.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/wzap_internal_model.GroupInviteLinkResp'
+                  $ref: '#/definitions/model.GroupInviteLinkResp'
               type: object
       security:
       - BearerAuth: []
@@ -435,23 +1006,19 @@ paths:
       - application/json
       description: Joins a group using an invite code
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Invite Code
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupJoinReq'
+          $ref: '#/definitions/model.GroupJoinReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Join group via link
@@ -463,23 +1030,19 @@ paths:
       - application/json
       description: Activates or deactivates the admin approval system for new members
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Enabled state
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupSettingReq'
+          $ref: '#/definitions/model.GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Set group join approval mode
@@ -489,23 +1052,19 @@ paths:
     post:
       description: Leaves a specified WhatsApp group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Target Group JID Payload
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupJIDReq'
+          $ref: '#/definitions/model.GroupJIDReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Leave group
@@ -517,23 +1076,19 @@ paths:
       - application/json
       description: Sets whether only admins can edit group info
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Enabled state
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupSettingReq'
+          $ref: '#/definitions/model.GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Set group locked mode
@@ -545,23 +1100,19 @@ paths:
       - application/json
       description: Updates the name of the specified WhatsApp group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: New name
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupTextReq'
+          $ref: '#/definitions/model.GroupTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Update group name
@@ -573,23 +1124,19 @@ paths:
       - application/json
       description: Add, remove, promote or demote participants in a group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Participants and action
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupParticipantReq'
+          $ref: '#/definitions/model.GroupParticipantReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Update group participants
@@ -601,23 +1148,19 @@ paths:
       - application/json
       description: Updates the profile picture of the specified WhatsApp group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Base64 encoded photo
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupPhotoReq'
+          $ref: '#/definitions/model.GroupPhotoReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Update group photo
@@ -627,23 +1170,19 @@ paths:
     post:
       description: Get the list of participants that requested to join the group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Target Group JID Payload
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupJIDReq'
+          $ref: '#/definitions/model.GroupJIDReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Get group join requests
@@ -655,23 +1194,19 @@ paths:
       - application/json
       description: Approves or rejects participants that requested to join the group
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Participants and action (approve/reject)
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.GroupRequestActionReq'
+          $ref: '#/definitions/model.GroupRequestActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Approve/Reject group join requests
@@ -686,35 +1221,151 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       summary: Health check
       tags:
       - Health
-  /messages/audio:
+  /label/chat:
     post:
       consumes:
       - application/json
+      description: Applies a label to an entire chat conversation
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
-      - description: Media payload
+      - description: Label chat payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
+          $ref: '#/definitions/model.LabelChatReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Add label to chat
+      tags:
+      - Labels
+  /label/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edits an existing label's name, color, or marks it as deleted
+      parameters:
+      - description: Edit label payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EditLabelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Edit a label
+      tags:
+      - Labels
+  /label/message:
+    post:
+      consumes:
+      - application/json
+      description: Applies a label to a specific message within a chat
+      parameters:
+      - description: Label message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.LabelMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Add label to message
+      tags:
+      - Labels
+  /messages/audio:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Send an audio message
+      tags:
+      - Messages
+  /messages/contact:
+    post:
+      consumes:
+      - application/json
+      description: Sends a vCard contact message via WhatsApp to the specified recipient
+      parameters:
+      - description: Contact payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a contact card
+      tags:
+      - Messages
+  /messages/delete:
+    post:
+      consumes:
+      - application/json
+      description: Revokes a previously sent message for all recipients
+      parameters:
+      - description: Delete payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeleteMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a sent message
       tags:
       - Messages
   /messages/document:
@@ -722,26 +1373,46 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Media payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
+          $ref: '#/definitions/model.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Send a document
+      tags:
+      - Messages
+  /messages/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edits an existing sent message by ID, replacing its text content
+      parameters:
+      - description: Edit payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.EditMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Edit a sent message
       tags:
       - Messages
   /messages/image:
@@ -749,26 +1420,195 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Media payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
+          $ref: '#/definitions/model.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Send an image message
+      tags:
+      - Messages
+  /messages/link:
+    post:
+      consumes:
+      - application/json
+      description: Sends a hyperlink preview message with optional title and description
+        to the specified recipient
+      parameters:
+      - description: Link payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendLinkReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a link preview message
+      tags:
+      - Messages
+  /messages/location:
+    post:
+      consumes:
+      - application/json
+      description: Sends a GPS location message with optional name and address to
+        the specified recipient
+      parameters:
+      - description: Location payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendLocationReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a location message
+      tags:
+      - Messages
+  /messages/poll:
+    post:
+      consumes:
+      - application/json
+      description: Sends a poll with multiple choice options; selectable_count controls
+        how many options a recipient may choose (0 = unlimited)
+      parameters:
+      - description: Poll payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendPollReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a poll message
+      tags:
+      - Messages
+  /messages/presence:
+    post:
+      consumes:
+      - application/json
+      description: 'Sends a typing, recording, or paused presence indicator to a specific
+        chat; presence values: typing, recording, paused'
+      parameters:
+      - description: Presence payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SetPresenceReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Set typing/recording presence
+      tags:
+      - Messages
+  /messages/reaction:
+    post:
+      consumes:
+      - application/json
+      description: Adds an emoji reaction to a message; pass an empty string for reaction
+        to remove an existing reaction
+      parameters:
+      - description: Reaction payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.ReactMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: React to a message
+      tags:
+      - Messages
+  /messages/read:
+    post:
+      consumes:
+      - application/json
+      description: Sends a read receipt for a specific message
+      parameters:
+      - description: Mark read payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.MarkReadReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark a message as read
+      tags:
+      - Messages
+  /messages/sticker:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded sticker image to the specified recipient
+      parameters:
+      - description: Sticker payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.SendStickerReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Send a sticker
       tags:
       - Messages
   /messages/text:
@@ -778,23 +1618,19 @@ paths:
       description: Sends a text message via WhatsApp. If :id is omitted, session is
         identified from Bearer token.
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Message payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.SendTextReq'
+          $ref: '#/definitions/model.SendTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Send a text message
@@ -805,35 +1641,57 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       - description: Media payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.SendMediaReq'
+          $ref: '#/definitions/model.SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Send a video message
       tags:
       - Messages
-  /session:
-    delete:
-      description: Disconnects and deletes the current session
+  /newsletter/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp Newsletter (channel) with optional description
+        and profile picture
       parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
+      - description: Newsletter payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateNewsletterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a newsletter
+      tags:
+      - Newsletter
+  /newsletter/info:
+    post:
+      description: Retrieves metadata about a newsletter by its JID
+      parameters:
+      - description: Newsletter JID
+        in: query
+        name: jid
+        required: true
         type: string
       produces:
       - application/json
@@ -841,7 +1699,111 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get newsletter info
+      tags:
+      - Newsletter
+  /newsletter/invite:
+    post:
+      description: Retrieves newsletter metadata from an invite code without subscribing
+      parameters:
+      - description: Newsletter invite code
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get newsletter info from invite code
+      tags:
+      - Newsletter
+  /newsletter/list:
+    get:
+      description: Returns all newsletters the current session is subscribed to
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: List subscribed newsletters
+      tags:
+      - Newsletter
+  /newsletter/messages:
+    post:
+      consumes:
+      - application/json
+      description: Fetches messages from a newsletter; supports pagination via before_id
+        cursor and count
+      parameters:
+      - description: Messages pagination payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.NewsletterMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Get newsletter messages
+      tags:
+      - Newsletter
+  /newsletter/subscribe:
+    post:
+      consumes:
+      - application/json
+      description: Subscribes the current session to a newsletter identified by its
+        JID
+      parameters:
+      - description: Newsletter JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          properties:
+            jid:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Subscribe to a newsletter
+      tags:
+      - Newsletter
+  /session:
+    delete:
+      description: Disconnects and deletes the current session
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Delete current session
@@ -850,18 +1812,13 @@ paths:
     get:
       description: Returns the session identified by the Bearer token (or query/header
         fallback)
-      parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Get current session
@@ -870,18 +1827,13 @@ paths:
   /session/connect:
     post:
       description: Connects a WhatsApp session (starts pairing if new)
-      parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Connect current session
@@ -890,18 +1842,13 @@ paths:
   /session/disconnect:
     post:
       description: Disconnects the active WhatsApp session
-      parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Disconnect current session
@@ -911,18 +1858,13 @@ paths:
     get:
       description: Returns a QR code for pairing a new WhatsApp device for current
         session
-      parameters:
-      - description: Session ID (Admin fallback)
-        in: header
-        name: X-Session-ID
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Get QR code for pair
@@ -938,7 +1880,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: List sessions
@@ -948,25 +1890,25 @@ paths:
       consumes:
       - application/json
       description: Creates a new WhatsApp session entry in the database. Returns the
-        generated api_key.
+        generated token.
       parameters:
       - description: Session data
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.SessionCreateReq'
+          $ref: '#/definitions/model.SessionCreateReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIError'
+            $ref: '#/definitions/model.APIError'
       security:
       - BearerAuth: []
       summary: Create a new session (Admin Only)
@@ -986,7 +1928,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: List webhooks
@@ -1006,14 +1948,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.CreateWebhookReq'
+          $ref: '#/definitions/model.CreateWebhookReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Create a webhook
@@ -1038,12 +1980,60 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Delete a webhook
       tags:
       - Webhooks
+  /unlabel/chat:
+    post:
+      consumes:
+      - application/json
+      description: Removes a label from a chat conversation
+      parameters:
+      - description: Label chat payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.LabelChatReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove label from chat
+      tags:
+      - Labels
+  /unlabel/message:
+    post:
+      consumes:
+      - application/json
+      description: Removes a label from a specific message
+      parameters:
+      - description: Label message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.LabelMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.APIResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove label from message
+      tags:
+      - Labels
   /webhooks:
     get:
       description: Returns all webhooks for a session
@@ -1053,7 +2043,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: List webhooks
@@ -1069,14 +2059,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/wzap_internal_model.CreateWebhookReq'
+          $ref: '#/definitions/model.CreateWebhookReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Create a webhook
@@ -1101,7 +2091,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/wzap_internal_model.APIResponse'
+            $ref: '#/definitions/model.APIResponse'
       security:
       - BearerAuth: []
       summary: Delete a webhook

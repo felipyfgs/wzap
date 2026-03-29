@@ -36,7 +36,7 @@ type SendPollReq struct {
 
 type SendStickerReq struct {
 	To       string `json:"to" validate:"required"`
-	MimeType string `json:"mime_type" validate:"required"`
+	MimeType string `json:"mimeType" validate:"required"`
 	Base64   string `json:"base64" validate:"required"`
 }
 

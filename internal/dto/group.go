@@ -14,7 +14,7 @@ type GroupInviteLinkResp struct {
 }
 
 type GroupJoinReq struct {
-	InviteCode string `json:"invite_code" validate:"required"`
+	InviteCode string `json:"inviteCode" validate:"required"`
 }
 
 type GroupParticipantReq struct {

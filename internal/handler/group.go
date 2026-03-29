@@ -388,7 +388,7 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Photo Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(fiber.Map{"picture_id": picID}, "Group photo updated successfully"))
+	return c.JSON(dto.SuccessResp(fiber.Map{"pictureId": picID}, "Group photo updated successfully"))
 }
 
 // SetAnnounce godoc

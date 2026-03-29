@@ -230,5 +230,5 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"picture_id": resp}, "Profile picture set"))
+	return c.JSON(dto.SuccessResp(map[string]string{"pictureId": resp}, "Profile picture set"))
 }

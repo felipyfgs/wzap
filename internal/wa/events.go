@@ -97,8 +97,8 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	}
 
 	payload := map[string]interface{}{
-		"event_id":   uuid.NewString(),
-		"session_id": sessionID,
+		"eventId":   uuid.NewString(),
+		"sessionId": sessionID,
 		"event":      eventType,
 		"timestamp":  time.Now().Format(time.RFC3339),
 	}

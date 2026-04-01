@@ -1,11 +1,18 @@
 package model
 
-type MessageType string
+import "time"
 
-const (
-	MsgTypeText     MessageType = "text"
-	MsgTypeImage    MessageType = "image"
-	MsgTypeVideo    MessageType = "video"
-	MsgTypeAudio    MessageType = "audio"
-	MsgTypeDocument MessageType = "document"
-)
+type Message struct {
+	ID        string    `json:"id"`
+	SessionID string    `json:"sessionId"`
+	ChatJID   string    `json:"chatJid"`
+	SenderJID string    `json:"senderJid"`
+	FromMe    bool      `json:"fromMe"`
+	MsgType   string    `json:"msgType"`
+	Body      string    `json:"body"`
+	MediaType string    `json:"mediaType,omitempty"`
+	MediaURL  string    `json:"mediaUrl,omitempty"`
+	Raw       any       `json:"raw,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
+	CreatedAt time.Time `json:"createdAt"`
+}

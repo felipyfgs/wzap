@@ -36,6 +36,8 @@ func (s *Server) SetupRoutes() error {
 		return err
 	}
 
+	messageRepo := repo.NewMessageRepository(s.db.Pool)
+
 	// Initialize Services
 	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine)
 	messageSvc := service.NewMessageService(engine)
@@ -47,8 +49,10 @@ func (s *Server) SetupRoutes() error {
 	communitySvc := service.NewCommunityService(engine)
 	chatSvc := service.NewChatService(engine)
 	mediaSvc := service.NewMediaService(engine, s.minio)
+	historySvc := service.NewHistoryService(messageRepo)
 
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
+	engine.SetMessagePersist(historySvc.PersistMessage)
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)
@@ -62,6 +66,7 @@ func (s *Server) SetupRoutes() error {
 	communityHandler := handler.NewCommunityHandler(communitySvc)
 	chatHandler := handler.NewChatHandler(chatSvc)
 	mediaHandler := handler.NewMediaHandler(mediaSvc)
+	historyHandler := handler.NewHistoryHandler(messageRepo)
 
 	wsHandler := handler.NewWebSocketHandler(hub, s.Config)
 
@@ -118,8 +123,9 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/messages/button", messageHandler.SendButton)
 	sess.Post("/messages/list", messageHandler.SendList)
 
-	// 3.1. Media
+	// 3.1. Media & History
 	sess.Get("/media/:messageId", mediaHandler.GetMedia)
+	sess.Get("/messages", historyHandler.ListMessages)
 
 	// 4. Contacts
 	sess.Get("/contacts", contactHandler.List)

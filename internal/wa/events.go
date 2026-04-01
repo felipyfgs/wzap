@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
 
 	"wzap/internal/logger"
@@ -50,6 +51,11 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 			case v.Message.GetStickerMessage() != nil:
 				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetStickerMessage().GetMimetype(), v.Message.GetStickerMessage())
 			}
+		}
+
+		if m.OnMessageReceived != nil {
+			msgType, body, mediaType := extractMessageContent(v.Message)
+			m.OnMessageReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
 		}
 
 	case *events.UndecryptableMessage:
@@ -621,5 +627,39 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 
 	if m.dispatcher != nil {
 		go m.dispatcher.Dispatch(sessionID, eventType, bytes)
+	}
+}
+
+func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string) {
+	if msg == nil {
+		return "unknown", "", ""
+	}
+	switch {
+	case msg.GetConversation() != "":
+		return "text", msg.GetConversation(), ""
+	case msg.GetExtendedTextMessage() != nil:
+		return "text", msg.GetExtendedTextMessage().GetText(), ""
+	case msg.GetImageMessage() != nil:
+		return "image", msg.GetImageMessage().GetCaption(), msg.GetImageMessage().GetMimetype()
+	case msg.GetVideoMessage() != nil:
+		return "video", msg.GetVideoMessage().GetCaption(), msg.GetVideoMessage().GetMimetype()
+	case msg.GetAudioMessage() != nil:
+		return "audio", "", msg.GetAudioMessage().GetMimetype()
+	case msg.GetDocumentMessage() != nil:
+		return "document", msg.GetDocumentMessage().GetFileName(), msg.GetDocumentMessage().GetMimetype()
+	case msg.GetStickerMessage() != nil:
+		return "sticker", "", msg.GetStickerMessage().GetMimetype()
+	case msg.GetContactMessage() != nil:
+		return "contact", msg.GetContactMessage().GetDisplayName(), ""
+	case msg.GetLocationMessage() != nil:
+		return "location", msg.GetLocationMessage().GetName(), ""
+	case msg.GetListMessage() != nil:
+		return "list", msg.GetListMessage().GetTitle(), ""
+	case msg.GetButtonsMessage() != nil:
+		return "buttons", msg.GetButtonsMessage().GetContentText(), ""
+	case msg.GetPollCreationMessage() != nil:
+		return "poll", msg.GetPollCreationMessage().GetName(), ""
+	default:
+		return "unknown", "", ""
 	}
 }

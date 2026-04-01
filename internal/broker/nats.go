@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"wzap/internal/config"
+	"wzap/internal/logger"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/rs/zerolog/log"
 )
 
 type Nats struct {
@@ -45,7 +45,7 @@ func New(cfg *config.Config) (*Nats, error) {
 
 	_, err = js.CreateOrUpdateStream(ctx, streamConfig)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to create/update NATS WZAP_EVENTS stream")
+		logger.Warn().Err(err).Msg("Failed to create/update NATS WZAP_EVENTS stream")
 	}
 
 	webhookStreamConfig := jetstream.StreamConfig{
@@ -57,10 +57,10 @@ func New(cfg *config.Config) (*Nats, error) {
 
 	_, err = js.CreateOrUpdateStream(ctx, webhookStreamConfig)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to create/update NATS WZAP_WEBHOOKS stream")
+		logger.Warn().Err(err).Msg("Failed to create/update NATS WZAP_WEBHOOKS stream")
 	}
 
-	log.Info().Msg("Successfully connected to NATS JetStream")
+	logger.Info().Msg("Successfully connected to NATS JetStream")
 
 	return &Nats{
 		Conn: nc,
@@ -70,9 +70,9 @@ func New(cfg *config.Config) (*Nats, error) {
 
 func (n *Nats) Close() {
 	if n.Conn != nil {
-		log.Info().Msg("Closing NATS connection")
+		logger.Info().Msg("Closing NATS connection")
 		if err := n.Conn.Drain(); err != nil {
-			log.Error().Err(err).Msg("Failed to drain NATS connection")
+			logger.Error().Err(err).Msg("Failed to drain NATS connection")
 		}
 		n.Conn.Close()
 	}

@@ -1,13 +1,12 @@
 package wa
 
 import (
-	"context"
 	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	"go.mau.fi/whatsmeow/types/events"
+	"wzap/internal/logger"
 
 	"wzap/internal/model"
 )
@@ -108,13 +107,13 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 
 	bytes, err := json.Marshal(payload)
 	if err != nil {
-		log.Error().Err(err).Str("session", sessionID).Msg("Failed to marshal event payload")
+		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to marshal event payload")
 		return
 	}
 
 	if m.nats != nil {
-		if err := m.nats.Publish(context.Background(), "wzap.events."+sessionID, bytes); err != nil {
-			log.Error().Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
+		if err := m.nats.Publish(m.ctx, "wzap.events."+sessionID, bytes); err != nil {
+			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
 		}
 	}
 

@@ -5,8 +5,8 @@ import (
 	"runtime/debug"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/rs/zerolog/log"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 )
 
 func Recovery() fiber.Handler {
@@ -18,7 +18,7 @@ func Recovery() fiber.Handler {
 					err = fmt.Errorf("%v", r)
 				}
 
-				log.Error().
+				logger.Error().
 					Err(err).
 					Str("stack", string(debug.Stack())).
 					Msg("panic recovered")

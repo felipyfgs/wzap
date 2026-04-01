@@ -11,7 +11,7 @@
 go.work
 
 # Build artifacts
-build/
+bin/
 dist/
 wzap
 

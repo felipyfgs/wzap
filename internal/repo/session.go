@@ -97,7 +97,9 @@ func (r *SessionRepository) Delete(ctx context.Context, id string) error {
 }
 
 func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status string) error {
-	_, err := r.db.Exec(ctx, `UPDATE "wzSessions" SET "status" = $1 WHERE "id" = $2`, status, id)
+	_, err := r.db.Exec(ctx,
+		`UPDATE "wzSessions" SET "status" = $1, "updatedAt" = NOW() WHERE "id" = $2`,
+		status, id)
 	if err != nil {
 		return fmt.Errorf("failed to update status for session %s: %w", id, err)
 	}
@@ -106,7 +108,7 @@ func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status 
 
 func (r *SessionRepository) UpdateJid(ctx context.Context, id string, jid string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "jid" = $1, "connected" = 1, "status" = 'connected' WHERE "id" = $2`,
+		`UPDATE "wzSessions" SET "jid" = $1, "connected" = 1, "status" = 'connected', "updatedAt" = NOW() WHERE "id" = $2`,
 		jid, id)
 	if err != nil {
 		return fmt.Errorf("failed to update jid for session %s: %w", id, err)
@@ -116,7 +118,7 @@ func (r *SessionRepository) UpdateJid(ctx context.Context, id string, jid string
 
 func (r *SessionRepository) SetConnected(ctx context.Context, id string, connected int) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "connected" = $1 WHERE "id" = $2`,
+		`UPDATE "wzSessions" SET "connected" = $1, "updatedAt" = NOW() WHERE "id" = $2`,
 		connected, id)
 	if err != nil {
 		return fmt.Errorf("failed to set connected status for session %s: %w", id, err)
@@ -126,7 +128,7 @@ func (r *SessionRepository) SetConnected(ctx context.Context, id string, connect
 
 func (r *SessionRepository) ClearDevice(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "connected" = 0, "jid" = '', "status" = 'disconnected' WHERE "id" = $1`,
+		`UPDATE "wzSessions" SET "connected" = 0, "jid" = '', "status" = 'disconnected', "updatedAt" = NOW() WHERE "id" = $1`,
 		id)
 	if err != nil {
 		return fmt.Errorf("failed to clear device for session %s: %w", id, err)

@@ -9,8 +9,8 @@ import (
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/rs/zerolog/log"
 	"wzap/internal/config"
+	"wzap/internal/logger"
 )
 
 type Minio struct {
@@ -39,10 +39,10 @@ func New(cfg *config.Config) (*Minio, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bucket: %w", err)
 		}
-		log.Info().Str("bucket", cfg.MinioBucket).Msg("Created new MinIO bucket")
+		logger.Info().Str("bucket", cfg.MinioBucket).Msg("Created new MinIO bucket")
 	}
 
-	log.Info().Msg("Successfully connected to MinIO")
+	logger.Info().Msg("Successfully connected to MinIO")
 
 	return &Minio{
 		Client: client,

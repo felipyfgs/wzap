@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq" // registers the PostgreSQL driver used by whatsmeow sqlstore
-	"github.com/rs/zerolog/log"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -15,14 +14,14 @@ import (
 
 	"wzap/internal/broker"
 	"wzap/internal/config"
+	"wzap/internal/logger"
 	"wzap/internal/repo"
 	"wzap/internal/webhook"
 )
 
-func NewManager(cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats, d *webhook.Dispatcher) (*Manager, error) {
-	waLogger := waLog.Stdout("wzap", cfg.WALogLevel, true)
+func NewManager(ctx context.Context, cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats, d *webhook.Dispatcher) (*Manager, error) {
+	waLogger := waLog.Zerolog(logger.Logger().With().Str("module", "wzap").Logger())
 
-	ctx := context.Background()
 	container, err := sqlstore.New(ctx, "postgres", cfg.DatabaseURL, waLogger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create whatsmeow store container: %w", err)
@@ -30,6 +29,7 @@ func NewManager(cfg *config.Config, sessionRepo *repo.SessionRepository, n *brok
 
 	return &Manager{
 		clients:     make(map[string]*whatsmeow.Client),
+		ctx:         ctx,
 		sessionRepo: sessionRepo,
 		container:   container,
 		nats:        n,
@@ -54,9 +54,9 @@ func (m *Manager) ReconnectAll(ctx context.Context) error {
 		jidStr := device.ID.String()
 		sessionID, err := m.sessionRepo.FindSessionIDByJID(ctx, jidStr)
 		if err != nil {
-			log.Warn().Str("jid", jidStr).Msg("Orphan device without matching session, removing from sqlstore")
+			logger.Warn().Str("jid", jidStr).Msg("Orphan device without matching session, removing from sqlstore")
 			if delErr := device.Delete(ctx); delErr != nil {
-				log.Error().Err(delErr).Str("jid", jidStr).Msg("Failed to delete orphan device")
+				logger.Error().Err(delErr).Str("jid", jidStr).Msg("Failed to delete orphan device")
 			}
 			continue
 		}
@@ -71,17 +71,17 @@ func (m *Manager) ReconnectAll(ctx context.Context) error {
 		m.mu.Unlock()
 
 		if err := client.Connect(); err != nil {
-			log.Error().Err(err).Str("session", sessionID).Msg("Failed to reconnect session")
+			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to reconnect session")
 			continue
 		}
 
 		if err := m.sessionRepo.SetConnected(ctx, sessionID, 1); err != nil {
-			log.Error().Err(err).Str("session", sessionID).Msg("Failed to set connected status")
+			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to set connected status")
 		}
 		if err := m.sessionRepo.UpdateStatus(ctx, sessionID, "connected"); err != nil {
-			log.Error().Err(err).Str("session", sessionID).Msg("Failed to update status to connected")
+			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to update status to connected")
 		}
-		log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Reconnected session")
+		logger.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Reconnected session")
 	}
 
 	return nil
@@ -127,7 +127,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		if parseErr == nil {
 			device, err = m.container.GetDevice(ctx, jid)
 			if err != nil {
-				log.Warn().Err(err).Msg("Failed to load device from store, creating new")
+				logger.Warn().Err(err).Msg("Failed to load device from store, creating new")
 			}
 		}
 	}
@@ -147,33 +147,33 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		case *events.Connected:
 			if client.Store.ID != nil {
 				jidStr := client.Store.ID.String()
-				if err := m.sessionRepo.UpdateJid(context.Background(), sessionID, jidStr); err != nil {
-					log.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid")
+				if err := m.sessionRepo.UpdateJid(m.ctx, sessionID, jidStr); err != nil {
+					logger.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid")
 				}
-				log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Session paired")
+				logger.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Session paired")
 			}
 		case *events.PairSuccess:
 			jidStr := v.ID.String()
-			if err := m.sessionRepo.UpdateJid(context.Background(), sessionID, jidStr); err != nil {
-				log.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid on pair")
+			if err := m.sessionRepo.UpdateJid(m.ctx, sessionID, jidStr); err != nil {
+				logger.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid on pair")
 			}
-			_ = m.sessionRepo.UpdateQRCode(context.Background(), sessionID, "")
-			log.Info().Str("session", sessionID).Str("jid", jidStr).Msg("QR pairing successful")
+			_ = m.sessionRepo.UpdateQRCode(m.ctx, sessionID, "")
+			logger.Info().Str("session", sessionID).Str("jid", jidStr).Msg("QR pairing successful")
 		case *events.Disconnected:
-			if err := m.sessionRepo.SetConnected(context.Background(), sessionID, 0); err != nil {
-				log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
+			if err := m.sessionRepo.SetConnected(m.ctx, sessionID, 0); err != nil {
+				logger.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
 			}
 		case *events.LoggedOut:
-			if err := client.Store.Delete(context.Background()); err != nil {
-				log.Error().Err(err).Str("session", sessionID).Msg("Failed to delete device from sqlstore on logout")
+			if err := client.Store.Delete(m.ctx); err != nil {
+				logger.Error().Err(err).Str("session", sessionID).Msg("Failed to delete device from sqlstore on logout")
 			}
 			m.mu.Lock()
 			delete(m.clients, sessionID)
 			m.mu.Unlock()
-			if err := m.sessionRepo.ClearDevice(context.Background(), sessionID); err != nil {
-				log.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
+			if err := m.sessionRepo.ClearDevice(m.ctx, sessionID); err != nil {
+				logger.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
 			}
-			_ = m.sessionRepo.UpdateQRCode(context.Background(), sessionID, "")
+			_ = m.sessionRepo.UpdateQRCode(m.ctx, sessionID, "")
 		}
 	})
 
@@ -205,7 +205,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 			return nil, nil, err
 		}
 
-		_ = m.sessionRepo.UpdateStatus(context.Background(), sessionID, "connecting")
+		_ = m.sessionRepo.UpdateStatus(m.ctx, sessionID, "connecting")
 		go m.consumeQRChannel(sessionID, qrChan)
 
 		return client, qrChan, nil
@@ -231,8 +231,8 @@ func (m *Manager) Disconnect(sessionID string) error {
 		delete(m.clients, sessionID)
 	}
 
-	if err := m.sessionRepo.SetConnected(context.Background(), sessionID, 0); err != nil {
-		log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
+	if err := m.sessionRepo.SetConnected(m.ctx, sessionID, 0); err != nil {
+		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
 	}
 	return nil
 }
@@ -250,10 +250,10 @@ func (m *Manager) Logout(ctx context.Context, sessionID string) error {
 
 	if exists && client.Store.ID != nil {
 		if err := client.Logout(ctx); err != nil {
-			log.Warn().Err(err).Str("session", sessionID).Msg("Logout request failed, forcing device cleanup")
+			logger.Warn().Err(err).Str("session", sessionID).Msg("Logout request failed, forcing device cleanup")
 			client.Disconnect()
 			if err := client.Store.Delete(ctx); err != nil {
-				log.Error().Err(err).Str("session", sessionID).Msg("Failed to delete device from sqlstore")
+				logger.Error().Err(err).Str("session", sessionID).Msg("Failed to delete device from sqlstore")
 			}
 		}
 	} else if exists {
@@ -261,7 +261,7 @@ func (m *Manager) Logout(ctx context.Context, sessionID string) error {
 	}
 
 	if err := m.sessionRepo.ClearDevice(ctx, sessionID); err != nil {
-		log.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
+		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
 	}
 	return nil
 }

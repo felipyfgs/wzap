@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"wzap/internal/broker"
+	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/repo"
 
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -54,7 +54,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	webhooks, err := d.webhookRepo.FindActiveBySessionAndEvent(ctx, sessionID, string(eventType))
 	if err != nil {
-		log.Error().Err(err).Str("session", sessionID).Str("event", string(eventType)).Msg("Failed to fetch webhooks for dispatch")
+		logger.Error().Err(err).Str("session", sessionID).Str("event", string(eventType)).Msg("Failed to fetch webhooks for dispatch")
 		return
 	}
 
@@ -77,21 +77,21 @@ func (d *Dispatcher) publishToNats(wh model.Webhook, payload []byte) {
 	}
 	data, err := json.Marshal(msg)
 	if err != nil {
-		log.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to marshal NATS webhook delivery message")
+		logger.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to marshal NATS webhook delivery message")
 		return
 	}
 	subject := natsDeliverSubject + "." + wh.ID
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := d.nats.Publish(ctx, subject, data); err != nil {
-		log.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to publish webhook delivery to NATS — falling back to direct dispatch")
+		logger.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to publish webhook delivery to NATS — falling back to direct dispatch")
 		go d.deliverHTTP(wh.URL, wh.Secret, payload)
 	}
 }
 
 func (d *Dispatcher) deliverHTTP(url, secret string, payload []byte) {
 	if err := d.deliverHTTPWithErr(url, secret, payload); err != nil {
-		log.Warn().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed")
+		logger.Warn().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed")
 	}
 }
 
@@ -112,17 +112,17 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 
 	cons, err := d.nats.JS.CreateOrUpdateConsumer(ctx, "WZAP_WEBHOOKS", consumerCfg)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to create NATS webhook consumer — NATS-queued webhooks will fall back to direct dispatch")
+		logger.Warn().Err(err).Msg("Failed to create NATS webhook consumer — NATS-queued webhooks will fall back to direct dispatch")
 		return
 	}
 
 	msgCtx, err := cons.Messages()
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to subscribe to NATS webhook consumer")
+		logger.Warn().Err(err).Msg("Failed to subscribe to NATS webhook consumer")
 		return
 	}
 
-	log.Info().Msg("NATS webhook consumer started")
+	logger.Info().Msg("NATS webhook consumer started")
 
 	go func() {
 		defer msgCtx.Stop()
@@ -138,19 +138,19 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 				if ctx.Err() != nil {
 					return
 				}
-				log.Warn().Err(err).Msg("NATS webhook consumer receive error")
+				logger.Warn().Err(err).Msg("NATS webhook consumer receive error")
 				continue
 			}
 
 			var dm deliverMsg
 			if err := json.Unmarshal(msg.Data(), &dm); err != nil {
-				log.Error().Err(err).Msg("Failed to unmarshal NATS webhook delivery message")
+				logger.Error().Err(err).Msg("Failed to unmarshal NATS webhook delivery message")
 				_ = msg.Term()
 				continue
 			}
 
 			if err := d.deliverHTTPWithErr(dm.URL, dm.Secret, dm.Payload); err != nil {
-				log.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Msg("NATS webhook delivery failed, will retry")
+				logger.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Msg("NATS webhook delivery failed, will retry")
 				_ = msg.Nak()
 			} else {
 				_ = msg.Ack()
@@ -184,7 +184,7 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close webhook response body")
+			logger.Warn().Err(err).Msg("Failed to close webhook response body")
 		}
 	}()
 	_, _ = io.Copy(io.Discard, resp.Body)

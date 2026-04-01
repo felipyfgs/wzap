@@ -19,8 +19,8 @@ func NewWebhookRepository(db *pgxpool.Pool) *WebhookRepository {
 }
 
 func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error {
-	query := `INSERT INTO "wzWebhooks" ("id", "sessionId", "url", "secret", "events", "enabled", "natsEnabled", "createdAt")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	query := `INSERT INTO "wzWebhooks" ("id", "sessionId", "url", "secret", "events", "enabled", "natsEnabled", "createdAt", "updatedAt")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)`
 	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.Enabled, w.NatsEnabled, w.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert webhook: %w", err)

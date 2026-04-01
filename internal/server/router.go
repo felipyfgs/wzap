@@ -14,16 +14,20 @@ import (
 
 func (s *Server) SetupRoutes() error {
 	// Initialize Repositories
-	sessionRepo := repo.NewSessionRepository(s.db)
-	webhookRepo := repo.NewWebhookRepository(s.db)
+	sessionRepo := repo.NewSessionRepository(s.db.Pool)
+	webhookRepo := repo.NewWebhookRepository(s.db.Pool)
 
 	// Initialize Dispatcher
 	disp := webhook.New(webhookRepo, s.nats)
 	go disp.StartConsumer(s.ctx)
 
 	// Initialize Engine
-	engine, err := wa.NewManager(s.Config, sessionRepo, s.nats, disp)
+	engine, err := wa.NewManager(s.ctx, s.Config, sessionRepo, s.nats, disp)
 	if err != nil {
+		return err
+	}
+
+	if err := engine.ReconnectAll(s.ctx); err != nil {
 		return err
 	}
 
@@ -39,7 +43,7 @@ func (s *Server) SetupRoutes() error {
 	chatSvc := service.NewChatService(engine)
 
 	// Initialize Handlers
-	healthHandler := handler.NewHealthHandler(s.db != nil, s.nats != nil, s.minio != nil)
+	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)
 	sessionHandler := handler.NewSessionHandler(sessionSvc, engine)
 	messageHandler := handler.NewMessageHandler(messageSvc)
 	contactHandler := handler.NewContactHandler(contactSvc)

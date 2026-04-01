@@ -4,7 +4,7 @@
 
 # Variables
 APP_NAME=wzap
-BUILD_DIR=build
+BUILD_DIR=bin
 DOCKER_IMAGE=wzap:latest
 
 help: ## Show this help message

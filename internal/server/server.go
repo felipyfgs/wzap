@@ -6,11 +6,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/zerolog/log"
 
 	"wzap/internal/broker"
 	"wzap/internal/config"
+	"wzap/internal/database"
+	"wzap/internal/logger"
 	"wzap/internal/middleware"
 	"wzap/internal/storage"
 )
@@ -19,14 +19,14 @@ type Server struct {
 	App    *fiber.App
 	Config *config.Config
 
-	db     *pgxpool.Pool
+	db     *database.DB
 	nats   *broker.Nats
 	minio  *storage.Minio
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func New(cfg *config.Config, dbPool *pgxpool.Pool, n *broker.Nats, m *storage.Minio) *Server {
+func New(cfg *config.Config, db *database.DB, n *broker.Nats, m *storage.Minio) *Server {
 	app := fiber.New(fiber.Config{
 		ServerHeader:          "wzap",
 		DisableStartupMessage: true,
@@ -56,7 +56,7 @@ func New(cfg *config.Config, dbPool *pgxpool.Pool, n *broker.Nats, m *storage.Mi
 	return &Server{
 		App:    app,
 		Config: cfg,
-		db:     dbPool,
+		db:     db,
 		nats:   n,
 		minio:  m,
 		ctx:    ctx,
@@ -66,12 +66,12 @@ func New(cfg *config.Config, dbPool *pgxpool.Pool, n *broker.Nats, m *storage.Mi
 
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%s", s.Config.ServerHost, s.Config.Port)
-	log.Info().Str("addr", addr).Msg("Starting API server")
+	logger.Info().Str("addr", addr).Msg("Starting API server")
 	return s.App.Listen(addr)
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	log.Info().Msg("Shutting down API server")
+	logger.Info().Msg("Shutting down API server")
 	s.cancel()
 
 	// Fiber shutdown might block, we wrap it in a channel with context timeout
@@ -82,10 +82,10 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		log.Warn().Msg("API server shutdown timed out")
+		logger.Warn().Msg("API server shutdown timed out")
 		return ctx.Err()
 	case err := <-done:
-		log.Info().Msg("API server stopped gracefully")
+		logger.Info().Msg("API server stopped gracefully")
 		return err
 	}
 }

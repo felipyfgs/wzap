@@ -85,7 +85,7 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 // @Security    ApiKey
 // @Router      /sessions/{sessionId} [get]
 func (h *SessionHandler) Get(c *fiber.Ctx) error {
-	id := c.Locals("sessionId").(string)
+	id := mustGetSessionID(c)
 	session, err := h.sessionSvc.Get(c.Context(), id)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
@@ -104,7 +104,7 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 // @Security    ApiKey
 // @Router      /sessions/{sessionId} [delete]
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
-	id := c.Locals("sessionId").(string)
+	id := mustGetSessionID(c)
 	if err := h.sessionSvc.Delete(c.Context(), id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 	}
@@ -122,7 +122,7 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 // @Security    ApiKey
 // @Router      /sessions/{sessionId}/connect [post]
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
-	id := c.Locals("sessionId").(string)
+	id := mustGetSessionID(c)
 
 	client, qrChan, err := h.engine.Connect(c.Context(), id)
 	if err != nil {
@@ -152,7 +152,7 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 // @Security    ApiKey
 // @Router      /sessions/{sessionId}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
-	id := c.Locals("sessionId").(string)
+	id := mustGetSessionID(c)
 	if err := h.engine.Disconnect(id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", err.Error()))
 	}
@@ -170,7 +170,7 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 // @Security    ApiKey
 // @Router      /sessions/{sessionId}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
-	id := c.Locals("sessionId").(string)
+	id := mustGetSessionID(c)
 
 	qrCode, err := h.engine.GetQRCode(c.Context(), id)
 	if err != nil {

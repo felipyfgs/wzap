@@ -3,15 +3,15 @@ package middleware
 import (
 	"wzap/internal/config"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/repo"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/rs/zerolog/log"
 )
 
 func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
 	if cfg.APIKey == "" {
-		log.Warn().Msg("API_KEY not set: all requests will be rejected")
+		logger.Warn().Msg("API_KEY not set: all requests will be rejected")
 	}
 	return func(c *fiber.Ctx) error {
 		if cfg.APIKey == "" {

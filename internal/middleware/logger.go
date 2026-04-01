@@ -5,7 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"wzap/internal/logger"
 )
 
 func Logger() fiber.Handler {
@@ -20,11 +20,11 @@ func Logger() fiber.Handler {
 		var ev *zerolog.Event
 		switch {
 		case status >= 500:
-			ev = log.Error()
+			ev = logger.Error()
 		case status >= 400:
-			ev = log.Warn()
+			ev = logger.Warn()
 		default:
-			ev = log.Info()
+			ev = logger.Info()
 		}
 
 		ev.

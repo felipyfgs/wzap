@@ -1,6 +1,7 @@
 package wa
 
 import (
+	"context"
 	"sync"
 
 	"go.mau.fi/whatsmeow"
@@ -17,6 +18,7 @@ type Manager struct {
 	clients map[string]*whatsmeow.Client
 	mu      sync.RWMutex
 
+	ctx         context.Context
 	sessionRepo *repo.SessionRepository
 	container   *sqlstore.Container
 	nats        *broker.Nats

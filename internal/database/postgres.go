@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/zerolog/log"
+	"wzap/internal/logger"
 )
 
 //go:embed migrations/*.sql
@@ -37,14 +37,14 @@ func New(ctx context.Context, url string) (*DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	log.Info().Msg("Successfully connected to PostgreSQL")
+	logger.Info().Msg("Successfully connected to PostgreSQL")
 
 	return &DB{Pool: pool}, nil
 }
 
 func (db *DB) Close() {
 	if db.Pool != nil {
-		log.Info().Msg("Closing PostgreSQL connection pool")
+		logger.Info().Msg("Closing PostgreSQL connection pool")
 		db.Pool.Close()
 	}
 }
@@ -63,6 +63,6 @@ func (db *DB) Migrate(ctx context.Context) error {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	log.Info().Msg("Database migrations applied successfully")
+	logger.Info().Msg("Database migrations applied successfully")
 	return nil
 }

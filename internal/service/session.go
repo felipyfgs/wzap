@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/repo"
 	"wzap/internal/wa"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 )
 
 var sessionNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
@@ -66,7 +66,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		events := make([]string, 0, len(req.Webhook.Events))
 		for _, e := range req.Webhook.Events {
 			if !model.ValidEventTypes[e] {
-				log.Warn().Str("event", string(e)).Str("session", session.ID).Msg("Skipping invalid event type in inline webhook")
+				logger.Warn().Str("event", string(e)).Str("session", session.ID).Msg("Skipping invalid event type in inline webhook")
 				continue
 			}
 			events = append(events, string(e))
@@ -80,7 +80,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 			CreatedAt: now,
 		}
 		if err := s.webhookRepo.Create(ctx, wh); err != nil {
-			log.Warn().Err(err).Str("session", session.ID).Msg("Failed to create inline webhook")
+			logger.Warn().Err(err).Str("session", session.ID).Msg("Failed to create inline webhook")
 		} else {
 			resp.Webhook = wh
 		}
@@ -89,17 +89,30 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	return resp, nil
 }
 
-func (s *SessionService) List(ctx context.Context) ([]model.Session, error) {
-	return s.repo.FindAll(ctx)
+func (s *SessionService) List(ctx context.Context) ([]dto.SessionResp, error) {
+	sessions, err := s.repo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+	resp := make([]dto.SessionResp, len(sessions))
+	for i, sess := range sessions {
+		resp[i] = dto.SessionToResp(sess)
+	}
+	return resp, nil
 }
 
-func (s *SessionService) Get(ctx context.Context, id string) (*model.Session, error) {
-	return s.repo.FindByID(ctx, id)
+func (s *SessionService) Get(ctx context.Context, id string) (*dto.SessionResp, error) {
+	session, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	resp := dto.SessionToResp(*session)
+	return &resp, nil
 }
 
 func (s *SessionService) Delete(ctx context.Context, id string) error {
 	if err := s.engine.Logout(ctx, id); err != nil {
-		log.Warn().Err(err).Str("session", id).Msg("Failed to logout session during delete")
+		logger.Warn().Err(err).Str("session", id).Msg("Failed to logout session during delete")
 	}
 	return s.repo.Delete(ctx, id)
 }

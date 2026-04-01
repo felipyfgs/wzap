@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/mdp/qrterminal/v3"
-	"github.com/rs/zerolog/log"
 	"go.mau.fi/whatsmeow"
+	"wzap/internal/logger"
 )
 
 // GetQRCode reads the latest QR code from the database.
@@ -26,15 +26,15 @@ func (m *Manager) consumeQRChannel(sessionID string, qrChan <-chan whatsmeow.QRC
 		case "code":
 			qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
 
-			if err := m.sessionRepo.UpdateQRCode(context.Background(), sessionID, evt.Code); err != nil {
-				log.Error().Err(err).Str("session", sessionID).Msg("Failed to save QR code to database")
+			if err := m.sessionRepo.UpdateQRCode(m.ctx, sessionID, evt.Code); err != nil {
+				logger.Error().Err(err).Str("session", sessionID).Msg("Failed to save QR code to database")
 			}
-			log.Info().Str("session", sessionID).Msg("QR code saved to database")
+			logger.Info().Str("session", sessionID).Msg("QR code saved to database")
 
 		case "timeout":
-			log.Warn().Str("session", sessionID).Msg("QR code timed out")
-			_ = m.sessionRepo.UpdateQRCode(context.Background(), sessionID, "")
-			_ = m.sessionRepo.UpdateStatus(context.Background(), sessionID, "disconnected")
+			logger.Warn().Str("session", sessionID).Msg("QR code timed out")
+			_ = m.sessionRepo.UpdateQRCode(m.ctx, sessionID, "")
+			_ = m.sessionRepo.UpdateStatus(m.ctx, sessionID, "disconnected")
 
 			m.mu.Lock()
 			if client, exists := m.clients[sessionID]; exists {
@@ -44,9 +44,9 @@ func (m *Manager) consumeQRChannel(sessionID string, qrChan <-chan whatsmeow.QRC
 			m.mu.Unlock()
 
 		case "success":
-			log.Info().Str("session", sessionID).Msg("QR pairing completed")
-			_ = m.sessionRepo.UpdateQRCode(context.Background(), sessionID, "")
-			_ = m.sessionRepo.UpdateStatus(context.Background(), sessionID, "connected")
+			logger.Info().Str("session", sessionID).Msg("QR pairing completed")
+			_ = m.sessionRepo.UpdateQRCode(m.ctx, sessionID, "")
+			_ = m.sessionRepo.UpdateStatus(m.ctx, sessionID, "connected")
 		}
 	}
 }

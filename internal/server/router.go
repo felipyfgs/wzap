@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gofiber/swagger"
 
+	_ "wzap/docs"
 	"wzap/internal/handler"
 	"wzap/internal/middleware"
 	"wzap/internal/repo"

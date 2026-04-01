@@ -53,7 +53,7 @@ make up # Start Postgres, MinIO, NATS and wzap API
 docker run -d \
   --name wzap \
   -p 8080:8080 \
-  -e DATABASE_URL="postgres://wzap:wzap123@host.docker.internal:5435/wzap?sslmode=disable" \
+  -e DATABASE_URL="postgres://USER:PASSWORD@host.docker.internal:5435/wzap?sslmode=disable" \
   -e NATS_URL="nats://host.docker.internal:4222" \
   -e MINIO_ENDPOINT="host.docker.internal:9010" \
   ghcr.io/<owner>/wzap:latest

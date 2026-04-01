@@ -54,7 +54,10 @@ func (m *Manager) ReconnectAll(ctx context.Context) error {
 		jidStr := device.ID.String()
 		sessionID, err := m.sessionRepo.FindSessionIDByJID(ctx, jidStr)
 		if err != nil {
-			log.Warn().Str("jid", jidStr).Msg("Device without matching session, skipping")
+			log.Warn().Str("jid", jidStr).Msg("Orphan device without matching session, removing from sqlstore")
+			if delErr := device.Delete(ctx); delErr != nil {
+				log.Error().Err(delErr).Str("jid", jidStr).Msg("Failed to delete orphan device")
+			}
 			continue
 		}
 
@@ -161,6 +164,12 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 				log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
 			}
 		case *events.LoggedOut:
+			if err := client.Store.Delete(context.Background()); err != nil {
+				log.Error().Err(err).Str("session", sessionID).Msg("Failed to delete device from sqlstore on logout")
+			}
+			m.mu.Lock()
+			delete(m.clients, sessionID)
+			m.mu.Unlock()
 			if err := m.sessionRepo.ClearDevice(context.Background(), sessionID); err != nil {
 				log.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
 			}
@@ -211,7 +220,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 	return client, nil, nil
 }
 
-// Disconnect disconnects a session.
+// Disconnect disconnects a session without removing the device from the sqlstore.
 func (m *Manager) Disconnect(sessionID string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -224,6 +233,35 @@ func (m *Manager) Disconnect(sessionID string) error {
 
 	if err := m.sessionRepo.SetConnected(context.Background(), sessionID, 0); err != nil {
 		log.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
+	}
+	return nil
+}
+
+// Logout sends an unpair request to WhatsApp, disconnects and removes the
+// device from the whatsmeow sqlstore. This is the proper cleanup for session
+// deletion — it prevents orphan devices in the sqlstore tables.
+func (m *Manager) Logout(ctx context.Context, sessionID string) error {
+	m.mu.Lock()
+	client, exists := m.clients[sessionID]
+	if exists {
+		delete(m.clients, sessionID)
+	}
+	m.mu.Unlock()
+
+	if exists && client.Store.ID != nil {
+		if err := client.Logout(ctx); err != nil {
+			log.Warn().Err(err).Str("session", sessionID).Msg("Logout request failed, forcing device cleanup")
+			client.Disconnect()
+			if err := client.Store.Delete(ctx); err != nil {
+				log.Error().Err(err).Str("session", sessionID).Msg("Failed to delete device from sqlstore")
+			}
+		}
+	} else if exists {
+		client.Disconnect()
+	}
+
+	if err := m.sessionRepo.ClearDevice(ctx, sessionID); err != nil {
+		log.Error().Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
 	}
 	return nil
 }

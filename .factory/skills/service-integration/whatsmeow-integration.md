@@ -28,10 +28,20 @@ if !client.IsConnected() {
 |---|---|
 | `"disconnected"` | Session exists in DB, no active WA connection |
 | `"connecting"` | `engine.Connect()` called, handshake in progress |
-| `"pairing"` | QR code generated, waiting for phone scan |
 | `"connected"` | Paired and fully connected, JID populated |
 
 The status is stored in `"wzSessions"."status"` and updated by the event handlers in `internal/wa/events.go`.
+
+## Manager API summary
+
+| Method | Signature | Purpose |
+|---|---|---|
+| `GetClient` | `(sessionID string) (*whatsmeow.Client, error)` | Get existing connected client |
+| `Connect` | `(ctx, sessionID) (*Client, <-chan QR, error)` | Connect or start pairing |
+| `Disconnect` | `(sessionID string) error` | Disconnect without removing device |
+| `Logout` | `(ctx, sessionID string) error` | Send unpair + delete device from sqlstore + clear DB |
+| `GetQRCode` | `(ctx, sessionID) (string, error)` | Get current QR code string |
+| `ReconnectAll` | `(ctx) error` | Reconnect all paired devices on startup; deletes orphan devices |
 
 ---
 
@@ -127,37 +137,39 @@ client.SendChatPresence(ctx, jid, types.ChatPresencePaused, types.ChatPresenceMe
 
 ## Event types
 
-All event type constants are defined in `internal/model/events.go`. The full set (50+):
+All event type constants are defined in `internal/model/events.go`. The full set (63):
 
 | Category | Constants |
 |---|---|
 | Messages | `EventMessage`, `EventUndecryptableMessage`, `EventMediaRetry`, `EventReceipt`, `EventDeleteForMe` |
-| Connection | `EventConnected`, `EventDisconnected`, `EventConnectFailure`, `EventLoggedOut`, `EventPairSuccess`, `EventPairError`, `EventQR`, `EventStreamError`, `EventStreamReplaced`, `EventKeepAliveTimeout`, `EventClientOutdated`, `EventTemporaryBan` |
+| Connection | `EventConnected`, `EventDisconnected`, `EventConnectFailure`, `EventLoggedOut`, `EventPairSuccess`, `EventPairError`, `EventQR`, `EventQRScannedWithoutMultidevice`, `EventStreamError`, `EventStreamReplaced`, `EventKeepAliveTimeout`, `EventKeepAliveRestored`, `EventClientOutdated`, `EventTemporaryBan`, `EventCATRefreshError`, `EventManualLoginReconnect` |
 | Contacts | `EventContact`, `EventPicture`, `EventIdentityChange`, `EventUserAbout`, `EventPushName`, `EventBusinessName` |
 | Groups | `EventGroupInfo`, `EventJoinedGroup` |
 | Presence | `EventPresence`, `EventChatPresence` |
-| Chat state | `EventArchive`, `EventMute`, `EventPin`, `EventStar`, `EventClearChat`, `EventDeleteChat`, `EventMarkChatAsRead` |
+| Chat state | `EventArchive`, `EventMute`, `EventPin`, `EventStar`, `EventClearChat`, `EventDeleteChat`, `EventMarkChatAsRead`, `EventUnarchiveChatsSetting` |
 | Labels | `EventLabelEdit`, `EventLabelAssociationChat`, `EventLabelAssociationMessage` |
-| Calls | `EventCallOffer`, `EventCallAccept`, `EventCallTerminate`, `EventCallOfferNotice`, `EventCallReject` |
+| Calls | `EventCallOffer`, `EventCallAccept`, `EventCallTerminate`, `EventCallOfferNotice`, `EventCallReject`, `EventCallRelayLatency`, `EventCallPreAccept`, `EventCallTransport`, `EventUnknownCallEvent` |
 | Newsletter | `EventNewsletterJoin`, `EventNewsletterLeave`, `EventNewsletterMuteChange`, `EventNewsletterLiveUpdate` |
-| Sync | `EventHistorySync`, `EventAppState`, `EventAppStateSyncComplete`, `EventOfflineSyncCompleted` |
-| Privacy | `EventPrivacySettings`, `EventPushNameSetting`, `EventBlocklistChange`, `EventBlocklist` |
+| Sync | `EventHistorySync`, `EventAppState`, `EventAppStateSyncComplete`, `EventAppStateSyncError`, `EventOfflineSyncCompleted`, `EventOfflineSyncPreview` |
+| Privacy | `EventPrivacySettings`, `EventPushNameSetting`, `EventUserStatusMute`, `EventBlocklistChange`, `EventBlocklist` |
 | Wildcard | `EventAll` — matches any event in webhook subscriptions |
 
 **Adding a new event type:**
 1. Add the constant to `internal/model/events.go`.
 2. Add it to the `types` slice inside the `ValidEventTypes` init function.
 3. Handle it in `internal/wa/events.go` within the `handleEvent` switch.
-4. Dispatch via `s.dispatcher.Dispatch(ctx, sessionID, string(eventType), payload)`.
+4. Dispatch via `m.dispatcher.Dispatch(sessionID, eventType, bytes)` (called in `internal/wa/events.go`).
 
 ---
 
 ## Dispatcher / webhook fan-out
 
 ```go
-// internal/dispatcher/dispatcher.go
+// internal/webhook/dispatcher.go
 // Publish an event to all matching webhooks and NATS:
-disp.Dispatch(ctx, sessionID, "Message", payloadBytes)
+d.Dispatch(sessionID, eventType, payloadBytes)
 ```
+
+The dispatcher signature is `func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, payload []byte)` — no `context.Context`, and `eventType` is `model.EventType` (not string).
 
 The dispatcher reads active webhooks via `WebhookRepository.FindActiveBySessionAndEvent` and delivers HTTP POST + publishes to the NATS subject `wzap.events.<sessionID>.<eventType>`.

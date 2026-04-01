@@ -19,7 +19,7 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 
         token := c.Get("ApiKey")
         if token == "" {
-            return c.Status(401).JSON(dto.ErrorResp("Unauthorized", "Missing ApiKey header"))
+            return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing ApiKey header"))
         }
 
         // Global admin token (env API_KEY)
@@ -36,7 +36,7 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
             return c.Next()
         }
 
-        return c.Status(401).JSON(dto.ErrorResp("Unauthorized", "Invalid token"))
+        return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Invalid token"))
     }
 }
 ```

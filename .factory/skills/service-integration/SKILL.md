@@ -14,7 +14,7 @@ Add or modify backend capabilities in wzap while preserving the layered architec
 - Exposing a new whatsmeow feature via the REST API.
 - Adding or modifying a repo query against `"wzSessions"` or `"wzWebhooks"`.
 - Publishing a new event type through the dispatcher to webhooks / NATS.
-- Changing the session lifecycle (connect, disconnect, QR flow).
+- Changing the session lifecycle (connect, disconnect, logout, QR flow).
 
 ## Layer map
 
@@ -24,7 +24,7 @@ Add or modify backend capabilities in wzap while preserving the layered architec
 | Business logic | `internal/service/` | Orchestrate whatsmeow client + repo calls |
 | Data access | `internal/repo/` | Raw pgx SQL against Postgres |
 | WA engine | `internal/wa/` | whatsmeow client lifecycle, QR, events |
-| Event fan-out | `internal/dispatcher/` | Deliver events to webhooks + NATS subjects |
+| Event fan-out | `internal/webhook/` | Deliver events to webhooks + NATS subjects |
 | DTOs | `internal/dto/` | Request / response payloads (camelCase JSON tags) |
 | Domain models | `internal/model/` | Persistent entities (`Session`, `Webhook`, event constants) |
 | Routes | `internal/server/router.go` | Fiber group registration + middleware wiring |

@@ -22,7 +22,7 @@ wzap has **two roles** — see `auth-model.md` for full details:
 | Role | How obtained | `c.Locals("authRole")` |
 |---|---|---|
 | `admin` | `ApiKey` header == `cfg.APIKey` (env `API_KEY`) | `"admin"` |
-| `session` | `ApiKey` header == a session's `apiKey` (`sk_*`) | `"session"` |
+| `session` | `ApiKey` header == a session's `apiKey` (`sk_*` or custom) | `"session"` |
 
 **Admin guard pattern** (place at top of every admin-only handler body):
 ```go

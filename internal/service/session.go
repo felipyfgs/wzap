@@ -98,8 +98,8 @@ func (s *SessionService) Get(ctx context.Context, id string) (*model.Session, er
 }
 
 func (s *SessionService) Delete(ctx context.Context, id string) error {
-	if err := s.engine.Disconnect(id); err != nil {
-		log.Warn().Err(err).Str("session", id).Msg("Failed to disconnect session during delete")
+	if err := s.engine.Logout(ctx, id); err != nil {
+		log.Warn().Err(err).Str("session", id).Msg("Failed to logout session during delete")
 	}
 	return s.repo.Delete(ctx, id)
 }

@@ -30,7 +30,7 @@ Reference for engineers operating a wzap instance: startup, health verification,
 | Command | Action |
 |---|---|
 | `make up` | Start Postgres, MinIO, NATS via Docker Compose |
-| `make dev` | Run `go run cmd/wzap/main.go` (hot-code dev) |
+| `make dev` | Run `go run cmd/wzap/main.go` |
 | `make build` | Compile to `build/wzap` |
 | `make tidy` | `go mod tidy` |
 | `make install-tools` | Install `golangci-lint` |
@@ -49,9 +49,12 @@ No auth required. Returns the status of the three infrastructure dependencies:
 {
   "success": true,
   "data": {
-    "database": true,
-    "nats": true,
-    "storage": true
+    "status": "UP",
+    "services": {
+      "database": true,
+      "nats": true,
+      "minio": true
+    }
   }
 }
 ```
@@ -67,8 +70,7 @@ If any value is `false`, the corresponding service is unreachable. Check Docker 
 | Status | `connected` | Meaning |
 |---|---|---|
 | `"disconnected"` | `0` | Session exists, no active WA connection |
-| `"connecting"` | `0` | `POST /sessions/:id/connect` called, handshake in progress |
-| `"pairing"` | `0` | QR generated, waiting for phone scan |
+| `"connecting"` | `0` | `POST /sessions/:id/connect` called, handshake or QR scan in progress |
 | `"connected"` | `1` | Paired and fully connected; `jid` is populated |
 
 ### Common admin operations
@@ -93,7 +95,7 @@ Response includes the session's `apiKey` (`sk_<uuid>`) — store it securely.
 POST /sessions/:sessionId/connect
 ApiKey: <ADMIN_API_KEY>
 ```
-Returns `{"status": "PAIRING"}` if the device needs to be linked, `{"status": "CONNECTED"}` if already linked.
+Returns `{"status": "PAIRING"}` if the device needs to be linked, `{"status": "CONNECTED"}` if already linked, or `{"status": "CONNECTING"}` if the client exists but is not yet connected.
 
 **Get QR code (poll until connected):**
 ```
@@ -113,7 +115,7 @@ ApiKey: <ADMIN_API_KEY>
 DELETE /sessions/:sessionId
 ApiKey: <ADMIN_API_KEY>
 ```
-Disconnects and removes the session from the database. The whatsmeow device store entry is also cleared.
+Calls `engine.Logout(ctx, id)` which sends an unpair request to WhatsApp, deletes the device from the whatsmeow sqlstore, clears device fields in the DB, then removes the session row.
 
 ---
 
@@ -122,13 +124,13 @@ Disconnects and removes the session from the database. The whatsmeow device stor
 **List webhooks for a session:**
 ```
 GET /sessions/:sessionId/webhooks
-ApiKey: <ADMIN_API_KEY>
+ApiKey: <SESSION_API_KEY>
 ```
 
 **Create a webhook:**
 ```
 POST /sessions/:sessionId/webhooks
-ApiKey: <ADMIN_API_KEY>
+ApiKey: <SESSION_API_KEY>
 
 {
   "url": "https://my-service.com/wh",
@@ -140,7 +142,7 @@ ApiKey: <ADMIN_API_KEY>
 **Delete a webhook:**
 ```
 DELETE /sessions/:sessionId/webhooks/:wid
-ApiKey: <ADMIN_API_KEY>
+ApiKey: <SESSION_API_KEY>
 ```
 
 ---
@@ -174,3 +176,9 @@ All structured log lines are emitted via `github.com/rs/zerolog/log`. Key fields
 | Webhook not firing | `enabled=false` or wrong event | Check webhook via `GET /:id/webhooks` |
 | `client not connected` error | Session disconnected mid-operation | Reconnect via `POST /:id/connect` |
 | Health check shows `"database": false` | Postgres down or wrong `DATABASE_URL` | `make up` or check connection string |
+
+---
+
+## Orphan device cleanup
+
+On startup, `ReconnectAll` iterates all devices in the whatsmeow sqlstore. Any device whose JID does not match a session in `"wzSessions"` is logged as orphan and deleted from the sqlstore automatically. This prevents stale devices from accumulating after unclean shutdowns or failed deletions.

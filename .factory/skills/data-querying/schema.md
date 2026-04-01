@@ -8,19 +8,20 @@ Postgres database accessed via `pgxpool.Pool`. All table and column names use ca
 
 Stores one row per WhatsApp session managed by wzap.
 
-| Column | Type | Nullable | Notes |
-|---|---|---|---|
-| `"id"` | `text` (UUID) | NOT NULL | Primary key, format `uuid.NewString()` |
-| `"name"` | `text` | NOT NULL | Unique human-readable identifier; `^[a-zA-Z0-9_-]+$` |
-| `"apiKey"` | `text` | NOT NULL | Bearer token for session-scoped auth; format `sk_<uuid>` — **treat as secret** |
-| `"jid"` | `text` | NULL | WhatsApp JID once paired, e.g. `5511999@s.whatsapp.net`; empty string when unpaired |
-| `"qrCode"` | `text` | NULL | Raw QR string for active pairing; cleared after successful pair |
-| `"connected"` | `integer` | NOT NULL | `1` = connected, `0` = not connected |
-| `"status"` | `text` | NOT NULL | One of: `"disconnected"`, `"connecting"`, `"pairing"`, `"connected"` |
-| `"proxy"` | `jsonb` | NOT NULL | `SessionProxy{Host, Port, Protocol, Username, Password}` — empty object by default |
-| `"settings"` | `jsonb` | NOT NULL | `SessionSettings{alwaysOnline, rejectCall, msgRejectCall, readMessages, ignoreGroups, ignoreStatus}` |
-| `"createdAt"` | `timestamptz` | NOT NULL | Set on insert |
-| `"updatedAt"` | `timestamptz` | NOT NULL | Set on insert; update manually on writes |
+| Column | Type | Nullable | Default | Notes |
+|---|---|---|---|---|
+| `"id"` | `VARCHAR(100)` | NOT NULL | — | Primary key, format `uuid.NewString()` |
+| `"name"` | `VARCHAR(100)` | NOT NULL | — | Unique human-readable identifier; `^[a-zA-Z0-9_-]+$` |
+| `"apiKey"` | `VARCHAR(255)` | NOT NULL | — | Bearer token for session-scoped auth; `sk_<uuid>` if auto-generated, otherwise the caller-supplied value — **treat as secret** |
+| `"jid"` | `VARCHAR(255)` | NULL | `''` | WhatsApp JID once paired, e.g. `5511999@s.whatsapp.net`; empty string when unpaired |
+| `"qrCode"` | `TEXT` | NULL | `''` | Raw QR string for active pairing; cleared after successful pair |
+| `"connected"` | `INTEGER` | NULL | `0` | `1` = connected, `0` = not connected |
+| `"status"` | `VARCHAR(50)` | NOT NULL | `'disconnected'` | One of: `"disconnected"`, `"connecting"`, `"connected"` |
+| `"proxy"` | `JSONB` | NOT NULL | `'{}'` | `SessionProxy{Host, Port, Protocol, Username, Password}` |
+| `"settings"` | `JSONB` | NOT NULL | `'{}'` | `SessionSettings{alwaysOnline, rejectCall, msgRejectCall, readMessages, ignoreGroups, ignoreStatus}` |
+| `"metadata"` | `JSONB` | NULL | — | Arbitrary metadata, no enforced schema |
+| `"createdAt"` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | Set on insert |
+| `"updatedAt"` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | **Auto-updated** via `BEFORE UPDATE` trigger (`updateWzSessionsUpdatedAt`) |
 
 ### `"proxy"` JSONB shape
 
@@ -71,6 +72,16 @@ FROM "wzSessions"
 WHERE "jid" = $1;
 ```
 
+### Indexes
+
+| Name | Columns | Type |
+|---|---|---|
+| `idxWzSessionsName` | `"name"` | B-tree |
+| `idxWzSessionsApiKey` | `"apiKey"` | Unique B-tree |
+| `idxWzSessionsStatus` | `"status"` | B-tree |
+| `idxWzSessionsConnected` | `"connected"` | B-tree |
+| `idxWzSessionsJidUnique` | `"jid"` | Unique partial (WHERE `"jid" IS NOT NULL AND "jid" != ''`) |
+
 > Never SELECT `"apiKey"` in list queries. Only fetch it when the caller is authenticated as admin and the purpose is session creation confirmation.
 
 ---
@@ -79,17 +90,17 @@ WHERE "jid" = $1;
 
 Stores webhook subscriptions. Each session can have multiple webhooks.
 
-| Column | Type | Nullable | Notes |
-|---|---|---|---|
-| `"id"` | `text` (UUID) | NOT NULL | Primary key |
-| `"sessionId"` | `text` (UUID) | NOT NULL | FK → `"wzSessions"."id"` |
-| `"url"` | `text` | NOT NULL | Target HTTPS endpoint for event delivery |
-| `"secret"` | `text` | NULL | HMAC-SHA256 signing secret — **treat as secret** |
-| `"events"` | `jsonb` | NOT NULL | Array of `EventType` strings, e.g. `["Message","Connected"]`; `["All"]` = wildcard |
-| `"enabled"` | `boolean` | NOT NULL | `true` = active; `false` = paused |
-| `"natsEnabled"` | `boolean` | NOT NULL | `true` = also publish to NATS subject |
-| `"createdAt"` | `timestamptz` | NOT NULL | Set on insert |
-| `"updatedAt"` | `timestamptz` | NULL | Updated on webhook edits |
+| Column | Type | Nullable | Default | Notes |
+|---|---|---|---|---|
+| `"id"` | `VARCHAR(100)` | NOT NULL | — | Primary key |
+| `"sessionId"` | `VARCHAR(100)` | NOT NULL | — | FK → `"wzSessions"."id"` **ON DELETE CASCADE** |
+| `"url"` | `VARCHAR(2048)` | NOT NULL | — | Target HTTPS endpoint for event delivery |
+| `"secret"` | `VARCHAR(255)` | NULL | — | HMAC-SHA256 signing secret — **treat as secret** |
+| `"events"` | `JSONB` | NOT NULL | `'[]'` | Array of `EventType` strings, e.g. `["Message","Connected"]`; `["All"]` = wildcard |
+| `"enabled"` | `BOOLEAN` | NOT NULL | `true` | `true` = active; `false` = paused |
+| `"natsEnabled"` | `BOOLEAN` | NOT NULL | `false` | `true` = also publish to NATS subject |
+| `"createdAt"` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | Set on insert |
+| `"updatedAt"` | `TIMESTAMPTZ` | NOT NULL | `NOW()` | **Auto-updated** via `BEFORE UPDATE` trigger (`updateWzWebhooksUpdatedAt`) |
 
 ### `"events"` JSONB array examples
 
@@ -102,25 +113,18 @@ Stores webhook subscriptions. Each session can have multiple webhooks.
 ### Common queries
 
 ```sql
--- All webhooks for a session
-SELECT "id", "url", "events", "enabled"
-FROM "wzWebhooks"
-WHERE "sessionId" = $1
-ORDER BY "createdAt" DESC;
-
--- Active webhooks that match a specific event
-SELECT "id", "url", "natsEnabled"
-FROM "wzWebhooks"
-WHERE "sessionId" = $1
-  AND "enabled" = true
-  AND ("events" @> $2::jsonb OR "events" @> '["All"]'::jsonb);
--- $2 = JSON array of one event, e.g. '["Message"]'
-
 -- Webhook count per session
 SELECT "sessionId", COUNT(*) AS total, SUM(CASE WHEN "enabled" THEN 1 ELSE 0 END) AS active
 FROM "wzWebhooks"
 GROUP BY "sessionId";
 ```
+
+### Indexes
+
+| Name | Columns | Type |
+|---|---|---|
+| `idxWzWebhooksSessionId` | `"sessionId"` | B-tree |
+| `idxWzWebhooksEnabled` | `"enabled"` | B-tree |
 
 > Never SELECT `"secret"` in list queries.
 
@@ -133,3 +137,5 @@ GROUP BY "sessionId";
 - Parameters: positional `$1`, `$2`, … (pgx / PostgreSQL style)
 - Timestamps: `timestamptz` — Go type `time.Time`, scanned directly by pgx
 - JSONB structs: scanned directly into Go structs by pgx (auto-marshalling)
+- Both tables have a `BEFORE UPDATE` trigger that auto-updates `"updatedAt"` to `NOW()` — no manual update needed
+- `"wzWebhooks"."sessionId"` has `ON DELETE CASCADE` — deleting a session removes its webhooks automatically

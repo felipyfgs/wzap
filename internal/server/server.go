@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -48,6 +49,7 @@ func New(cfg *config.Config, db *database.DB, n *broker.Nats, m *storage.Minio) 
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
+	app.Use(middleware.RateLimit(120, time.Minute))
 
 	ctx, cancel := context.WithCancel(context.Background())
 

@@ -1,6 +1,15 @@
 package handler
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
+
+	"wzap/internal/dto"
+	mw "wzap/internal/middleware"
+)
 
 func getSessionID(c *fiber.Ctx) (string, error) {
 	val, ok := c.Locals("sessionID").(string)
@@ -13,4 +22,21 @@ func getSessionID(c *fiber.Ctx) (string, error) {
 func mustGetSessionID(c *fiber.Ctx) string {
 	val, _ := c.Locals("sessionID").(string)
 	return val
+}
+
+func parseAndValidate(c *fiber.Ctx, req interface{}) error {
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := mw.Validate.Struct(req); err != nil {
+		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+			var msgs []string
+			for _, e := range validationErrors {
+				msgs = append(msgs, fmt.Sprintf("field '%s' failed on '%s'", e.Field(), e.Tag()))
+			}
+			return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Validation Error", strings.Join(msgs, "; ")))
+		}
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Validation Error", err.Error()))
+	}
+	return nil
 }

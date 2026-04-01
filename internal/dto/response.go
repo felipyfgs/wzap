@@ -1,37 +1,32 @@
 package dto
 
 type APIResponse struct {
-	Success bool        `json:"success"`
-	Data    interface{} `json:"data,omitempty"`
-	Message string      `json:"message"`
+	Success bool        `json:"Success"`
+	Data    interface{} `json:"Data,omitempty"`
+	Message string      `json:"Message"`
 }
 
 type APIError struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error"`
-	Message string `json:"message,omitempty"`
+	Success bool   `json:"Success"`
+	Error   string `json:"Error"`
+	Message string `json:"Message,omitempty"`
 }
 
-// MidResp is the response for all message send operations.
 type MidResp struct {
-	Mid string `json:"mid"`
+	Mid string `json:"Mid"`
 }
 
-// ConnectResp is the response for the connect endpoint.
 type ConnectResp struct {
-	// Status is one of: CONNECTED, PAIRING, CONNECTING
-	Status string `json:"status"`
+	Status string `json:"Status"`
 }
 
-// QRResp is the response for the QR code endpoint.
 type QRResp struct {
-	QR    string `json:"qr"`
-	Image string `json:"image"`
+	QRCode string `json:"QRCode"`
+	Image  string `json:"Image"`
 }
 
-// PictureIDResp is the response for set-profile-picture.
 type PictureIDResp struct {
-	PictureID string `json:"pictureId"`
+	PictureID string `json:"PictureId"`
 }
 
 func SuccessResp(data interface{}) APIResponse {

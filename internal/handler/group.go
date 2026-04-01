@@ -183,7 +183,7 @@ func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Join Group Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(fiber.Map{"jid": jid}))
+	return c.JSON(dto.SuccessResp(fiber.Map{"Jid": jid}))
 }
 
 // Leave godoc
@@ -382,7 +382,7 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 	}
 	jid := req.GroupJID
 
-	bytes, err := base64.StdEncoding.DecodeString(req.PhotoBase64)
+	bytes, err := base64.StdEncoding.DecodeString(req.Image)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "failed to decode base64 photo"))
 	}
@@ -391,7 +391,7 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Photo Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(fiber.Map{"pictureId": picID}))
+	return c.JSON(dto.SuccessResp(dto.PictureIDResp{PictureID: picID}))
 }
 
 // SetAnnounce godoc

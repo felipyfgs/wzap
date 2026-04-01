@@ -1,11 +1,11 @@
 package dto
 
 type CreateCommunityReq struct {
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description"`
+	Name        string `json:"Name" validate:"required"`
+	Description string `json:"Description"`
 }
 
 type CommunityParticipantReq struct {
-	CommunityJID string   `json:"communityJid" validate:"required"`
-	Participants []string `json:"participants" validate:"required"`
+	CommunityJID string   `json:"CommunityJid" validate:"required"`
+	Participants []string `json:"Participants" validate:"required"`
 }

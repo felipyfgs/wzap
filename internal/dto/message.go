@@ -1,75 +1,75 @@
 package dto
 
 type SendTextReq struct {
-	JID  string `json:"jid" validate:"required"`
-	Text string `json:"text" validate:"required"`
+	Phone string `json:"Phone" validate:"required"`
+	Body  string `json:"Body" validate:"required"`
 }
 
 type SendMediaReq struct {
-	JID      string `json:"jid" validate:"required"`
-	MimeType string `json:"mimeType" validate:"required"`
-	Caption  string `json:"caption"`
-	Filename string `json:"filename"`
-	Base64   string `json:"base64"`
+	Phone    string `json:"Phone" validate:"required"`
+	MimeType string `json:"MimeType" validate:"required"`
+	Caption  string `json:"Caption"`
+	FileName string `json:"FileName"`
+	Base64   string `json:"Base64"`
 }
 
 type SendContactReq struct {
-	JID   string `json:"jid" validate:"required"`
-	Name  string `json:"name" validate:"required"`
-	Vcard string `json:"vcard" validate:"required"`
+	Phone string `json:"Phone" validate:"required"`
+	Name  string `json:"Name" validate:"required"`
+	Vcard string `json:"Vcard" validate:"required"`
 }
 
 type SendLocationReq struct {
-	JID     string  `json:"jid" validate:"required"`
-	Lat     float64 `json:"lat" validate:"required"`
-	Lng     float64 `json:"lng" validate:"required"`
-	Name    string  `json:"name"`
-	Address string  `json:"address"`
+	Phone     string  `json:"Phone" validate:"required"`
+	Latitude  float64 `json:"Latitude" validate:"required"`
+	Longitude float64 `json:"Longitude" validate:"required"`
+	Name      string  `json:"Name"`
+	Address   string  `json:"Address"`
 }
 
 type SendPollReq struct {
-	JID             string   `json:"jid" validate:"required"`
-	Name            string   `json:"name" validate:"required"`
-	Options         []string `json:"options" validate:"required,min=2"`
-	SelectableCount int      `json:"selectableCount"`
+	Phone           string   `json:"Phone" validate:"required"`
+	Name            string   `json:"Name" validate:"required"`
+	Options         []string `json:"Options" validate:"required,min=2"`
+	SelectableCount int      `json:"SelectableCount"`
 }
 
 type SendStickerReq struct {
-	JID      string `json:"jid" validate:"required"`
-	MimeType string `json:"mimeType" validate:"required"`
-	Base64   string `json:"base64" validate:"required"`
+	Phone    string `json:"Phone" validate:"required"`
+	MimeType string `json:"MimeType" validate:"required"`
+	Base64   string `json:"Base64" validate:"required"`
 }
 
 type SendLinkReq struct {
-	JID         string `json:"jid" validate:"required"`
-	URL         string `json:"url" validate:"required"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+	Phone       string `json:"Phone" validate:"required"`
+	URL         string `json:"URL" validate:"required"`
+	Title       string `json:"Title"`
+	Description string `json:"Description"`
 }
 
 type EditMessageReq struct {
-	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"mid" validate:"required"`
-	Text      string `json:"text" validate:"required"`
+	Phone     string `json:"Phone" validate:"required"`
+	MessageID string `json:"Mid" validate:"required"`
+	Body      string `json:"Body" validate:"required"`
 }
 
 type DeleteMessageReq struct {
-	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"mid" validate:"required"`
+	Phone     string `json:"Phone" validate:"required"`
+	MessageID string `json:"Mid" validate:"required"`
 }
 
 type ReactMessageReq struct {
-	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"mid" validate:"required"`
-	Reaction  string `json:"reaction" validate:"required"`
+	Phone     string `json:"Phone" validate:"required"`
+	MessageID string `json:"Mid" validate:"required"`
+	Reaction  string `json:"Reaction" validate:"required"`
 }
 
 type MarkReadReq struct {
-	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"mid" validate:"required"`
+	Phone     string `json:"Phone" validate:"required"`
+	MessageID string `json:"Mid" validate:"required"`
 }
 
 type SetPresenceReq struct {
-	JID      string `json:"jid" validate:"required"`
-	Presence string `json:"presence" validate:"required"`
+	Phone string `json:"Phone" validate:"required"`
+	State string `json:"State" validate:"required"`
 }

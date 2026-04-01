@@ -145,7 +145,7 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 		status = "CONNECTING"
 	}
 
-	return c.JSON(dto.SuccessResp(map[string]string{"status": status}))
+	return c.JSON(dto.SuccessResp(dto.ConnectResp{Status: status}))
 }
 
 // Disconnect godoc
@@ -195,8 +195,5 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 		qrBase64 = "data:image/png;base64," + base64.StdEncoding.EncodeToString(imageBytes)
 	}
 
-	return c.JSON(dto.SuccessResp(map[string]interface{}{
-		"qr":    qrCode,
-		"image": qrBase64,
-	}))
+	return c.JSON(dto.SuccessResp(dto.QRResp{QRCode: qrCode, Image: qrBase64}))
 }

@@ -1,5 +1,5 @@
 package dto
 
 type ChatActionReq struct {
-	JID string `json:"jid" validate:"required"`
+	JID string `json:"Jid" validate:"required"`
 }

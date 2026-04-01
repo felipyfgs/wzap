@@ -1,39 +1,39 @@
 package dto
 
 type CheckContactReq struct {
-	Phones []string `json:"phones" validate:"required"`
+	Phones []string `json:"Phones" validate:"required"`
 }
 
 type CheckContactResp struct {
-	Exists      bool   `json:"exists"`
-	JID         string `json:"jid,omitempty"`
-	PhoneNumber string `json:"phoneNumber"`
+	Exists      bool   `json:"Exists"`
+	JID         string `json:"Jid,omitempty"`
+	PhoneNumber string `json:"PhoneNumber"`
 }
 
 type GetAvatarReq struct {
-	JID string `json:"jid" validate:"required"`
+	Phone string `json:"Phone" validate:"required"`
 }
 
 type GetAvatarResp struct {
-	URL string `json:"url"`
-	ID  string `json:"id"`
+	URL string `json:"URL"`
+	ID  string `json:"Id"`
 }
 
 type BlockContactReq struct {
-	JID string `json:"jid" validate:"required"`
+	Phone string `json:"Phone" validate:"required"`
 }
 
 type GetUserInfoReq struct {
-	JIDs []string `json:"jids" validate:"required"`
+	Phones []string `json:"Phones" validate:"required"`
 }
 
 type UserInfoResp struct {
-	JID     string   `json:"jid"`
-	Status  string   `json:"status"`
-	Picture string   `json:"picture"`
-	Devices []string `json:"devices"`
+	JID     string   `json:"Jid"`
+	Status  string   `json:"Status"`
+	Picture string   `json:"Picture"`
+	Devices []string `json:"Devices"`
 }
 
 type SetProfilePictureReq struct {
-	Base64 string `json:"base64" validate:"required"`
+	Image string `json:"Image" validate:"required"`
 }

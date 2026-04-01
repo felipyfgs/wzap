@@ -3103,13 +3103,13 @@ const docTemplate = `{
         "APIError": {
             "type": "object",
             "properties": {
-                "error": {
+                "Error": {
                     "type": "string"
                 },
-                "message": {
+                "Message": {
                     "type": "string"
                 },
-                "success": {
+                "Success": {
                     "type": "boolean"
                 }
             }
@@ -3117,11 +3117,11 @@ const docTemplate = `{
         "APIResponse": {
             "type": "object",
             "properties": {
-                "data": {},
-                "message": {
+                "Data": {},
+                "Message": {
                     "type": "string"
                 },
-                "success": {
+                "Success": {
                     "type": "boolean"
                 }
             }
@@ -3129,10 +3129,10 @@ const docTemplate = `{
         "BlockContactReq": {
             "type": "object",
             "required": [
-                "jid"
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3140,10 +3140,10 @@ const docTemplate = `{
         "ChatActionReq": {
             "type": "object",
             "required": [
-                "jid"
+                "Jid"
             ],
             "properties": {
-                "jid": {
+                "Jid": {
                     "type": "string"
                 }
             }
@@ -3151,10 +3151,10 @@ const docTemplate = `{
         "CheckContactReq": {
             "type": "object",
             "required": [
-                "phones"
+                "Phones"
             ],
             "properties": {
-                "phones": {
+                "Phones": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3165,14 +3165,14 @@ const docTemplate = `{
         "CommunityParticipantReq": {
             "type": "object",
             "required": [
-                "communityJid",
-                "participants"
+                "CommunityJid",
+                "Participants"
             ],
             "properties": {
-                "communityJid": {
+                "CommunityJid": {
                     "type": "string"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3183,8 +3183,7 @@ const docTemplate = `{
         "ConnectResp": {
             "type": "object",
             "properties": {
-                "status": {
-                    "description": "Status is one of: CONNECTED, PAIRING, CONNECTING",
+                "Status": {
                     "type": "string"
                 }
             }
@@ -3192,13 +3191,13 @@ const docTemplate = `{
         "CreateCommunityReq": {
             "type": "object",
             "required": [
-                "name"
+                "Name"
             ],
             "properties": {
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 }
             }
@@ -3206,11 +3205,11 @@ const docTemplate = `{
         "CreateGroupReq": {
             "type": "object",
             "properties": {
-                "name": {
+                "Name": {
                     "type": "string",
                     "example": "My Awesome Group"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3225,16 +3224,16 @@ const docTemplate = `{
         "CreateNewsletterReq": {
             "type": "object",
             "required": [
-                "name"
+                "Name"
             ],
             "properties": {
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "picture": {
+                "Picture": {
                     "type": "string"
                 }
             }
@@ -3242,23 +3241,23 @@ const docTemplate = `{
         "CreateWebhookReq": {
             "type": "object",
             "required": [
-                "events",
-                "url"
+                "Events",
+                "URL"
             ],
             "properties": {
-                "events": {
+                "Events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "natsEnabled": {
+                "NatsEnabled": {
                     "type": "boolean"
                 },
-                "secret": {
+                "Secret": {
                     "type": "string"
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3266,14 +3265,14 @@ const docTemplate = `{
         "DeleteMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid"
+                "Mid",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Mid": {
                     "type": "string"
                 },
-                "mid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3281,19 +3280,19 @@ const docTemplate = `{
         "EditLabelReq": {
             "type": "object",
             "required": [
-                "labelId"
+                "LabelId"
             ],
             "properties": {
-                "color": {
+                "Color": {
                     "type": "integer"
                 },
-                "deleted": {
+                "Deleted": {
                     "type": "boolean"
                 },
-                "labelId": {
+                "LabelId": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 }
             }
@@ -3301,18 +3300,18 @@ const docTemplate = `{
         "EditMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid",
-                "text"
+                "Body",
+                "Mid",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Body": {
                     "type": "string"
                 },
-                "mid": {
+                "Mid": {
                     "type": "string"
                 },
-                "text": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3320,10 +3319,10 @@ const docTemplate = `{
         "GetAvatarReq": {
             "type": "object",
             "required": [
-                "jid"
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3331,10 +3330,10 @@ const docTemplate = `{
         "GetAvatarResp": {
             "type": "object",
             "properties": {
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3342,10 +3341,10 @@ const docTemplate = `{
         "GetUserInfoReq": {
             "type": "object",
             "required": [
-                "jids"
+                "Phones"
             ],
             "properties": {
-                "jids": {
+                "Phones": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3356,7 +3355,7 @@ const docTemplate = `{
         "GroupInviteLinkResp": {
             "type": "object",
             "properties": {
-                "link": {
+                "Link": {
                     "type": "string"
                 }
             }
@@ -3364,10 +3363,10 @@ const docTemplate = `{
         "GroupJIDReq": {
             "type": "object",
             "required": [
-                "groupJid"
+                "GroupJid"
             ],
             "properties": {
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 }
             }
@@ -3375,10 +3374,10 @@ const docTemplate = `{
         "GroupJoinReq": {
             "type": "object",
             "required": [
-                "inviteCode"
+                "InviteCode"
             ],
             "properties": {
-                "inviteCode": {
+                "InviteCode": {
                     "type": "string"
                 }
             }
@@ -3386,19 +3385,19 @@ const docTemplate = `{
         "GroupParticipantReq": {
             "type": "object",
             "required": [
-                "action",
-                "groupJid",
-                "participants"
+                "Action",
+                "GroupJid",
+                "Participants"
             ],
             "properties": {
-                "action": {
+                "Action": {
                     "type": "string",
                     "example": "add"
                 },
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3412,14 +3411,14 @@ const docTemplate = `{
         "GroupPhotoReq": {
             "type": "object",
             "required": [
-                "groupJid",
-                "photoBase64"
+                "GroupJid",
+                "Image"
             ],
             "properties": {
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "photoBase64": {
+                "Image": {
                     "type": "string"
                 }
             }
@@ -3427,19 +3426,19 @@ const docTemplate = `{
         "GroupRequestActionReq": {
             "type": "object",
             "required": [
-                "action",
-                "groupJid",
-                "participants"
+                "Action",
+                "GroupJid",
+                "Participants"
             ],
             "properties": {
-                "action": {
+                "Action": {
                     "type": "string",
                     "example": "approve"
                 },
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3453,13 +3452,13 @@ const docTemplate = `{
         "GroupSettingReq": {
             "type": "object",
             "required": [
-                "groupJid"
+                "GroupJid"
             ],
             "properties": {
-                "enabled": {
+                "Enabled": {
                     "type": "boolean"
                 },
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 }
             }
@@ -3467,14 +3466,14 @@ const docTemplate = `{
         "GroupTextReq": {
             "type": "object",
             "required": [
-                "groupJid",
-                "text"
+                "GroupJid",
+                "Text"
             ],
             "properties": {
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "text": {
+                "Text": {
                     "type": "string"
                 }
             }
@@ -3482,14 +3481,14 @@ const docTemplate = `{
         "LabelChatReq": {
             "type": "object",
             "required": [
-                "jid",
-                "labelId"
+                "Jid",
+                "LabelId"
             ],
             "properties": {
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "labelId": {
+                "LabelId": {
                     "type": "string"
                 }
             }
@@ -3497,18 +3496,18 @@ const docTemplate = `{
         "LabelMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "labelId",
-                "mid"
+                "Jid",
+                "LabelId",
+                "Mid"
             ],
             "properties": {
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "labelId": {
+                "LabelId": {
                     "type": "string"
                 },
-                "mid": {
+                "Mid": {
                     "type": "string"
                 }
             }
@@ -3516,14 +3515,14 @@ const docTemplate = `{
         "MarkReadReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid"
+                "Mid",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Mid": {
                     "type": "string"
                 },
-                "mid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3531,7 +3530,7 @@ const docTemplate = `{
         "MidResp": {
             "type": "object",
             "properties": {
-                "mid": {
+                "Mid": {
                     "type": "string"
                 }
             }
@@ -3539,16 +3538,16 @@ const docTemplate = `{
         "NewsletterMessageReq": {
             "type": "object",
             "required": [
-                "newsletterJid"
+                "NewsletterJid"
             ],
             "properties": {
-                "beforeId": {
+                "BeforeId": {
                     "type": "integer"
                 },
-                "count": {
+                "Count": {
                     "type": "integer"
                 },
-                "newsletterJid": {
+                "NewsletterJid": {
                     "type": "string"
                 }
             }
@@ -3556,10 +3555,10 @@ const docTemplate = `{
         "NewsletterSubscribeReq": {
             "type": "object",
             "required": [
-                "newsletterJid"
+                "NewsletterJid"
             ],
             "properties": {
-                "newsletterJid": {
+                "NewsletterJid": {
                     "type": "string"
                 }
             }
@@ -3567,7 +3566,7 @@ const docTemplate = `{
         "PictureIDResp": {
             "type": "object",
             "properties": {
-                "pictureId": {
+                "PictureId": {
                     "type": "string"
                 }
             }
@@ -3575,10 +3574,10 @@ const docTemplate = `{
         "QRResp": {
             "type": "object",
             "properties": {
-                "image": {
+                "Image": {
                     "type": "string"
                 },
-                "qr": {
+                "QRCode": {
                     "type": "string"
                 }
             }
@@ -3586,18 +3585,18 @@ const docTemplate = `{
         "ReactMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid",
-                "reaction"
+                "Mid",
+                "Phone",
+                "Reaction"
             ],
             "properties": {
-                "jid": {
+                "Mid": {
                     "type": "string"
                 },
-                "mid": {
+                "Phone": {
                     "type": "string"
                 },
-                "reaction": {
+                "Reaction": {
                     "type": "string"
                 }
             }
@@ -3605,18 +3604,18 @@ const docTemplate = `{
         "SendContactReq": {
             "type": "object",
             "required": [
-                "jid",
-                "name",
-                "vcard"
+                "Name",
+                "Phone",
+                "Vcard"
             ],
             "properties": {
-                "jid": {
+                "Name": {
                     "type": "string"
                 },
-                "name": {
+                "Phone": {
                     "type": "string"
                 },
-                "vcard": {
+                "Vcard": {
                     "type": "string"
                 }
             }
@@ -3624,20 +3623,20 @@ const docTemplate = `{
         "SendLinkReq": {
             "type": "object",
             "required": [
-                "jid",
-                "url"
+                "Phone",
+                "URL"
             ],
             "properties": {
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "jid": {
+                "Phone": {
                     "type": "string"
                 },
-                "title": {
+                "Title": {
                     "type": "string"
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3645,24 +3644,24 @@ const docTemplate = `{
         "SendLocationReq": {
             "type": "object",
             "required": [
-                "jid",
-                "lat",
-                "lng"
+                "Latitude",
+                "Longitude",
+                "Phone"
             ],
             "properties": {
-                "address": {
+                "Address": {
                     "type": "string"
                 },
-                "jid": {
+                "Latitude": {
+                    "type": "number"
+                },
+                "Longitude": {
+                    "type": "number"
+                },
+                "Name": {
                     "type": "string"
                 },
-                "lat": {
-                    "type": "number"
-                },
-                "lng": {
-                    "type": "number"
-                },
-                "name": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3670,23 +3669,23 @@ const docTemplate = `{
         "SendMediaReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mimeType"
+                "MimeType",
+                "Phone"
             ],
             "properties": {
-                "base64": {
+                "Base64": {
                     "type": "string"
                 },
-                "caption": {
+                "Caption": {
                     "type": "string"
                 },
-                "filename": {
+                "FileName": {
                     "type": "string"
                 },
-                "jid": {
+                "MimeType": {
                     "type": "string"
                 },
-                "mimeType": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3694,25 +3693,25 @@ const docTemplate = `{
         "SendPollReq": {
             "type": "object",
             "required": [
-                "jid",
-                "name",
-                "options"
+                "Name",
+                "Options",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Name": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
-                "options": {
+                "Options": {
                     "type": "array",
                     "minItems": 2,
                     "items": {
                         "type": "string"
                     }
                 },
-                "selectableCount": {
+                "Phone": {
+                    "type": "string"
+                },
+                "SelectableCount": {
                     "type": "integer"
                 }
             }
@@ -3720,18 +3719,18 @@ const docTemplate = `{
         "SendStickerReq": {
             "type": "object",
             "required": [
-                "base64",
-                "jid",
-                "mimeType"
+                "Base64",
+                "MimeType",
+                "Phone"
             ],
             "properties": {
-                "base64": {
+                "Base64": {
                     "type": "string"
                 },
-                "jid": {
+                "MimeType": {
                     "type": "string"
                 },
-                "mimeType": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3739,14 +3738,14 @@ const docTemplate = `{
         "SendTextReq": {
             "type": "object",
             "required": [
-                "jid",
-                "text"
+                "Body",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Body": {
                     "type": "string"
                 },
-                "text": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3754,22 +3753,22 @@ const docTemplate = `{
         "SessionCreateReq": {
             "type": "object",
             "required": [
-                "name"
+                "Name"
             ],
             "properties": {
-                "apiKey": {
+                "ApiKey": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "proxy": {
+                "Proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "settings": {
+                "Settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "webhook": {
+                "Webhook": {
                     "$ref": "#/definitions/WebhookCreateInline"
                 }
             }
@@ -3777,37 +3776,37 @@ const docTemplate = `{
         "SessionCreatedResp": {
             "type": "object",
             "properties": {
-                "apiKey": {
+                "ApiKey": {
                     "type": "string"
                 },
-                "connected": {
+                "Connected": {
                     "type": "integer"
                 },
-                "createdAt": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "proxy": {
+                "Proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "settings": {
+                "Settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "status": {
+                "Status": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "UpdatedAt": {
                     "type": "string"
                 },
-                "webhook": {
+                "Webhook": {
                     "$ref": "#/definitions/WebhookResp"
                 }
             }
@@ -3815,19 +3814,19 @@ const docTemplate = `{
         "SessionProxy": {
             "type": "object",
             "properties": {
-                "host": {
+                "Host": {
                     "type": "string"
                 },
-                "password": {
+                "Password": {
                     "type": "string"
                 },
-                "port": {
+                "Port": {
                     "type": "integer"
                 },
-                "protocol": {
+                "Protocol": {
                     "type": "string"
                 },
-                "username": {
+                "Username": {
                     "type": "string"
                 }
             }
@@ -3835,31 +3834,31 @@ const docTemplate = `{
         "SessionResp": {
             "type": "object",
             "properties": {
-                "connected": {
+                "Connected": {
                     "type": "integer"
                 },
-                "createdAt": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "proxy": {
+                "Proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "settings": {
+                "Settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "status": {
+                "Status": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -3867,22 +3866,22 @@ const docTemplate = `{
         "SessionSettings": {
             "type": "object",
             "properties": {
-                "alwaysOnline": {
+                "AlwaysOnline": {
                     "type": "boolean"
                 },
-                "ignoreGroups": {
+                "IgnoreGroups": {
                     "type": "boolean"
                 },
-                "ignoreStatus": {
+                "IgnoreStatus": {
                     "type": "boolean"
                 },
-                "msgRejectCall": {
+                "MsgRejectCall": {
                     "type": "string"
                 },
-                "readMessages": {
+                "ReadMessages": {
                     "type": "boolean"
                 },
-                "rejectCall": {
+                "RejectCall": {
                     "type": "boolean"
                 }
             }
@@ -3890,14 +3889,14 @@ const docTemplate = `{
         "SetPresenceReq": {
             "type": "object",
             "required": [
-                "jid",
-                "presence"
+                "Phone",
+                "State"
             ],
             "properties": {
-                "jid": {
+                "Phone": {
                     "type": "string"
                 },
-                "presence": {
+                "State": {
                     "type": "string"
                 }
             }
@@ -3905,10 +3904,10 @@ const docTemplate = `{
         "SetProfilePictureReq": {
             "type": "object",
             "required": [
-                "base64"
+                "Image"
             ],
             "properties": {
-                "base64": {
+                "Image": {
                     "type": "string"
                 }
             }
@@ -3916,19 +3915,19 @@ const docTemplate = `{
         "UserInfoResp": {
             "type": "object",
             "properties": {
-                "devices": {
+                "Devices": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "picture": {
+                "Picture": {
                     "type": "string"
                 },
-                "status": {
+                "Status": {
                     "type": "string"
                 }
             }
@@ -3936,13 +3935,13 @@ const docTemplate = `{
         "WebhookCreateInline": {
             "type": "object",
             "properties": {
-                "events": {
+                "Events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3950,34 +3949,34 @@ const docTemplate = `{
         "WebhookResp": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "enabled": {
+                "Enabled": {
                     "type": "boolean"
                 },
-                "events": {
+                "Events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "natsEnabled": {
+                "NatsEnabled": {
                     "type": "boolean"
                 },
-                "secret": {
+                "Secret": {
                     "type": "string"
                 },
-                "sessionId": {
+                "SessionId": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "URL": {
                     "type": "string"
                 },
-                "url": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }

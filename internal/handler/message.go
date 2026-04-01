@@ -43,7 +43,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // SendImage godoc
@@ -129,7 +129,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // SendContact godoc
@@ -157,7 +157,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // SendLocation godoc
@@ -185,7 +185,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // SendPoll godoc
@@ -213,7 +213,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // SendSticker godoc
@@ -241,7 +241,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // SendLink godoc
@@ -269,7 +269,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // EditMessage godoc
@@ -297,7 +297,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // DeleteMessage godoc
@@ -325,7 +325,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // ReactMessage godoc
@@ -353,7 +353,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
 	}
-	return c.JSON(dto.SuccessResp(map[string]string{"mid": msgID}))
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 
 // MarkRead godoc

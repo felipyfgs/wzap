@@ -1,77 +1,76 @@
 definitions:
   APIError:
     properties:
-      error:
+      Error:
         type: string
-      message:
+      Message:
         type: string
-      success:
+      Success:
         type: boolean
     type: object
   APIResponse:
     properties:
-      data: {}
-      message:
+      Data: {}
+      Message:
         type: string
-      success:
+      Success:
         type: boolean
     type: object
   BlockContactReq:
     properties:
-      jid:
+      Phone:
         type: string
     required:
-    - jid
+    - Phone
     type: object
   ChatActionReq:
     properties:
-      jid:
+      Jid:
         type: string
     required:
-    - jid
+    - Jid
     type: object
   CheckContactReq:
     properties:
-      phones:
+      Phones:
         items:
           type: string
         type: array
     required:
-    - phones
+    - Phones
     type: object
   CommunityParticipantReq:
     properties:
-      communityJid:
+      CommunityJid:
         type: string
-      participants:
+      Participants:
         items:
           type: string
         type: array
     required:
-    - communityJid
-    - participants
+    - CommunityJid
+    - Participants
     type: object
   ConnectResp:
     properties:
-      status:
-        description: 'Status is one of: CONNECTED, PAIRING, CONNECTING'
+      Status:
         type: string
     type: object
   CreateCommunityReq:
     properties:
-      description:
+      Description:
         type: string
-      name:
+      Name:
         type: string
     required:
-    - name
+    - Name
     type: object
   CreateGroupReq:
     properties:
-      name:
+      Name:
         example: My Awesome Group
         type: string
-      participants:
+      Participants:
         example:
         - "5511999999999"
         - "5511888888888"
@@ -81,505 +80,505 @@ definitions:
     type: object
   CreateNewsletterReq:
     properties:
-      description:
+      Description:
         type: string
-      name:
+      Name:
         type: string
-      picture:
+      Picture:
         type: string
     required:
-    - name
+    - Name
     type: object
   CreateWebhookReq:
     properties:
-      events:
+      Events:
         items:
           type: string
         type: array
-      natsEnabled:
+      NatsEnabled:
         type: boolean
-      secret:
+      Secret:
         type: string
-      url:
+      URL:
         type: string
     required:
-    - events
-    - url
+    - Events
+    - URL
     type: object
   DeleteMessageReq:
     properties:
-      jid:
+      Mid:
         type: string
-      mid:
+      Phone:
         type: string
     required:
-    - jid
-    - mid
+    - Mid
+    - Phone
     type: object
   EditLabelReq:
     properties:
-      color:
+      Color:
         type: integer
-      deleted:
+      Deleted:
         type: boolean
-      labelId:
+      LabelId:
         type: string
-      name:
+      Name:
         type: string
     required:
-    - labelId
+    - LabelId
     type: object
   EditMessageReq:
     properties:
-      jid:
+      Body:
         type: string
-      mid:
+      Mid:
         type: string
-      text:
+      Phone:
         type: string
     required:
-    - jid
-    - mid
-    - text
+    - Body
+    - Mid
+    - Phone
     type: object
   GetAvatarReq:
     properties:
-      jid:
+      Phone:
         type: string
     required:
-    - jid
+    - Phone
     type: object
   GetAvatarResp:
     properties:
-      id:
+      Id:
         type: string
-      url:
+      URL:
         type: string
     type: object
   GetUserInfoReq:
     properties:
-      jids:
+      Phones:
         items:
           type: string
         type: array
     required:
-    - jids
+    - Phones
     type: object
   GroupInviteLinkResp:
     properties:
-      link:
+      Link:
         type: string
     type: object
   GroupJIDReq:
     properties:
-      groupJid:
+      GroupJid:
         type: string
     required:
-    - groupJid
+    - GroupJid
     type: object
   GroupJoinReq:
     properties:
-      inviteCode:
+      InviteCode:
         type: string
     required:
-    - inviteCode
+    - InviteCode
     type: object
   GroupParticipantReq:
     properties:
-      action:
+      Action:
         example: add
         type: string
-      groupJid:
+      GroupJid:
         type: string
-      participants:
+      Participants:
         example:
         - "5511999999999"
         items:
           type: string
         type: array
     required:
-    - action
-    - groupJid
-    - participants
+    - Action
+    - GroupJid
+    - Participants
     type: object
   GroupPhotoReq:
     properties:
-      groupJid:
+      GroupJid:
         type: string
-      photoBase64:
+      Image:
         type: string
     required:
-    - groupJid
-    - photoBase64
+    - GroupJid
+    - Image
     type: object
   GroupRequestActionReq:
     properties:
-      action:
+      Action:
         example: approve
         type: string
-      groupJid:
+      GroupJid:
         type: string
-      participants:
+      Participants:
         example:
         - "5511999999999"
         items:
           type: string
         type: array
     required:
-    - action
-    - groupJid
-    - participants
+    - Action
+    - GroupJid
+    - Participants
     type: object
   GroupSettingReq:
     properties:
-      enabled:
+      Enabled:
         type: boolean
-      groupJid:
+      GroupJid:
         type: string
     required:
-    - groupJid
+    - GroupJid
     type: object
   GroupTextReq:
     properties:
-      groupJid:
+      GroupJid:
         type: string
-      text:
+      Text:
         type: string
     required:
-    - groupJid
-    - text
+    - GroupJid
+    - Text
     type: object
   LabelChatReq:
     properties:
-      jid:
+      Jid:
         type: string
-      labelId:
+      LabelId:
         type: string
     required:
-    - jid
-    - labelId
+    - Jid
+    - LabelId
     type: object
   LabelMessageReq:
     properties:
-      jid:
+      Jid:
         type: string
-      labelId:
+      LabelId:
         type: string
-      mid:
+      Mid:
         type: string
     required:
-    - jid
-    - labelId
-    - mid
+    - Jid
+    - LabelId
+    - Mid
     type: object
   MarkReadReq:
     properties:
-      jid:
+      Mid:
         type: string
-      mid:
+      Phone:
         type: string
     required:
-    - jid
-    - mid
+    - Mid
+    - Phone
     type: object
   MidResp:
     properties:
-      mid:
+      Mid:
         type: string
     type: object
   NewsletterMessageReq:
     properties:
-      beforeId:
+      BeforeId:
         type: integer
-      count:
+      Count:
         type: integer
-      newsletterJid:
+      NewsletterJid:
         type: string
     required:
-    - newsletterJid
+    - NewsletterJid
     type: object
   NewsletterSubscribeReq:
     properties:
-      newsletterJid:
+      NewsletterJid:
         type: string
     required:
-    - newsletterJid
+    - NewsletterJid
     type: object
   PictureIDResp:
     properties:
-      pictureId:
+      PictureId:
         type: string
     type: object
   QRResp:
     properties:
-      image:
+      Image:
         type: string
-      qr:
+      QRCode:
         type: string
     type: object
   ReactMessageReq:
     properties:
-      jid:
+      Mid:
         type: string
-      mid:
+      Phone:
         type: string
-      reaction:
+      Reaction:
         type: string
     required:
-    - jid
-    - mid
-    - reaction
+    - Mid
+    - Phone
+    - Reaction
     type: object
   SendContactReq:
     properties:
-      jid:
+      Name:
         type: string
-      name:
+      Phone:
         type: string
-      vcard:
+      Vcard:
         type: string
     required:
-    - jid
-    - name
-    - vcard
+    - Name
+    - Phone
+    - Vcard
     type: object
   SendLinkReq:
     properties:
-      description:
+      Description:
         type: string
-      jid:
+      Phone:
         type: string
-      title:
+      Title:
         type: string
-      url:
+      URL:
         type: string
     required:
-    - jid
-    - url
+    - Phone
+    - URL
     type: object
   SendLocationReq:
     properties:
-      address:
+      Address:
         type: string
-      jid:
+      Latitude:
+        type: number
+      Longitude:
+        type: number
+      Name:
         type: string
-      lat:
-        type: number
-      lng:
-        type: number
-      name:
+      Phone:
         type: string
     required:
-    - jid
-    - lat
-    - lng
+    - Latitude
+    - Longitude
+    - Phone
     type: object
   SendMediaReq:
     properties:
-      base64:
+      Base64:
         type: string
-      caption:
+      Caption:
         type: string
-      filename:
+      FileName:
         type: string
-      jid:
+      MimeType:
         type: string
-      mimeType:
+      Phone:
         type: string
     required:
-    - jid
-    - mimeType
+    - MimeType
+    - Phone
     type: object
   SendPollReq:
     properties:
-      jid:
+      Name:
         type: string
-      name:
-        type: string
-      options:
+      Options:
         items:
           type: string
         minItems: 2
         type: array
-      selectableCount:
+      Phone:
+        type: string
+      SelectableCount:
         type: integer
     required:
-    - jid
-    - name
-    - options
+    - Name
+    - Options
+    - Phone
     type: object
   SendStickerReq:
     properties:
-      base64:
+      Base64:
         type: string
-      jid:
+      MimeType:
         type: string
-      mimeType:
+      Phone:
         type: string
     required:
-    - base64
-    - jid
-    - mimeType
+    - Base64
+    - MimeType
+    - Phone
     type: object
   SendTextReq:
     properties:
-      jid:
+      Body:
         type: string
-      text:
+      Phone:
         type: string
     required:
-    - jid
-    - text
+    - Body
+    - Phone
     type: object
   SessionCreateReq:
     properties:
-      apiKey:
+      ApiKey:
         type: string
-      name:
+      Name:
         type: string
-      proxy:
+      Proxy:
         $ref: '#/definitions/SessionProxy'
-      settings:
+      Settings:
         $ref: '#/definitions/SessionSettings'
-      webhook:
+      Webhook:
         $ref: '#/definitions/WebhookCreateInline'
     required:
-    - name
+    - Name
     type: object
   SessionCreatedResp:
     properties:
-      apiKey:
+      ApiKey:
         type: string
-      connected:
+      Connected:
         type: integer
-      createdAt:
+      CreatedAt:
         type: string
-      id:
+      Id:
         type: string
-      jid:
+      Jid:
         type: string
-      name:
+      Name:
         type: string
-      proxy:
+      Proxy:
         $ref: '#/definitions/SessionProxy'
-      settings:
+      Settings:
         $ref: '#/definitions/SessionSettings'
-      status:
+      Status:
         type: string
-      updatedAt:
+      UpdatedAt:
         type: string
-      webhook:
+      Webhook:
         $ref: '#/definitions/WebhookResp'
     type: object
   SessionProxy:
     properties:
-      host:
+      Host:
         type: string
-      password:
+      Password:
         type: string
-      port:
+      Port:
         type: integer
-      protocol:
+      Protocol:
         type: string
-      username:
+      Username:
         type: string
     type: object
   SessionResp:
     properties:
-      connected:
+      Connected:
         type: integer
-      createdAt:
+      CreatedAt:
         type: string
-      id:
+      Id:
         type: string
-      jid:
+      Jid:
         type: string
-      name:
+      Name:
         type: string
-      proxy:
+      Proxy:
         $ref: '#/definitions/SessionProxy'
-      settings:
+      Settings:
         $ref: '#/definitions/SessionSettings'
-      status:
+      Status:
         type: string
-      updatedAt:
+      UpdatedAt:
         type: string
     type: object
   SessionSettings:
     properties:
-      alwaysOnline:
+      AlwaysOnline:
         type: boolean
-      ignoreGroups:
+      IgnoreGroups:
         type: boolean
-      ignoreStatus:
+      IgnoreStatus:
         type: boolean
-      msgRejectCall:
+      MsgRejectCall:
         type: string
-      readMessages:
+      ReadMessages:
         type: boolean
-      rejectCall:
+      RejectCall:
         type: boolean
     type: object
   SetPresenceReq:
     properties:
-      jid:
+      Phone:
         type: string
-      presence:
+      State:
         type: string
     required:
-    - jid
-    - presence
+    - Phone
+    - State
     type: object
   SetProfilePictureReq:
     properties:
-      base64:
+      Image:
         type: string
     required:
-    - base64
+    - Image
     type: object
   UserInfoResp:
     properties:
-      devices:
+      Devices:
         items:
           type: string
         type: array
-      jid:
+      Jid:
         type: string
-      picture:
+      Picture:
         type: string
-      status:
+      Status:
         type: string
     type: object
   WebhookCreateInline:
     properties:
-      events:
+      Events:
         items:
           type: string
         type: array
-      url:
+      URL:
         type: string
     type: object
   WebhookResp:
     properties:
-      createdAt:
+      CreatedAt:
         type: string
-      enabled:
+      Enabled:
         type: boolean
-      events:
+      Events:
         items:
           type: string
         type: array
-      id:
+      Id:
         type: string
-      natsEnabled:
+      NatsEnabled:
         type: boolean
-      secret:
+      Secret:
         type: string
-      sessionId:
+      SessionId:
         type: string
-      updatedAt:
+      URL:
         type: string
-      url:
+      UpdatedAt:
         type: string
     type: object
 info:

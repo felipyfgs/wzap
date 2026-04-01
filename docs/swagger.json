@@ -3095,13 +3095,13 @@
         "APIError": {
             "type": "object",
             "properties": {
-                "error": {
+                "Error": {
                     "type": "string"
                 },
-                "message": {
+                "Message": {
                     "type": "string"
                 },
-                "success": {
+                "Success": {
                     "type": "boolean"
                 }
             }
@@ -3109,11 +3109,11 @@
         "APIResponse": {
             "type": "object",
             "properties": {
-                "data": {},
-                "message": {
+                "Data": {},
+                "Message": {
                     "type": "string"
                 },
-                "success": {
+                "Success": {
                     "type": "boolean"
                 }
             }
@@ -3121,10 +3121,10 @@
         "BlockContactReq": {
             "type": "object",
             "required": [
-                "jid"
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3132,10 +3132,10 @@
         "ChatActionReq": {
             "type": "object",
             "required": [
-                "jid"
+                "Jid"
             ],
             "properties": {
-                "jid": {
+                "Jid": {
                     "type": "string"
                 }
             }
@@ -3143,10 +3143,10 @@
         "CheckContactReq": {
             "type": "object",
             "required": [
-                "phones"
+                "Phones"
             ],
             "properties": {
-                "phones": {
+                "Phones": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3157,14 +3157,14 @@
         "CommunityParticipantReq": {
             "type": "object",
             "required": [
-                "communityJid",
-                "participants"
+                "CommunityJid",
+                "Participants"
             ],
             "properties": {
-                "communityJid": {
+                "CommunityJid": {
                     "type": "string"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3175,8 +3175,7 @@
         "ConnectResp": {
             "type": "object",
             "properties": {
-                "status": {
-                    "description": "Status is one of: CONNECTED, PAIRING, CONNECTING",
+                "Status": {
                     "type": "string"
                 }
             }
@@ -3184,13 +3183,13 @@
         "CreateCommunityReq": {
             "type": "object",
             "required": [
-                "name"
+                "Name"
             ],
             "properties": {
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 }
             }
@@ -3198,11 +3197,11 @@
         "CreateGroupReq": {
             "type": "object",
             "properties": {
-                "name": {
+                "Name": {
                     "type": "string",
                     "example": "My Awesome Group"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3217,16 +3216,16 @@
         "CreateNewsletterReq": {
             "type": "object",
             "required": [
-                "name"
+                "Name"
             ],
             "properties": {
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "picture": {
+                "Picture": {
                     "type": "string"
                 }
             }
@@ -3234,23 +3233,23 @@
         "CreateWebhookReq": {
             "type": "object",
             "required": [
-                "events",
-                "url"
+                "Events",
+                "URL"
             ],
             "properties": {
-                "events": {
+                "Events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "natsEnabled": {
+                "NatsEnabled": {
                     "type": "boolean"
                 },
-                "secret": {
+                "Secret": {
                     "type": "string"
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3258,14 +3257,14 @@
         "DeleteMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid"
+                "Mid",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Mid": {
                     "type": "string"
                 },
-                "mid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3273,19 +3272,19 @@
         "EditLabelReq": {
             "type": "object",
             "required": [
-                "labelId"
+                "LabelId"
             ],
             "properties": {
-                "color": {
+                "Color": {
                     "type": "integer"
                 },
-                "deleted": {
+                "Deleted": {
                     "type": "boolean"
                 },
-                "labelId": {
+                "LabelId": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 }
             }
@@ -3293,18 +3292,18 @@
         "EditMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid",
-                "text"
+                "Body",
+                "Mid",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Body": {
                     "type": "string"
                 },
-                "mid": {
+                "Mid": {
                     "type": "string"
                 },
-                "text": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3312,10 +3311,10 @@
         "GetAvatarReq": {
             "type": "object",
             "required": [
-                "jid"
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3323,10 +3322,10 @@
         "GetAvatarResp": {
             "type": "object",
             "properties": {
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3334,10 +3333,10 @@
         "GetUserInfoReq": {
             "type": "object",
             "required": [
-                "jids"
+                "Phones"
             ],
             "properties": {
-                "jids": {
+                "Phones": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3348,7 +3347,7 @@
         "GroupInviteLinkResp": {
             "type": "object",
             "properties": {
-                "link": {
+                "Link": {
                     "type": "string"
                 }
             }
@@ -3356,10 +3355,10 @@
         "GroupJIDReq": {
             "type": "object",
             "required": [
-                "groupJid"
+                "GroupJid"
             ],
             "properties": {
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 }
             }
@@ -3367,10 +3366,10 @@
         "GroupJoinReq": {
             "type": "object",
             "required": [
-                "inviteCode"
+                "InviteCode"
             ],
             "properties": {
-                "inviteCode": {
+                "InviteCode": {
                     "type": "string"
                 }
             }
@@ -3378,19 +3377,19 @@
         "GroupParticipantReq": {
             "type": "object",
             "required": [
-                "action",
-                "groupJid",
-                "participants"
+                "Action",
+                "GroupJid",
+                "Participants"
             ],
             "properties": {
-                "action": {
+                "Action": {
                     "type": "string",
                     "example": "add"
                 },
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3404,14 +3403,14 @@
         "GroupPhotoReq": {
             "type": "object",
             "required": [
-                "groupJid",
-                "photoBase64"
+                "GroupJid",
+                "Image"
             ],
             "properties": {
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "photoBase64": {
+                "Image": {
                     "type": "string"
                 }
             }
@@ -3419,19 +3418,19 @@
         "GroupRequestActionReq": {
             "type": "object",
             "required": [
-                "action",
-                "groupJid",
-                "participants"
+                "Action",
+                "GroupJid",
+                "Participants"
             ],
             "properties": {
-                "action": {
+                "Action": {
                     "type": "string",
                     "example": "approve"
                 },
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "participants": {
+                "Participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3445,13 +3444,13 @@
         "GroupSettingReq": {
             "type": "object",
             "required": [
-                "groupJid"
+                "GroupJid"
             ],
             "properties": {
-                "enabled": {
+                "Enabled": {
                     "type": "boolean"
                 },
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 }
             }
@@ -3459,14 +3458,14 @@
         "GroupTextReq": {
             "type": "object",
             "required": [
-                "groupJid",
-                "text"
+                "GroupJid",
+                "Text"
             ],
             "properties": {
-                "groupJid": {
+                "GroupJid": {
                     "type": "string"
                 },
-                "text": {
+                "Text": {
                     "type": "string"
                 }
             }
@@ -3474,14 +3473,14 @@
         "LabelChatReq": {
             "type": "object",
             "required": [
-                "jid",
-                "labelId"
+                "Jid",
+                "LabelId"
             ],
             "properties": {
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "labelId": {
+                "LabelId": {
                     "type": "string"
                 }
             }
@@ -3489,18 +3488,18 @@
         "LabelMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "labelId",
-                "mid"
+                "Jid",
+                "LabelId",
+                "Mid"
             ],
             "properties": {
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "labelId": {
+                "LabelId": {
                     "type": "string"
                 },
-                "mid": {
+                "Mid": {
                     "type": "string"
                 }
             }
@@ -3508,14 +3507,14 @@
         "MarkReadReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid"
+                "Mid",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Mid": {
                     "type": "string"
                 },
-                "mid": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3523,7 +3522,7 @@
         "MidResp": {
             "type": "object",
             "properties": {
-                "mid": {
+                "Mid": {
                     "type": "string"
                 }
             }
@@ -3531,16 +3530,16 @@
         "NewsletterMessageReq": {
             "type": "object",
             "required": [
-                "newsletterJid"
+                "NewsletterJid"
             ],
             "properties": {
-                "beforeId": {
+                "BeforeId": {
                     "type": "integer"
                 },
-                "count": {
+                "Count": {
                     "type": "integer"
                 },
-                "newsletterJid": {
+                "NewsletterJid": {
                     "type": "string"
                 }
             }
@@ -3548,10 +3547,10 @@
         "NewsletterSubscribeReq": {
             "type": "object",
             "required": [
-                "newsletterJid"
+                "NewsletterJid"
             ],
             "properties": {
-                "newsletterJid": {
+                "NewsletterJid": {
                     "type": "string"
                 }
             }
@@ -3559,7 +3558,7 @@
         "PictureIDResp": {
             "type": "object",
             "properties": {
-                "pictureId": {
+                "PictureId": {
                     "type": "string"
                 }
             }
@@ -3567,10 +3566,10 @@
         "QRResp": {
             "type": "object",
             "properties": {
-                "image": {
+                "Image": {
                     "type": "string"
                 },
-                "qr": {
+                "QRCode": {
                     "type": "string"
                 }
             }
@@ -3578,18 +3577,18 @@
         "ReactMessageReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mid",
-                "reaction"
+                "Mid",
+                "Phone",
+                "Reaction"
             ],
             "properties": {
-                "jid": {
+                "Mid": {
                     "type": "string"
                 },
-                "mid": {
+                "Phone": {
                     "type": "string"
                 },
-                "reaction": {
+                "Reaction": {
                     "type": "string"
                 }
             }
@@ -3597,18 +3596,18 @@
         "SendContactReq": {
             "type": "object",
             "required": [
-                "jid",
-                "name",
-                "vcard"
+                "Name",
+                "Phone",
+                "Vcard"
             ],
             "properties": {
-                "jid": {
+                "Name": {
                     "type": "string"
                 },
-                "name": {
+                "Phone": {
                     "type": "string"
                 },
-                "vcard": {
+                "Vcard": {
                     "type": "string"
                 }
             }
@@ -3616,20 +3615,20 @@
         "SendLinkReq": {
             "type": "object",
             "required": [
-                "jid",
-                "url"
+                "Phone",
+                "URL"
             ],
             "properties": {
-                "description": {
+                "Description": {
                     "type": "string"
                 },
-                "jid": {
+                "Phone": {
                     "type": "string"
                 },
-                "title": {
+                "Title": {
                     "type": "string"
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3637,24 +3636,24 @@
         "SendLocationReq": {
             "type": "object",
             "required": [
-                "jid",
-                "lat",
-                "lng"
+                "Latitude",
+                "Longitude",
+                "Phone"
             ],
             "properties": {
-                "address": {
+                "Address": {
                     "type": "string"
                 },
-                "jid": {
+                "Latitude": {
+                    "type": "number"
+                },
+                "Longitude": {
+                    "type": "number"
+                },
+                "Name": {
                     "type": "string"
                 },
-                "lat": {
-                    "type": "number"
-                },
-                "lng": {
-                    "type": "number"
-                },
-                "name": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3662,23 +3661,23 @@
         "SendMediaReq": {
             "type": "object",
             "required": [
-                "jid",
-                "mimeType"
+                "MimeType",
+                "Phone"
             ],
             "properties": {
-                "base64": {
+                "Base64": {
                     "type": "string"
                 },
-                "caption": {
+                "Caption": {
                     "type": "string"
                 },
-                "filename": {
+                "FileName": {
                     "type": "string"
                 },
-                "jid": {
+                "MimeType": {
                     "type": "string"
                 },
-                "mimeType": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3686,25 +3685,25 @@
         "SendPollReq": {
             "type": "object",
             "required": [
-                "jid",
-                "name",
-                "options"
+                "Name",
+                "Options",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Name": {
                     "type": "string"
                 },
-                "name": {
-                    "type": "string"
-                },
-                "options": {
+                "Options": {
                     "type": "array",
                     "minItems": 2,
                     "items": {
                         "type": "string"
                     }
                 },
-                "selectableCount": {
+                "Phone": {
+                    "type": "string"
+                },
+                "SelectableCount": {
                     "type": "integer"
                 }
             }
@@ -3712,18 +3711,18 @@
         "SendStickerReq": {
             "type": "object",
             "required": [
-                "base64",
-                "jid",
-                "mimeType"
+                "Base64",
+                "MimeType",
+                "Phone"
             ],
             "properties": {
-                "base64": {
+                "Base64": {
                     "type": "string"
                 },
-                "jid": {
+                "MimeType": {
                     "type": "string"
                 },
-                "mimeType": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3731,14 +3730,14 @@
         "SendTextReq": {
             "type": "object",
             "required": [
-                "jid",
-                "text"
+                "Body",
+                "Phone"
             ],
             "properties": {
-                "jid": {
+                "Body": {
                     "type": "string"
                 },
-                "text": {
+                "Phone": {
                     "type": "string"
                 }
             }
@@ -3746,22 +3745,22 @@
         "SessionCreateReq": {
             "type": "object",
             "required": [
-                "name"
+                "Name"
             ],
             "properties": {
-                "apiKey": {
+                "ApiKey": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "proxy": {
+                "Proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "settings": {
+                "Settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "webhook": {
+                "Webhook": {
                     "$ref": "#/definitions/WebhookCreateInline"
                 }
             }
@@ -3769,37 +3768,37 @@
         "SessionCreatedResp": {
             "type": "object",
             "properties": {
-                "apiKey": {
+                "ApiKey": {
                     "type": "string"
                 },
-                "connected": {
+                "Connected": {
                     "type": "integer"
                 },
-                "createdAt": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "proxy": {
+                "Proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "settings": {
+                "Settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "status": {
+                "Status": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "UpdatedAt": {
                     "type": "string"
                 },
-                "webhook": {
+                "Webhook": {
                     "$ref": "#/definitions/WebhookResp"
                 }
             }
@@ -3807,19 +3806,19 @@
         "SessionProxy": {
             "type": "object",
             "properties": {
-                "host": {
+                "Host": {
                     "type": "string"
                 },
-                "password": {
+                "Password": {
                     "type": "string"
                 },
-                "port": {
+                "Port": {
                     "type": "integer"
                 },
-                "protocol": {
+                "Protocol": {
                     "type": "string"
                 },
-                "username": {
+                "Username": {
                     "type": "string"
                 }
             }
@@ -3827,31 +3826,31 @@
         "SessionResp": {
             "type": "object",
             "properties": {
-                "connected": {
+                "Connected": {
                     "type": "integer"
                 },
-                "createdAt": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "name": {
+                "Name": {
                     "type": "string"
                 },
-                "proxy": {
+                "Proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "settings": {
+                "Settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "status": {
+                "Status": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }
@@ -3859,22 +3858,22 @@
         "SessionSettings": {
             "type": "object",
             "properties": {
-                "alwaysOnline": {
+                "AlwaysOnline": {
                     "type": "boolean"
                 },
-                "ignoreGroups": {
+                "IgnoreGroups": {
                     "type": "boolean"
                 },
-                "ignoreStatus": {
+                "IgnoreStatus": {
                     "type": "boolean"
                 },
-                "msgRejectCall": {
+                "MsgRejectCall": {
                     "type": "string"
                 },
-                "readMessages": {
+                "ReadMessages": {
                     "type": "boolean"
                 },
-                "rejectCall": {
+                "RejectCall": {
                     "type": "boolean"
                 }
             }
@@ -3882,14 +3881,14 @@
         "SetPresenceReq": {
             "type": "object",
             "required": [
-                "jid",
-                "presence"
+                "Phone",
+                "State"
             ],
             "properties": {
-                "jid": {
+                "Phone": {
                     "type": "string"
                 },
-                "presence": {
+                "State": {
                     "type": "string"
                 }
             }
@@ -3897,10 +3896,10 @@
         "SetProfilePictureReq": {
             "type": "object",
             "required": [
-                "base64"
+                "Image"
             ],
             "properties": {
-                "base64": {
+                "Image": {
                     "type": "string"
                 }
             }
@@ -3908,19 +3907,19 @@
         "UserInfoResp": {
             "type": "object",
             "properties": {
-                "devices": {
+                "Devices": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "jid": {
+                "Jid": {
                     "type": "string"
                 },
-                "picture": {
+                "Picture": {
                     "type": "string"
                 },
-                "status": {
+                "Status": {
                     "type": "string"
                 }
             }
@@ -3928,13 +3927,13 @@
         "WebhookCreateInline": {
             "type": "object",
             "properties": {
-                "events": {
+                "Events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "url": {
+                "URL": {
                     "type": "string"
                 }
             }
@@ -3942,34 +3941,34 @@
         "WebhookResp": {
             "type": "object",
             "properties": {
-                "createdAt": {
+                "CreatedAt": {
                     "type": "string"
                 },
-                "enabled": {
+                "Enabled": {
                     "type": "boolean"
                 },
-                "events": {
+                "Events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "id": {
+                "Id": {
                     "type": "string"
                 },
-                "natsEnabled": {
+                "NatsEnabled": {
                     "type": "boolean"
                 },
-                "secret": {
+                "Secret": {
                     "type": "string"
                 },
-                "sessionId": {
+                "SessionId": {
                     "type": "string"
                 },
-                "updatedAt": {
+                "URL": {
                     "type": "string"
                 },
-                "url": {
+                "UpdatedAt": {
                     "type": "string"
                 }
             }

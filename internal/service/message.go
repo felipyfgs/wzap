@@ -36,13 +36,13 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 		return "", fmt.Errorf("client not connected")
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
 
 	msg := &waE2E.Message{
-		Conversation: proto.String(req.Text),
+		Conversation: proto.String(req.Body),
 	}
 
 	resp, err := client.SendMessage(ctx, jid, msg)
@@ -78,7 +78,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		return "", fmt.Errorf("client not connected")
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
@@ -119,16 +119,16 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			FileLength:    proto.Uint64(uint64(len(data))),
 		}
 	case whatsmeow.MediaDocument:
-		if req.Filename == "" {
-			req.Filename = "document-" + uuid.NewString()
+		if req.FileName == "" {
+			req.FileName = "document-" + uuid.NewString()
 			ext, _ := mime.ExtensionsByType(req.MimeType)
 			if len(ext) > 0 {
-				req.Filename += ext[0]
+				req.FileName += ext[0]
 			}
 		}
 		msg.DocumentMessage = &waE2E.DocumentMessage{
-			Title:         proto.String(req.Filename),
-			FileName:      proto.String(filepath.Base(req.Filename)),
+			Title:         proto.String(req.FileName),
+			FileName:      proto.String(filepath.Base(req.FileName)),
 			Mimetype:      proto.String(req.MimeType),
 			URL:           proto.String(uploaded.URL),
 			DirectPath:    proto.String(uploaded.DirectPath),
@@ -164,7 +164,7 @@ func (s *MessageService) SendContact(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
@@ -190,15 +190,15 @@ func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
 
 	msg := &waE2E.Message{
 		LocationMessage: &waE2E.LocationMessage{
-			DegreesLatitude:  proto.Float64(req.Lat),
-			DegreesLongitude: proto.Float64(req.Lng),
+			DegreesLatitude:  proto.Float64(req.Latitude),
+			DegreesLongitude: proto.Float64(req.Longitude),
 			Name:             proto.String(req.Name),
 			Address:          proto.String(req.Address),
 		},
@@ -218,7 +218,7 @@ func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
@@ -239,7 +239,7 @@ func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
@@ -280,7 +280,7 @@ func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
@@ -307,13 +307,13 @@ func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
 
 	newMsg := &waE2E.Message{
-		Conversation: proto.String(req.Text),
+		Conversation: proto.String(req.Body),
 	}
 
 	msg := client.BuildEdit(jid, req.MessageID, newMsg)
@@ -332,7 +332,7 @@ func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, re
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
@@ -353,7 +353,7 @@ func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return "", err
 	}
@@ -374,7 +374,7 @@ func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req dto
 		return err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return err
 	}
@@ -388,14 +388,14 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 		return err
 	}
 
-	jid, err := parseJID(req.JID)
+	jid, err := parseJID(req.Phone)
 	if err != nil {
 		return err
 	}
 
 	var presence types.ChatPresence
 	var media types.ChatPresenceMedia
-	switch req.Presence {
+	switch req.State {
 	case "typing":
 		presence = types.ChatPresenceComposing
 		media = types.ChatPresenceMediaText
@@ -406,7 +406,7 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 		presence = types.ChatPresencePaused
 		media = types.ChatPresenceMediaText
 	default:
-		return fmt.Errorf("invalid presence type: %s", req.Presence)
+		return fmt.Errorf("invalid presence type: %s", req.State)
 	}
 
 	return client.SendChatPresence(ctx, jid, presence, media)

@@ -82,7 +82,7 @@ func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req dt
 		return nil, fmt.Errorf("client not connected")
 	}
 
-	jid, err := types.ParseJID(req.JID)
+	jid, err := types.ParseJID(req.Phone)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func (s *ContactService) Block(ctx context.Context, sessionID string, req dto.Bl
 		return nil, fmt.Errorf("client not connected")
 	}
 
-	jid, err := types.ParseJID(req.JID)
+	jid, err := types.ParseJID(req.Phone)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func (s *ContactService) Unblock(ctx context.Context, sessionID string, req dto.
 		return nil, fmt.Errorf("client not connected")
 	}
 
-	jid, err := types.ParseJID(req.JID)
+	jid, err := types.ParseJID(req.Phone)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (s *ContactService) GetUserInfo(ctx context.Context, sessionID string, req 
 	}
 
 	var jids []types.JID
-	for _, jidStr := range req.JIDs {
+	for _, jidStr := range req.Phones {
 		jid, err := types.ParseJID(jidStr)
 		if err == nil {
 			jids = append(jids, jid)
@@ -207,7 +207,7 @@ func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string
 		return "", fmt.Errorf("client not connected")
 	}
 
-	data, err := base64.StdEncoding.DecodeString(req.Base64)
+	data, err := base64.StdEncoding.DecodeString(req.Image)
 	if err != nil {
 		return "", fmt.Errorf("invalid base64: %w", err)
 	}

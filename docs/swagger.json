@@ -352,7 +352,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/GetAvatarResp"
                                         }
                                     }
@@ -506,7 +506,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/definitions/UserInfoResp"
@@ -585,7 +585,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/PictureIDResp"
                                         }
                                     }
@@ -910,7 +910,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/GroupInviteLinkResp"
                                         }
                                     }
@@ -1443,7 +1443,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1506,7 +1506,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1569,7 +1569,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1632,7 +1632,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1695,7 +1695,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1758,7 +1758,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1821,7 +1821,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1884,7 +1884,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1947,7 +1947,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2061,7 +2061,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2175,7 +2175,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2238,7 +2238,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2301,7 +2301,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2572,7 +2572,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/definitions/SessionResp"
@@ -2630,7 +2630,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/SessionCreatedResp"
                                         }
                                     }
@@ -2688,7 +2688,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/SessionResp"
                                         }
                                     }
@@ -2778,7 +2778,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/ConnectResp"
                                         }
                                     }
@@ -2876,7 +2876,7 @@
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/QRResp"
                                         }
                                     }

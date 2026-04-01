@@ -69,7 +69,7 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.GetAvatarReq true "JID payload"
-// @Success     200  {object} dto.APIResponse{data=dto.GetAvatarResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.GetAvatarResp}
 // @Security    ApiKey
 // @Router      /contacts/avatar [post]
 func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
@@ -167,7 +167,7 @@ func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.GetUserInfoReq true "JIDs payload"
-// @Success     200  {object} dto.APIResponse{data=[]dto.UserInfoResp}
+// @Success     200  {object} dto.APIResponse{Data=[]dto.UserInfoResp}
 // @Security    ApiKey
 // @Router      /contacts/info [post]
 func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
@@ -213,7 +213,7 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SetProfilePictureReq true "Base64 image payload"
-// @Success     200  {object} dto.APIResponse{data=dto.PictureIDResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.PictureIDResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey

@@ -801,7 +801,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/GetAvatarResp'
               type: object
       security:
@@ -895,7 +895,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   items:
                     $ref: '#/definitions/UserInfoResp'
                   type: array
@@ -943,7 +943,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/PictureIDResp'
               type: object
         "400":
@@ -1142,7 +1142,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/GroupInviteLinkResp'
               type: object
       security:
@@ -1468,7 +1468,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1505,7 +1505,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1542,7 +1542,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1580,7 +1580,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1617,7 +1617,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1654,7 +1654,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1692,7 +1692,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1730,7 +1730,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1768,7 +1768,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1839,7 +1839,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1908,7 +1908,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1945,7 +1945,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -1982,7 +1982,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/MidResp'
               type: object
         "400":
@@ -2150,7 +2150,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   items:
                     $ref: '#/definitions/SessionResp'
                   type: array
@@ -2185,7 +2185,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/SessionCreatedResp'
               type: object
         "400":
@@ -2245,7 +2245,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/SessionResp'
               type: object
         "404":
@@ -2276,7 +2276,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/ConnectResp'
               type: object
         "409":
@@ -2337,7 +2337,7 @@ paths:
             allOf:
             - $ref: '#/definitions/APIResponse'
             - properties:
-                data:
+                Data:
                   $ref: '#/definitions/QRResp'
               type: object
         "404":

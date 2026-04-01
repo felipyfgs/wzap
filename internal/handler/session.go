@@ -32,7 +32,7 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SessionCreateReq true "Session data"
-// @Success     201  {object} dto.APIResponse{data=dto.SessionCreatedResp}
+// @Success     201  {object} dto.APIResponse{Data=dto.SessionCreatedResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     403  {object} dto.APIError
 // @Security    ApiKey
@@ -60,7 +60,7 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 // @Description Returns all sessions. APIKey is never included in responses.
 // @Tags        Sessions
 // @Produce     json
-// @Success     200 {object} dto.APIResponse{data=[]dto.SessionResp}
+// @Success     200 {object} dto.APIResponse{Data=[]dto.SessionResp}
 // @Failure     403 {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions [get]
@@ -83,7 +83,7 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Success     200 {object} dto.APIResponse{data=dto.SessionResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.SessionResp}
 // @Failure     404 {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions/{sessionId} [get]
@@ -122,7 +122,7 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Success     200 {object} dto.APIResponse{data=dto.ConnectResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.ConnectResp}
 // @Failure     409 {object} dto.APIError "QR pairing already pending"
 // @Failure     500 {object} dto.APIError
 // @Security    ApiKey
@@ -173,7 +173,7 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Success     200 {object} dto.APIResponse{data=dto.QRResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.QRResp}
 // @Failure     404 {object} dto.APIError "No QR code available yet"
 // @Security    ApiKey
 // @Router      /sessions/{sessionId}/qr [get]

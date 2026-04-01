@@ -23,7 +23,7 @@ func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendTextReq true "Message payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -53,7 +53,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -69,7 +69,7 @@ func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -85,7 +85,7 @@ func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -101,7 +101,7 @@ func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -139,7 +139,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendContactReq true "Contact payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -167,7 +167,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendLocationReq true "Location payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -195,7 +195,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendPollReq true "Poll payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -223,7 +223,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendStickerReq true "Sticker payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -251,7 +251,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendLinkReq true "Link payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -279,7 +279,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.EditMessageReq true "Edit payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -307,7 +307,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.DeleteMessageReq true "Delete payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey
@@ -335,7 +335,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.ReactMessageReq true "Reaction payload"
-// @Success     200  {object} dto.APIResponse{data=dto.MidResp}
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    ApiKey

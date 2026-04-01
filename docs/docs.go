@@ -360,7 +360,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/GetAvatarResp"
                                         }
                                     }
@@ -514,7 +514,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/definitions/UserInfoResp"
@@ -593,7 +593,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/PictureIDResp"
                                         }
                                     }
@@ -918,7 +918,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/GroupInviteLinkResp"
                                         }
                                     }
@@ -1451,7 +1451,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1514,7 +1514,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1577,7 +1577,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1640,7 +1640,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1703,7 +1703,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1766,7 +1766,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1829,7 +1829,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1892,7 +1892,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -1955,7 +1955,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2069,7 +2069,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2183,7 +2183,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2246,7 +2246,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2309,7 +2309,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/MidResp"
                                         }
                                     }
@@ -2580,7 +2580,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/definitions/SessionResp"
@@ -2638,7 +2638,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/SessionCreatedResp"
                                         }
                                     }
@@ -2696,7 +2696,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/SessionResp"
                                         }
                                     }
@@ -2786,7 +2786,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/ConnectResp"
                                         }
                                     }
@@ -2884,7 +2884,7 @@ const docTemplate = `{
                                 {
                                     "type": "object",
                                     "properties": {
-                                        "data": {
+                                        "Data": {
                                             "$ref": "#/definitions/QRResp"
                                         }
                                     }

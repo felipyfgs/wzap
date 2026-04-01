@@ -105,7 +105,7 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Param       reset query bool false "Reset the invite link"
-// @Success     200 {object} dto.APIResponse{data=dto.GroupInviteLinkResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.GroupInviteLinkResp}
 // @Security    ApiKey
 // @Router      /groups/invite-link [post]
 func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {

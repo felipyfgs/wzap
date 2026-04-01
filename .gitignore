@@ -58,3 +58,6 @@ ssl/
 
 # Kilo config (local)
 .kilo/
+
+# Factory MCP config (may contain credentials)
+.factory/mcp.json

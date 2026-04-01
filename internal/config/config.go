@@ -38,11 +38,11 @@ func Load() *Config {
 		LogLevel:    getEnv("LOG_LEVEL", "info"),
 		Environment: getEnv("ENVIRONMENT", "development"),
 
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://wzap:wzap123@localhost:5435/wzap?sslmode=disable"),
+		DatabaseURL: getEnv("DATABASE_URL", ""),
 
 		MinioEndpoint:  getEnv("MINIO_ENDPOINT", "localhost:9010"),
-		MinioAccessKey: getEnv("MINIO_ACCESS_KEY", "admin"),
-		MinioSecretKey: getEnv("MINIO_SECRET_KEY", "admin123"),
+		MinioAccessKey: getEnv("MINIO_ACCESS_KEY", ""),
+		MinioSecretKey: getEnv("MINIO_SECRET_KEY", ""),
 		MinioBucket:    getEnv("MINIO_BUCKET", "wzap-media"),
 		MinioUseSSL:    getEnvAsBool("MINIO_USE_SSL", false),
 

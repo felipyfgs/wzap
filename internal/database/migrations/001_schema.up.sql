@@ -2,74 +2,78 @@
 -- wzap Database Schema
 -- =====================================================
 
-CREATE OR REPLACE FUNCTION "updateUpdatedAtColumn"()
+CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW."updatedAt" = NOW();
+    NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
 -- =====================================================
--- Sessions Table (primary auth entity)
+-- Sessions Table
 -- =====================================================
-CREATE TABLE IF NOT EXISTS "wzSessions" (
-    "id" VARCHAR(100) PRIMARY KEY,
-    "name" VARCHAR(100) NOT NULL UNIQUE,
-    "apiKey" VARCHAR(255) NOT NULL UNIQUE,
-    "jid" VARCHAR(255) DEFAULT '',
-    "qrCode" TEXT DEFAULT '',
-    "connected" INTEGER DEFAULT 0,
-    "status" VARCHAR(50) NOT NULL DEFAULT 'disconnected',
-    "proxy" JSONB NOT NULL DEFAULT '{}',
-    "settings" JSONB NOT NULL DEFAULT '{}',
-    "metadata" JSONB,
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS wz_sessions (
+    id          VARCHAR(100) PRIMARY KEY,
+    name        VARCHAR(100) NOT NULL UNIQUE,
+    api_key     VARCHAR(255) NOT NULL UNIQUE,
+    jid         VARCHAR(255) NOT NULL DEFAULT '',
+    qr_code     TEXT NOT NULL DEFAULT '',
+    connected   INTEGER NOT NULL DEFAULT 0,
+    status      VARCHAR(50) NOT NULL DEFAULT 'disconnected',
+    proxy       JSONB NOT NULL DEFAULT '{}',
+    settings    JSONB NOT NULL DEFAULT '{}',
+    metadata    JSONB,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS "idxWzSessionsName" ON "wzSessions" ("name");
-CREATE UNIQUE INDEX IF NOT EXISTS "idxWzSessionsApiKey" ON "wzSessions" ("apiKey");
-CREATE INDEX IF NOT EXISTS "idxWzSessionsStatus" ON "wzSessions" ("status");
-CREATE INDEX IF NOT EXISTS "idxWzSessionsConnected" ON "wzSessions" ("connected");
+CREATE INDEX IF NOT EXISTS idx_wz_sessions_name
+    ON wz_sessions (name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wz_sessions_api_key
+    ON wz_sessions (api_key);
+CREATE INDEX IF NOT EXISTS idx_wz_sessions_status
+    ON wz_sessions (status);
+CREATE INDEX IF NOT EXISTS idx_wz_sessions_connected
+    ON wz_sessions (connected);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wz_sessions_jid
+    ON wz_sessions (jid)
+    WHERE jid IS NOT NULL AND jid != '';
 
-CREATE UNIQUE INDEX IF NOT EXISTS "idxWzSessionsJidUnique"
-    ON "wzSessions" ("jid")
-    WHERE "jid" IS NOT NULL AND "jid" != '';
+DROP TRIGGER IF EXISTS trg_wz_sessions_updated_at ON wz_sessions;
+CREATE TRIGGER trg_wz_sessions_updated_at
+    BEFORE UPDATE ON wz_sessions
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-DROP TRIGGER IF EXISTS "updateWzSessionsUpdatedAt" ON "wzSessions";
-CREATE TRIGGER "updateWzSessionsUpdatedAt"
-    BEFORE UPDATE ON "wzSessions"
-    FOR EACH ROW
-    EXECUTE FUNCTION "updateUpdatedAtColumn"();
-
-COMMENT ON TABLE "wzSessions" IS 'WhatsApp sessions managed by wzap';
-COMMENT ON COLUMN "wzSessions"."name" IS 'Unique URL-safe session identifier (^[a-zA-Z0-9_-]+$)';
-COMMENT ON COLUMN "wzSessions"."apiKey" IS 'API key for session-scoped authentication';
-COMMENT ON COLUMN "wzSessions"."jid" IS 'WhatsApp device JID from whatsmeow (set after pairing)';
+COMMENT ON TABLE  wz_sessions          IS 'WhatsApp sessions managed by wzap';
+COMMENT ON COLUMN wz_sessions.name     IS 'Unique URL-safe session identifier (^[a-zA-Z0-9_-]+$)';
+COMMENT ON COLUMN wz_sessions.api_key  IS 'API key for session-scoped authentication';
+COMMENT ON COLUMN wz_sessions.jid      IS 'WhatsApp device JID from whatsmeow (set after pairing)';
 
 -- =====================================================
 -- Webhooks Table
 -- =====================================================
-CREATE TABLE IF NOT EXISTS "wzWebhooks" (
-    "id" VARCHAR(100) PRIMARY KEY,
-    "sessionId" VARCHAR(100) NOT NULL REFERENCES "wzSessions"("id") ON DELETE CASCADE,
-    "url" VARCHAR(2048) NOT NULL,
-    "secret" VARCHAR(255),
-    "events" JSONB NOT NULL DEFAULT '[]',
-    "enabled" BOOLEAN NOT NULL DEFAULT true,
-    "natsEnabled" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS wz_webhooks (
+    id           VARCHAR(100) PRIMARY KEY,
+    session_id   VARCHAR(100) NOT NULL REFERENCES wz_sessions(id) ON DELETE CASCADE,
+    url          VARCHAR(2048) NOT NULL,
+    secret       VARCHAR(255),
+    events       JSONB NOT NULL DEFAULT '[]',
+    enabled      BOOLEAN NOT NULL DEFAULT true,
+    nats_enabled BOOLEAN NOT NULL DEFAULT false,
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS "idxWzWebhooksSessionId" ON "wzWebhooks" ("sessionId");
-CREATE INDEX IF NOT EXISTS "idxWzWebhooksEnabled" ON "wzWebhooks" ("enabled");
+CREATE INDEX IF NOT EXISTS idx_wz_webhooks_session_id
+    ON wz_webhooks (session_id);
+CREATE INDEX IF NOT EXISTS idx_wz_webhooks_enabled
+    ON wz_webhooks (enabled);
 
-DROP TRIGGER IF EXISTS "updateWzWebhooksUpdatedAt" ON "wzWebhooks";
-CREATE TRIGGER "updateWzWebhooksUpdatedAt"
-    BEFORE UPDATE ON "wzWebhooks"
-    FOR EACH ROW
-    EXECUTE FUNCTION "updateUpdatedAtColumn"();
+DROP TRIGGER IF EXISTS trg_wz_webhooks_updated_at ON wz_webhooks;
+CREATE TRIGGER trg_wz_webhooks_updated_at
+    BEFORE UPDATE ON wz_webhooks
+    FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 
-COMMENT ON TABLE "wzWebhooks" IS 'Webhook configurations per session';
+COMMENT ON TABLE  wz_webhooks            IS 'Webhook configurations per session';
+COMMENT ON COLUMN wz_webhooks.session_id IS 'FK to wz_sessions.id';

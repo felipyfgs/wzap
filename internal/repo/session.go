@@ -18,7 +18,7 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 }
 
 func (r *SessionRepository) Create(ctx context.Context, session *model.Session) error {
-	query := `INSERT INTO "wzSessions" ("id", "name", "apiKey", "status", "proxy", "settings", "createdAt", "updatedAt")
+	query := `INSERT INTO wz_sessions (id, name, api_key, status, proxy, settings, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.APIKey, session.Status, session.Proxy, session.Settings, session.CreatedAt, session.UpdatedAt)
 	if err != nil {
@@ -28,9 +28,9 @@ func (r *SessionRepository) Create(ctx context.Context, session *model.Session) 
 }
 
 func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error) {
-	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
-		FROM "wzSessions" ORDER BY "createdAt" DESC`
+	query := `SELECT id, name, COALESCE(jid, ''), COALESCE(qr_code, ''),
+		connected, status, proxy, settings, created_at, updated_at
+		FROM wz_sessions ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
@@ -50,9 +50,9 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 }
 
 func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Session, error) {
-	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
-		FROM "wzSessions" WHERE "id" = $1`
+	query := `SELECT id, name, COALESCE(jid, ''), COALESCE(qr_code, ''),
+		connected, status, proxy, settings, created_at, updated_at
+		FROM wz_sessions WHERE id = $1`
 
 	var s model.Session
 	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
@@ -63,9 +63,9 @@ func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Ses
 }
 
 func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model.Session, error) {
-	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
-		FROM "wzSessions" WHERE "name" = $1`
+	query := `SELECT id, name, COALESCE(jid, ''), COALESCE(qr_code, ''),
+		connected, status, proxy, settings, created_at, updated_at
+		FROM wz_sessions WHERE name = $1`
 
 	var s model.Session
 	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
@@ -76,20 +76,20 @@ func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model
 }
 
 func (r *SessionRepository) FindByAPIKey(ctx context.Context, apiKey string) (*model.Session, error) {
-	query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-		"connected", "status", "proxy", "settings", "createdAt", "updatedAt"
-		FROM "wzSessions" WHERE "apiKey" = $1`
+	query := `SELECT id, name, COALESCE(jid, ''), COALESCE(qr_code, ''),
+		connected, status, proxy, settings, created_at, updated_at
+		FROM wz_sessions WHERE api_key = $1`
 
 	var s model.Session
 	err := r.db.QueryRow(ctx, query, apiKey).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("session not found for apiKey: %w", err)
+		return nil, fmt.Errorf("session not found for api_key: %w", err)
 	}
 	return &s, nil
 }
 
 func (r *SessionRepository) Delete(ctx context.Context, id string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM "wzSessions" WHERE "id" = $1`, id)
+	_, err := r.db.Exec(ctx, `DELETE FROM wz_sessions WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("failed to delete session %s: %w", id, err)
 	}
@@ -98,7 +98,7 @@ func (r *SessionRepository) Delete(ctx context.Context, id string) error {
 
 func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "status" = $1, "updatedAt" = NOW() WHERE "id" = $2`,
+		`UPDATE wz_sessions SET status = $1, updated_at = NOW() WHERE id = $2`,
 		status, id)
 	if err != nil {
 		return fmt.Errorf("failed to update status for session %s: %w", id, err)
@@ -108,7 +108,7 @@ func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status 
 
 func (r *SessionRepository) UpdateJid(ctx context.Context, id string, jid string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "jid" = $1, "connected" = 1, "status" = 'connected', "updatedAt" = NOW() WHERE "id" = $2`,
+		`UPDATE wz_sessions SET jid = $1, connected = 1, status = 'connected', updated_at = NOW() WHERE id = $2`,
 		jid, id)
 	if err != nil {
 		return fmt.Errorf("failed to update jid for session %s: %w", id, err)
@@ -118,7 +118,7 @@ func (r *SessionRepository) UpdateJid(ctx context.Context, id string, jid string
 
 func (r *SessionRepository) SetConnected(ctx context.Context, id string, connected int) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "connected" = $1, "updatedAt" = NOW() WHERE "id" = $2`,
+		`UPDATE wz_sessions SET connected = $1, updated_at = NOW() WHERE id = $2`,
 		connected, id)
 	if err != nil {
 		return fmt.Errorf("failed to set connected status for session %s: %w", id, err)
@@ -128,7 +128,7 @@ func (r *SessionRepository) SetConnected(ctx context.Context, id string, connect
 
 func (r *SessionRepository) ClearDevice(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "connected" = 0, "jid" = '', "status" = 'disconnected', "updatedAt" = NOW() WHERE "id" = $1`,
+		`UPDATE wz_sessions SET connected = 0, jid = '', status = 'disconnected', updated_at = NOW() WHERE id = $1`,
 		id)
 	if err != nil {
 		return fmt.Errorf("failed to clear device for session %s: %w", id, err)
@@ -139,7 +139,7 @@ func (r *SessionRepository) ClearDevice(ctx context.Context, id string) error {
 func (r *SessionRepository) GetJid(ctx context.Context, id string) (string, error) {
 	var jid string
 	err := r.db.QueryRow(ctx,
-		`SELECT COALESCE("jid", '') FROM "wzSessions" WHERE "id" = $1`,
+		`SELECT COALESCE(jid, '') FROM wz_sessions WHERE id = $1`,
 		id).Scan(&jid)
 	if err != nil {
 		return "", fmt.Errorf("failed to get jid for session %s: %w", id, err)
@@ -150,7 +150,7 @@ func (r *SessionRepository) GetJid(ctx context.Context, id string) (string, erro
 func (r *SessionRepository) FindSessionIDByJID(ctx context.Context, jid string) (string, error) {
 	var sessionID string
 	err := r.db.QueryRow(ctx,
-		`SELECT "id" FROM "wzSessions" WHERE "jid" = $1`,
+		`SELECT id FROM wz_sessions WHERE jid = $1`,
 		jid).Scan(&sessionID)
 	if err != nil {
 		return "", fmt.Errorf("failed to find session ID by JID %s: %w", jid, err)
@@ -160,7 +160,7 @@ func (r *SessionRepository) FindSessionIDByJID(ctx context.Context, jid string) 
 
 func (r *SessionRepository) UpdateQRCode(ctx context.Context, id string, qrCode string) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE "wzSessions" SET "qrCode" = $1 WHERE "id" = $2`,
+		`UPDATE wz_sessions SET qr_code = $1 WHERE id = $2`,
 		qrCode, id)
 	if err != nil {
 		return fmt.Errorf("failed to update QR code for session %s: %w", id, err)

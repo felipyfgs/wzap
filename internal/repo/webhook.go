@@ -19,7 +19,7 @@ func NewWebhookRepository(db *pgxpool.Pool) *WebhookRepository {
 }
 
 func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error {
-	query := `INSERT INTO "wzWebhooks" ("id", "sessionId", "url", "secret", "events", "enabled", "natsEnabled", "createdAt", "updatedAt")
+	query := `INSERT INTO wz_webhooks (id, session_id, url, secret, events, enabled, nats_enabled, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)`
 	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.Enabled, w.NatsEnabled, w.CreatedAt)
 	if err != nil {
@@ -29,8 +29,8 @@ func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error 
 }
 
 func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID string) ([]model.Webhook, error) {
-	query := `SELECT "id", "sessionId", "url", COALESCE("secret", ''), "events", "enabled", "natsEnabled", "createdAt", "updatedAt"
-		FROM "wzWebhooks" WHERE "sessionId" = $1 ORDER BY "createdAt" DESC`
+	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, enabled, nats_enabled, created_at, updated_at
+		FROM wz_webhooks WHERE session_id = $1 ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(ctx, query, sessionID)
 	if err != nil {
@@ -50,11 +50,11 @@ func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID strin
 }
 
 func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, sessionID string, eventType string) ([]model.Webhook, error) {
-	query := `SELECT "id", "sessionId", "url", COALESCE("secret", ''), "events", "enabled", "natsEnabled", "createdAt", "updatedAt"
-		FROM "wzWebhooks"
-		WHERE "sessionId" = $1
-		  AND "enabled" = true
-		  AND ("events" @> $2::jsonb OR "events" @> '["All"]'::jsonb)`
+	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, enabled, nats_enabled, created_at, updated_at
+		FROM wz_webhooks
+		WHERE session_id = $1
+		  AND enabled = true
+		  AND (events @> $2::jsonb OR events @> '["All"]'::jsonb)`
 
 	eventJSON, _ := json.Marshal([]string{eventType})
 	rows, err := r.db.Query(ctx, query, sessionID, eventJSON)
@@ -76,7 +76,7 @@ func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, ses
 
 func (r *WebhookRepository) Delete(ctx context.Context, sessionID, webhookID string) error {
 	_, err := r.db.Exec(ctx,
-		`DELETE FROM "wzWebhooks" WHERE "id" = $1 AND "sessionId" = $2`,
+		`DELETE FROM wz_webhooks WHERE id = $1 AND session_id = $2`,
 		webhookID, sessionID)
 	return err
 }

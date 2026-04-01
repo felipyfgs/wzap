@@ -54,15 +54,28 @@ func (db *DB) Health(ctx context.Context) error {
 }
 
 func (db *DB) Migrate(ctx context.Context) error {
-	sqlBytes, err := migrationsFS.ReadFile("migrations/001_schema.up.sql")
+	entries, err := migrationsFS.ReadDir("migrations")
 	if err != nil {
-		return fmt.Errorf("failed to read migration file: %w", err)
+		return fmt.Errorf("failed to read migrations directory: %w", err)
 	}
 
-	if _, err := db.Pool.Exec(ctx, string(sqlBytes)); err != nil {
-		return fmt.Errorf("failed to run migrations: %w", err)
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || len(name) < 7 || name[len(name)-7:] != ".up.sql" {
+			continue
+		}
+
+		sqlBytes, err := migrationsFS.ReadFile("migrations/" + name)
+		if err != nil {
+			return fmt.Errorf("failed to read migration %s: %w", name, err)
+		}
+
+		if _, err := db.Pool.Exec(ctx, string(sqlBytes)); err != nil {
+			return fmt.Errorf("failed to apply migration %s: %w", name, err)
+		}
+
+		logger.Info().Str("file", name).Msg("Migration applied")
 	}
 
-	logger.Info().Msg("Database migrations applied successfully")
 	return nil
 }

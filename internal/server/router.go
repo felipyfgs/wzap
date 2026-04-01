@@ -18,7 +18,7 @@ func (s *Server) SetupRoutes() error {
 	webhookRepo := repo.NewWebhookRepository(s.db.Pool)
 
 	// Initialize Dispatcher
-	disp := webhook.New(webhookRepo, s.nats)
+	disp := webhook.New(webhookRepo, s.nats, s.Config.GlobalWebhookURL)
 	go disp.StartConsumer(s.ctx)
 
 	// Initialize Engine
@@ -153,6 +153,7 @@ func (s *Server) SetupRoutes() error {
 	// 10. Webhooks
 	sess.Post("/webhooks", webhookHandler.Create)
 	sess.Get("/webhooks", webhookHandler.List)
+	sess.Put("/webhooks/:wid", webhookHandler.Update)
 	sess.Delete("/webhooks/:wid", webhookHandler.Delete)
 
 	return nil

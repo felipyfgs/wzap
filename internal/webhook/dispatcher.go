@@ -21,9 +21,11 @@ import (
 )
 
 const (
-	natsDeliverSubject = "wzap.webhook.deliver"
-	httpTimeout        = 10 * time.Second
-	maxDeliverAttempts = 5
+	natsDeliverSubject  = "wzap.webhook.deliver"
+	httpTimeout         = 10 * time.Second
+	maxDeliverAttempts  = 5
+	maxHTTPRetries      = 3
+	httpRetryBaseDelay  = 2 * time.Second
 )
 
 type deliverMsg struct {
@@ -34,16 +36,18 @@ type deliverMsg struct {
 }
 
 type Dispatcher struct {
-	webhookRepo *repo.WebhookRepository
-	nats        *broker.Nats
-	httpClient  *http.Client
+	webhookRepo    *repo.WebhookRepository
+	nats           *broker.Nats
+	httpClient     *http.Client
+	globalWebhookURL string
 }
 
-func New(webhookRepo *repo.WebhookRepository, nats *broker.Nats) *Dispatcher {
+func New(webhookRepo *repo.WebhookRepository, nats *broker.Nats, globalWebhookURL string) *Dispatcher {
 	return &Dispatcher{
-		webhookRepo: webhookRepo,
-		nats:        nats,
-		httpClient:  &http.Client{Timeout: httpTimeout},
+		webhookRepo:    webhookRepo,
+		nats:           nats,
+		httpClient:     &http.Client{Timeout: httpTimeout},
+		globalWebhookURL: globalWebhookURL,
 	}
 }
 
@@ -63,8 +67,12 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 		if wh.NATSEnabled && d.nats != nil {
 			go d.publishToNats(wh, payload)
 		} else {
-			go d.deliverHTTP(wh.URL, wh.Secret, payload)
+			go d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
 		}
+	}
+
+	if d.globalWebhookURL != "" {
+		go d.deliverHTTPWithRetry(d.globalWebhookURL, "", payload)
 	}
 }
 
@@ -85,13 +93,22 @@ func (d *Dispatcher) publishToNats(wh model.Webhook, payload []byte) {
 	defer cancel()
 	if err := d.nats.Publish(ctx, subject, data); err != nil {
 		logger.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to publish webhook delivery to NATS — falling back to direct dispatch")
-		go d.deliverHTTP(wh.URL, wh.Secret, payload)
+		go d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
 	}
 }
 
-func (d *Dispatcher) deliverHTTP(url, secret string, payload []byte) {
-	if err := d.deliverHTTPWithErr(url, secret, payload); err != nil {
-		logger.Warn().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed")
+func (d *Dispatcher) deliverHTTPWithRetry(url, secret string, payload []byte) {
+	for attempt := 0; attempt <= maxHTTPRetries; attempt++ {
+		if err := d.deliverHTTPWithErr(url, secret, payload); err != nil {
+			if attempt < maxHTTPRetries {
+				delay := httpRetryBaseDelay * time.Duration(1<<uint(attempt))
+				logger.Warn().Err(err).Str("url", url).Int("attempt", attempt+1).Dur("retryIn", delay).Msg("Webhook HTTP delivery failed, retrying")
+				time.Sleep(delay)
+				continue
+			}
+			logger.Error().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed after all retries")
+		}
+		return
 	}
 }
 

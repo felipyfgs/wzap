@@ -74,6 +74,29 @@ func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, ses
 	return webhooks, rows.Err()
 }
 
+func (r *WebhookRepository) FindByID(ctx context.Context, sessionID, webhookID string) (*model.Webhook, error) {
+	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, enabled, nats_enabled, created_at, updated_at
+		FROM wz_webhooks WHERE id = $1 AND session_id = $2`
+	var w model.Webhook
+	err := r.db.QueryRow(ctx, query, webhookID, sessionID).Scan(
+		&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("webhook not found: %w", err)
+	}
+	return &w, nil
+}
+
+func (r *WebhookRepository) Update(ctx context.Context, w *model.Webhook) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE wz_webhooks SET url = $1, secret = $2, events = $3, enabled = $4, nats_enabled = $5, updated_at = NOW()
+		 WHERE id = $6 AND session_id = $7`,
+		w.URL, w.Secret, w.Events, w.Enabled, w.NATSEnabled, w.ID, w.SessionID)
+	if err != nil {
+		return fmt.Errorf("failed to update webhook: %w", err)
+	}
+	return nil
+}
+
 func (r *WebhookRepository) Delete(ctx context.Context, sessionID, webhookID string) error {
 	_, err := r.db.Exec(ctx,
 		`DELETE FROM wz_webhooks WHERE id = $1 AND session_id = $2`,

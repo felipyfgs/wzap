@@ -60,6 +60,35 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 	return c.JSON(dto.SuccessResp(webhooks))
 }
 
+// Update godoc
+// @Summary     Update a webhook
+// @Description Updates webhook fields (URL, secret, events, enabled, natsEnabled). Only provided fields are changed.
+// @Tags        Webhooks
+// @Accept      json
+// @Produce     json
+// @Param       sessionId   path     string                true "Session name or ID"
+// @Param       wid         path     string                true "Webhook ID"
+// @Param       body        body     dto.UpdateWebhookReq  true "Webhook update data"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /sessions/{sessionId}/webhooks/{wid} [put]
+func (h *WebhookHandler) Update(c *fiber.Ctx) error {
+	sessionID := mustGetSessionID(c)
+	webhookID := c.Params("wid")
+
+	var req dto.UpdateWebhookReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+
+	webhook, err := h.webhookSvc.Update(c.Context(), sessionID, webhookID, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(webhook))
+}
+
 // Delete godoc
 // @Summary     Delete a webhook
 // @Description Removes a webhook from the session

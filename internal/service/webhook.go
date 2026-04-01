@@ -47,6 +47,34 @@ func (s *WebhookService) List(ctx context.Context, sessionID string) ([]model.We
 	return s.repo.FindBySessionID(ctx, sessionID)
 }
 
+func (s *WebhookService) Update(ctx context.Context, sessionID, webhookID string, req dto.UpdateWebhookReq) (*model.Webhook, error) {
+	wh, err := s.repo.FindByID(ctx, sessionID, webhookID)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.URL != nil {
+		wh.URL = *req.URL
+	}
+	if req.Secret != nil {
+		wh.Secret = *req.Secret
+	}
+	if req.Events != nil {
+		wh.Events = req.Events
+	}
+	if req.Enabled != nil {
+		wh.Enabled = *req.Enabled
+	}
+	if req.NATSEnabled != nil {
+		wh.NATSEnabled = *req.NATSEnabled
+	}
+
+	if err := s.repo.Update(ctx, wh); err != nil {
+		return nil, err
+	}
+	return wh, nil
+}
+
 func (s *WebhookService) Delete(ctx context.Context, sessionID, webhookID string) error {
 	return s.repo.Delete(ctx, sessionID, webhookID)
 }

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"strings"
 
 	"wzap/internal/dto"
 	"wzap/internal/wa"
@@ -54,10 +53,7 @@ func (s *CommunityService) updateParticipant(ctx context.Context, sessionID stri
 	var jids []types.JID
 	for _, p := range req.Participants {
 		if p != "" {
-			if !strings.Contains(p, "@") {
-				p += "@s.whatsapp.net"
-			}
-			pj, err := types.ParseJID(p)
+			pj, err := types.ParseJID(wa.EnsureJIDSuffix(p))
 			if err == nil {
 				jids = append(jids, pj)
 			}

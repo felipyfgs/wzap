@@ -1,0 +1,15 @@
+.git
+.github
+.dockerignore
+Dockerfile
+.env
+*.md
+Makefile
+docker-compose.yml
+docs
+build
+.factory
+.home
+.devcontainer
+.editorconfig
+.vscode

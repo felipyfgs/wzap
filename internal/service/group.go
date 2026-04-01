@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"strings"
-
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
@@ -70,10 +68,7 @@ func (s *GroupService) CreateGroup(ctx context.Context, sessionID string, req dt
 	var jids []types.JID
 	for _, p := range req.Participants {
 		if p != "" {
-			if !strings.Contains(p, "@") {
-				p += "@s.whatsapp.net"
-			}
-			jid, err := types.ParseJID(p)
+			jid, err := types.ParseJID(wa.EnsureJIDSuffix(p))
 			if err == nil {
 				jids = append(jids, jid)
 			}
@@ -246,10 +241,7 @@ func (s *GroupService) UpdateParticipants(ctx context.Context, sessionID, groupJ
 	var jids []types.JID
 	for _, p := range participants {
 		if p != "" {
-			if !strings.Contains(p, "@") {
-				p += "@s.whatsapp.net"
-			}
-			pj, err := types.ParseJID(p)
+			pj, err := types.ParseJID(wa.EnsureJIDSuffix(p))
 			if err == nil {
 				jids = append(jids, pj)
 			}
@@ -303,10 +295,7 @@ func (s *GroupService) UpdateRequestParticipants(ctx context.Context, sessionID,
 	var jids []types.JID
 	for _, p := range participants {
 		if p != "" {
-			if !strings.Contains(p, "@") {
-				p += "@s.whatsapp.net"
-			}
-			pj, err := types.ParseJID(p)
+			pj, err := types.ParseJID(wa.EnsureJIDSuffix(p))
 			if err == nil {
 				jids = append(jids, pj)
 			}

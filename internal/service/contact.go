@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"strings"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
@@ -41,7 +40,7 @@ func (s *ContactService) CheckContacts(ctx context.Context, sessionID string, re
 		results = append(results, dto.CheckContactResp{
 			Exists:      check.IsIn,
 			JID:         check.JID.String(),
-			PhoneNumber: strings.TrimSuffix(check.JID.User, "@s.whatsapp.net"),
+			PhoneNumber: check.JID.User,
 		})
 	}
 

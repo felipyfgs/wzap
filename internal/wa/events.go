@@ -85,7 +85,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	case *events.NewsletterJoin:
 		eventType = model.EventNewsletterJoin
 		natsData = map[string]interface{}{
-			"jid": v.NewsletterMetadata.ID,
+			"jid": v.ID,
 		}
 	case *events.NewsletterLeave:
 		eventType = model.EventNewsletterLeave

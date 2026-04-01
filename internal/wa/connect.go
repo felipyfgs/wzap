@@ -15,11 +15,11 @@ import (
 
 	"wzap/internal/broker"
 	"wzap/internal/config"
-	"wzap/internal/dispatcher"
 	"wzap/internal/repo"
+	"wzap/internal/webhook"
 )
 
-func NewManager(cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats, d *dispatcher.Dispatcher) (*Manager, error) {
+func NewManager(cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats, d *webhook.Dispatcher) (*Manager, error) {
 	waLogger := waLog.Stdout("wzap", cfg.WALogLevel, true)
 
 	ctx := context.Background()
@@ -98,10 +98,12 @@ func (m *Manager) GetClient(sessionID string) (*whatsmeow.Client, error) {
 
 // Connect connects or pairs a session.
 func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Client, <-chan whatsmeow.QRChannelItem, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	// Phase 1: check for an existing client without a write lock.
+	m.mu.RLock()
+	client, exists := m.clients[sessionID]
+	m.mu.RUnlock()
 
-	if client, exists := m.clients[sessionID]; exists {
+	if exists {
 		if client.IsConnected() {
 			return client, nil, nil
 		}
@@ -109,6 +111,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		return client, nil, err
 	}
 
+	// Phase 2: load device and build client — no lock held, no network calls.
 	deviceJID, err := m.sessionRepo.GetJid(ctx, sessionID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("session not found: %w", err)
@@ -130,7 +133,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		device = m.container.NewDevice()
 	}
 
-	client := whatsmeow.NewClient(device, m.waLog)
+	client = whatsmeow.NewClient(device, m.waLog)
 
 	client.AddEventHandler(func(evt interface{}) {
 		m.handleEvent(sessionID, evt)
@@ -165,14 +168,31 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		}
 	})
 
+	// Phase 3: insert into map under write lock — map operation only, no I/O.
+	m.mu.Lock()
+	if existing, ok := m.clients[sessionID]; ok {
+		m.mu.Unlock()
+		if existing.IsConnected() {
+			return existing, nil, nil
+		}
+		return existing, nil, existing.Connect()
+	}
 	m.clients[sessionID] = client
+	m.mu.Unlock()
 
+	// Phase 4: connect outside the lock so other goroutines are not blocked.
 	if client.Store.ID == nil {
 		qrChan, qrErr := client.GetQRChannel(ctx)
 		if qrErr != nil {
+			m.mu.Lock()
+			delete(m.clients, sessionID)
+			m.mu.Unlock()
 			return nil, nil, fmt.Errorf("failed to get QR channel: %w", qrErr)
 		}
 		if err = client.Connect(); err != nil {
+			m.mu.Lock()
+			delete(m.clients, sessionID)
+			m.mu.Unlock()
 			return nil, nil, err
 		}
 
@@ -182,8 +202,13 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		return client, qrChan, nil
 	}
 
-	err = client.Connect()
-	return client, nil, err
+	if err = client.Connect(); err != nil {
+		m.mu.Lock()
+		delete(m.clients, sessionID)
+		m.mu.Unlock()
+		return nil, nil, err
+	}
+	return client, nil, nil
 }
 
 // Disconnect disconnects a session.

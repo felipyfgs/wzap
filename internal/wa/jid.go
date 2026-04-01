@@ -13,11 +13,11 @@ import "strings"
 //	HOSTED (128) → @s.whatsapp.net  (hosted business)
 //	HOSTED_LID (129) → @lid        (hosted + local ID)
 const (
-	ServerUser      = "@s.whatsapp.net"  // individual user JIDs
-	ServerGroup     = "@g.us"            // group chat JIDs
-	ServerBroadcast = "@broadcast"       // broadcast list JIDs
+	ServerUser       = "@s.whatsapp.net" // individual user JIDs
+	ServerGroup      = "@g.us"           // group chat JIDs
+	ServerBroadcast  = "@broadcast"      // broadcast list JIDs
 	ServerNewsletter = "@newsletter"     // channel/status JIDs
-	ServerLID       = "@lid"             // local/hidden ID (privacy)
+	ServerLID        = "@lid"            // local/hidden ID (privacy)
 )
 
 // IsAnyJIDServer reports whether jid contains any known WhatsApp server suffix.

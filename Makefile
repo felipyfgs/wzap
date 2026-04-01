@@ -38,4 +38,4 @@ clean: ## Clean build artifacts
 	@rm -rf $(BUILD_DIR)
 
 install-tools: ## Install development tools (golangci-lint)
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v1.56.2
+	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.11.4

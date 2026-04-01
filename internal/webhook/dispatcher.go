@@ -1,4 +1,4 @@
-package dispatcher
+package webhook
 
 import (
 	"bytes"
@@ -182,7 +182,11 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 	if err != nil {
 		return fmt.Errorf("http post: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			log.Warn().Err(err).Msg("Failed to close webhook response body")
+		}
+	}()
 	_, _ = io.Copy(io.Discard, resp.Body)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {

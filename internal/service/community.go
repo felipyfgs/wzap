@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 
 	"wzap/internal/dto"
 	"wzap/internal/wa"
@@ -23,6 +24,9 @@ func (s *CommunityService) Create(ctx context.Context, sessionID string, req dto
 	if err != nil {
 		return nil, err
 	}
+	if !client.IsConnected() {
+		return nil, fmt.Errorf("client not connected")
+	}
 
 	reqCreate := whatsmeow.ReqCreateGroup{
 		Name: req.Name,
@@ -43,6 +47,9 @@ func (s *CommunityService) updateParticipant(ctx context.Context, sessionID stri
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
+	}
+	if !client.IsConnected() {
+		return nil, fmt.Errorf("client not connected")
 	}
 
 	jid, err := types.ParseJID(req.CommunityJID)

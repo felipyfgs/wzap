@@ -25,7 +25,6 @@ func (m *Manager) consumeQRChannel(sessionID string, qrChan <-chan whatsmeow.QRC
 		switch evt.Event {
 		case "code":
 			qrterminal.GenerateHalfBlock(evt.Code, qrterminal.L, os.Stdout)
-			fmt.Println("QR code:", evt.Code)
 
 			if err := m.sessionRepo.UpdateQRCode(context.Background(), sessionID, evt.Code); err != nil {
 				log.Error().Err(err).Str("session", sessionID).Msg("Failed to save QR code to database")

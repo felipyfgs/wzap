@@ -78,6 +78,9 @@ func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req dt
 	if err != nil {
 		return nil, err
 	}
+	if !client.IsConnected() {
+		return nil, fmt.Errorf("client not connected")
+	}
 
 	jid, err := types.ParseJID(req.JID)
 	if err != nil {
@@ -104,6 +107,9 @@ func (s *ContactService) Block(ctx context.Context, sessionID string, req dto.Bl
 	if err != nil {
 		return nil, err
 	}
+	if !client.IsConnected() {
+		return nil, fmt.Errorf("client not connected")
+	}
 
 	jid, err := types.ParseJID(req.JID)
 	if err != nil {
@@ -118,6 +124,9 @@ func (s *ContactService) Unblock(ctx context.Context, sessionID string, req dto.
 	if err != nil {
 		return nil, err
 	}
+	if !client.IsConnected() {
+		return nil, fmt.Errorf("client not connected")
+	}
 
 	jid, err := types.ParseJID(req.JID)
 	if err != nil {
@@ -131,6 +140,9 @@ func (s *ContactService) GetBlocklist(ctx context.Context, sessionID string) (*t
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
+	}
+	if !client.IsConnected() {
+		return nil, fmt.Errorf("client not connected")
 	}
 
 	return client.GetBlocklist(ctx)
@@ -178,8 +190,10 @@ func (s *ContactService) GetPrivacySettings(ctx context.Context, sessionID strin
 	if err != nil {
 		return types.PrivacySettings{}, err
 	}
+	if !client.IsConnected() {
+		return types.PrivacySettings{}, fmt.Errorf("client not connected")
+	}
 
-	// client.GetPrivacySettings only returns types.PrivacySettings
 	settings := client.GetPrivacySettings(ctx)
 	return settings, nil
 }
@@ -188,6 +202,9 @@ func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
+	}
+	if !client.IsConnected() || client.Store.ID == nil {
+		return "", fmt.Errorf("client not connected")
 	}
 
 	data, err := base64.StdEncoding.DecodeString(req.Base64)

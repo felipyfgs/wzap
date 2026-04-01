@@ -23,7 +23,7 @@ func Recovery() fiber.Handler {
 					Str("stack", string(debug.Stack())).
 					Msg("panic recovered")
 
-				c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+				_ = c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
 			}
 		}()
 		return c.Next()

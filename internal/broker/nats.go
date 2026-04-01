@@ -71,7 +71,9 @@ func New(cfg *config.Config) (*Nats, error) {
 func (n *Nats) Close() {
 	if n.Conn != nil {
 		log.Info().Msg("Closing NATS connection")
-		n.Conn.Drain()
+		if err := n.Conn.Drain(); err != nil {
+			log.Error().Err(err).Msg("Failed to drain NATS connection")
+		}
 		n.Conn.Close()
 	}
 }

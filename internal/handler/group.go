@@ -71,8 +71,9 @@ func (h *GroupHandler) Create(c *fiber.Ctx) error {
 // @Summary     Get group info
 // @Description Get detailed information about a group by JID
 // @Tags        Groups
+// @Accept      json
 // @Produce     json
-// @Param       jid query string true "Group JID"
+// @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} dto.APIResponse
 // @Security    ApiKey
 // @Router      /groups/info [post]
@@ -82,12 +83,15 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 		return err
 	}
 
-	jid := c.Query("jid")
-	if jid == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "jid query parameter is required"))
+	var req dto.GroupJIDReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", err.Error()))
+	}
+	if req.GroupJID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "groupJid is required"))
 	}
 
-	group, err := h.groupSvc.GetInfo(c.Context(), id, jid)
+	group, err := h.groupSvc.GetInfo(c.Context(), id, req.GroupJID)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Group Info Error", err.Error()))
 	}
@@ -127,8 +131,9 @@ func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 // @Summary     Get group info from invite link
 // @Description Previews a group's info using an invite code without joining
 // @Tags        Groups
+// @Accept      json
 // @Produce     json
-// @Param       code query string true "Invite Code"
+// @Param       request body dto.GroupJoinReq true "Invite Code Payload"
 // @Success     200 {object} dto.APIResponse
 // @Security    ApiKey
 // @Router      /groups/invite-info [post]
@@ -137,12 +142,16 @@ func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	code := c.Query("code")
-	if code == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "code query parameter is required"))
+
+	var req dto.GroupJoinReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", err.Error()))
+	}
+	if req.InviteCode == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "inviteCode is required"))
 	}
 
-	group, err := h.groupSvc.GetInfoFromLink(c.Context(), id, code)
+	group, err := h.groupSvc.GetInfoFromLink(c.Context(), id, req.InviteCode)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Info From Link Error", err.Error()))
 	}
@@ -219,7 +228,6 @@ func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupParticipantReq
 	if err := c.BodyParser(&req); err != nil {
@@ -276,7 +284,6 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupRequestActionReq
 	if err := c.BodyParser(&req); err != nil {
@@ -306,7 +313,6 @@ func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupTextReq
 	if err := c.BodyParser(&req); err != nil {
@@ -338,7 +344,6 @@ func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupTextReq
 	if err := c.BodyParser(&req); err != nil {
@@ -370,7 +375,6 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupPhotoReq
 	if err := c.BodyParser(&req); err != nil {
@@ -405,7 +409,6 @@ func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupSettingReq
 	if err := c.BodyParser(&req); err != nil {
@@ -437,7 +440,6 @@ func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupSettingReq
 	if err := c.BodyParser(&req); err != nil {
@@ -469,7 +471,6 @@ func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// Body parsing handles the payload
 
 	var req dto.GroupSettingReq
 	if err := c.BodyParser(&req); err != nil {

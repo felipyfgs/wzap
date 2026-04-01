@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"go.mau.fi/whatsmeow"
-	waProto "go.mau.fi/whatsmeow/binary/proto"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types"
 	"google.golang.org/protobuf/proto"
 
@@ -41,7 +41,7 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	msg := &waProto.Message{
+	msg := &waE2E.Message{
 		Conversation: proto.String(req.Text),
 	}
 
@@ -93,11 +93,11 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		return "", fmt.Errorf("failed to upload media: %w", err)
 	}
 
-	var msg waProto.Message
+	var msg waE2E.Message
 
 	switch mediaType {
 	case whatsmeow.MediaImage:
-		msg.ImageMessage = &waProto.ImageMessage{
+		msg.ImageMessage = &waE2E.ImageMessage{
 			Caption:       proto.String(req.Caption),
 			Mimetype:      proto.String(req.MimeType),
 			URL:           proto.String(uploaded.URL),
@@ -108,7 +108,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			FileLength:    proto.Uint64(uint64(len(data))),
 		}
 	case whatsmeow.MediaVideo:
-		msg.VideoMessage = &waProto.VideoMessage{
+		msg.VideoMessage = &waE2E.VideoMessage{
 			Caption:       proto.String(req.Caption),
 			Mimetype:      proto.String(req.MimeType),
 			URL:           proto.String(uploaded.URL),
@@ -126,7 +126,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 				req.Filename += ext[0]
 			}
 		}
-		msg.DocumentMessage = &waProto.DocumentMessage{
+		msg.DocumentMessage = &waE2E.DocumentMessage{
 			Title:         proto.String(req.Filename),
 			FileName:      proto.String(filepath.Base(req.Filename)),
 			Mimetype:      proto.String(req.MimeType),
@@ -138,7 +138,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			FileLength:    proto.Uint64(uint64(len(data))),
 		}
 	case whatsmeow.MediaAudio:
-		msg.AudioMessage = &waProto.AudioMessage{
+		msg.AudioMessage = &waE2E.AudioMessage{
 			Mimetype:      proto.String(req.MimeType),
 			PTT:           proto.Bool(true),
 			URL:           proto.String(uploaded.URL),
@@ -169,8 +169,8 @@ func (s *MessageService) SendContact(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	msg := &waProto.Message{
-		ContactMessage: &waProto.ContactMessage{
+	msg := &waE2E.Message{
+		ContactMessage: &waE2E.ContactMessage{
 			DisplayName: proto.String(req.Name),
 			Vcard:       proto.String(req.Vcard),
 		},
@@ -195,8 +195,8 @@ func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	msg := &waProto.Message{
-		LocationMessage: &waProto.LocationMessage{
+	msg := &waE2E.Message{
+		LocationMessage: &waE2E.LocationMessage{
 			DegreesLatitude:  proto.Float64(req.Lat),
 			DegreesLongitude: proto.Float64(req.Lng),
 			Name:             proto.String(req.Name),
@@ -254,8 +254,8 @@ func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req 
 		return "", fmt.Errorf("failed to upload sticker: %w", err)
 	}
 
-	msg := &waProto.Message{
-		StickerMessage: &waProto.StickerMessage{
+	msg := &waE2E.Message{
+		StickerMessage: &waE2E.StickerMessage{
 			Mimetype:      proto.String(req.MimeType),
 			URL:           proto.String(uploaded.URL),
 			DirectPath:    proto.String(uploaded.DirectPath),
@@ -285,8 +285,8 @@ func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	msg := &waProto.Message{
-		ExtendedTextMessage: &waProto.ExtendedTextMessage{
+	msg := &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 			Text:        proto.String(req.URL),
 			Title:       proto.String(req.Title),
 			Description: proto.String(req.Description),
@@ -312,7 +312,7 @@ func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	newMsg := &waProto.Message{
+	newMsg := &waE2E.Message{
 		Conversation: proto.String(req.Text),
 	}
 

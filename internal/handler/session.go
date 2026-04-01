@@ -27,13 +27,14 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *
 
 // Create godoc
 // @Summary     Create a new session (Admin Only)
-// @Description Creates a new session with an auto-generated or custom apiKey
+// @Description Creates a new session with an auto-generated or custom apiKey. Returns the full session object including the apiKey.
 // @Tags        Sessions
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SessionCreateReq true "Session data"
-// @Success     200  {object} dto.APIResponse
-// @Failure     400  {object} dto.APIResponse
+// @Success     201  {object} dto.APIResponse{data=dto.SessionCreatedResp}
+// @Failure     400  {object} dto.APIError
+// @Failure     403  {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions [post]
 func (h *SessionHandler) Create(c *fiber.Ctx) error {
@@ -56,10 +57,11 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 
 // List godoc
 // @Summary     List sessions (Admin Only)
-// @Description Returns all sessions
+// @Description Returns all sessions. APIKey is never included in responses.
 // @Tags        Sessions
 // @Produce     json
-// @Success     200 {object} dto.APIResponse
+// @Success     200 {object} dto.APIResponse{data=[]dto.SessionResp}
+// @Failure     403 {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions [get]
 func (h *SessionHandler) List(c *fiber.Ctx) error {
@@ -77,11 +79,12 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 
 // Get godoc
 // @Summary     Get session
-// @Description Returns the session identified by :sessionId (name or id)
+// @Description Returns the session identified by :sessionId (name or id). APIKey is not included.
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionId   path string true "Session name or ID"
-// @Success     200 {object} dto.APIResponse
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse{data=dto.SessionResp}
+// @Failure     404 {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions/{sessionId} [get]
 func (h *SessionHandler) Get(c *fiber.Ctx) error {
@@ -96,11 +99,12 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 
 // Delete godoc
 // @Summary     Delete session
-// @Description Disconnects and deletes the session
+// @Description Disconnects and permanently deletes the session and its device from the store
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionId   path string true "Session name or ID"
+// @Param       sessionId path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions/{sessionId} [delete]
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
@@ -114,11 +118,13 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 
 // Connect godoc
 // @Summary     Connect session
-// @Description Connects a WhatsApp session (starts pairing if new)
+// @Description Connects a WhatsApp session. Returns status CONNECTED, PAIRING (QR required), or CONNECTING.
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionId   path string true "Session name or ID"
-// @Success     200 {object} dto.APIResponse
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse{data=dto.ConnectResp}
+// @Failure     409 {object} dto.APIError "QR pairing already pending"
+// @Failure     500 {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions/{sessionId}/connect [post]
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
@@ -144,11 +150,12 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 
 // Disconnect godoc
 // @Summary     Disconnect session
-// @Description Disconnects the active WhatsApp session
+// @Description Disconnects the active WhatsApp session without removing the device (can reconnect later)
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionId   path string true "Session name or ID"
+// @Param       sessionId path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
 // @Security    ApiKey
 // @Router      /sessions/{sessionId}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
@@ -162,11 +169,12 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 
 // QR godoc
 // @Summary     Get QR code for pairing
-// @Description Returns a QR code for pairing a new WhatsApp device
+// @Description Returns the current QR code string and a base64 PNG image. Call /connect first, then poll this endpoint until a code is available.
 // @Tags        Sessions
 // @Produce     json
-// @Param       sessionId   path string true "Session name or ID"
-// @Success     200 {object} dto.APIResponse
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse{data=dto.QRResp}
+// @Failure     404 {object} dto.APIError "No QR code available yet"
 // @Security    ApiKey
 // @Router      /sessions/{sessionId}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {

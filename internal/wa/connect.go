@@ -3,8 +3,10 @@ package wa
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	_ "github.com/lib/pq" // registers the PostgreSQL driver used by whatsmeow sqlstore
+	"github.com/rs/zerolog"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -20,7 +22,11 @@ import (
 )
 
 func NewManager(ctx context.Context, cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats, d *webhook.Dispatcher) (*Manager, error) {
-	waLogger := waLog.Zerolog(logger.Logger().With().Str("module", "wzap").Logger())
+	waLevel, err := zerolog.ParseLevel(strings.ToLower(cfg.WALogLevel))
+	if err != nil {
+		waLevel = zerolog.InfoLevel
+	}
+	waLogger := waLog.Zerolog(logger.Logger().Level(waLevel).With().Str("module", "wzap").Logger())
 
 	container, err := sqlstore.New(ctx, "postgres", cfg.DatabaseURL, waLogger)
 	if err != nil {

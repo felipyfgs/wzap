@@ -49,24 +49,24 @@ type SendLinkReq struct {
 
 type EditMessageReq struct {
 	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"messageId" validate:"required"`
+	MessageID string `json:"mid" validate:"required"`
 	Text      string `json:"text" validate:"required"`
 }
 
 type DeleteMessageReq struct {
 	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"messageId" validate:"required"`
+	MessageID string `json:"mid" validate:"required"`
 }
 
 type ReactMessageReq struct {
 	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"messageId" validate:"required"`
+	MessageID string `json:"mid" validate:"required"`
 	Reaction  string `json:"reaction" validate:"required"`
 }
 
 type MarkReadReq struct {
 	JID       string `json:"jid" validate:"required"`
-	MessageID string `json:"messageId" validate:"required"`
+	MessageID string `json:"mid" validate:"required"`
 }
 
 type SetPresenceReq struct {

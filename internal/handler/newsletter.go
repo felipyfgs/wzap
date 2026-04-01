@@ -143,8 +143,10 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 // @Tags        Newsletter
 // @Accept      json
 // @Produce     json
-// @Param       body body     object{jid=string} true "Newsletter JID payload"
+// @Param       body body     dto.NewsletterSubscribeReq true "Newsletter JID payload"
 // @Success     200  {object} dto.APIResponse
+// @Failure     400  {object} dto.APIError
+// @Failure     500  {object} dto.APIError
 // @Security    ApiKey
 // @Router      /newsletter/subscribe [post]
 func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {

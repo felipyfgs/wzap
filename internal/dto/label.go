@@ -8,7 +8,7 @@ type LabelChatReq struct {
 type LabelMessageReq struct {
 	JID       string `json:"jid" validate:"required"`
 	LabelID   string `json:"labelId" validate:"required"`
-	MessageID string `json:"messageId" validate:"required"`
+	MessageID string `json:"mid" validate:"required"`
 }
 
 type EditLabelReq struct {

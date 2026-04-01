@@ -1,6 +1,6 @@
 # wzap Makefile
 
-.PHONY: help dev build run tidy up down clean install-tools
+.PHONY: help dev build run tidy up down clean install-tools docs
 
 # Variables
 APP_NAME=wzap
@@ -37,5 +37,9 @@ down-clean: ## Stop all services and remove volumes (DESTRUCTIVE)
 clean: ## Clean build artifacts
 	@rm -rf $(BUILD_DIR)
 
-install-tools: ## Install development tools (golangci-lint)
+install-tools: ## Install development tools (golangci-lint, swag)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.11.4
+	go install github.com/swaggo/swag/cmd/swag@latest
+
+docs: ## Generate Swagger documentation
+	swag init -g cmd/wzap/main.go -o docs --parseDependency --parseInternal --useStructName

@@ -9,15 +9,7 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "https://github.com/galvaofelipe421-wq/fiozap",
-        "contact": {
-            "name": "wzap Support",
-            "url": "https://github.com/galvaofelipe421-wq/fiozap"
-        },
-        "license": {
-            "name": "MIT",
-            "url": "https://opensource.org/licenses/MIT"
-        },
+        "contact": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -48,7 +40,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ChatActionReq"
+                            "$ref": "#/definitions/ChatActionReq"
                         }
                     }
                 ],
@@ -56,7 +48,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -87,7 +79,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ChatActionReq"
+                            "$ref": "#/definitions/ChatActionReq"
                         }
                     }
                 ],
@@ -95,7 +87,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -126,7 +118,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ChatActionReq"
+                            "$ref": "#/definitions/ChatActionReq"
                         }
                     }
                 ],
@@ -134,7 +126,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -165,7 +157,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ChatActionReq"
+                            "$ref": "#/definitions/ChatActionReq"
                         }
                     }
                 ],
@@ -173,7 +165,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -204,7 +196,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateCommunityReq"
+                            "$ref": "#/definitions/CreateCommunityReq"
                         }
                     }
                 ],
@@ -212,7 +204,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -243,7 +235,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CommunityParticipantReq"
+                            "$ref": "#/definitions/CommunityParticipantReq"
                         }
                     }
                 ],
@@ -251,7 +243,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -282,7 +274,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CommunityParticipantReq"
+                            "$ref": "#/definitions/CommunityParticipantReq"
                         }
                     }
                 ],
@@ -290,7 +282,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -315,7 +307,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -346,7 +338,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GetAvatarReq"
+                            "$ref": "#/definitions/GetAvatarReq"
                         }
                     }
                 ],
@@ -356,13 +348,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.APIResponse"
+                                    "$ref": "#/definitions/APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.GetAvatarResp"
+                                            "$ref": "#/definitions/GetAvatarResp"
                                         }
                                     }
                                 }
@@ -397,7 +389,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.BlockContactReq"
+                            "$ref": "#/definitions/BlockContactReq"
                         }
                     }
                 ],
@@ -405,7 +397,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -430,7 +422,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -461,7 +453,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CheckContactReq"
+                            "$ref": "#/definitions/CheckContactReq"
                         }
                     }
                 ],
@@ -469,7 +461,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -500,7 +492,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GetUserInfoReq"
+                            "$ref": "#/definitions/GetUserInfoReq"
                         }
                     }
                 ],
@@ -510,7 +502,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.APIResponse"
+                                    "$ref": "#/definitions/APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -518,7 +510,7 @@ const docTemplate = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/dto.UserInfoResp"
+                                                "$ref": "#/definitions/UserInfoResp"
                                             }
                                         }
                                     }
@@ -548,7 +540,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -579,7 +571,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SetProfilePictureReq"
+                            "$ref": "#/definitions/SetProfilePictureReq"
                         }
                     }
                 ],
@@ -587,7 +579,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/PictureIDResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -618,7 +634,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.BlockContactReq"
+                            "$ref": "#/definitions/BlockContactReq"
                         }
                     }
                 ],
@@ -626,7 +642,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -651,7 +667,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -682,7 +698,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupSettingReq"
+                            "$ref": "#/definitions/GroupSettingReq"
                         }
                     }
                 ],
@@ -690,7 +706,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -721,7 +737,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateGroupReq"
+                            "$ref": "#/definitions/CreateGroupReq"
                         }
                     }
                 ],
@@ -729,7 +745,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -760,7 +776,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupTextReq"
+                            "$ref": "#/definitions/GroupTextReq"
                         }
                     }
                 ],
@@ -768,7 +784,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -782,6 +798,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Get detailed information about a group by JID",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -791,18 +810,20 @@ const docTemplate = `{
                 "summary": "Get group info",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Group JID",
-                        "name": "jid",
-                        "in": "query",
-                        "required": true
+                        "description": "Target Group JID Payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJIDReq"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -816,6 +837,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Previews a group's info using an invite code without joining",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -825,18 +849,20 @@ const docTemplate = `{
                 "summary": "Get group info from invite link",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Invite Code",
-                        "name": "code",
-                        "in": "query",
-                        "required": true
+                        "description": "Invite Code Payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJoinReq"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -864,7 +890,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupJIDReq"
+                            "$ref": "#/definitions/GroupJIDReq"
                         }
                     },
                     {
@@ -880,13 +906,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.APIResponse"
+                                    "$ref": "#/definitions/APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/dto.GroupInviteLinkResp"
+                                            "$ref": "#/definitions/GroupInviteLinkResp"
                                         }
                                     }
                                 }
@@ -921,7 +947,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupJoinReq"
+                            "$ref": "#/definitions/GroupJoinReq"
                         }
                     }
                 ],
@@ -929,7 +955,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -960,7 +986,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupSettingReq"
+                            "$ref": "#/definitions/GroupSettingReq"
                         }
                     }
                 ],
@@ -968,7 +994,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -996,7 +1022,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupJIDReq"
+                            "$ref": "#/definitions/GroupJIDReq"
                         }
                     }
                 ],
@@ -1004,7 +1030,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1035,7 +1061,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupSettingReq"
+                            "$ref": "#/definitions/GroupSettingReq"
                         }
                     }
                 ],
@@ -1043,7 +1069,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1074,7 +1100,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupTextReq"
+                            "$ref": "#/definitions/GroupTextReq"
                         }
                     }
                 ],
@@ -1082,7 +1108,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1113,7 +1139,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupParticipantReq"
+                            "$ref": "#/definitions/GroupParticipantReq"
                         }
                     }
                 ],
@@ -1121,7 +1147,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1152,7 +1178,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupPhotoReq"
+                            "$ref": "#/definitions/GroupPhotoReq"
                         }
                     }
                 ],
@@ -1160,7 +1186,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1188,7 +1214,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupJIDReq"
+                            "$ref": "#/definitions/GroupJIDReq"
                         }
                     }
                 ],
@@ -1196,7 +1222,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1227,7 +1253,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.GroupRequestActionReq"
+                            "$ref": "#/definitions/GroupRequestActionReq"
                         }
                     }
                 ],
@@ -1235,7 +1261,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1255,7 +1281,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1286,7 +1312,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LabelChatReq"
+                            "$ref": "#/definitions/LabelChatReq"
                         }
                     }
                 ],
@@ -1294,7 +1320,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1325,7 +1351,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.EditLabelReq"
+                            "$ref": "#/definitions/EditLabelReq"
                         }
                     }
                 ],
@@ -1333,7 +1359,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1364,7 +1390,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LabelMessageReq"
+                            "$ref": "#/definitions/LabelMessageReq"
                         }
                     }
                 ],
@@ -1372,7 +1398,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -1385,6 +1411,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
+                "description": "Sends a base64-encoded audio file as a voice note (PTT)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1402,7 +1429,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendMediaReq"
+                            "$ref": "#/definitions/SendMediaReq"
                         }
                     }
                 ],
@@ -1410,7 +1437,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1441,7 +1492,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendContactReq"
+                            "$ref": "#/definitions/SendContactReq"
                         }
                     }
                 ],
@@ -1449,7 +1500,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1462,7 +1537,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Revokes a previously sent message for all recipients",
+                "description": "Revokes a previously sent message for all recipients (unsend)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1480,7 +1555,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.DeleteMessageReq"
+                            "$ref": "#/definitions/DeleteMessageReq"
                         }
                     }
                 ],
@@ -1488,7 +1563,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1501,6 +1600,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
+                "description": "Sends a base64-encoded file as a document. Use filename to set the display name.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1518,7 +1618,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendMediaReq"
+                            "$ref": "#/definitions/SendMediaReq"
                         }
                     }
                 ],
@@ -1526,7 +1626,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1539,7 +1663,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Edits an existing sent message by ID, replacing its text content",
+                "description": "Edits a previously sent message by mid, replacing its text content",
                 "consumes": [
                     "application/json"
                 ],
@@ -1557,7 +1681,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.EditMessageReq"
+                            "$ref": "#/definitions/EditMessageReq"
                         }
                     }
                 ],
@@ -1565,7 +1689,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1578,6 +1726,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
+                "description": "Sends a base64-encoded image to a WhatsApp JID with optional caption",
                 "consumes": [
                     "application/json"
                 ],
@@ -1595,7 +1744,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendMediaReq"
+                            "$ref": "#/definitions/SendMediaReq"
                         }
                     }
                 ],
@@ -1603,7 +1752,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1616,7 +1789,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Sends a hyperlink preview message with optional title and description to the specified recipient",
+                "description": "Sends a hyperlink with optional title and description as a rich preview message",
                 "consumes": [
                     "application/json"
                 ],
@@ -1634,7 +1807,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendLinkReq"
+                            "$ref": "#/definitions/SendLinkReq"
                         }
                     }
                 ],
@@ -1642,7 +1815,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1673,7 +1870,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendLocationReq"
+                            "$ref": "#/definitions/SendLocationReq"
                         }
                     }
                 ],
@@ -1681,7 +1878,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1694,7 +1915,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Sends a poll with multiple choice options; selectable_count controls how many options a recipient may choose (0 = unlimited)",
+                "description": "Sends a poll with multiple choice options. selectableCount controls how many options a recipient may choose (0 = unlimited)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1712,7 +1933,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendPollReq"
+                            "$ref": "#/definitions/SendPollReq"
                         }
                     }
                 ],
@@ -1720,7 +1941,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1733,7 +1978,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Sends a typing, recording, or paused presence indicator to a specific chat; presence values: typing, recording, paused",
+                "description": "Sends a chat presence indicator. Accepted values for presence: typing, recording, paused",
                 "consumes": [
                     "application/json"
                 ],
@@ -1751,7 +1996,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SetPresenceReq"
+                            "$ref": "#/definitions/SetPresenceReq"
                         }
                     }
                 ],
@@ -1759,7 +2004,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1772,7 +2029,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Adds an emoji reaction to a message; pass an empty string for reaction to remove an existing reaction",
+                "description": "Adds an emoji reaction to a message. Pass an empty string for reaction to remove an existing one.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1790,7 +2047,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ReactMessageReq"
+                            "$ref": "#/definitions/ReactMessageReq"
                         }
                     }
                 ],
@@ -1798,7 +2055,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1811,7 +2092,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Sends a read receipt for a specific message",
+                "description": "Sends a read receipt for a specific message (removes unread indicator)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1829,7 +2110,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.MarkReadReq"
+                            "$ref": "#/definitions/MarkReadReq"
                         }
                     }
                 ],
@@ -1837,7 +2118,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1850,7 +2143,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Sends a base64-encoded sticker image to the specified recipient",
+                "description": "Sends a base64-encoded sticker image (WebP) to the specified recipient",
                 "consumes": [
                     "application/json"
                 ],
@@ -1868,7 +2161,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendStickerReq"
+                            "$ref": "#/definitions/SendStickerReq"
                         }
                     }
                 ],
@@ -1876,7 +2169,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1889,7 +2206,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Sends a text message via WhatsApp. If :id is omitted, session is identified from ApiKey.",
+                "description": "Sends a plain text message to a WhatsApp JID (user or group)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1907,7 +2224,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendTextReq"
+                            "$ref": "#/definitions/SendTextReq"
                         }
                     }
                 ],
@@ -1915,7 +2232,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1928,6 +2269,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
+                "description": "Sends a base64-encoded video to a WhatsApp JID with optional caption",
                 "consumes": [
                     "application/json"
                 ],
@@ -1945,7 +2287,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SendMediaReq"
+                            "$ref": "#/definitions/SendMediaReq"
                         }
                     }
                 ],
@@ -1953,7 +2295,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1984,7 +2350,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateNewsletterReq"
+                            "$ref": "#/definitions/CreateNewsletterReq"
                         }
                     }
                 ],
@@ -1992,7 +2358,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2026,7 +2392,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2060,7 +2426,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2085,7 +2451,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2116,7 +2482,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NewsletterMessageReq"
+                            "$ref": "#/definitions/NewsletterMessageReq"
                         }
                     }
                 ],
@@ -2124,7 +2490,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2155,12 +2521,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "jid": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/NewsletterSubscribeReq"
                         }
                     }
                 ],
@@ -2168,7 +2529,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2181,7 +2554,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Returns all sessions",
+                "description": "Returns all sessions. APIKey is never included in responses.",
                 "produces": [
                     "application/json"
                 ],
@@ -2193,7 +2566,28 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/SessionResp"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2204,7 +2598,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Creates a new session with an auto-generated or custom apiKey",
+                "description": "Creates a new session with an auto-generated or custom apiKey. Returns the full session object including the apiKey.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2222,21 +2616,39 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.SessionCreateReq"
+                            "$ref": "#/definitions/SessionCreateReq"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/SessionCreatedResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2249,7 +2661,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Returns the session identified by :sessionId (name or id)",
+                "description": "Returns the session identified by :sessionId (name or id). APIKey is not included.",
                 "produces": [
                     "application/json"
                 ],
@@ -2270,7 +2682,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/SessionResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2281,7 +2711,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Disconnects and deletes the session",
+                "description": "Disconnects and permanently deletes the session and its device from the store",
                 "produces": [
                     "application/json"
                 ],
@@ -2302,7 +2732,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2315,7 +2751,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Connects a WhatsApp session (starts pairing if new)",
+                "description": "Connects a WhatsApp session. Returns status CONNECTED, PAIRING (QR required), or CONNECTING.",
                 "produces": [
                     "application/json"
                 ],
@@ -2336,7 +2772,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/ConnectResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "409": {
+                        "description": "QR pairing already pending",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2349,7 +2809,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Disconnects the active WhatsApp session",
+                "description": "Disconnects the active WhatsApp session without removing the device (can reconnect later)",
                 "produces": [
                     "application/json"
                 ],
@@ -2370,7 +2830,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2383,7 +2849,7 @@ const docTemplate = `{
                         "ApiKey": []
                     }
                 ],
-                "description": "Returns a QR code for pairing a new WhatsApp device",
+                "description": "Returns the current QR code string and a base64 PNG image. Call /connect first, then poll this endpoint until a code is available.",
                 "produces": [
                     "application/json"
                 ],
@@ -2404,7 +2870,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/QRResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "No QR code available yet",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2438,7 +2922,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2474,7 +2958,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateWebhookReq"
+                            "$ref": "#/definitions/CreateWebhookReq"
                         }
                     }
                 ],
@@ -2482,7 +2966,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2523,7 +3007,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2554,7 +3038,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LabelChatReq"
+                            "$ref": "#/definitions/LabelChatReq"
                         }
                     }
                 ],
@@ -2562,7 +3046,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2593,7 +3077,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.LabelMessageReq"
+                            "$ref": "#/definitions/LabelMessageReq"
                         }
                     }
                 ],
@@ -2601,7 +3085,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/APIResponse"
                         }
                     }
                 }
@@ -2609,7 +3093,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.APIResponse": {
+        "APIError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -2621,7 +3119,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.BlockContactReq": {
+        "BlockContactReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2632,7 +3130,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ChatActionReq": {
+        "ChatActionReq": {
             "type": "object",
             "required": [
                 "jid"
@@ -2643,7 +3141,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CheckContactReq": {
+        "CheckContactReq": {
             "type": "object",
             "required": [
                 "phones"
@@ -2657,7 +3155,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CommunityParticipantReq": {
+        "CommunityParticipantReq": {
             "type": "object",
             "required": [
                 "communityJid",
@@ -2675,7 +3173,16 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateCommunityReq": {
+        "ConnectResp": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "description": "Status is one of: CONNECTED, PAIRING, CONNECTING",
+                    "type": "string"
+                }
+            }
+        },
+        "CreateCommunityReq": {
             "type": "object",
             "required": [
                 "name"
@@ -2689,7 +3196,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateGroupReq": {
+        "CreateGroupReq": {
             "type": "object",
             "properties": {
                 "name": {
@@ -2708,7 +3215,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateNewsletterReq": {
+        "CreateNewsletterReq": {
             "type": "object",
             "required": [
                 "name"
@@ -2725,7 +3232,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateWebhookReq": {
+        "CreateWebhookReq": {
             "type": "object",
             "required": [
                 "events",
@@ -2735,7 +3242,7 @@ const docTemplate = `{
                 "events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.EventType"
+                        "$ref": "#/definitions/EventType"
                     }
                 },
                 "natsEnabled": {
@@ -2749,22 +3256,22 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DeleteMessageReq": {
+        "DeleteMessageReq": {
             "type": "object",
             "required": [
                 "jid",
-                "messageId"
+                "mid"
             ],
             "properties": {
                 "jid": {
                     "type": "string"
                 },
-                "messageId": {
+                "mid": {
                     "type": "string"
                 }
             }
         },
-        "dto.EditLabelReq": {
+        "EditLabelReq": {
             "type": "object",
             "required": [
                 "labelId"
@@ -2784,18 +3291,18 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.EditMessageReq": {
+        "EditMessageReq": {
             "type": "object",
             "required": [
                 "jid",
-                "messageId",
+                "mid",
                 "text"
             ],
             "properties": {
                 "jid": {
                     "type": "string"
                 },
-                "messageId": {
+                "mid": {
                     "type": "string"
                 },
                 "text": {
@@ -2803,483 +3310,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.GetAvatarReq": {
-            "type": "object",
-            "required": [
-                "jid"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GetAvatarResp": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GetUserInfoReq": {
-            "type": "object",
-            "required": [
-                "jids"
-            ],
-            "properties": {
-                "jids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "dto.GroupInviteLinkResp": {
-            "type": "object",
-            "properties": {
-                "link": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GroupJIDReq": {
-            "type": "object",
-            "required": [
-                "groupJid"
-            ],
-            "properties": {
-                "groupJid": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GroupJoinReq": {
-            "type": "object",
-            "required": [
-                "inviteCode"
-            ],
-            "properties": {
-                "inviteCode": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GroupParticipantReq": {
-            "type": "object",
-            "required": [
-                "action",
-                "groupJid",
-                "participants"
-            ],
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "add"
-                },
-                "groupJid": {
-                    "type": "string"
-                },
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "5511999999999"
-                    ]
-                }
-            }
-        },
-        "dto.GroupPhotoReq": {
-            "type": "object",
-            "required": [
-                "groupJid",
-                "photoBase64"
-            ],
-            "properties": {
-                "groupJid": {
-                    "type": "string"
-                },
-                "photoBase64": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GroupRequestActionReq": {
-            "type": "object",
-            "required": [
-                "action",
-                "groupJid",
-                "participants"
-            ],
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "approve"
-                },
-                "groupJid": {
-                    "type": "string"
-                },
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "5511999999999"
-                    ]
-                }
-            }
-        },
-        "dto.GroupSettingReq": {
-            "type": "object",
-            "required": [
-                "groupJid"
-            ],
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                },
-                "groupJid": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.GroupTextReq": {
-            "type": "object",
-            "required": [
-                "groupJid",
-                "text"
-            ],
-            "properties": {
-                "groupJid": {
-                    "type": "string"
-                },
-                "text": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.LabelChatReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "labelId"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "labelId": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.LabelMessageReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "labelId",
-                "messageId"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "labelId": {
-                    "type": "string"
-                },
-                "messageId": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.MarkReadReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "messageId"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "messageId": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.NewsletterMessageReq": {
-            "type": "object",
-            "required": [
-                "newsletterJid"
-            ],
-            "properties": {
-                "beforeId": {
-                    "type": "integer"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "newsletterJid": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ReactMessageReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "messageId",
-                "reaction"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "messageId": {
-                    "type": "string"
-                },
-                "reaction": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendContactReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "name",
-                "vcard"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "vcard": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendLinkReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "url"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "jid": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendLocationReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "lat",
-                "lng"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "jid": {
-                    "type": "string"
-                },
-                "lat": {
-                    "type": "number"
-                },
-                "lng": {
-                    "type": "number"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendMediaReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "mimeType"
-            ],
-            "properties": {
-                "base64": {
-                    "type": "string"
-                },
-                "caption": {
-                    "type": "string"
-                },
-                "filename": {
-                    "type": "string"
-                },
-                "jid": {
-                    "type": "string"
-                },
-                "mimeType": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendPollReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "name",
-                "options"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "options": {
-                    "type": "array",
-                    "minItems": 2,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "selectableCount": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.SendStickerReq": {
-            "type": "object",
-            "required": [
-                "base64",
-                "jid",
-                "mimeType"
-            ],
-            "properties": {
-                "base64": {
-                    "type": "string"
-                },
-                "jid": {
-                    "type": "string"
-                },
-                "mimeType": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SendTextReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "text"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "text": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SessionCreateReq": {
-            "type": "object",
-            "properties": {
-                "apiKey": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "proxy": {
-                    "$ref": "#/definitions/model.SessionProxy"
-                },
-                "settings": {
-                    "$ref": "#/definitions/model.SessionSettings"
-                },
-                "webhook": {
-                    "$ref": "#/definitions/dto.WebhookCreateInline"
-                }
-            }
-        },
-        "dto.SetPresenceReq": {
-            "type": "object",
-            "required": [
-                "jid",
-                "presence"
-            ],
-            "properties": {
-                "jid": {
-                    "type": "string"
-                },
-                "presence": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SetProfilePictureReq": {
-            "type": "object",
-            "required": [
-                "base64"
-            ],
-            "properties": {
-                "base64": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserInfoResp": {
-            "type": "object",
-            "properties": {
-                "devices": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "jid": {
-                    "type": "string"
-                },
-                "picture": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.WebhookCreateInline": {
-            "type": "object",
-            "properties": {
-                "events": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.EventType"
-                    }
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.EventType": {
+        "EventType": {
             "type": "string",
             "enum": [
                 "All",
@@ -3420,7 +3451,505 @@ const docTemplate = `{
                 "EventBlocklist"
             ]
         },
-        "model.SessionProxy": {
+        "GetAvatarReq": {
+            "type": "object",
+            "required": [
+                "jid"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                }
+            }
+        },
+        "GetAvatarResp": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "GetUserInfoReq": {
+            "type": "object",
+            "required": [
+                "jids"
+            ],
+            "properties": {
+                "jids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "GroupInviteLinkResp": {
+            "type": "object",
+            "properties": {
+                "link": {
+                    "type": "string"
+                }
+            }
+        },
+        "GroupJIDReq": {
+            "type": "object",
+            "required": [
+                "groupJid"
+            ],
+            "properties": {
+                "groupJid": {
+                    "type": "string"
+                }
+            }
+        },
+        "GroupJoinReq": {
+            "type": "object",
+            "required": [
+                "inviteCode"
+            ],
+            "properties": {
+                "inviteCode": {
+                    "type": "string"
+                }
+            }
+        },
+        "GroupParticipantReq": {
+            "type": "object",
+            "required": [
+                "action",
+                "groupJid",
+                "participants"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "add"
+                },
+                "groupJid": {
+                    "type": "string"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "5511999999999"
+                    ]
+                }
+            }
+        },
+        "GroupPhotoReq": {
+            "type": "object",
+            "required": [
+                "groupJid",
+                "photoBase64"
+            ],
+            "properties": {
+                "groupJid": {
+                    "type": "string"
+                },
+                "photoBase64": {
+                    "type": "string"
+                }
+            }
+        },
+        "GroupRequestActionReq": {
+            "type": "object",
+            "required": [
+                "action",
+                "groupJid",
+                "participants"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "approve"
+                },
+                "groupJid": {
+                    "type": "string"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "5511999999999"
+                    ]
+                }
+            }
+        },
+        "GroupSettingReq": {
+            "type": "object",
+            "required": [
+                "groupJid"
+            ],
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "groupJid": {
+                    "type": "string"
+                }
+            }
+        },
+        "GroupTextReq": {
+            "type": "object",
+            "required": [
+                "groupJid",
+                "text"
+            ],
+            "properties": {
+                "groupJid": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "LabelChatReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "labelId"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "labelId": {
+                    "type": "string"
+                }
+            }
+        },
+        "LabelMessageReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "labelId",
+                "mid"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "labelId": {
+                    "type": "string"
+                },
+                "mid": {
+                    "type": "string"
+                }
+            }
+        },
+        "MarkReadReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "mid"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "mid": {
+                    "type": "string"
+                }
+            }
+        },
+        "MidResp": {
+            "type": "object",
+            "properties": {
+                "mid": {
+                    "type": "string"
+                }
+            }
+        },
+        "NewsletterMessageReq": {
+            "type": "object",
+            "required": [
+                "newsletterJid"
+            ],
+            "properties": {
+                "beforeId": {
+                    "type": "integer"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "newsletterJid": {
+                    "type": "string"
+                }
+            }
+        },
+        "NewsletterSubscribeReq": {
+            "type": "object",
+            "required": [
+                "newsletterJid"
+            ],
+            "properties": {
+                "newsletterJid": {
+                    "type": "string"
+                }
+            }
+        },
+        "PictureIDResp": {
+            "type": "object",
+            "properties": {
+                "pictureId": {
+                    "type": "string"
+                }
+            }
+        },
+        "QRResp": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "type": "string"
+                },
+                "qr": {
+                    "type": "string"
+                }
+            }
+        },
+        "ReactMessageReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "mid",
+                "reaction"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "mid": {
+                    "type": "string"
+                },
+                "reaction": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendContactReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "name",
+                "vcard"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "vcard": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendLinkReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "url"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendLocationReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "lat",
+                "lng"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "lat": {
+                    "type": "number"
+                },
+                "lng": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendMediaReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "mimeType"
+            ],
+            "properties": {
+                "base64": {
+                    "type": "string"
+                },
+                "caption": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendPollReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "name",
+                "options"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "options": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "selectableCount": {
+                    "type": "integer"
+                }
+            }
+        },
+        "SendStickerReq": {
+            "type": "object",
+            "required": [
+                "base64",
+                "jid",
+                "mimeType"
+            ],
+            "properties": {
+                "base64": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendTextReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "text"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "SessionCreateReq": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "apiKey": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "proxy": {
+                    "$ref": "#/definitions/SessionProxy"
+                },
+                "settings": {
+                    "$ref": "#/definitions/SessionSettings"
+                },
+                "webhook": {
+                    "$ref": "#/definitions/WebhookCreateInline"
+                }
+            }
+        },
+        "SessionCreatedResp": {
+            "type": "object",
+            "properties": {
+                "apiKey": {
+                    "type": "string"
+                },
+                "connected": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "proxy": {
+                    "$ref": "#/definitions/SessionProxy"
+                },
+                "qrCode": {
+                    "type": "string"
+                },
+                "settings": {
+                    "$ref": "#/definitions/SessionSettings"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "webhook": {
+                    "$ref": "#/definitions/Webhook"
+                }
+            }
+        },
+        "SessionProxy": {
             "type": "object",
             "properties": {
                 "host": {
@@ -3440,7 +3969,39 @@ const docTemplate = `{
                 }
             }
         },
-        "model.SessionSettings": {
+        "SessionResp": {
+            "type": "object",
+            "properties": {
+                "connected": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "proxy": {
+                    "$ref": "#/definitions/SessionProxy"
+                },
+                "settings": {
+                    "$ref": "#/definitions/SessionSettings"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "SessionSettings": {
             "type": "object",
             "properties": {
                 "alwaysOnline": {
@@ -3462,26 +4023,113 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
-        }
-    },
-    "securityDefinitions": {
-        "ApiKey": {
-            "description": "Session or admin token. Pass the apiKey value directly in the ApiKey header.",
-            "type": "apiKey",
-            "name": "ApiKey",
-            "in": "header"
+        },
+        "SetPresenceReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "presence"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "presence": {
+                    "type": "string"
+                }
+            }
+        },
+        "SetProfilePictureReq": {
+            "type": "object",
+            "required": [
+                "base64"
+            ],
+            "properties": {
+                "base64": {
+                    "type": "string"
+                }
+            }
+        },
+        "UserInfoResp": {
+            "type": "object",
+            "properties": {
+                "devices": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "picture": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "Webhook": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "natsEnabled": {
+                    "type": "boolean"
+                },
+                "secret": {
+                    "type": "string"
+                },
+                "sessionId": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "WebhookCreateInline": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EventType"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1.0",
+	Version:          "",
 	Host:             "",
 	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "wzap API",
-	Description:      "WhatsApp Multi-Session API powered by whatsmeow",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

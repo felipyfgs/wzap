@@ -1,5 +1,14 @@
 definitions:
-  dto.APIResponse:
+  APIError:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  APIResponse:
     properties:
       data: {}
       message:
@@ -7,21 +16,21 @@ definitions:
       success:
         type: boolean
     type: object
-  dto.BlockContactReq:
+  BlockContactReq:
     properties:
       jid:
         type: string
     required:
     - jid
     type: object
-  dto.ChatActionReq:
+  ChatActionReq:
     properties:
       jid:
         type: string
     required:
     - jid
     type: object
-  dto.CheckContactReq:
+  CheckContactReq:
     properties:
       phones:
         items:
@@ -30,7 +39,7 @@ definitions:
     required:
     - phones
     type: object
-  dto.CommunityParticipantReq:
+  CommunityParticipantReq:
     properties:
       communityJid:
         type: string
@@ -42,7 +51,13 @@ definitions:
     - communityJid
     - participants
     type: object
-  dto.CreateCommunityReq:
+  ConnectResp:
+    properties:
+      status:
+        description: 'Status is one of: CONNECTED, PAIRING, CONNECTING'
+        type: string
+    type: object
+  CreateCommunityReq:
     properties:
       description:
         type: string
@@ -51,7 +66,7 @@ definitions:
     required:
     - name
     type: object
-  dto.CreateGroupReq:
+  CreateGroupReq:
     properties:
       name:
         example: My Awesome Group
@@ -64,7 +79,7 @@ definitions:
           type: string
         type: array
     type: object
-  dto.CreateNewsletterReq:
+  CreateNewsletterReq:
     properties:
       description:
         type: string
@@ -75,11 +90,11 @@ definitions:
     required:
     - name
     type: object
-  dto.CreateWebhookReq:
+  CreateWebhookReq:
     properties:
       events:
         items:
-          $ref: '#/definitions/model.EventType'
+          $ref: '#/definitions/EventType'
         type: array
       natsEnabled:
         type: boolean
@@ -91,17 +106,17 @@ definitions:
     - events
     - url
     type: object
-  dto.DeleteMessageReq:
+  DeleteMessageReq:
     properties:
       jid:
         type: string
-      messageId:
+      mid:
         type: string
     required:
     - jid
-    - messageId
+    - mid
     type: object
-  dto.EditLabelReq:
+  EditLabelReq:
     properties:
       color:
         type: integer
@@ -114,337 +129,20 @@ definitions:
     required:
     - labelId
     type: object
-  dto.EditMessageReq:
+  EditMessageReq:
     properties:
       jid:
         type: string
-      messageId:
+      mid:
         type: string
       text:
         type: string
     required:
     - jid
-    - messageId
+    - mid
     - text
     type: object
-  dto.GetAvatarReq:
-    properties:
-      jid:
-        type: string
-    required:
-    - jid
-    type: object
-  dto.GetAvatarResp:
-    properties:
-      id:
-        type: string
-      url:
-        type: string
-    type: object
-  dto.GetUserInfoReq:
-    properties:
-      jids:
-        items:
-          type: string
-        type: array
-    required:
-    - jids
-    type: object
-  dto.GroupInviteLinkResp:
-    properties:
-      link:
-        type: string
-    type: object
-  dto.GroupJIDReq:
-    properties:
-      groupJid:
-        type: string
-    required:
-    - groupJid
-    type: object
-  dto.GroupJoinReq:
-    properties:
-      inviteCode:
-        type: string
-    required:
-    - inviteCode
-    type: object
-  dto.GroupParticipantReq:
-    properties:
-      action:
-        example: add
-        type: string
-      groupJid:
-        type: string
-      participants:
-        example:
-        - "5511999999999"
-        items:
-          type: string
-        type: array
-    required:
-    - action
-    - groupJid
-    - participants
-    type: object
-  dto.GroupPhotoReq:
-    properties:
-      groupJid:
-        type: string
-      photoBase64:
-        type: string
-    required:
-    - groupJid
-    - photoBase64
-    type: object
-  dto.GroupRequestActionReq:
-    properties:
-      action:
-        example: approve
-        type: string
-      groupJid:
-        type: string
-      participants:
-        example:
-        - "5511999999999"
-        items:
-          type: string
-        type: array
-    required:
-    - action
-    - groupJid
-    - participants
-    type: object
-  dto.GroupSettingReq:
-    properties:
-      enabled:
-        type: boolean
-      groupJid:
-        type: string
-    required:
-    - groupJid
-    type: object
-  dto.GroupTextReq:
-    properties:
-      groupJid:
-        type: string
-      text:
-        type: string
-    required:
-    - groupJid
-    - text
-    type: object
-  dto.LabelChatReq:
-    properties:
-      jid:
-        type: string
-      labelId:
-        type: string
-    required:
-    - jid
-    - labelId
-    type: object
-  dto.LabelMessageReq:
-    properties:
-      jid:
-        type: string
-      labelId:
-        type: string
-      messageId:
-        type: string
-    required:
-    - jid
-    - labelId
-    - messageId
-    type: object
-  dto.MarkReadReq:
-    properties:
-      jid:
-        type: string
-      messageId:
-        type: string
-    required:
-    - jid
-    - messageId
-    type: object
-  dto.NewsletterMessageReq:
-    properties:
-      beforeId:
-        type: integer
-      count:
-        type: integer
-      newsletterJid:
-        type: string
-    required:
-    - newsletterJid
-    type: object
-  dto.ReactMessageReq:
-    properties:
-      jid:
-        type: string
-      messageId:
-        type: string
-      reaction:
-        type: string
-    required:
-    - jid
-    - messageId
-    - reaction
-    type: object
-  dto.SendContactReq:
-    properties:
-      jid:
-        type: string
-      name:
-        type: string
-      vcard:
-        type: string
-    required:
-    - jid
-    - name
-    - vcard
-    type: object
-  dto.SendLinkReq:
-    properties:
-      description:
-        type: string
-      jid:
-        type: string
-      title:
-        type: string
-      url:
-        type: string
-    required:
-    - jid
-    - url
-    type: object
-  dto.SendLocationReq:
-    properties:
-      address:
-        type: string
-      jid:
-        type: string
-      lat:
-        type: number
-      lng:
-        type: number
-      name:
-        type: string
-    required:
-    - jid
-    - lat
-    - lng
-    type: object
-  dto.SendMediaReq:
-    properties:
-      base64:
-        type: string
-      caption:
-        type: string
-      filename:
-        type: string
-      jid:
-        type: string
-      mimeType:
-        type: string
-    required:
-    - jid
-    - mimeType
-    type: object
-  dto.SendPollReq:
-    properties:
-      jid:
-        type: string
-      name:
-        type: string
-      options:
-        items:
-          type: string
-        minItems: 2
-        type: array
-      selectableCount:
-        type: integer
-    required:
-    - jid
-    - name
-    - options
-    type: object
-  dto.SendStickerReq:
-    properties:
-      base64:
-        type: string
-      jid:
-        type: string
-      mimeType:
-        type: string
-    required:
-    - base64
-    - jid
-    - mimeType
-    type: object
-  dto.SendTextReq:
-    properties:
-      jid:
-        type: string
-      text:
-        type: string
-    required:
-    - jid
-    - text
-    type: object
-  dto.SessionCreateReq:
-    properties:
-      apiKey:
-        type: string
-      name:
-        type: string
-      proxy:
-        $ref: '#/definitions/model.SessionProxy'
-      settings:
-        $ref: '#/definitions/model.SessionSettings'
-      webhook:
-        $ref: '#/definitions/dto.WebhookCreateInline'
-    type: object
-  dto.SetPresenceReq:
-    properties:
-      jid:
-        type: string
-      presence:
-        type: string
-    required:
-    - jid
-    - presence
-    type: object
-  dto.SetProfilePictureReq:
-    properties:
-      base64:
-        type: string
-    required:
-    - base64
-    type: object
-  dto.UserInfoResp:
-    properties:
-      devices:
-        items:
-          type: string
-        type: array
-      jid:
-        type: string
-      picture:
-        type: string
-      status:
-        type: string
-    type: object
-  dto.WebhookCreateInline:
-    properties:
-      events:
-        items:
-          $ref: '#/definitions/model.EventType'
-        type: array
-      url:
-        type: string
-    type: object
-  model.EventType:
+  EventType:
     enum:
     - All
     - Message
@@ -582,7 +280,338 @@ definitions:
     - EventUserStatusMute
     - EventBlocklistChange
     - EventBlocklist
-  model.SessionProxy:
+  GetAvatarReq:
+    properties:
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
+  GetAvatarResp:
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+    type: object
+  GetUserInfoReq:
+    properties:
+      jids:
+        items:
+          type: string
+        type: array
+    required:
+    - jids
+    type: object
+  GroupInviteLinkResp:
+    properties:
+      link:
+        type: string
+    type: object
+  GroupJIDReq:
+    properties:
+      groupJid:
+        type: string
+    required:
+    - groupJid
+    type: object
+  GroupJoinReq:
+    properties:
+      inviteCode:
+        type: string
+    required:
+    - inviteCode
+    type: object
+  GroupParticipantReq:
+    properties:
+      action:
+        example: add
+        type: string
+      groupJid:
+        type: string
+      participants:
+        example:
+        - "5511999999999"
+        items:
+          type: string
+        type: array
+    required:
+    - action
+    - groupJid
+    - participants
+    type: object
+  GroupPhotoReq:
+    properties:
+      groupJid:
+        type: string
+      photoBase64:
+        type: string
+    required:
+    - groupJid
+    - photoBase64
+    type: object
+  GroupRequestActionReq:
+    properties:
+      action:
+        example: approve
+        type: string
+      groupJid:
+        type: string
+      participants:
+        example:
+        - "5511999999999"
+        items:
+          type: string
+        type: array
+    required:
+    - action
+    - groupJid
+    - participants
+    type: object
+  GroupSettingReq:
+    properties:
+      enabled:
+        type: boolean
+      groupJid:
+        type: string
+    required:
+    - groupJid
+    type: object
+  GroupTextReq:
+    properties:
+      groupJid:
+        type: string
+      text:
+        type: string
+    required:
+    - groupJid
+    - text
+    type: object
+  LabelChatReq:
+    properties:
+      jid:
+        type: string
+      labelId:
+        type: string
+    required:
+    - jid
+    - labelId
+    type: object
+  LabelMessageReq:
+    properties:
+      jid:
+        type: string
+      labelId:
+        type: string
+      mid:
+        type: string
+    required:
+    - jid
+    - labelId
+    - mid
+    type: object
+  MarkReadReq:
+    properties:
+      jid:
+        type: string
+      mid:
+        type: string
+    required:
+    - jid
+    - mid
+    type: object
+  MidResp:
+    properties:
+      mid:
+        type: string
+    type: object
+  NewsletterMessageReq:
+    properties:
+      beforeId:
+        type: integer
+      count:
+        type: integer
+      newsletterJid:
+        type: string
+    required:
+    - newsletterJid
+    type: object
+  NewsletterSubscribeReq:
+    properties:
+      newsletterJid:
+        type: string
+    required:
+    - newsletterJid
+    type: object
+  PictureIDResp:
+    properties:
+      pictureId:
+        type: string
+    type: object
+  QRResp:
+    properties:
+      image:
+        type: string
+      qr:
+        type: string
+    type: object
+  ReactMessageReq:
+    properties:
+      jid:
+        type: string
+      mid:
+        type: string
+      reaction:
+        type: string
+    required:
+    - jid
+    - mid
+    - reaction
+    type: object
+  SendContactReq:
+    properties:
+      jid:
+        type: string
+      name:
+        type: string
+      vcard:
+        type: string
+    required:
+    - jid
+    - name
+    - vcard
+    type: object
+  SendLinkReq:
+    properties:
+      description:
+        type: string
+      jid:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    required:
+    - jid
+    - url
+    type: object
+  SendLocationReq:
+    properties:
+      address:
+        type: string
+      jid:
+        type: string
+      lat:
+        type: number
+      lng:
+        type: number
+      name:
+        type: string
+    required:
+    - jid
+    - lat
+    - lng
+    type: object
+  SendMediaReq:
+    properties:
+      base64:
+        type: string
+      caption:
+        type: string
+      filename:
+        type: string
+      jid:
+        type: string
+      mimeType:
+        type: string
+    required:
+    - jid
+    - mimeType
+    type: object
+  SendPollReq:
+    properties:
+      jid:
+        type: string
+      name:
+        type: string
+      options:
+        items:
+          type: string
+        minItems: 2
+        type: array
+      selectableCount:
+        type: integer
+    required:
+    - jid
+    - name
+    - options
+    type: object
+  SendStickerReq:
+    properties:
+      base64:
+        type: string
+      jid:
+        type: string
+      mimeType:
+        type: string
+    required:
+    - base64
+    - jid
+    - mimeType
+    type: object
+  SendTextReq:
+    properties:
+      jid:
+        type: string
+      text:
+        type: string
+    required:
+    - jid
+    - text
+    type: object
+  SessionCreateReq:
+    properties:
+      apiKey:
+        type: string
+      name:
+        type: string
+      proxy:
+        $ref: '#/definitions/SessionProxy'
+      settings:
+        $ref: '#/definitions/SessionSettings'
+      webhook:
+        $ref: '#/definitions/WebhookCreateInline'
+    required:
+    - name
+    type: object
+  SessionCreatedResp:
+    properties:
+      apiKey:
+        type: string
+      connected:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: string
+      jid:
+        type: string
+      name:
+        type: string
+      proxy:
+        $ref: '#/definitions/SessionProxy'
+      qrCode:
+        type: string
+      settings:
+        $ref: '#/definitions/SessionSettings'
+      status:
+        type: string
+      updatedAt:
+        type: string
+      webhook:
+        $ref: '#/definitions/Webhook'
+    type: object
+  SessionProxy:
     properties:
       host:
         type: string
@@ -595,7 +624,28 @@ definitions:
       username:
         type: string
     type: object
-  model.SessionSettings:
+  SessionResp:
+    properties:
+      connected:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: string
+      jid:
+        type: string
+      name:
+        type: string
+      proxy:
+        $ref: '#/definitions/SessionProxy'
+      settings:
+        $ref: '#/definitions/SessionSettings'
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  SessionSettings:
     properties:
       alwaysOnline:
         type: boolean
@@ -610,17 +660,70 @@ definitions:
       rejectCall:
         type: boolean
     type: object
+  SetPresenceReq:
+    properties:
+      jid:
+        type: string
+      presence:
+        type: string
+    required:
+    - jid
+    - presence
+    type: object
+  SetProfilePictureReq:
+    properties:
+      base64:
+        type: string
+    required:
+    - base64
+    type: object
+  UserInfoResp:
+    properties:
+      devices:
+        items:
+          type: string
+        type: array
+      jid:
+        type: string
+      picture:
+        type: string
+      status:
+        type: string
+    type: object
+  Webhook:
+    properties:
+      createdAt:
+        type: string
+      enabled:
+        type: boolean
+      events:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      natsEnabled:
+        type: boolean
+      secret:
+        type: string
+      sessionId:
+        type: string
+      updatedAt:
+        type: string
+      url:
+        type: string
+    type: object
+  WebhookCreateInline:
+    properties:
+      events:
+        items:
+          $ref: '#/definitions/EventType'
+        type: array
+      url:
+        type: string
+    type: object
 info:
-  contact:
-    name: wzap Support
-    url: https://github.com/galvaofelipe421-wq/fiozap
-  description: WhatsApp Multi-Session API powered by whatsmeow
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
-  termsOfService: https://github.com/galvaofelipe421-wq/fiozap
-  title: wzap API
-  version: "1.0"
+  contact: {}
 paths:
   /chat/archive:
     post:
@@ -634,14 +737,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.ChatActionReq'
+          $ref: '#/definitions/ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Archive a chat
@@ -658,14 +761,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.ChatActionReq'
+          $ref: '#/definitions/ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Mute a chat
@@ -682,14 +785,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.ChatActionReq'
+          $ref: '#/definitions/ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Pin a chat
@@ -707,14 +810,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.ChatActionReq'
+          $ref: '#/definitions/ChatActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Unpin a chat
@@ -732,14 +835,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateCommunityReq'
+          $ref: '#/definitions/CreateCommunityReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Create a community
@@ -757,14 +860,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CommunityParticipantReq'
+          $ref: '#/definitions/CommunityParticipantReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Add subgroup to community
@@ -781,14 +884,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CommunityParticipantReq'
+          $ref: '#/definitions/CommunityParticipantReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Remove subgroup from community
@@ -803,7 +906,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: List contacts
@@ -821,7 +924,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.GetAvatarReq'
+          $ref: '#/definitions/GetAvatarReq'
       produces:
       - application/json
       responses:
@@ -829,10 +932,10 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.APIResponse'
+            - $ref: '#/definitions/APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.GetAvatarResp'
+                  $ref: '#/definitions/GetAvatarResp'
               type: object
       security:
       - ApiKey: []
@@ -851,14 +954,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.BlockContactReq'
+          $ref: '#/definitions/BlockContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Block a contact
@@ -873,7 +976,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get blocked contacts list
@@ -890,14 +993,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CheckContactReq'
+          $ref: '#/definitions/CheckContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Check contacts on WhatsApp
@@ -915,7 +1018,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.GetUserInfoReq'
+          $ref: '#/definitions/GetUserInfoReq'
       produces:
       - application/json
       responses:
@@ -923,11 +1026,11 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.APIResponse'
+            - $ref: '#/definitions/APIResponse'
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/dto.UserInfoResp'
+                    $ref: '#/definitions/UserInfoResp'
                   type: array
               type: object
       security:
@@ -945,7 +1048,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get privacy settings
@@ -963,14 +1066,27 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SetProfilePictureReq'
+          $ref: '#/definitions/SetProfilePictureReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/PictureIDResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Set profile picture
@@ -987,14 +1103,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.BlockContactReq'
+          $ref: '#/definitions/BlockContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Unblock a contact
@@ -1009,7 +1125,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: List joined groups
@@ -1026,14 +1142,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupSettingReq'
+          $ref: '#/definitions/GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Set group announce mode
@@ -1050,14 +1166,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateGroupReq'
+          $ref: '#/definitions/CreateGroupReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Create a new group
@@ -1074,14 +1190,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupTextReq'
+          $ref: '#/definitions/GroupTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Update group description
@@ -1089,20 +1205,23 @@ paths:
       - Groups
   /groups/info:
     post:
+      consumes:
+      - application/json
       description: Get detailed information about a group by JID
       parameters:
-      - description: Group JID
-        in: query
-        name: jid
+      - description: Target Group JID Payload
+        in: body
+        name: request
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get group info
@@ -1110,20 +1229,23 @@ paths:
       - Groups
   /groups/invite-info:
     post:
+      consumes:
+      - application/json
       description: Previews a group's info using an invite code without joining
       parameters:
-      - description: Invite Code
-        in: query
-        name: code
+      - description: Invite Code Payload
+        in: body
+        name: request
         required: true
-        type: string
+        schema:
+          $ref: '#/definitions/GroupJoinReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get group info from invite link
@@ -1139,7 +1261,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupJIDReq'
+          $ref: '#/definitions/GroupJIDReq'
       - description: Reset the invite link
         in: query
         name: reset
@@ -1151,10 +1273,10 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.APIResponse'
+            - $ref: '#/definitions/APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/dto.GroupInviteLinkResp'
+                  $ref: '#/definitions/GroupInviteLinkResp'
               type: object
       security:
       - ApiKey: []
@@ -1172,14 +1294,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupJoinReq'
+          $ref: '#/definitions/GroupJoinReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Join group via link
@@ -1196,14 +1318,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupSettingReq'
+          $ref: '#/definitions/GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Set group join approval mode
@@ -1218,14 +1340,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupJIDReq'
+          $ref: '#/definitions/GroupJIDReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Leave group
@@ -1242,14 +1364,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupSettingReq'
+          $ref: '#/definitions/GroupSettingReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Set group locked mode
@@ -1266,14 +1388,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupTextReq'
+          $ref: '#/definitions/GroupTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Update group name
@@ -1290,14 +1412,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupParticipantReq'
+          $ref: '#/definitions/GroupParticipantReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Update group participants
@@ -1314,14 +1436,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupPhotoReq'
+          $ref: '#/definitions/GroupPhotoReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Update group photo
@@ -1336,14 +1458,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupJIDReq'
+          $ref: '#/definitions/GroupJIDReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get group join requests
@@ -1360,14 +1482,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.GroupRequestActionReq'
+          $ref: '#/definitions/GroupRequestActionReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Approve/Reject group join requests
@@ -1382,7 +1504,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       summary: Health check
       tags:
       - Health
@@ -1397,14 +1519,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.LabelChatReq'
+          $ref: '#/definitions/LabelChatReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Add label to chat
@@ -1421,14 +1543,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.EditLabelReq'
+          $ref: '#/definitions/EditLabelReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Edit a label
@@ -1445,14 +1567,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.LabelMessageReq'
+          $ref: '#/definitions/LabelMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Add label to message
@@ -1462,20 +1584,34 @@ paths:
     post:
       consumes:
       - application/json
+      description: Sends a base64-encoded audio file as a voice note (PTT)
       parameters:
       - description: Media payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendMediaReq'
+          $ref: '#/definitions/SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send an audio message
@@ -1492,14 +1628,27 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendContactReq'
+          $ref: '#/definitions/SendContactReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a contact card
@@ -1509,21 +1658,34 @@ paths:
     post:
       consumes:
       - application/json
-      description: Revokes a previously sent message for all recipients
+      description: Revokes a previously sent message for all recipients (unsend)
       parameters:
       - description: Delete payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.DeleteMessageReq'
+          $ref: '#/definitions/DeleteMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Delete a sent message
@@ -1533,20 +1695,35 @@ paths:
     post:
       consumes:
       - application/json
+      description: Sends a base64-encoded file as a document. Use filename to set
+        the display name.
       parameters:
       - description: Media payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendMediaReq'
+          $ref: '#/definitions/SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a document
@@ -1556,21 +1733,34 @@ paths:
     post:
       consumes:
       - application/json
-      description: Edits an existing sent message by ID, replacing its text content
+      description: Edits a previously sent message by mid, replacing its text content
       parameters:
       - description: Edit payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.EditMessageReq'
+          $ref: '#/definitions/EditMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Edit a sent message
@@ -1580,20 +1770,34 @@ paths:
     post:
       consumes:
       - application/json
+      description: Sends a base64-encoded image to a WhatsApp JID with optional caption
       parameters:
       - description: Media payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendMediaReq'
+          $ref: '#/definitions/SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send an image message
@@ -1603,22 +1807,35 @@ paths:
     post:
       consumes:
       - application/json
-      description: Sends a hyperlink preview message with optional title and description
-        to the specified recipient
+      description: Sends a hyperlink with optional title and description as a rich
+        preview message
       parameters:
       - description: Link payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendLinkReq'
+          $ref: '#/definitions/SendLinkReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a link preview message
@@ -1636,14 +1853,27 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendLocationReq'
+          $ref: '#/definitions/SendLocationReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a location message
@@ -1653,7 +1883,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Sends a poll with multiple choice options; selectable_count controls
+      description: Sends a poll with multiple choice options. selectableCount controls
         how many options a recipient may choose (0 = unlimited)
       parameters:
       - description: Poll payload
@@ -1661,14 +1891,27 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendPollReq'
+          $ref: '#/definitions/SendPollReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a poll message
@@ -1678,22 +1921,30 @@ paths:
     post:
       consumes:
       - application/json
-      description: 'Sends a typing, recording, or paused presence indicator to a specific
-        chat; presence values: typing, recording, paused'
+      description: 'Sends a chat presence indicator. Accepted values for presence:
+        typing, recording, paused'
       parameters:
       - description: Presence payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SetPresenceReq'
+          $ref: '#/definitions/SetPresenceReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Set typing/recording presence
@@ -1703,22 +1954,35 @@ paths:
     post:
       consumes:
       - application/json
-      description: Adds an emoji reaction to a message; pass an empty string for reaction
-        to remove an existing reaction
+      description: Adds an emoji reaction to a message. Pass an empty string for reaction
+        to remove an existing one.
       parameters:
       - description: Reaction payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.ReactMessageReq'
+          $ref: '#/definitions/ReactMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: React to a message
@@ -1728,21 +1992,29 @@ paths:
     post:
       consumes:
       - application/json
-      description: Sends a read receipt for a specific message
+      description: Sends a read receipt for a specific message (removes unread indicator)
       parameters:
       - description: Mark read payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.MarkReadReq'
+          $ref: '#/definitions/MarkReadReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Mark a message as read
@@ -1752,21 +2024,34 @@ paths:
     post:
       consumes:
       - application/json
-      description: Sends a base64-encoded sticker image to the specified recipient
+      description: Sends a base64-encoded sticker image (WebP) to the specified recipient
       parameters:
       - description: Sticker payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendStickerReq'
+          $ref: '#/definitions/SendStickerReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a sticker
@@ -1776,22 +2061,34 @@ paths:
     post:
       consumes:
       - application/json
-      description: Sends a text message via WhatsApp. If :id is omitted, session is
-        identified from ApiKey.
+      description: Sends a plain text message to a WhatsApp JID (user or group)
       parameters:
       - description: Message payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendTextReq'
+          $ref: '#/definitions/SendTextReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a text message
@@ -1801,20 +2098,34 @@ paths:
     post:
       consumes:
       - application/json
+      description: Sends a base64-encoded video to a WhatsApp JID with optional caption
       parameters:
       - description: Media payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SendMediaReq'
+          $ref: '#/definitions/SendMediaReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Send a video message
@@ -1832,14 +2143,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateNewsletterReq'
+          $ref: '#/definitions/CreateNewsletterReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Create a newsletter
@@ -1860,7 +2171,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get newsletter info
@@ -1881,7 +2192,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get newsletter info from invite code
@@ -1896,7 +2207,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: List subscribed newsletters
@@ -1914,14 +2225,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.NewsletterMessageReq'
+          $ref: '#/definitions/NewsletterMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Get newsletter messages
@@ -1939,17 +2250,22 @@ paths:
         name: body
         required: true
         schema:
-          properties:
-            jid:
-              type: string
-          type: object
+          $ref: '#/definitions/NewsletterSubscribeReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Subscribe to a newsletter
@@ -1957,14 +2273,25 @@ paths:
       - Newsletter
   /sessions:
     get:
-      description: Returns all sessions
+      description: Returns all sessions. APIKey is never included in responses.
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/SessionResp'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: List sessions (Admin Only)
@@ -1973,25 +2300,35 @@ paths:
     post:
       consumes:
       - application/json
-      description: Creates a new session with an auto-generated or custom apiKey
+      description: Creates a new session with an auto-generated or custom apiKey.
+        Returns the full session object including the apiKey.
       parameters:
       - description: Session data
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.SessionCreateReq'
+          $ref: '#/definitions/SessionCreateReq'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/SessionCreatedResp'
+              type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Create a new session (Admin Only)
@@ -1999,7 +2336,8 @@ paths:
       - Sessions
   /sessions/{sessionId}:
     delete:
-      description: Disconnects and deletes the session
+      description: Disconnects and permanently deletes the session and its device
+        from the store
       parameters:
       - description: Session name or ID
         in: path
@@ -2012,14 +2350,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Delete session
       tags:
       - Sessions
     get:
-      description: Returns the session identified by :sessionId (name or id)
+      description: Returns the session identified by :sessionId (name or id). APIKey
+        is not included.
       parameters:
       - description: Session name or ID
         in: path
@@ -2032,7 +2375,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/SessionResp'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Get session
@@ -2040,7 +2392,8 @@ paths:
       - Sessions
   /sessions/{sessionId}/connect:
     post:
-      description: Connects a WhatsApp session (starts pairing if new)
+      description: Connects a WhatsApp session. Returns status CONNECTED, PAIRING
+        (QR required), or CONNECTING.
       parameters:
       - description: Session name or ID
         in: path
@@ -2053,7 +2406,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/ConnectResp'
+              type: object
+        "409":
+          description: QR pairing already pending
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Connect session
@@ -2061,7 +2427,8 @@ paths:
       - Sessions
   /sessions/{sessionId}/disconnect:
     post:
-      description: Disconnects the active WhatsApp session
+      description: Disconnects the active WhatsApp session without removing the device
+        (can reconnect later)
       parameters:
       - description: Session name or ID
         in: path
@@ -2074,7 +2441,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Disconnect session
@@ -2082,7 +2453,8 @@ paths:
       - Sessions
   /sessions/{sessionId}/qr:
     get:
-      description: Returns a QR code for pairing a new WhatsApp device
+      description: Returns the current QR code string and a base64 PNG image. Call
+        /connect first, then poll this endpoint until a code is available.
       parameters:
       - description: Session name or ID
         in: path
@@ -2095,7 +2467,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/QRResp'
+              type: object
+        "404":
+          description: No QR code available yet
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - ApiKey: []
       summary: Get QR code for pairing
@@ -2116,7 +2497,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: List webhooks
@@ -2137,14 +2518,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateWebhookReq'
+          $ref: '#/definitions/CreateWebhookReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Create a webhook
@@ -2170,7 +2551,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Delete a webhook
@@ -2187,14 +2568,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.LabelChatReq'
+          $ref: '#/definitions/LabelChatReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Remove label from chat
@@ -2211,24 +2592,17 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.LabelMessageReq'
+          $ref: '#/definitions/LabelMessageReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/APIResponse'
       security:
       - ApiKey: []
       summary: Remove label from message
       tags:
       - Labels
-securityDefinitions:
-  ApiKey:
-    description: Session or admin token. Pass the apiKey value directly in the ApiKey
-      header.
-    in: header
-    name: ApiKey
-    type: apiKey
 swagger: "2.0"

@@ -213,7 +213,9 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SetProfilePictureReq true "Base64 image payload"
-// @Success     200  {object} dto.APIResponse
+// @Success     200  {object} dto.APIResponse{data=dto.PictureIDResp}
+// @Failure     400  {object} dto.APIError
+// @Failure     500  {object} dto.APIError
 // @Security    ApiKey
 // @Router      /contacts/profile-picture [post]
 func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {

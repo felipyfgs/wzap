@@ -375,7 +375,7 @@ curl -X POST http://localhost:8080/sessions/my-session/messages/text \
 **Response:**
 ```json
 {
-  "data": { "messageId": "ABCDEF123456" },
+  "data": { "mid": "ABCDEF123456" },
   "message": "success"
 }
 ```
@@ -492,7 +492,7 @@ curl -X POST http://localhost:8080/sessions/my-session/messages/image \
 ```json
 {
   "jid": "5511999999999",
-  "messageId": "ABCDEF123456",
+  "mid": "ABCDEF123456",
   "text": "Updated text content"
 }
 ```
@@ -508,7 +508,7 @@ Revokes the message for all recipients.
 ```json
 {
   "jid": "5511999999999",
-  "messageId": "ABCDEF123456"
+  "mid": "ABCDEF123456"
 }
 ```
 
@@ -523,7 +523,7 @@ Pass an empty `reaction` string to remove an existing reaction.
 ```json
 {
   "jid": "5511999999999",
-  "messageId": "ABCDEF123456",
+  "mid": "ABCDEF123456",
   "reaction": "👍"
 }
 ```
@@ -537,7 +537,7 @@ Pass an empty `reaction` string to remove an existing reaction.
 ```json
 {
   "jid": "5511999999999",
-  "messageId": "ABCDEF123456"
+  "mid": "ABCDEF123456"
 }
 ```
 
@@ -955,7 +955,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 {
   "jid": "5511999999999@s.whatsapp.net",
   "labelId": "1",
-  "messageId": "ABCDEF123456"
+  "mid": "ABCDEF123456"
 }
 ```
 
@@ -969,7 +969,7 @@ Labels are a WhatsApp Business feature for organizing chats.
 {
   "jid": "5511999999999@s.whatsapp.net",
   "labelId": "1",
-  "messageId": "ABCDEF123456"
+  "mid": "ABCDEF123456"
 }
 ```
 

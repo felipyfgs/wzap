@@ -12,6 +12,28 @@ type APIError struct {
 	Message string `json:"message,omitempty"`
 }
 
+// MidResp is the response for all message send operations.
+type MidResp struct {
+	Mid string `json:"mid"`
+}
+
+// ConnectResp is the response for the connect endpoint.
+type ConnectResp struct {
+	// Status is one of: CONNECTED, PAIRING, CONNECTING
+	Status string `json:"status"`
+}
+
+// QRResp is the response for the QR code endpoint.
+type QRResp struct {
+	QR    string `json:"qr"`
+	Image string `json:"image"`
+}
+
+// PictureIDResp is the response for set-profile-picture.
+type PictureIDResp struct {
+	PictureID string `json:"pictureId"`
+}
+
 func SuccessResp(data interface{}) APIResponse {
 	return APIResponse{
 		Success: true,

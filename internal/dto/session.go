@@ -12,7 +12,7 @@ type WebhookCreateInline struct {
 }
 
 type SessionCreateReq struct {
-	Name     string                `json:"name"`
+	Name     string                `json:"name" validate:"required"`
 	APIKey   string                `json:"apiKey,omitempty"`
 	Proxy    model.SessionProxy    `json:"proxy,omitempty"`
 	Webhook  *WebhookCreateInline  `json:"webhook,omitempty"`

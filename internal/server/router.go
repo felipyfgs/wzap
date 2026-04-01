@@ -1,6 +1,7 @@
 package server
 
 import (
+	ws "github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/swagger"
 
 	_ "wzap/docs"
@@ -10,6 +11,7 @@ import (
 	"wzap/internal/service"
 	"wzap/internal/wa"
 	"wzap/internal/webhook"
+	wsHub "wzap/internal/websocket"
 )
 
 func (s *Server) SetupRoutes() error {
@@ -18,7 +20,10 @@ func (s *Server) SetupRoutes() error {
 	webhookRepo := repo.NewWebhookRepository(s.db.Pool)
 
 	// Initialize Dispatcher
+	hub := wsHub.NewHub()
+
 	disp := webhook.New(webhookRepo, s.nats, s.Config.GlobalWebhookURL)
+	disp.SetWSBroadcaster(hub)
 	go disp.StartConsumer(s.ctx)
 
 	// Initialize Engine
@@ -58,11 +63,18 @@ func (s *Server) SetupRoutes() error {
 	chatHandler := handler.NewChatHandler(chatSvc)
 	mediaHandler := handler.NewMediaHandler(mediaSvc)
 
+	wsHandler := handler.NewWebSocketHandler(hub, s.Config)
+
 	// Swagger UI (No Auth)
 	s.App.Get("/swagger/*", swagger.HandlerDefault)
 
 	// Health (No Auth)
 	s.App.Get("/health", healthHandler.Check)
+
+	// WebSocket (token via query param or Authorization header)
+	s.App.Use("/ws", wsHandler.Upgrade())
+	s.App.Get("/ws/:sessionId", ws.New(wsHandler.Handle()))
+	s.App.Get("/ws", ws.New(wsHandler.Handle()))
 
 	// API Group with Auth (admin token or session token)
 	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))

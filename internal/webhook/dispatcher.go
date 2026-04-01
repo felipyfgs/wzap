@@ -35,20 +35,29 @@ type deliverMsg struct {
 	Payload   json.RawMessage `json:"payload"`
 }
 
+type WSBroadcaster interface {
+	Broadcast(sessionID string, payload []byte)
+}
+
 type Dispatcher struct {
-	webhookRepo    *repo.WebhookRepository
-	nats           *broker.Nats
-	httpClient     *http.Client
+	webhookRepo      *repo.WebhookRepository
+	nats             *broker.Nats
+	httpClient       *http.Client
 	globalWebhookURL string
+	ws               WSBroadcaster
 }
 
 func New(webhookRepo *repo.WebhookRepository, nats *broker.Nats, globalWebhookURL string) *Dispatcher {
 	return &Dispatcher{
-		webhookRepo:    webhookRepo,
-		nats:           nats,
-		httpClient:     &http.Client{Timeout: httpTimeout},
+		webhookRepo:      webhookRepo,
+		nats:             nats,
+		httpClient:       &http.Client{Timeout: httpTimeout},
 		globalWebhookURL: globalWebhookURL,
 	}
+}
+
+func (d *Dispatcher) SetWSBroadcaster(ws WSBroadcaster) {
+	d.ws = ws
 }
 
 // Dispatch looks up active webhooks for the session/event and delivers the payload.
@@ -73,6 +82,10 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	if d.globalWebhookURL != "" {
 		go d.deliverHTTPWithRetry(d.globalWebhookURL, "", payload)
+	}
+
+	if d.ws != nil {
+		d.ws.Broadcast(sessionID, payload)
 	}
 }
 

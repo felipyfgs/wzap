@@ -1,7 +1,17 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "WhatsApp Multi-Session API powered by whatsmeow",
+        "title": "wzap API",
+        "contact": {
+            "name": "wzap Support",
+            "url": "https://github.com/felipyfgs/wzap"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
     },
     "paths": {
         "/chat/archive": {
@@ -3963,6 +3973,14 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKey": {
+            "description": "Session or admin token passed in the ApiKey header",
+            "type": "apiKey",
+            "name": "ApiKey",
+            "in": "header"
         }
     }
 }

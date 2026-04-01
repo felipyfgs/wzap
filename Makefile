@@ -42,4 +42,5 @@ install-tools: ## Install development tools (golangci-lint, swag)
 	go install github.com/swaggo/swag/cmd/swag@latest
 
 docs: ## Generate Swagger documentation
-	swag init -g cmd/wzap/main.go -o docs --parseDependency --parseInternal --useStructName
+	swag init -g main.go -o docs --parseInternal --useStructName \
+		-d cmd/wzap,internal/handler,internal/dto,internal/model,internal/service,internal/repo

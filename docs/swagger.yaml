@@ -583,7 +583,15 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    name: wzap Support
+    url: https://github.com/felipyfgs/wzap
+  description: WhatsApp Multi-Session API powered by whatsmeow
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: wzap API
+  version: "1.0"
 paths:
   /chat/archive:
     post:
@@ -2465,4 +2473,10 @@ paths:
       summary: Remove label from message
       tags:
       - Labels
+securityDefinitions:
+  ApiKey:
+    description: Session or admin token passed in the ApiKey header
+    in: header
+    name: ApiKey
+    type: apiKey
 swagger: "2.0"

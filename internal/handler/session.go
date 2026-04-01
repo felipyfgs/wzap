@@ -116,6 +116,53 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 	return c.JSON(dto.SuccessResp(nil))
 }
 
+// Update godoc
+// @Summary     Update session
+// @Description Updates session fields (name, proxy, settings). Only provided fields are changed.
+// @Tags        Sessions
+// @Accept      json
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body     dto.SessionUpdateReq true "Session update data"
+// @Success     200 {object} dto.APIResponse{Data=dto.SessionResp}
+// @Failure     400 {object} dto.APIError
+// @Security    Authorization
+// @Router      /sessions/{sessionId} [put]
+func (h *SessionHandler) Update(c *fiber.Ctx) error {
+	id := mustGetSessionID(c)
+	var req dto.SessionUpdateReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+
+	session, err := h.sessionSvc.Update(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Update Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(session))
+}
+
+// Status godoc
+// @Summary     Get session status
+// @Description Returns detailed connection status (connected, loggedIn, JID)
+// @Tags        Sessions
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse{Data=dto.SessionStatusResp}
+// @Failure     404 {object} dto.APIError
+// @Security    Authorization
+// @Router      /sessions/{sessionId}/status [get]
+func (h *SessionHandler) Status(c *fiber.Ctx) error {
+	id := mustGetSessionID(c)
+	status, err := h.sessionSvc.Status(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(status))
+}
+
 // Connect godoc
 // @Summary     Connect session
 // @Description Connects a WhatsApp session. Returns status CONNECTED, PAIRING (QR required), or CONNECTING.
@@ -196,4 +243,73 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(dto.SuccessResp(dto.QRResp{QRCode: qrCode, Image: qrBase64}))
+}
+
+// Pair godoc
+// @Summary     Pair via phone number
+// @Description Generates a pairing code for linking without QR scan. Call /connect first.
+// @Tags        Sessions
+// @Accept      json
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body     dto.PairPhoneReq true "Phone number"
+// @Success     200 {object} dto.APIResponse{Data=dto.PairPhoneResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
+// @Router      /sessions/{sessionId}/pair [post]
+func (h *SessionHandler) Pair(c *fiber.Ctx) error {
+	id := mustGetSessionID(c)
+	var req dto.PairPhoneReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if req.Phone == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "phone is required"))
+	}
+
+	code, err := h.engine.PairPhone(c.Context(), id, req.Phone)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Pair Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(dto.PairPhoneResp{PairingCode: code}))
+}
+
+// Logout godoc
+// @Summary     Logout session
+// @Description Logs out the WhatsApp device (requires re-scan), but keeps the session record
+// @Tags        Sessions
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
+// @Router      /sessions/{sessionId}/logout [post]
+func (h *SessionHandler) Logout(c *fiber.Ctx) error {
+	id := mustGetSessionID(c)
+	if err := h.engine.Logout(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Logout Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// Reconnect godoc
+// @Summary     Reconnect session
+// @Description Disconnects and reconnects the session
+// @Tags        Sessions
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
+// @Router      /sessions/{sessionId}/reconnect [post]
+func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
+	id := mustGetSessionID(c)
+	if err := h.engine.Reconnect(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Reconnect Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(nil))
 }

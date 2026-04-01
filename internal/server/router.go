@@ -73,9 +73,14 @@ func (s *Server) SetupRoutes() error {
 
 	// 2. Session lifecycle
 	sess.Get("/", sessionHandler.Get)
+	sess.Put("/", sessionHandler.Update)
 	sess.Delete("/", sessionHandler.Delete)
+	sess.Get("/status", sessionHandler.Status)
 	sess.Post("/connect", sessionHandler.Connect)
 	sess.Post("/disconnect", sessionHandler.Disconnect)
+	sess.Post("/reconnect", sessionHandler.Reconnect)
+	sess.Post("/logout", sessionHandler.Logout)
+	sess.Post("/pair", sessionHandler.Pair)
 	sess.Get("/qr", sessionHandler.QR)
 
 	// 3. Messaging
@@ -94,6 +99,8 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/messages/reaction", messageHandler.ReactMessage)
 	sess.Post("/messages/read", messageHandler.MarkRead)
 	sess.Post("/messages/presence", messageHandler.SetPresence)
+	sess.Post("/messages/button", messageHandler.SendButton)
+	sess.Post("/messages/list", messageHandler.SendList)
 
 	// 4. Contacts
 	sess.Get("/contacts", contactHandler.List)

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"mime"
+	net_http "net/http"
 	"path/filepath"
 	"strings"
 	"time"
@@ -42,10 +44,14 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 	}
 
 	msg := &waE2E.Message{
-		Conversation: proto.String(req.Body),
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+			Text:        proto.String(req.Body),
+			ContextInfo: buildContextInfo(req.ReplyTo),
+		},
 	}
 
-	resp, err := client.SendMessage(ctx, jid, msg)
+	opts := buildSendOpts(req.CustomID)
+	resp, err := client.SendMessage(ctx, jid, msg, opts...)
 	if err != nil {
 		return "", fmt.Errorf("failed to send text message: %w", err)
 	}
@@ -83,9 +89,17 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		return "", err
 	}
 
-	data, err := base64.StdEncoding.DecodeString(req.Base64)
-	if err != nil {
-		return "", fmt.Errorf("invalid base64: %w", err)
+	var data []byte
+	if req.URL != "" {
+		data, err = downloadURL(req.URL)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		data, err = base64.StdEncoding.DecodeString(req.Base64)
+		if err != nil {
+			return "", fmt.Errorf("invalid base64: %w", err)
+		}
 	}
 
 	uploaded, err := client.Upload(ctx, data, mediaType)
@@ -94,6 +108,8 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 	}
 
 	var msg waE2E.Message
+
+	ci := buildContextInfo(req.ReplyTo)
 
 	switch mediaType {
 	case whatsmeow.MediaImage:
@@ -106,6 +122,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			FileEncSHA256: uploaded.FileEncSHA256,
 			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(data))),
+			ContextInfo:   ci,
 		}
 	case whatsmeow.MediaVideo:
 		msg.VideoMessage = &waE2E.VideoMessage{
@@ -117,6 +134,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			FileEncSHA256: uploaded.FileEncSHA256,
 			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(data))),
+			ContextInfo:   ci,
 		}
 	case whatsmeow.MediaDocument:
 		if req.FileName == "" {
@@ -136,6 +154,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			FileEncSHA256: uploaded.FileEncSHA256,
 			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(data))),
+			ContextInfo:   ci,
 		}
 	case whatsmeow.MediaAudio:
 		msg.AudioMessage = &waE2E.AudioMessage{
@@ -147,10 +166,12 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			FileEncSHA256: uploaded.FileEncSHA256,
 			FileSHA256:    uploaded.FileSHA256,
 			FileLength:    proto.Uint64(uint64(len(data))),
+			ContextInfo:   ci,
 		}
 	}
 
-	resp, err := client.SendMessage(ctx, jid, &msg)
+	opts := buildSendOpts(req.CustomID)
+	resp, err := client.SendMessage(ctx, jid, &msg, opts...)
 	if err != nil {
 		return "", fmt.Errorf("failed to send media message: %w", err)
 	}
@@ -410,6 +431,145 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 	}
 
 	return client.SendChatPresence(ctx, jid, presence, media)
+}
+
+func buildContextInfo(reply *dto.ReplyContext) *waE2E.ContextInfo {
+	if reply == nil || reply.MessageID == "" {
+		return nil
+	}
+	ci := &waE2E.ContextInfo{
+		StanzaID: proto.String(reply.MessageID),
+	}
+	if reply.Participant != "" {
+		ci.Participant = proto.String(reply.Participant)
+	}
+	if len(reply.MentionedJID) > 0 {
+		ci.MentionedJID = reply.MentionedJID
+	}
+	return ci
+}
+
+func buildSendOpts(customID string) []whatsmeow.SendRequestExtra {
+	if customID == "" {
+		return nil
+	}
+	return []whatsmeow.SendRequestExtra{{ID: customID}}
+}
+
+func (s *MessageService) SendButton(ctx context.Context, sessionID string, req dto.SendButtonReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+	if !client.IsConnected() {
+		return "", fmt.Errorf("client not connected")
+	}
+
+	jid, err := parseJID(req.Phone)
+	if err != nil {
+		return "", err
+	}
+
+	buttons := make([]*waE2E.ButtonsMessage_Button, len(req.Buttons))
+	for i, b := range req.Buttons {
+		buttons[i] = &waE2E.ButtonsMessage_Button{
+			ButtonID: proto.String(b.ID),
+			ButtonText: &waE2E.ButtonsMessage_Button_ButtonText{
+				DisplayText: proto.String(b.Text),
+			},
+			Type: waE2E.ButtonsMessage_Button_RESPONSE.Enum(),
+		}
+	}
+
+	msg := &waE2E.Message{
+		ViewOnceMessage: &waE2E.FutureProofMessage{
+			Message: &waE2E.Message{
+				ButtonsMessage: &waE2E.ButtonsMessage{
+					ContentText: proto.String(req.Body),
+					FooterText:  proto.String(req.Footer),
+					Buttons:     buttons,
+					HeaderType:  waE2E.ButtonsMessage_EMPTY.Enum(),
+					ContextInfo: buildContextInfo(req.ReplyTo),
+				},
+			},
+		},
+	}
+
+	opts := buildSendOpts(req.CustomID)
+	resp, err := client.SendMessage(ctx, jid, msg, opts...)
+	if err != nil {
+		return "", fmt.Errorf("failed to send button message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto.SendListReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+	if !client.IsConnected() {
+		return "", fmt.Errorf("client not connected")
+	}
+
+	jid, err := parseJID(req.Phone)
+	if err != nil {
+		return "", err
+	}
+
+	sections := make([]*waE2E.ListMessage_Section, len(req.Sections))
+	for i, sec := range req.Sections {
+		rows := make([]*waE2E.ListMessage_Row, len(sec.Rows))
+		for j, r := range sec.Rows {
+			rows[j] = &waE2E.ListMessage_Row{
+				RowID:       proto.String(r.ID),
+				Title:       proto.String(r.Title),
+				Description: proto.String(r.Description),
+			}
+		}
+		sections[i] = &waE2E.ListMessage_Section{
+			Title: proto.String(sec.Title),
+			Rows:  rows,
+		}
+	}
+
+	msg := &waE2E.Message{
+		ListMessage: &waE2E.ListMessage{
+			Title:       proto.String(req.Title),
+			Description: proto.String(req.Body),
+			FooterText:  proto.String(req.Footer),
+			ButtonText:  proto.String(req.ButtonText),
+			ListType:    waE2E.ListMessage_SINGLE_SELECT.Enum(),
+			Sections:    sections,
+			ContextInfo: buildContextInfo(req.ReplyTo),
+		},
+	}
+
+	opts := buildSendOpts(req.CustomID)
+	resp, err := client.SendMessage(ctx, jid, msg, opts...)
+	if err != nil {
+		return "", fmt.Errorf("failed to send list message: %w", err)
+	}
+
+	return resp.ID, nil
+}
+
+func downloadURL(url string) ([]byte, error) {
+	httpClient := &net_http.Client{Timeout: 60 * time.Second}
+	resp, err := httpClient.Get(url)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download from url: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("download returned status %d", resp.StatusCode)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read download body: %w", err)
+	}
+	return data, nil
 }
 
 func parseJID(target string) (types.JID, error) {

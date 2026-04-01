@@ -409,3 +409,63 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
+
+// SendButton godoc
+// @Summary     Send a button message
+// @Description Sends a message with interactive buttons
+// @Tags        Messages
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.SendButtonReq true "Button message payload"
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400  {object} dto.APIError
+// @Failure     500  {object} dto.APIError
+// @Security    Authorization
+// @Router      /messages/button [post]
+func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.SendButtonReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+
+	msgID, err := h.msgSvc.SendButton(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+}
+
+// SendList godoc
+// @Summary     Send a list message
+// @Description Sends a message with interactive list sections
+// @Tags        Messages
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.SendListReq true "List message payload"
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400  {object} dto.APIError
+// @Failure     500  {object} dto.APIError
+// @Security    Authorization
+// @Router      /messages/list [post]
+func (h *MessageHandler) SendList(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.SendListReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+
+	msgID, err := h.msgSvc.SendList(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+}

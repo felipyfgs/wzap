@@ -96,6 +96,16 @@ func (r *SessionRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+func (r *SessionRepository) UpdateSession(ctx context.Context, session *model.Session) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE wz_sessions SET name = $1, proxy = $2, settings = $3, updated_at = NOW() WHERE id = $4`,
+		session.Name, session.Proxy, session.Settings, session.ID)
+	if err != nil {
+		return fmt.Errorf("failed to update session %s: %w", session.ID, err)
+	}
+	return nil
+}
+
 func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status string) error {
 	_, err := r.db.Exec(ctx,
 		`UPDATE wz_sessions SET status = $1, updated_at = NOW() WHERE id = $2`,

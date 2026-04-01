@@ -136,6 +136,59 @@ func (s *SessionService) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
+func (s *SessionService) Update(ctx context.Context, id string, req dto.SessionUpdateReq) (*dto.SessionResp, error) {
+	session, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Name != nil {
+		if !sessionNameRegex.MatchString(*req.Name) {
+			return nil, fmt.Errorf("name must contain only letters, numbers, hyphens and underscores")
+		}
+		session.Name = *req.Name
+	}
+	if req.Proxy != nil {
+		session.Proxy = model.SessionProxy(*req.Proxy)
+	}
+	if req.Settings != nil {
+		session.Settings = model.SessionSettings(*req.Settings)
+	}
+
+	if err := s.repo.UpdateSession(ctx, session); err != nil {
+		return nil, err
+	}
+
+	resp := dto.SessionToResp(*session)
+	return &resp, nil
+}
+
+func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionStatusResp, error) {
+	session, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	loggedIn := session.JID != ""
+	connected := session.Connected == 1
+
+	if s.engine != nil {
+		if client, cErr := s.engine.GetClient(id); cErr == nil {
+			connected = client.IsConnected()
+			loggedIn = client.Store.ID != nil
+		}
+	}
+
+	return &dto.SessionStatusResp{
+		ID:        session.ID,
+		Name:      session.Name,
+		JID:       session.JID,
+		Connected: connected,
+		LoggedIn:  loggedIn,
+		Status:    session.Status,
+	}, nil
+}
+
 func (s *SessionService) SetStatus(ctx context.Context, id string, status string) error {
 	return s.repo.UpdateStatus(ctx, id, status)
 }

@@ -74,6 +74,29 @@ type SessionCreatedResp struct {
 	Webhook   *WebhookResp    `json:"webhook,omitempty"`
 }
 
+type SessionUpdateReq struct {
+	Name     *string          `json:"name,omitempty"`
+	Proxy    *SessionProxy    `json:"proxy,omitempty"`
+	Settings *SessionSettings `json:"settings,omitempty"`
+}
+
+type SessionStatusResp struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	JID       string `json:"jid,omitempty"`
+	Connected bool   `json:"connected"`
+	LoggedIn  bool   `json:"loggedIn"`
+	Status    string `json:"status"`
+}
+
+type PairPhoneReq struct {
+	Phone string `json:"phone" validate:"required"`
+}
+
+type PairPhoneResp struct {
+	PairingCode string `json:"pairingCode"`
+}
+
 func SessionToResp(s model.Session) SessionResp {
 	return SessionResp{
 		ID:        s.ID,

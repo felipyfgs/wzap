@@ -271,3 +271,34 @@ func (m *Manager) Logout(ctx context.Context, sessionID string) error {
 	}
 	return nil
 }
+
+func (m *Manager) PairPhone(ctx context.Context, sessionID, phone string) (string, error) {
+	m.mu.RLock()
+	client, exists := m.clients[sessionID]
+	m.mu.RUnlock()
+
+	if !exists {
+		_, _, err := m.Connect(ctx, sessionID)
+		if err != nil {
+			return "", fmt.Errorf("failed to connect session for pairing: %w", err)
+		}
+		m.mu.RLock()
+		client, exists = m.clients[sessionID]
+		m.mu.RUnlock()
+		if !exists {
+			return "", fmt.Errorf("session client not available after connect")
+		}
+	}
+
+	code, err := client.PairPhone(ctx, phone, true, whatsmeow.PairClientChrome, "wzap")
+	if err != nil {
+		return "", fmt.Errorf("failed to pair phone: %w", err)
+	}
+	return code, nil
+}
+
+func (m *Manager) Reconnect(ctx context.Context, sessionID string) error {
+	m.Disconnect(sessionID)
+	_, _, err := m.Connect(ctx, sessionID)
+	return err
+}

@@ -50,8 +50,8 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		Name:      req.Name,
 		APIKey:    apiKey,
 		Status:    "disconnected",
-		Proxy:     req.Proxy,
-		Settings:  req.Settings,
+		Proxy:     model.SessionProxy(req.Proxy),
+		Settings:  model.SessionSettings(req.Settings),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -60,16 +60,26 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
 
-	resp := &dto.SessionCreatedResp{Session: *session}
+	resp := &dto.SessionCreatedResp{
+		ID:        session.ID,
+		Name:      session.Name,
+		APIKey:    session.APIKey,
+		Status:    session.Status,
+		Connected: session.Connected,
+		Proxy:     req.Proxy,
+		Settings:  req.Settings,
+		CreatedAt: session.CreatedAt,
+		UpdatedAt: session.UpdatedAt,
+	}
 
 	if req.Webhook != nil && req.Webhook.URL != "" {
 		events := make([]string, 0, len(req.Webhook.Events))
 		for _, e := range req.Webhook.Events {
-			if !model.ValidEventTypes[e] {
-				logger.Warn().Str("event", string(e)).Str("session", session.ID).Msg("Skipping invalid event type in inline webhook")
+			if !model.ValidEventTypes[model.EventType(e)] {
+				logger.Warn().Str("event", e).Str("session", session.ID).Msg("Skipping invalid event type in inline webhook")
 				continue
 			}
-			events = append(events, string(e))
+			events = append(events, e)
 		}
 		wh := &model.Webhook{
 			ID:        uuid.NewString(),
@@ -82,7 +92,16 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		if err := s.webhookRepo.Create(ctx, wh); err != nil {
 			logger.Warn().Err(err).Str("session", session.ID).Msg("Failed to create inline webhook")
 		} else {
-			resp.Webhook = wh
+			resp.Webhook = &dto.WebhookResp{
+				ID:          wh.ID,
+				SessionID:   wh.SessionID,
+				URL:         wh.URL,
+				Events:      wh.Events,
+				Enabled:     wh.Enabled,
+				NatsEnabled: wh.NatsEnabled,
+				CreatedAt:   wh.CreatedAt,
+				UpdatedAt:   wh.UpdatedAt,
+			}
 		}
 	}
 

@@ -3242,7 +3242,7 @@ const docTemplate = `{
                 "events": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/EventType"
+                        "type": "string"
                     }
                 },
                 "natsEnabled": {
@@ -3309,147 +3309,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "EventType": {
-            "type": "string",
-            "enum": [
-                "All",
-                "Message",
-                "UndecryptableMessage",
-                "MediaRetry",
-                "Receipt",
-                "DeleteForMe",
-                "Connected",
-                "Disconnected",
-                "ConnectFailure",
-                "LoggedOut",
-                "PairSuccess",
-                "PairError",
-                "QR",
-                "QRScannedWithoutMultidevice",
-                "StreamError",
-                "StreamReplaced",
-                "KeepAliveTimeout",
-                "KeepAliveRestored",
-                "ClientOutdated",
-                "TemporaryBan",
-                "CATRefreshError",
-                "ManualLoginReconnect",
-                "Contact",
-                "Picture",
-                "IdentityChange",
-                "UserAbout",
-                "PushName",
-                "BusinessName",
-                "GroupInfo",
-                "JoinedGroup",
-                "Presence",
-                "ChatPresence",
-                "Archive",
-                "Mute",
-                "Pin",
-                "Star",
-                "ClearChat",
-                "DeleteChat",
-                "MarkChatAsRead",
-                "UnarchiveChatsSetting",
-                "LabelEdit",
-                "LabelAssociationChat",
-                "LabelAssociationMessage",
-                "CallOffer",
-                "CallAccept",
-                "CallTerminate",
-                "CallOfferNotice",
-                "CallRelayLatency",
-                "CallPreAccept",
-                "CallReject",
-                "CallTransport",
-                "UnknownCallEvent",
-                "NewsletterJoin",
-                "NewsletterLeave",
-                "NewsletterMuteChange",
-                "NewsletterLiveUpdate",
-                "HistorySync",
-                "AppState",
-                "AppStateSyncComplete",
-                "AppStateSyncError",
-                "OfflineSyncCompleted",
-                "OfflineSyncPreview",
-                "PrivacySettings",
-                "PushNameSetting",
-                "UserStatusMute",
-                "BlocklistChange",
-                "Blocklist"
-            ],
-            "x-enum-varnames": [
-                "EventAll",
-                "EventMessage",
-                "EventUndecryptableMessage",
-                "EventMediaRetry",
-                "EventReceipt",
-                "EventDeleteForMe",
-                "EventConnected",
-                "EventDisconnected",
-                "EventConnectFailure",
-                "EventLoggedOut",
-                "EventPairSuccess",
-                "EventPairError",
-                "EventQR",
-                "EventQRScannedWithoutMultidevice",
-                "EventStreamError",
-                "EventStreamReplaced",
-                "EventKeepAliveTimeout",
-                "EventKeepAliveRestored",
-                "EventClientOutdated",
-                "EventTemporaryBan",
-                "EventCATRefreshError",
-                "EventManualLoginReconnect",
-                "EventContact",
-                "EventPicture",
-                "EventIdentityChange",
-                "EventUserAbout",
-                "EventPushName",
-                "EventBusinessName",
-                "EventGroupInfo",
-                "EventJoinedGroup",
-                "EventPresence",
-                "EventChatPresence",
-                "EventArchive",
-                "EventMute",
-                "EventPin",
-                "EventStar",
-                "EventClearChat",
-                "EventDeleteChat",
-                "EventMarkChatAsRead",
-                "EventUnarchiveChatsSetting",
-                "EventLabelEdit",
-                "EventLabelAssociationChat",
-                "EventLabelAssociationMessage",
-                "EventCallOffer",
-                "EventCallAccept",
-                "EventCallTerminate",
-                "EventCallOfferNotice",
-                "EventCallRelayLatency",
-                "EventCallPreAccept",
-                "EventCallReject",
-                "EventCallTransport",
-                "EventUnknownCallEvent",
-                "EventNewsletterJoin",
-                "EventNewsletterLeave",
-                "EventNewsletterMuteChange",
-                "EventNewsletterLiveUpdate",
-                "EventHistorySync",
-                "EventAppState",
-                "EventAppStateSyncComplete",
-                "EventAppStateSyncError",
-                "EventOfflineSyncCompleted",
-                "EventOfflineSyncPreview",
-                "EventPrivacySettings",
-                "EventPushNameSetting",
-                "EventUserStatusMute",
-                "EventBlocklistChange",
-                "EventBlocklist"
-            ]
         },
         "GetAvatarReq": {
             "type": "object",
@@ -3932,9 +3791,6 @@ const docTemplate = `{
                 "proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "qrCode": {
-                    "type": "string"
-                },
                 "settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
@@ -3945,7 +3801,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "webhook": {
-                    "$ref": "#/definitions/Webhook"
+                    "$ref": "#/definitions/WebhookResp"
                 }
             }
         },
@@ -4070,7 +3926,21 @@ const docTemplate = `{
                 }
             }
         },
-        "Webhook": {
+        "WebhookCreateInline": {
+            "type": "object",
+            "properties": {
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "WebhookResp": {
             "type": "object",
             "properties": {
                 "createdAt": {
@@ -4099,20 +3969,6 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "WebhookCreateInline": {
-            "type": "object",
-            "properties": {
-                "events": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/EventType"
-                    }
                 },
                 "url": {
                     "type": "string"

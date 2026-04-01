@@ -6,30 +6,77 @@ import (
 	"wzap/internal/model"
 )
 
+// SessionProxy mirrors model.SessionProxy for API exposure.
+type SessionProxy struct {
+	Host     string `json:"host,omitempty"`
+	Port     int    `json:"port,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+// SessionSettings mirrors model.SessionSettings for API exposure.
+type SessionSettings struct {
+	AlwaysOnline  bool   `json:"alwaysOnline"`
+	RejectCall    bool   `json:"rejectCall"`
+	MsgRejectCall string `json:"msgRejectCall,omitempty"`
+	ReadMessages  bool   `json:"readMessages"`
+	IgnoreGroups  bool   `json:"ignoreGroups"`
+	IgnoreStatus  bool   `json:"ignoreStatus"`
+}
+
+// WebhookResp is the public representation of a webhook.
+type WebhookResp struct {
+	ID          string    `json:"id"`
+	SessionID   string    `json:"sessionId"`
+	URL         string    `json:"url"`
+	Secret      string    `json:"secret,omitempty"`
+	Events      []string  `json:"events"`
+	Enabled     bool      `json:"enabled"`
+	NatsEnabled bool      `json:"natsEnabled"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+
 type WebhookCreateInline struct {
-	URL    string            `json:"url"`
-	Events []model.EventType `json:"events,omitempty"`
+	URL    string   `json:"url"`
+	Events []string `json:"events,omitempty"`
 }
 
 type SessionCreateReq struct {
-	Name     string                `json:"name" validate:"required"`
-	APIKey   string                `json:"apiKey,omitempty"`
-	Proxy    model.SessionProxy    `json:"proxy,omitempty"`
-	Webhook  *WebhookCreateInline  `json:"webhook,omitempty"`
-	Settings model.SessionSettings `json:"settings,omitempty"`
+	Name     string          `json:"name" validate:"required"`
+	APIKey   string          `json:"apiKey,omitempty"`
+	Proxy    SessionProxy    `json:"proxy,omitempty"`
+	Webhook  *WebhookCreateInline `json:"webhook,omitempty"`
+	Settings SessionSettings `json:"settings,omitempty"`
 }
 
 // SessionResp is the public representation of a session — APIKey is never included.
 type SessionResp struct {
-	ID        string                `json:"id"`
-	Name      string                `json:"name"`
-	JID       string                `json:"jid,omitempty"`
-	Connected int                   `json:"connected"`
-	Status    string                `json:"status"`
-	Proxy     model.SessionProxy    `json:"proxy"`
-	Settings  model.SessionSettings `json:"settings"`
-	CreatedAt time.Time             `json:"createdAt"`
-	UpdatedAt time.Time             `json:"updatedAt"`
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	JID       string          `json:"jid,omitempty"`
+	Connected int             `json:"connected"`
+	Status    string          `json:"status"`
+	Proxy     SessionProxy    `json:"proxy"`
+	Settings  SessionSettings `json:"settings"`
+	CreatedAt time.Time       `json:"createdAt"`
+	UpdatedAt time.Time       `json:"updatedAt"`
+}
+
+// SessionCreatedResp is returned on session creation — includes APIKey once.
+type SessionCreatedResp struct {
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	APIKey    string          `json:"apiKey"`
+	JID       string          `json:"jid,omitempty"`
+	Connected int             `json:"connected"`
+	Status    string          `json:"status"`
+	Proxy     SessionProxy    `json:"proxy"`
+	Settings  SessionSettings `json:"settings"`
+	CreatedAt time.Time       `json:"createdAt"`
+	UpdatedAt time.Time       `json:"updatedAt"`
+	Webhook   *WebhookResp    `json:"webhook,omitempty"`
 }
 
 func SessionToResp(s model.Session) SessionResp {
@@ -39,14 +86,9 @@ func SessionToResp(s model.Session) SessionResp {
 		JID:       s.JID,
 		Connected: s.Connected,
 		Status:    s.Status,
-		Proxy:     s.Proxy,
-		Settings:  s.Settings,
+		Proxy:     SessionProxy(s.Proxy),
+		Settings:  SessionSettings(s.Settings),
 		CreatedAt: s.CreatedAt,
 		UpdatedAt: s.UpdatedAt,
 	}
-}
-
-type SessionCreatedResp struct {
-	model.Session
-	Webhook *model.Webhook `json:"webhook,omitempty"`
 }

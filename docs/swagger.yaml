@@ -94,7 +94,7 @@ definitions:
     properties:
       events:
         items:
-          $ref: '#/definitions/EventType'
+          type: string
         type: array
       natsEnabled:
         type: boolean
@@ -142,144 +142,6 @@ definitions:
     - mid
     - text
     type: object
-  EventType:
-    enum:
-    - All
-    - Message
-    - UndecryptableMessage
-    - MediaRetry
-    - Receipt
-    - DeleteForMe
-    - Connected
-    - Disconnected
-    - ConnectFailure
-    - LoggedOut
-    - PairSuccess
-    - PairError
-    - QR
-    - QRScannedWithoutMultidevice
-    - StreamError
-    - StreamReplaced
-    - KeepAliveTimeout
-    - KeepAliveRestored
-    - ClientOutdated
-    - TemporaryBan
-    - CATRefreshError
-    - ManualLoginReconnect
-    - Contact
-    - Picture
-    - IdentityChange
-    - UserAbout
-    - PushName
-    - BusinessName
-    - GroupInfo
-    - JoinedGroup
-    - Presence
-    - ChatPresence
-    - Archive
-    - Mute
-    - Pin
-    - Star
-    - ClearChat
-    - DeleteChat
-    - MarkChatAsRead
-    - UnarchiveChatsSetting
-    - LabelEdit
-    - LabelAssociationChat
-    - LabelAssociationMessage
-    - CallOffer
-    - CallAccept
-    - CallTerminate
-    - CallOfferNotice
-    - CallRelayLatency
-    - CallPreAccept
-    - CallReject
-    - CallTransport
-    - UnknownCallEvent
-    - NewsletterJoin
-    - NewsletterLeave
-    - NewsletterMuteChange
-    - NewsletterLiveUpdate
-    - HistorySync
-    - AppState
-    - AppStateSyncComplete
-    - AppStateSyncError
-    - OfflineSyncCompleted
-    - OfflineSyncPreview
-    - PrivacySettings
-    - PushNameSetting
-    - UserStatusMute
-    - BlocklistChange
-    - Blocklist
-    type: string
-    x-enum-varnames:
-    - EventAll
-    - EventMessage
-    - EventUndecryptableMessage
-    - EventMediaRetry
-    - EventReceipt
-    - EventDeleteForMe
-    - EventConnected
-    - EventDisconnected
-    - EventConnectFailure
-    - EventLoggedOut
-    - EventPairSuccess
-    - EventPairError
-    - EventQR
-    - EventQRScannedWithoutMultidevice
-    - EventStreamError
-    - EventStreamReplaced
-    - EventKeepAliveTimeout
-    - EventKeepAliveRestored
-    - EventClientOutdated
-    - EventTemporaryBan
-    - EventCATRefreshError
-    - EventManualLoginReconnect
-    - EventContact
-    - EventPicture
-    - EventIdentityChange
-    - EventUserAbout
-    - EventPushName
-    - EventBusinessName
-    - EventGroupInfo
-    - EventJoinedGroup
-    - EventPresence
-    - EventChatPresence
-    - EventArchive
-    - EventMute
-    - EventPin
-    - EventStar
-    - EventClearChat
-    - EventDeleteChat
-    - EventMarkChatAsRead
-    - EventUnarchiveChatsSetting
-    - EventLabelEdit
-    - EventLabelAssociationChat
-    - EventLabelAssociationMessage
-    - EventCallOffer
-    - EventCallAccept
-    - EventCallTerminate
-    - EventCallOfferNotice
-    - EventCallRelayLatency
-    - EventCallPreAccept
-    - EventCallReject
-    - EventCallTransport
-    - EventUnknownCallEvent
-    - EventNewsletterJoin
-    - EventNewsletterLeave
-    - EventNewsletterMuteChange
-    - EventNewsletterLiveUpdate
-    - EventHistorySync
-    - EventAppState
-    - EventAppStateSyncComplete
-    - EventAppStateSyncError
-    - EventOfflineSyncCompleted
-    - EventOfflineSyncPreview
-    - EventPrivacySettings
-    - EventPushNameSetting
-    - EventUserStatusMute
-    - EventBlocklistChange
-    - EventBlocklist
   GetAvatarReq:
     properties:
       jid:
@@ -600,8 +462,6 @@ definitions:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
-      qrCode:
-        type: string
       settings:
         $ref: '#/definitions/SessionSettings'
       status:
@@ -609,7 +469,7 @@ definitions:
       updatedAt:
         type: string
       webhook:
-        $ref: '#/definitions/Webhook'
+        $ref: '#/definitions/WebhookResp'
     type: object
   SessionProxy:
     properties:
@@ -690,7 +550,16 @@ definitions:
       status:
         type: string
     type: object
-  Webhook:
+  WebhookCreateInline:
+    properties:
+      events:
+        items:
+          type: string
+        type: array
+      url:
+        type: string
+    type: object
+  WebhookResp:
     properties:
       createdAt:
         type: string
@@ -710,15 +579,6 @@ definitions:
         type: string
       updatedAt:
         type: string
-      url:
-        type: string
-    type: object
-  WebhookCreateInline:
-    properties:
-      events:
-        items:
-          $ref: '#/definitions/EventType'
-        type: array
       url:
         type: string
     type: object

@@ -30,8 +30,8 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.CreateCommunityReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	group, err := h.communitySvc.Create(c.Context(), id, req)
 	if err != nil {
@@ -56,8 +56,8 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.CommunityParticipantReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	participants, err := h.communitySvc.AddParticipant(c.Context(), id, req)
 	if err != nil {
@@ -82,8 +82,8 @@ func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.CommunityParticipantReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	participants, err := h.communitySvc.RemoveParticipant(c.Context(), id, req)
 	if err != nil {

@@ -53,7 +53,7 @@ func (h *Hub) Broadcast(sessionID string, payload []byte) {
 		if err := conn.WriteMessage(ws.TextMessage, payload); err != nil {
 			logger.Warn().Err(err).Str("session", sessionID).Msg("WebSocket write failed, closing connection")
 			h.Unregister(sessionID, conn)
-			conn.Close()
+			_ = conn.Close()
 		}
 	}
 }
@@ -70,7 +70,7 @@ func (h *Hub) BroadcastAll(payload []byte) {
 
 	for conn := range allConns {
 		if err := conn.WriteMessage(ws.TextMessage, payload); err != nil {
-			conn.Close()
+			_ = conn.Close()
 		}
 	}
 }

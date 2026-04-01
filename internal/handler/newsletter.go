@@ -31,8 +31,8 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.CreateNewsletterReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	meta, err := h.newsletterSvc.Create(c.Context(), id, req)
 	if err != nil {
@@ -127,8 +127,8 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.NewsletterMessageReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgs, err := h.newsletterSvc.Messages(c.Context(), id, req)
 	if err != nil {
@@ -155,8 +155,8 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.NewsletterSubscribeReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.newsletterSvc.Subscribe(c.Context(), id, req.NewsletterJID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -180,8 +180,8 @@ func (h *NewsletterHandler) Unsubscribe(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.NewsletterSubscribeReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.newsletterSvc.Unsubscribe(c.Context(), id, req.NewsletterJID); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -205,8 +205,8 @@ func (h *NewsletterHandler) Mute(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.NewsletterMuteReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.newsletterSvc.Mute(c.Context(), id, req.NewsletterJID, req.Mute); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -230,8 +230,8 @@ func (h *NewsletterHandler) React(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.NewsletterReactReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.newsletterSvc.React(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -255,8 +255,8 @@ func (h *NewsletterHandler) MarkViewed(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.NewsletterMarkViewedReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.newsletterSvc.MarkViewed(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))

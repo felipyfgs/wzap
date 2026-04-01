@@ -298,7 +298,7 @@ func (m *Manager) PairPhone(ctx context.Context, sessionID, phone string) (strin
 }
 
 func (m *Manager) Reconnect(ctx context.Context, sessionID string) error {
-	m.Disconnect(sessionID)
+	_ = m.Disconnect(sessionID)
 	_, _, err := m.Connect(ctx, sessionID)
 	return err
 }

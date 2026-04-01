@@ -26,7 +26,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Archives a chat identified by JID, moving it out of the main chat list",
@@ -61,11 +61,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/delete": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Permanently deletes a chat (including media)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Delete a chat",
+                "parameters": [
+                    {
+                        "description": "Chat JID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ChatActionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/mute": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Mutes notifications for a chat identified by JID",
@@ -104,7 +143,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Pins a chat to the top of the chat list",
@@ -139,11 +178,128 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/read": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Marks specific messages in a chat as read",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Mark chat as read",
+                "parameters": [
+                    {
+                        "description": "Chat JID + message IDs",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ChatMarkReadReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/unarchive": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Removes a chat from the archived list",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Unarchive a chat",
+                "parameters": [
+                    {
+                        "description": "Chat JID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ChatActionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/unmute": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Removes mute from a chat",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Unmute a chat",
+                "parameters": [
+                    {
+                        "description": "Chat JID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ChatActionReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/unpin": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Removes a chat from the pinned position at the top of the chat list",
@@ -182,7 +338,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Community (a group of groups) with a name and optional description",
@@ -221,7 +377,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Adds one or more subgroups (by JID) as participants to an existing community",
@@ -260,7 +416,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Removes one or more subgroups (by JID) from an existing community",
@@ -299,7 +455,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Returns all contacts from the WhatsApp session",
@@ -324,7 +480,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Fetches the profile picture URL and picture ID for the given WhatsApp JID",
@@ -375,7 +531,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Blocks a WhatsApp contact by JID, preventing them from sending messages",
@@ -414,7 +570,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Returns the full list of JIDs currently blocked by the session",
@@ -439,7 +595,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Checks if phone numbers are registered on WhatsApp",
@@ -478,7 +634,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Fetches detailed user info (status, profile picture, devices) for one or more WhatsApp JIDs",
@@ -528,11 +684,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/contacts/presence": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Subscribes to presence updates for a contact (online/offline/typing)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Subscribe to presence",
+                "parameters": [
+                    {
+                        "description": "JID payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SubscribePresenceReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/contacts/privacy": {
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)",
@@ -551,13 +746,50 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Updates a privacy setting (groupadd, last, status, profile, readreceipts, online, calladd)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Set privacy setting",
+                "parameters": [
+                    {
+                        "description": "Privacy setting",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SetPrivacyReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
             }
         },
         "/contacts/profile-picture": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Updates the session account's WhatsApp profile picture with a base64-encoded image",
@@ -616,11 +848,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/contacts/status": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Updates the session's WhatsApp \"About\" status message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Set status message",
+                "parameters": [
+                    {
+                        "description": "Status message",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SetStatusMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/contacts/unblock": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Unblocks a previously blocked WhatsApp contact by JID",
@@ -659,7 +930,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Returns all WhatsApp groups the session is part of",
@@ -684,7 +955,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sets whether only admins can send messages in the group",
@@ -723,7 +994,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Creates a new WhatsApp group with the given participants",
@@ -762,7 +1033,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Updates the description of the specified WhatsApp group",
@@ -797,11 +1068,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/groups/ephemeral": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Sets the disappearing messages timer for a group (in seconds: 0, 86400, 604800, 7776000)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Set ephemeral timer",
+                "parameters": [
+                    {
+                        "description": "Ephemeral settings",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupEphemeralReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/groups/info": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Get detailed information about a group by JID",
@@ -840,7 +1150,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Previews a group's info using an invite code without joining",
@@ -879,7 +1189,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Gets the invite link for a WhatsApp group, optionally resetting it",
@@ -933,7 +1243,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Joins a group using an invite code",
@@ -972,7 +1282,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Activates or deactivates the admin approval system for new members",
@@ -1011,7 +1321,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Leaves a specified WhatsApp group",
@@ -1047,7 +1357,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sets whether only admins can edit group info",
@@ -1086,7 +1396,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Updates the name of the specified WhatsApp group",
@@ -1125,7 +1435,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Add, remove, promote or demote participants in a group",
@@ -1164,7 +1474,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Updates the profile picture of the specified WhatsApp group",
@@ -1199,11 +1509,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/groups/photo/remove": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Removes the current group profile photo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Groups"
+                ],
+                "summary": "Remove group photo",
+                "parameters": [
+                    {
+                        "description": "Group JID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJIDReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/groups/requests": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Get the list of participants that requested to join the group",
@@ -1239,7 +1588,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Approves or rejects participants that requested to join the group",
@@ -1298,7 +1647,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Applies a label to an entire chat conversation",
@@ -1337,7 +1686,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Edits an existing label's name, color, or marks it as deleted",
@@ -1376,7 +1725,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Applies a label to a specific message within a chat",
@@ -1415,7 +1764,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a base64-encoded audio file as a voice note (PTT)",
@@ -1474,11 +1823,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/messages/button": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Sends a message with interactive buttons",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a button message",
+                "parameters": [
+                    {
+                        "description": "Button message payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SendButtonReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/messages/contact": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a vCard contact message via WhatsApp to the specified recipient",
@@ -1541,7 +1953,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Revokes a previously sent message for all recipients (unsend)",
@@ -1604,7 +2016,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a base64-encoded file as a document. Use filename to set the display name.",
@@ -1667,7 +2079,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Edits a previously sent message by mid, replacing its text content",
@@ -1730,7 +2142,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a base64-encoded image to a WhatsApp JID with optional caption",
@@ -1793,7 +2205,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a hyperlink with optional title and description as a rich preview message",
@@ -1852,11 +2264,74 @@ const docTemplate = `{
                 }
             }
         },
+        "/messages/list": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Sends a message with interactive list sections",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Send a list message",
+                "parameters": [
+                    {
+                        "description": "List message payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SendListReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/messages/location": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a GPS location message with optional name and address to the specified recipient",
@@ -1919,7 +2394,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a poll with multiple choice options. selectableCount controls how many options a recipient may choose (0 = unlimited)",
@@ -1982,7 +2457,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a chat presence indicator. Accepted values for presence: typing, recording, paused",
@@ -2033,7 +2508,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Adds an emoji reaction to a message. Pass an empty string for reaction to remove an existing one.",
@@ -2096,7 +2571,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a read receipt for a specific message (removes unread indicator)",
@@ -2147,7 +2622,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a base64-encoded sticker image (WebP) to the specified recipient",
@@ -2210,7 +2685,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a plain text message to a WhatsApp JID (user or group)",
@@ -2273,7 +2748,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Sends a base64-encoded video to a WhatsApp JID with optional caption",
@@ -2336,7 +2811,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Creates a new WhatsApp Newsletter (channel) with optional description and profile picture",
@@ -2375,7 +2850,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Retrieves metadata about a newsletter by its JID",
@@ -2409,7 +2884,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Retrieves newsletter metadata from an invite code without subscribing",
@@ -2443,7 +2918,7 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Returns all newsletters the current session is subscribed to",
@@ -2468,7 +2943,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Fetches messages from a newsletter; supports pagination via before_id cursor and count",
@@ -2503,11 +2978,89 @@ const docTemplate = `{
                 }
             }
         },
+        "/newsletter/mute": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Toggles mute status for a newsletter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Mute/unmute a newsletter",
+                "parameters": [
+                    {
+                        "description": "Mute payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewsletterMuteReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/react": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Sends a reaction to a newsletter message",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "React to a newsletter message",
+                "parameters": [
+                    {
+                        "description": "Reaction payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewsletterReactReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/newsletter/subscribe": {
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Subscribes the current session to a newsletter identified by its JID",
@@ -2554,14 +3107,92 @@ const docTemplate = `{
                 }
             }
         },
+        "/newsletter/unsubscribe": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Unfollows a newsletter",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Unsubscribe from a newsletter",
+                "parameters": [
+                    {
+                        "description": "Newsletter JID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewsletterSubscribeReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/newsletter/viewed": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Marks newsletter messages as viewed by server IDs",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Newsletter"
+                ],
+                "summary": "Mark newsletter messages as viewed",
+                "parameters": [
+                    {
+                        "description": "Mark viewed payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/NewsletterMarkViewedReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions": {
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
-                "description": "Returns all sessions. APIKey is never included in responses.",
+                "description": "Returns all sessions. Token is never included in list responses.",
                 "produces": [
                     "application/json"
                 ],
@@ -2602,10 +3233,10 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
-                "description": "Creates a new session with an auto-generated or custom apiKey. Returns the full session object including the apiKey.",
+                "description": "Creates a new session with an auto-generated or custom token. Returns the full session object including the token.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2665,10 +3296,10 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
-                "description": "Returns the session identified by :sessionId (name or id). APIKey is not included.",
+                "description": "Returns the session identified by :sessionId (name or id). Token is not included.",
                 "produces": [
                     "application/json"
                 ],
@@ -2712,10 +3343,72 @@ const docTemplate = `{
                     }
                 }
             },
+            "put": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Updates session fields (name, proxy, settings). Only provided fields are changed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Update session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Session update data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SessionUpdateReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/SessionResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Disconnects and permanently deletes the session and its device from the store",
@@ -2755,7 +3448,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Connects a WhatsApp session. Returns status CONNECTED, PAIRING (QR required), or CONNECTING.",
@@ -2813,7 +3506,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Disconnects the active WhatsApp session without removing the device (can reconnect later)",
@@ -2849,11 +3542,220 @@ const docTemplate = `{
                 }
             }
         },
+        "/sessions/{sessionId}/logout": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Logs out the WhatsApp device (requires re-scan), but keeps the session record",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Logout session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/media/{messageId}": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Returns a presigned S3 URL for a previously stored media message",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Media"
+                ],
+                "summary": "Get media URL",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Message ID",
+                        "name": "messageId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/messages": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Returns paginated message history for the session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "List messages",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Chat JID filter",
+                        "name": "chat",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Max results (default 50, max 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset for pagination",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/pair": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Generates a pairing code for linking without QR scan. Call /connect first.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Pair via phone number",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Phone number",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/PairPhoneReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/PairPhoneResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions/{sessionId}/qr": {
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Returns the current QR code string and a base64 PNG image. Call /connect first, then poll this endpoint until a code is available.",
@@ -2901,11 +3803,103 @@ const docTemplate = `{
                 }
             }
         },
+        "/sessions/{sessionId}/reconnect": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Disconnects and reconnects the session",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Reconnect session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/status": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Returns detailed connection status (connected, loggedIn, JID)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get session status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/SessionStatusResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions/{sessionId}/webhooks": {
             "get": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Returns all webhooks for the session",
@@ -2937,7 +3931,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Registers a new webhook for the session",
@@ -2980,10 +3974,61 @@ const docTemplate = `{
             }
         },
         "/sessions/{sessionId}/webhooks/{wid}": {
+            "put": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Updates webhook fields (URL, secret, events, enabled, natsEnabled). Only provided fields are changed.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "summary": "Update a webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Webhook ID",
+                        "name": "wid",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Webhook update data",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateWebhookReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Removes a webhook from the session",
@@ -3024,7 +4069,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Removes a label from a chat conversation",
@@ -3063,7 +4108,7 @@ const docTemplate = `{
             "post": {
                 "security": [
                     {
-                        "ApiKey": []
+                        "Authorization": []
                     }
                 ],
                 "description": "Removes a label from a specific message",
@@ -3103,13 +4148,13 @@ const docTemplate = `{
         "APIError": {
             "type": "object",
             "properties": {
-                "Error": {
+                "error": {
                     "type": "string"
                 },
-                "Message": {
+                "message": {
                     "type": "string"
                 },
-                "Success": {
+                "success": {
                     "type": "boolean"
                 }
             }
@@ -3117,11 +4162,11 @@ const docTemplate = `{
         "APIResponse": {
             "type": "object",
             "properties": {
-                "Data": {},
-                "Message": {
+                "data": {},
+                "message": {
                     "type": "string"
                 },
-                "Success": {
+                "success": {
                     "type": "boolean"
                 }
             }
@@ -3129,10 +4174,25 @@ const docTemplate = `{
         "BlockContactReq": {
             "type": "object",
             "required": [
-                "Phone"
+                "phone"
             ],
             "properties": {
-                "Phone": {
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "ButtonItem": {
+            "type": "object",
+            "required": [
+                "id",
+                "text"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "text": {
                     "type": "string"
                 }
             }
@@ -3140,21 +4200,39 @@ const docTemplate = `{
         "ChatActionReq": {
             "type": "object",
             "required": [
-                "Jid"
+                "jid"
             ],
             "properties": {
-                "Jid": {
+                "jid": {
                     "type": "string"
+                }
+            }
+        },
+        "ChatMarkReadReq": {
+            "type": "object",
+            "required": [
+                "jid",
+                "messageIds"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                },
+                "messageIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
         "CheckContactReq": {
             "type": "object",
             "required": [
-                "Phones"
+                "phones"
             ],
             "properties": {
-                "Phones": {
+                "phones": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3165,14 +4243,14 @@ const docTemplate = `{
         "CommunityParticipantReq": {
             "type": "object",
             "required": [
-                "CommunityJid",
-                "Participants"
+                "communityJid",
+                "participants"
             ],
             "properties": {
-                "CommunityJid": {
+                "communityJid": {
                     "type": "string"
                 },
-                "Participants": {
+                "participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3183,7 +4261,7 @@ const docTemplate = `{
         "ConnectResp": {
             "type": "object",
             "properties": {
-                "Status": {
+                "status": {
                     "type": "string"
                 }
             }
@@ -3191,13 +4269,13 @@ const docTemplate = `{
         "CreateCommunityReq": {
             "type": "object",
             "required": [
-                "Name"
+                "name"
             ],
             "properties": {
-                "Description": {
+                "description": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 }
             }
@@ -3205,11 +4283,11 @@ const docTemplate = `{
         "CreateGroupReq": {
             "type": "object",
             "properties": {
-                "Name": {
+                "name": {
                     "type": "string",
                     "example": "My Awesome Group"
                 },
-                "Participants": {
+                "participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3224,16 +4302,16 @@ const docTemplate = `{
         "CreateNewsletterReq": {
             "type": "object",
             "required": [
-                "Name"
+                "name"
             ],
             "properties": {
-                "Description": {
+                "description": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Picture": {
+                "picture": {
                     "type": "string"
                 }
             }
@@ -3241,23 +4319,23 @@ const docTemplate = `{
         "CreateWebhookReq": {
             "type": "object",
             "required": [
-                "Events",
-                "URL"
+                "events",
+                "url"
             ],
             "properties": {
-                "Events": {
+                "events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "NatsEnabled": {
+                "natsEnabled": {
                     "type": "boolean"
                 },
-                "Secret": {
+                "secret": {
                     "type": "string"
                 },
-                "URL": {
+                "url": {
                     "type": "string"
                 }
             }
@@ -3265,14 +4343,14 @@ const docTemplate = `{
         "DeleteMessageReq": {
             "type": "object",
             "required": [
-                "Mid",
-                "Phone"
+                "messageId",
+                "phone"
             ],
             "properties": {
-                "Mid": {
+                "messageId": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 }
             }
@@ -3280,19 +4358,19 @@ const docTemplate = `{
         "EditLabelReq": {
             "type": "object",
             "required": [
-                "LabelId"
+                "labelId"
             ],
             "properties": {
-                "Color": {
+                "color": {
                     "type": "integer"
                 },
-                "Deleted": {
+                "deleted": {
                     "type": "boolean"
                 },
-                "LabelId": {
+                "labelId": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 }
             }
@@ -3300,18 +4378,18 @@ const docTemplate = `{
         "EditMessageReq": {
             "type": "object",
             "required": [
-                "Body",
-                "Mid",
-                "Phone"
+                "body",
+                "messageId",
+                "phone"
             ],
             "properties": {
-                "Body": {
+                "body": {
                     "type": "string"
                 },
-                "Mid": {
+                "messageId": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 }
             }
@@ -3319,10 +4397,10 @@ const docTemplate = `{
         "GetAvatarReq": {
             "type": "object",
             "required": [
-                "Phone"
+                "phone"
             ],
             "properties": {
-                "Phone": {
+                "phone": {
                     "type": "string"
                 }
             }
@@ -3330,10 +4408,10 @@ const docTemplate = `{
         "GetAvatarResp": {
             "type": "object",
             "properties": {
-                "Id": {
+                "id": {
                     "type": "string"
                 },
-                "URL": {
+                "url": {
                     "type": "string"
                 }
             }
@@ -3341,10 +4419,10 @@ const docTemplate = `{
         "GetUserInfoReq": {
             "type": "object",
             "required": [
-                "Phones"
+                "phones"
             ],
             "properties": {
-                "Phones": {
+                "phones": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3352,10 +4430,25 @@ const docTemplate = `{
                 }
             }
         },
+        "GroupEphemeralReq": {
+            "type": "object",
+            "required": [
+                "duration",
+                "groupJid"
+            ],
+            "properties": {
+                "duration": {
+                    "type": "integer"
+                },
+                "groupJid": {
+                    "type": "string"
+                }
+            }
+        },
         "GroupInviteLinkResp": {
             "type": "object",
             "properties": {
-                "Link": {
+                "link": {
                     "type": "string"
                 }
             }
@@ -3363,10 +4456,10 @@ const docTemplate = `{
         "GroupJIDReq": {
             "type": "object",
             "required": [
-                "GroupJid"
+                "groupJid"
             ],
             "properties": {
-                "GroupJid": {
+                "groupJid": {
                     "type": "string"
                 }
             }
@@ -3374,10 +4467,10 @@ const docTemplate = `{
         "GroupJoinReq": {
             "type": "object",
             "required": [
-                "InviteCode"
+                "inviteCode"
             ],
             "properties": {
-                "InviteCode": {
+                "inviteCode": {
                     "type": "string"
                 }
             }
@@ -3385,19 +4478,19 @@ const docTemplate = `{
         "GroupParticipantReq": {
             "type": "object",
             "required": [
-                "Action",
-                "GroupJid",
-                "Participants"
+                "action",
+                "groupJid",
+                "participants"
             ],
             "properties": {
-                "Action": {
+                "action": {
                     "type": "string",
                     "example": "add"
                 },
-                "GroupJid": {
+                "groupJid": {
                     "type": "string"
                 },
-                "Participants": {
+                "participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3411,14 +4504,14 @@ const docTemplate = `{
         "GroupPhotoReq": {
             "type": "object",
             "required": [
-                "GroupJid",
-                "Image"
+                "groupJid",
+                "image"
             ],
             "properties": {
-                "GroupJid": {
+                "groupJid": {
                     "type": "string"
                 },
-                "Image": {
+                "image": {
                     "type": "string"
                 }
             }
@@ -3426,19 +4519,19 @@ const docTemplate = `{
         "GroupRequestActionReq": {
             "type": "object",
             "required": [
-                "Action",
-                "GroupJid",
-                "Participants"
+                "action",
+                "groupJid",
+                "participants"
             ],
             "properties": {
-                "Action": {
+                "action": {
                     "type": "string",
                     "example": "approve"
                 },
-                "GroupJid": {
+                "groupJid": {
                     "type": "string"
                 },
-                "Participants": {
+                "participants": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -3452,13 +4545,13 @@ const docTemplate = `{
         "GroupSettingReq": {
             "type": "object",
             "required": [
-                "GroupJid"
+                "groupJid"
             ],
             "properties": {
-                "Enabled": {
+                "enabled": {
                     "type": "boolean"
                 },
-                "GroupJid": {
+                "groupJid": {
                     "type": "string"
                 }
             }
@@ -3466,14 +4559,14 @@ const docTemplate = `{
         "GroupTextReq": {
             "type": "object",
             "required": [
-                "GroupJid",
-                "Text"
+                "groupJid",
+                "text"
             ],
             "properties": {
-                "GroupJid": {
+                "groupJid": {
                     "type": "string"
                 },
-                "Text": {
+                "text": {
                     "type": "string"
                 }
             }
@@ -3481,14 +4574,14 @@ const docTemplate = `{
         "LabelChatReq": {
             "type": "object",
             "required": [
-                "Jid",
-                "LabelId"
+                "jid",
+                "labelId"
             ],
             "properties": {
-                "Jid": {
+                "jid": {
                     "type": "string"
                 },
-                "LabelId": {
+                "labelId": {
                     "type": "string"
                 }
             }
@@ -3496,18 +4589,54 @@ const docTemplate = `{
         "LabelMessageReq": {
             "type": "object",
             "required": [
-                "Jid",
-                "LabelId",
-                "Mid"
+                "jid",
+                "labelId",
+                "messageId"
             ],
             "properties": {
-                "Jid": {
+                "jid": {
                     "type": "string"
                 },
-                "LabelId": {
+                "labelId": {
                     "type": "string"
                 },
-                "Mid": {
+                "messageId": {
+                    "type": "string"
+                }
+            }
+        },
+        "ListRow": {
+            "type": "object",
+            "required": [
+                "id",
+                "title"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "ListSection": {
+            "type": "object",
+            "required": [
+                "rows"
+            ],
+            "properties": {
+                "rows": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/ListRow"
+                    }
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -3515,14 +4644,14 @@ const docTemplate = `{
         "MarkReadReq": {
             "type": "object",
             "required": [
-                "Mid",
-                "Phone"
+                "messageId",
+                "phone"
             ],
             "properties": {
-                "Mid": {
+                "messageId": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 }
             }
@@ -3530,35 +4659,109 @@ const docTemplate = `{
         "MidResp": {
             "type": "object",
             "properties": {
-                "Mid": {
+                "messageId": {
                     "type": "string"
+                }
+            }
+        },
+        "NewsletterMarkViewedReq": {
+            "type": "object",
+            "required": [
+                "newsletterJid",
+                "serverIds"
+            ],
+            "properties": {
+                "newsletterJid": {
+                    "type": "string"
+                },
+                "serverIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
         "NewsletterMessageReq": {
             "type": "object",
             "required": [
-                "NewsletterJid"
+                "newsletterJid"
             ],
             "properties": {
-                "BeforeId": {
+                "beforeId": {
                     "type": "integer"
                 },
-                "Count": {
+                "count": {
                     "type": "integer"
                 },
-                "NewsletterJid": {
+                "newsletterJid": {
                     "type": "string"
+                }
+            }
+        },
+        "NewsletterMuteReq": {
+            "type": "object",
+            "required": [
+                "newsletterJid"
+            ],
+            "properties": {
+                "mute": {
+                    "type": "boolean"
+                },
+                "newsletterJid": {
+                    "type": "string"
+                }
+            }
+        },
+        "NewsletterReactReq": {
+            "type": "object",
+            "required": [
+                "messageId",
+                "newsletterJid",
+                "reaction",
+                "serverId"
+            ],
+            "properties": {
+                "messageId": {
+                    "type": "string"
+                },
+                "newsletterJid": {
+                    "type": "string"
+                },
+                "reaction": {
+                    "type": "string"
+                },
+                "serverId": {
+                    "type": "integer"
                 }
             }
         },
         "NewsletterSubscribeReq": {
             "type": "object",
             "required": [
-                "NewsletterJid"
+                "newsletterJid"
             ],
             "properties": {
-                "NewsletterJid": {
+                "newsletterJid": {
+                    "type": "string"
+                }
+            }
+        },
+        "PairPhoneReq": {
+            "type": "object",
+            "required": [
+                "phone"
+            ],
+            "properties": {
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "PairPhoneResp": {
+            "type": "object",
+            "properties": {
+                "pairingCode": {
                     "type": "string"
                 }
             }
@@ -3566,7 +4769,7 @@ const docTemplate = `{
         "PictureIDResp": {
             "type": "object",
             "properties": {
-                "PictureId": {
+                "pictureId": {
                     "type": "string"
                 }
             }
@@ -3574,10 +4777,10 @@ const docTemplate = `{
         "QRResp": {
             "type": "object",
             "properties": {
-                "Image": {
+                "image": {
                     "type": "string"
                 },
-                "QRCode": {
+                "qrCode": {
                     "type": "string"
                 }
             }
@@ -3585,37 +4788,86 @@ const docTemplate = `{
         "ReactMessageReq": {
             "type": "object",
             "required": [
-                "Mid",
-                "Phone",
-                "Reaction"
+                "messageId",
+                "phone",
+                "reaction"
             ],
             "properties": {
-                "Mid": {
+                "messageId": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 },
-                "Reaction": {
+                "reaction": {
                     "type": "string"
+                }
+            }
+        },
+        "ReplyContext": {
+            "type": "object",
+            "properties": {
+                "mentionedJid": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "messageId": {
+                    "type": "string"
+                },
+                "participant": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendButtonReq": {
+            "type": "object",
+            "required": [
+                "body",
+                "buttons",
+                "phone"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "buttons": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/ButtonItem"
+                    }
+                },
+                "customId": {
+                    "type": "string"
+                },
+                "footer": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "replyTo": {
+                    "$ref": "#/definitions/ReplyContext"
                 }
             }
         },
         "SendContactReq": {
             "type": "object",
             "required": [
-                "Name",
-                "Phone",
-                "Vcard"
+                "name",
+                "phone",
+                "vcard"
             ],
             "properties": {
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 },
-                "Vcard": {
+                "vcard": {
                     "type": "string"
                 }
             }
@@ -3623,20 +4875,60 @@ const docTemplate = `{
         "SendLinkReq": {
             "type": "object",
             "required": [
-                "Phone",
-                "URL"
+                "phone",
+                "url"
             ],
             "properties": {
-                "Description": {
+                "description": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 },
-                "Title": {
+                "title": {
                     "type": "string"
                 },
-                "URL": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendListReq": {
+            "type": "object",
+            "required": [
+                "body",
+                "buttonText",
+                "phone",
+                "sections",
+                "title"
+            ],
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "buttonText": {
+                    "type": "string"
+                },
+                "customId": {
+                    "type": "string"
+                },
+                "footer": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "replyTo": {
+                    "$ref": "#/definitions/ReplyContext"
+                },
+                "sections": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/ListSection"
+                    }
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -3644,24 +4936,24 @@ const docTemplate = `{
         "SendLocationReq": {
             "type": "object",
             "required": [
-                "Latitude",
-                "Longitude",
-                "Phone"
+                "latitude",
+                "longitude",
+                "phone"
             ],
             "properties": {
-                "Address": {
+                "address": {
                     "type": "string"
                 },
-                "Latitude": {
+                "latitude": {
                     "type": "number"
                 },
-                "Longitude": {
+                "longitude": {
                     "type": "number"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 }
             }
@@ -3669,23 +4961,32 @@ const docTemplate = `{
         "SendMediaReq": {
             "type": "object",
             "required": [
-                "MimeType",
-                "Phone"
+                "mimeType",
+                "phone"
             ],
             "properties": {
-                "Base64": {
+                "base64": {
                     "type": "string"
                 },
-                "Caption": {
+                "caption": {
                     "type": "string"
                 },
-                "FileName": {
+                "customId": {
                     "type": "string"
                 },
-                "MimeType": {
+                "fileName": {
                     "type": "string"
                 },
-                "Phone": {
+                "mimeType": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "replyTo": {
+                    "$ref": "#/definitions/ReplyContext"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -3693,25 +4994,25 @@ const docTemplate = `{
         "SendPollReq": {
             "type": "object",
             "required": [
-                "Name",
-                "Options",
-                "Phone"
+                "name",
+                "options",
+                "phone"
             ],
             "properties": {
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Options": {
+                "options": {
                     "type": "array",
                     "minItems": 2,
                     "items": {
                         "type": "string"
                     }
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 },
-                "SelectableCount": {
+                "selectableCount": {
                     "type": "integer"
                 }
             }
@@ -3719,18 +5020,18 @@ const docTemplate = `{
         "SendStickerReq": {
             "type": "object",
             "required": [
-                "Base64",
-                "MimeType",
-                "Phone"
+                "base64",
+                "mimeType",
+                "phone"
             ],
             "properties": {
-                "Base64": {
+                "base64": {
                     "type": "string"
                 },
-                "MimeType": {
+                "mimeType": {
                     "type": "string"
                 },
-                "Phone": {
+                "phone": {
                     "type": "string"
                 }
             }
@@ -3738,37 +5039,43 @@ const docTemplate = `{
         "SendTextReq": {
             "type": "object",
             "required": [
-                "Body",
-                "Phone"
+                "body",
+                "phone"
             ],
             "properties": {
-                "Body": {
+                "body": {
                     "type": "string"
                 },
-                "Phone": {
+                "customId": {
                     "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "replyTo": {
+                    "$ref": "#/definitions/ReplyContext"
                 }
             }
         },
         "SessionCreateReq": {
             "type": "object",
             "required": [
-                "Name"
+                "name"
             ],
             "properties": {
-                "ApiKey": {
+                "apiKey": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Proxy": {
+                "proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "Settings": {
+                "settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "Webhook": {
+                "webhook": {
                     "$ref": "#/definitions/WebhookCreateInline"
                 }
             }
@@ -3776,37 +5083,37 @@ const docTemplate = `{
         "SessionCreatedResp": {
             "type": "object",
             "properties": {
-                "ApiKey": {
+                "apiKey": {
                     "type": "string"
                 },
-                "Connected": {
+                "connected": {
                     "type": "integer"
                 },
-                "CreatedAt": {
+                "createdAt": {
                     "type": "string"
                 },
-                "Id": {
+                "id": {
                     "type": "string"
                 },
-                "Jid": {
+                "jid": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Proxy": {
+                "proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "Settings": {
+                "settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "Status": {
+                "status": {
                     "type": "string"
                 },
-                "UpdatedAt": {
+                "updatedAt": {
                     "type": "string"
                 },
-                "Webhook": {
+                "webhook": {
                     "$ref": "#/definitions/WebhookResp"
                 }
             }
@@ -3814,19 +5121,19 @@ const docTemplate = `{
         "SessionProxy": {
             "type": "object",
             "properties": {
-                "Host": {
+                "host": {
                     "type": "string"
                 },
-                "Password": {
+                "password": {
                     "type": "string"
                 },
-                "Port": {
+                "port": {
                     "type": "integer"
                 },
-                "Protocol": {
+                "protocol": {
                     "type": "string"
                 },
-                "Username": {
+                "username": {
                     "type": "string"
                 }
             }
@@ -3834,31 +5141,31 @@ const docTemplate = `{
         "SessionResp": {
             "type": "object",
             "properties": {
-                "Connected": {
+                "connected": {
                     "type": "integer"
                 },
-                "CreatedAt": {
+                "createdAt": {
                     "type": "string"
                 },
-                "Id": {
+                "id": {
                     "type": "string"
                 },
-                "Jid": {
+                "jid": {
                     "type": "string"
                 },
-                "Name": {
+                "name": {
                     "type": "string"
                 },
-                "Proxy": {
+                "proxy": {
                     "$ref": "#/definitions/SessionProxy"
                 },
-                "Settings": {
+                "settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
-                "Status": {
+                "status": {
                     "type": "string"
                 },
-                "UpdatedAt": {
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -3866,37 +5173,89 @@ const docTemplate = `{
         "SessionSettings": {
             "type": "object",
             "properties": {
-                "AlwaysOnline": {
+                "alwaysOnline": {
                     "type": "boolean"
                 },
-                "IgnoreGroups": {
+                "ignoreGroups": {
                     "type": "boolean"
                 },
-                "IgnoreStatus": {
+                "ignoreStatus": {
                     "type": "boolean"
                 },
-                "MsgRejectCall": {
+                "msgRejectCall": {
                     "type": "string"
                 },
-                "ReadMessages": {
+                "readMessages": {
                     "type": "boolean"
                 },
-                "RejectCall": {
+                "rejectCall": {
                     "type": "boolean"
+                }
+            }
+        },
+        "SessionStatusResp": {
+            "type": "object",
+            "properties": {
+                "connected": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "loggedIn": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "SessionUpdateReq": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "proxy": {
+                    "$ref": "#/definitions/SessionProxy"
+                },
+                "settings": {
+                    "$ref": "#/definitions/SessionSettings"
                 }
             }
         },
         "SetPresenceReq": {
             "type": "object",
             "required": [
-                "Phone",
-                "State"
+                "phone",
+                "state"
             ],
             "properties": {
-                "Phone": {
+                "phone": {
                     "type": "string"
                 },
-                "State": {
+                "state": {
+                    "type": "string"
+                }
+            }
+        },
+        "SetPrivacyReq": {
+            "type": "object",
+            "required": [
+                "setting",
+                "value"
+            ],
+            "properties": {
+                "setting": {
+                    "type": "string"
+                },
+                "value": {
                     "type": "string"
                 }
             }
@@ -3904,10 +5263,55 @@ const docTemplate = `{
         "SetProfilePictureReq": {
             "type": "object",
             "required": [
-                "Image"
+                "image"
             ],
             "properties": {
-                "Image": {
+                "image": {
+                    "type": "string"
+                }
+            }
+        },
+        "SetStatusMessageReq": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "SubscribePresenceReq": {
+            "type": "object",
+            "required": [
+                "phone"
+            ],
+            "properties": {
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateWebhookReq": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "events": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "natsEnabled": {
+                    "type": "boolean"
+                },
+                "secret": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -3915,19 +5319,19 @@ const docTemplate = `{
         "UserInfoResp": {
             "type": "object",
             "properties": {
-                "Devices": {
+                "devices": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "Jid": {
+                "jid": {
                     "type": "string"
                 },
-                "Picture": {
+                "picture": {
                     "type": "string"
                 },
-                "Status": {
+                "status": {
                     "type": "string"
                 }
             }
@@ -3935,13 +5339,13 @@ const docTemplate = `{
         "WebhookCreateInline": {
             "type": "object",
             "properties": {
-                "Events": {
+                "events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "URL": {
+                "url": {
                     "type": "string"
                 }
             }
@@ -3949,44 +5353,44 @@ const docTemplate = `{
         "WebhookResp": {
             "type": "object",
             "properties": {
-                "CreatedAt": {
+                "createdAt": {
                     "type": "string"
                 },
-                "Enabled": {
+                "enabled": {
                     "type": "boolean"
                 },
-                "Events": {
+                "events": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "Id": {
+                "id": {
                     "type": "string"
                 },
-                "NatsEnabled": {
+                "natsEnabled": {
                     "type": "boolean"
                 },
-                "Secret": {
+                "secret": {
                     "type": "string"
                 },
-                "SessionId": {
+                "sessionId": {
                     "type": "string"
                 },
-                "URL": {
+                "updatedAt": {
                     "type": "string"
                 },
-                "UpdatedAt": {
+                "url": {
                     "type": "string"
                 }
             }
         }
     },
     "securityDefinitions": {
-        "ApiKey": {
-            "description": "Session or admin token passed in the ApiKey header",
+        "Authorization": {
+            "description": "Session or admin token (without Bearer prefix)",
             "type": "apiKey",
-            "name": "ApiKey",
+            "name": "Authorization",
             "in": "header"
         }
     }

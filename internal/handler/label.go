@@ -30,8 +30,8 @@ func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.LabelChatReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.labelSvc.AddToChat(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -55,8 +55,8 @@ func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.LabelChatReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.labelSvc.RemoveFromChat(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -80,8 +80,8 @@ func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.LabelMessageReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.labelSvc.AddToMessage(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -105,8 +105,8 @@ func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.LabelMessageReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.labelSvc.RemoveFromMessage(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -130,8 +130,8 @@ func (h *LabelHandler) EditLabel(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.EditLabelReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.labelSvc.EditLabel(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))

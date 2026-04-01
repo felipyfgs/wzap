@@ -30,8 +30,8 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatActionReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.Archive(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -55,8 +55,8 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatActionReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.Mute(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -80,8 +80,8 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatActionReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.Pin(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -105,8 +105,8 @@ func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatActionReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.Unpin(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -130,8 +130,8 @@ func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatActionReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.Unarchive(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -155,8 +155,8 @@ func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatActionReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.Unmute(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -180,8 +180,8 @@ func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatActionReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.DeleteChat(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
@@ -205,8 +205,8 @@ func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ChatMarkReadReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.chatSvc.MarkRead(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))

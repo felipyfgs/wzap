@@ -34,8 +34,8 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendTextReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 
 	msgID, err := h.msgSvc.SendText(c.Context(), id, req)
@@ -116,8 +116,8 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 		return err
 	}
 	var req dto.SendMediaReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 
 	if req.Base64 == "" {
@@ -150,8 +150,8 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendContactReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.SendContact(c.Context(), id, req)
 	if err != nil {
@@ -178,8 +178,8 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendLocationReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.SendLocation(c.Context(), id, req)
 	if err != nil {
@@ -206,8 +206,8 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendPollReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.SendPoll(c.Context(), id, req)
 	if err != nil {
@@ -234,8 +234,8 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendStickerReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.SendSticker(c.Context(), id, req)
 	if err != nil {
@@ -262,8 +262,8 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendLinkReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.SendLink(c.Context(), id, req)
 	if err != nil {
@@ -290,8 +290,8 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.EditMessageReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.EditMessage(c.Context(), id, req)
 	if err != nil {
@@ -318,8 +318,8 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.DeleteMessageReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.DeleteMessage(c.Context(), id, req)
 	if err != nil {
@@ -346,8 +346,8 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.ReactMessageReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	msgID, err := h.msgSvc.ReactMessage(c.Context(), id, req)
 	if err != nil {
@@ -374,8 +374,8 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.MarkReadReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.msgSvc.MarkRead(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
@@ -401,8 +401,8 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SetPresenceReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.msgSvc.SetPresence(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
@@ -428,8 +428,8 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendButtonReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 
 	msgID, err := h.msgSvc.SendButton(c.Context(), id, req)
@@ -458,8 +458,8 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SendListReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 
 	msgID, err := h.msgSvc.SendList(c.Context(), id, req)

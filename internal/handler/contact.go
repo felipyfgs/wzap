@@ -50,8 +50,8 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.CheckContactReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 
 	results, err := h.contactSvc.CheckContacts(c.Context(), id, req)
@@ -78,8 +78,8 @@ func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.GetAvatarReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	resp, err := h.contactSvc.GetAvatar(c.Context(), id, req)
 	if err != nil {
@@ -104,8 +104,8 @@ func (h *ContactHandler) Block(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.BlockContactReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	resp, err := h.contactSvc.Block(c.Context(), id, req)
 	if err != nil {
@@ -130,8 +130,8 @@ func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.BlockContactReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	resp, err := h.contactSvc.Unblock(c.Context(), id, req)
 	if err != nil {
@@ -176,8 +176,8 @@ func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.GetUserInfoReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	resp, err := h.contactSvc.GetUserInfo(c.Context(), id, req)
 	if err != nil {
@@ -224,8 +224,8 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SetProfilePictureReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	resp, err := h.contactSvc.SetProfilePicture(c.Context(), id, req)
 	if err != nil {
@@ -250,8 +250,8 @@ func (h *ContactHandler) SubscribePresence(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SubscribePresenceReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.contactSvc.SubscribePresence(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Presence Error", err.Error()))
@@ -275,8 +275,8 @@ func (h *ContactHandler) SetPrivacy(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SetPrivacyReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	resp, err := h.contactSvc.SetPrivacy(c.Context(), id, req)
 	if err != nil {
@@ -301,8 +301,8 @@ func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
 		return err
 	}
 	var req dto.SetStatusMessageReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if err := h.contactSvc.SetStatusMessage(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Status Error", err.Error()))

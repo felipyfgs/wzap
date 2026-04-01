@@ -43,8 +43,8 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 	}
 
 	var req dto.SessionCreateReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 
 	session, err := h.sessionSvc.Create(c.Context(), req)
@@ -131,8 +131,8 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 func (h *SessionHandler) Update(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 	var req dto.SessionUpdateReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 
 	session, err := h.sessionSvc.Update(c.Context(), id, req)
@@ -261,8 +261,8 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 	var req dto.PairPhoneReq
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
 	}
 	if req.Phone == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "phone is required"))

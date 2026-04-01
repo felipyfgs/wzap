@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
@@ -399,4 +400,37 @@ func (s *GroupService) SetJoinApproval(ctx context.Context, sessionID, groupJID 
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
 	return client.SetGroupJoinApprovalMode(ctx, jid, approval)
+}
+
+func (s *GroupService) RemovePhoto(ctx context.Context, sessionID, groupJID string) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+	if !client.IsConnected() {
+		return fmt.Errorf("client not connected")
+	}
+
+	jid, err := types.ParseJID(groupJID)
+	if err != nil {
+		return fmt.Errorf("invalid group JID: %w", err)
+	}
+	_, err = client.SetGroupPhoto(ctx, jid, nil)
+	return err
+}
+
+func (s *GroupService) SetEphemeral(ctx context.Context, sessionID, groupJID string, duration time.Duration) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+	if !client.IsConnected() {
+		return fmt.Errorf("client not connected")
+	}
+
+	jid, err := types.ParseJID(groupJID)
+	if err != nil {
+		return fmt.Errorf("invalid group JID: %w", err)
+	}
+	return client.SetDisappearingTimer(ctx, jid, duration, time.Now())
 }

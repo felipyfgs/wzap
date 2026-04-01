@@ -37,6 +37,21 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 			Bool("fromMe", v.Info.IsFromMe).
 			Msg("Message received")
 
+		if m.OnMediaReceived != nil && v.Message != nil {
+			switch {
+			case v.Message.GetImageMessage() != nil:
+				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetImageMessage().GetMimetype(), v.Message.GetImageMessage())
+			case v.Message.GetVideoMessage() != nil:
+				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetVideoMessage().GetMimetype(), v.Message.GetVideoMessage())
+			case v.Message.GetAudioMessage() != nil:
+				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetAudioMessage().GetMimetype(), v.Message.GetAudioMessage())
+			case v.Message.GetDocumentMessage() != nil:
+				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetDocumentMessage().GetMimetype(), v.Message.GetDocumentMessage())
+			case v.Message.GetStickerMessage() != nil:
+				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetStickerMessage().GetMimetype(), v.Message.GetStickerMessage())
+			}
+		}
+
 	case *events.UndecryptableMessage:
 		eventType = model.EventUndecryptableMessage
 		natsData = map[string]interface{}{

@@ -37,3 +37,16 @@ type UserInfoResp struct {
 type SetProfilePictureReq struct {
 	Image string `json:"image" validate:"required"`
 }
+
+type SubscribePresenceReq struct {
+	Phone string `json:"phone" validate:"required"`
+}
+
+type SetPrivacyReq struct {
+	Setting string `json:"setting" validate:"required"`
+	Value   string `json:"value" validate:"required"`
+}
+
+type SetStatusMessageReq struct {
+	Status string `json:"status" validate:"required"`
+}

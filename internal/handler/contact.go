@@ -233,3 +233,79 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	}
 	return c.JSON(dto.SuccessResp(dto.PictureIDResp{PictureID: resp}))
 }
+
+// SubscribePresence godoc
+// @Summary     Subscribe to presence
+// @Description Subscribes to presence updates for a contact (online/offline/typing)
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.SubscribePresenceReq true "JID payload"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /contacts/presence [post]
+func (h *ContactHandler) SubscribePresence(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.SubscribePresenceReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.contactSvc.SubscribePresence(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Presence Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// SetPrivacy godoc
+// @Summary     Set privacy setting
+// @Description Updates a privacy setting (groupadd, last, status, profile, readreceipts, online, calladd)
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.SetPrivacyReq true "Privacy setting"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /contacts/privacy [post]
+func (h *ContactHandler) SetPrivacy(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.SetPrivacyReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	resp, err := h.contactSvc.SetPrivacy(c.Context(), id, req)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Privacy Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(resp))
+}
+
+// SetStatusMessage godoc
+// @Summary     Set status message
+// @Description Updates the session's WhatsApp "About" status message
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.SetStatusMessageReq true "Status message"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /contacts/status [post]
+func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.SetStatusMessageReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.contactSvc.SetStatusMessage(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Status Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}

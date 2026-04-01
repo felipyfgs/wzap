@@ -43,3 +43,8 @@ type GroupSettingReq struct {
 type GroupJIDReq struct {
 	GroupJID string `json:"groupJid" validate:"required"`
 }
+
+type GroupEphemeralReq struct {
+	GroupJID string `json:"groupJid" validate:"required"`
+	Duration int    `json:"duration" validate:"required"`
+}

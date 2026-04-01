@@ -214,3 +214,44 @@ func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string
 
 	return client.SetGroupPhoto(ctx, *client.Store.ID, data)
 }
+
+func (s *ContactService) SubscribePresence(ctx context.Context, sessionID string, req dto.SubscribePresenceReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+	if !client.IsConnected() {
+		return fmt.Errorf("client not connected")
+	}
+
+	jid, err := types.ParseJID(req.Phone)
+	if err != nil {
+		return fmt.Errorf("invalid JID: %w", err)
+	}
+
+	return client.SubscribePresence(ctx, jid)
+}
+
+func (s *ContactService) SetPrivacy(ctx context.Context, sessionID string, req dto.SetPrivacyReq) (types.PrivacySettings, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return types.PrivacySettings{}, err
+	}
+	if !client.IsConnected() {
+		return types.PrivacySettings{}, fmt.Errorf("client not connected")
+	}
+
+	return client.SetPrivacySetting(ctx, types.PrivacySettingType(req.Setting), types.PrivacySetting(req.Value))
+}
+
+func (s *ContactService) SetStatusMessage(ctx context.Context, sessionID string, req dto.SetStatusMessageReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+	if !client.IsConnected() {
+		return fmt.Errorf("client not connected")
+	}
+
+	return client.SetStatusMessage(ctx, req.Status)
+}

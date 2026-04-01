@@ -14,15 +14,22 @@ import (
 	"wzap/internal/webhook"
 )
 
+type MediaAutoUploadFunc func(sessionID, messageID, mimeType string, downloadable whatsmeow.DownloadableMessage)
+
 type Manager struct {
 	clients map[string]*whatsmeow.Client
 	mu      sync.RWMutex
 
-	ctx         context.Context
-	sessionRepo *repo.SessionRepository
-	container   *sqlstore.Container
-	nats        *broker.Nats
-	dispatcher  *webhook.Dispatcher
-	cfg         *config.Config
-	waLog       waLog.Logger
+	ctx              context.Context
+	sessionRepo      *repo.SessionRepository
+	container        *sqlstore.Container
+	nats             *broker.Nats
+	dispatcher       *webhook.Dispatcher
+	cfg              *config.Config
+	waLog            waLog.Logger
+	OnMediaReceived  MediaAutoUploadFunc
+}
+
+func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {
+	m.OnMediaReceived = fn
 }

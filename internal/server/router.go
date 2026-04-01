@@ -41,6 +41,9 @@ func (s *Server) SetupRoutes() error {
 	newsletterSvc := service.NewNewsletterService(engine)
 	communitySvc := service.NewCommunityService(engine)
 	chatSvc := service.NewChatService(engine)
+	mediaSvc := service.NewMediaService(engine, s.minio)
+
+	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)
@@ -53,6 +56,7 @@ func (s *Server) SetupRoutes() error {
 	newsletterHandler := handler.NewNewsletterHandler(newsletterSvc)
 	communityHandler := handler.NewCommunityHandler(communitySvc)
 	chatHandler := handler.NewChatHandler(chatSvc)
+	mediaHandler := handler.NewMediaHandler(mediaSvc)
 
 	// Swagger UI (No Auth)
 	s.App.Get("/swagger/*", swagger.HandlerDefault)
@@ -102,6 +106,9 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/messages/button", messageHandler.SendButton)
 	sess.Post("/messages/list", messageHandler.SendList)
 
+	// 3.1. Media
+	sess.Get("/media/:messageId", mediaHandler.GetMedia)
+
 	// 4. Contacts
 	sess.Get("/contacts", contactHandler.List)
 	sess.Post("/contacts/check", contactHandler.Check)
@@ -112,6 +119,9 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/contacts/info", contactHandler.GetUserInfo)
 	sess.Get("/contacts/privacy", contactHandler.GetPrivacySettings)
 	sess.Post("/contacts/profile-picture", contactHandler.SetProfilePicture)
+	sess.Post("/contacts/presence", contactHandler.SubscribePresence)
+	sess.Post("/contacts/privacy", contactHandler.SetPrivacy)
+	sess.Post("/contacts/status", contactHandler.SetStatusMessage)
 
 	// 5. Groups
 	sess.Get("/groups", groupHandler.List)
@@ -130,6 +140,8 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/groups/announce", groupHandler.SetAnnounce)
 	sess.Post("/groups/locked", groupHandler.SetLocked)
 	sess.Post("/groups/join-approval", groupHandler.SetJoinApproval)
+	sess.Post("/groups/photo/remove", groupHandler.RemovePhoto)
+	sess.Post("/groups/ephemeral", groupHandler.SetEphemeral)
 
 	// 6. Chat
 	sess.Post("/chat/archive", chatHandler.Archive)

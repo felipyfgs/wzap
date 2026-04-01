@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/base64"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
@@ -483,6 +484,57 @@ func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 
 	if err := h.groupSvc.SetJoinApproval(c.Context(), id, jid, req.Enabled); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Join Approval Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// RemovePhoto godoc
+// @Summary     Remove group photo
+// @Description Removes the current group profile photo
+// @Tags        Groups
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.GroupJIDReq true "Group JID"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /groups/photo/remove [post]
+func (h *GroupHandler) RemovePhoto(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.GroupJIDReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", err.Error()))
+	}
+	if err := h.groupSvc.RemovePhoto(c.Context(), id, req.GroupJID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Remove Photo Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// SetEphemeral godoc
+// @Summary     Set ephemeral timer
+// @Description Sets the disappearing messages timer for a group (in seconds: 0, 86400, 604800, 7776000)
+// @Tags        Groups
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.GroupEphemeralReq true "Ephemeral settings"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /groups/ephemeral [post]
+func (h *GroupHandler) SetEphemeral(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.GroupEphemeralReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", err.Error()))
+	}
+	duration := time.Duration(req.Duration) * time.Second
+	if err := h.groupSvc.SetEphemeral(c.Context(), id, req.GroupJID, duration); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Ephemeral Error", err.Error()))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }

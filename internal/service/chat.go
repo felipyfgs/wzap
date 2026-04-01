@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"go.mau.fi/whatsmeow/appstate"
+	"go.mau.fi/whatsmeow/types"
+
 	"wzap/internal/dto"
 	"wzap/internal/wa"
 )
@@ -43,7 +45,7 @@ func (s *ChatService) Mute(ctx context.Context, sessionID string, req dto.ChatAc
 		return err
 	}
 
-	patch := appstate.BuildMute(jid, true, 8*60*60) // 8 hours mute as default
+	patch := appstate.BuildMute(jid, true, 8*time.Hour)
 	return client.SendAppState(ctx, patch)
 }
 
@@ -75,4 +77,67 @@ func (s *ChatService) Unpin(ctx context.Context, sessionID string, req dto.ChatA
 
 	patch := appstate.BuildPin(jid, false)
 	return client.SendAppState(ctx, patch)
+}
+
+func (s *ChatService) Unarchive(ctx context.Context, sessionID string, req dto.ChatActionReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := parseJID(req.JID)
+	if err != nil {
+		return err
+	}
+
+	patch := appstate.BuildArchive(jid, false, time.Now(), nil)
+	return client.SendAppState(ctx, patch)
+}
+
+func (s *ChatService) Unmute(ctx context.Context, sessionID string, req dto.ChatActionReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := parseJID(req.JID)
+	if err != nil {
+		return err
+	}
+
+	patch := appstate.BuildMute(jid, false, 0)
+	return client.SendAppState(ctx, patch)
+}
+
+func (s *ChatService) DeleteChat(ctx context.Context, sessionID string, req dto.ChatActionReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := parseJID(req.JID)
+	if err != nil {
+		return err
+	}
+
+	return client.SendAppState(ctx, appstate.BuildDeleteChat(jid, time.Now(), nil, true))
+}
+
+func (s *ChatService) MarkRead(ctx context.Context, sessionID string, req dto.ChatMarkReadReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := parseJID(req.JID)
+	if err != nil {
+		return err
+	}
+
+	ids := make([]types.MessageID, len(req.MessageIDs))
+	for i, id := range req.MessageIDs {
+		ids[i] = types.MessageID(id)
+	}
+
+	return client.MarkRead(ctx, ids, time.Now(), jid, jid)
 }

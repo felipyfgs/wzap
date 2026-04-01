@@ -148,6 +148,10 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/chat/mute", chatHandler.Mute)
 	sess.Post("/chat/pin", chatHandler.Pin)
 	sess.Post("/chat/unpin", chatHandler.Unpin)
+	sess.Post("/chat/unarchive", chatHandler.Unarchive)
+	sess.Post("/chat/unmute", chatHandler.Unmute)
+	sess.Post("/chat/delete", chatHandler.DeleteChat)
+	sess.Post("/chat/read", chatHandler.MarkRead)
 
 	// 7. Labels
 	sess.Post("/label/chat", labelHandler.AddToChat)
@@ -163,6 +167,10 @@ func (s *Server) SetupRoutes() error {
 	sess.Get("/newsletter/list", newsletterHandler.List)
 	sess.Post("/newsletter/messages", newsletterHandler.Messages)
 	sess.Post("/newsletter/subscribe", newsletterHandler.Subscribe)
+	sess.Post("/newsletter/unsubscribe", newsletterHandler.Unsubscribe)
+	sess.Post("/newsletter/mute", newsletterHandler.Mute)
+	sess.Post("/newsletter/react", newsletterHandler.React)
+	sess.Post("/newsletter/viewed", newsletterHandler.MarkViewed)
 
 	// 9. Community
 	sess.Post("/community/create", communityHandler.Create)

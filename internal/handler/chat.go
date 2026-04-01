@@ -113,3 +113,103 @@ func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
+
+// Unarchive godoc
+// @Summary     Unarchive a chat
+// @Description Removes a chat from the archived list
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.ChatActionReq true "Chat JID"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /chat/unarchive [post]
+func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.ChatActionReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.chatSvc.Unarchive(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// Unmute godoc
+// @Summary     Unmute a chat
+// @Description Removes mute from a chat
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.ChatActionReq true "Chat JID"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /chat/unmute [post]
+func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.ChatActionReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.chatSvc.Unmute(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// DeleteChat godoc
+// @Summary     Delete a chat
+// @Description Permanently deletes a chat (including media)
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.ChatActionReq true "Chat JID"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /chat/delete [post]
+func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.ChatActionReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.chatSvc.DeleteChat(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// MarkRead godoc
+// @Summary     Mark chat as read
+// @Description Marks specific messages in a chat as read
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.ChatMarkReadReq true "Chat JID + message IDs"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /chat/read [post]
+func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.ChatMarkReadReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.chatSvc.MarkRead(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}

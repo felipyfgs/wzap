@@ -163,3 +163,103 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
+
+// Unsubscribe godoc
+// @Summary     Unsubscribe from a newsletter
+// @Description Unfollows a newsletter
+// @Tags        Newsletter
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.NewsletterSubscribeReq true "Newsletter JID"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /newsletter/unsubscribe [post]
+func (h *NewsletterHandler) Unsubscribe(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.NewsletterSubscribeReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.newsletterSvc.Unsubscribe(c.Context(), id, req.NewsletterJID); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// Mute godoc
+// @Summary     Mute/unmute a newsletter
+// @Description Toggles mute status for a newsletter
+// @Tags        Newsletter
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.NewsletterMuteReq true "Mute payload"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /newsletter/mute [post]
+func (h *NewsletterHandler) Mute(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.NewsletterMuteReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.newsletterSvc.Mute(c.Context(), id, req.NewsletterJID, req.Mute); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// React godoc
+// @Summary     React to a newsletter message
+// @Description Sends a reaction to a newsletter message
+// @Tags        Newsletter
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.NewsletterReactReq true "Reaction payload"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /newsletter/react [post]
+func (h *NewsletterHandler) React(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.NewsletterReactReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.newsletterSvc.React(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}
+
+// MarkViewed godoc
+// @Summary     Mark newsletter messages as viewed
+// @Description Marks newsletter messages as viewed by server IDs
+// @Tags        Newsletter
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.NewsletterMarkViewedReq true "Mark viewed payload"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Router      /newsletter/viewed [post]
+func (h *NewsletterHandler) MarkViewed(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.NewsletterMarkViewedReq
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+	}
+	if err := h.newsletterSvc.MarkViewed(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}

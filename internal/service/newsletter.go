@@ -107,3 +107,64 @@ func (s *NewsletterService) Subscribe(ctx context.Context, sessionID string, jid
 
 	return client.FollowNewsletter(ctx, jid)
 }
+
+func (s *NewsletterService) Unsubscribe(ctx context.Context, sessionID string, jidStr string) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := types.ParseJID(jidStr)
+	if err != nil {
+		return err
+	}
+
+	return client.UnfollowNewsletter(ctx, jid)
+}
+
+func (s *NewsletterService) Mute(ctx context.Context, sessionID, jidStr string, mute bool) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := types.ParseJID(jidStr)
+	if err != nil {
+		return err
+	}
+
+	return client.NewsletterToggleMute(ctx, jid, mute)
+}
+
+func (s *NewsletterService) React(ctx context.Context, sessionID string, req dto.NewsletterReactReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := types.ParseJID(req.JID)
+	if err != nil {
+		return err
+	}
+
+	return client.NewsletterSendReaction(ctx, jid, types.MessageServerID(req.ServerID), req.Reaction, types.MessageID(req.MessageID))
+}
+
+func (s *NewsletterService) MarkViewed(ctx context.Context, sessionID string, req dto.NewsletterMarkViewedReq) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	jid, err := types.ParseJID(req.JID)
+	if err != nil {
+		return err
+	}
+
+	serverIDs := make([]types.MessageServerID, len(req.ServerIDs))
+	for i, id := range req.ServerIDs {
+		serverIDs[i] = types.MessageServerID(id)
+	}
+
+	return client.NewsletterMarkViewed(ctx, jid, serverIDs)
+}

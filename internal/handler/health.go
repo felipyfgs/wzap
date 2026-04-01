@@ -11,11 +11,11 @@ import (
 
 type HealthHandler struct {
 	db    *database.DB
-	nats  *broker.Nats
+	nats  *broker.NATS
 	minio *storage.Minio
 }
 
-func NewHealthHandler(db *database.DB, nats *broker.Nats, minio *storage.Minio) *HealthHandler {
+func NewHealthHandler(db *database.DB, nats *broker.NATS, minio *storage.Minio) *HealthHandler {
 	return &HealthHandler{db: db, nats: nats, minio: minio}
 }
 
@@ -39,11 +39,11 @@ func (h *HealthHandler) Check(c *fiber.Ctx) error {
 	}
 
 	status := map[string]interface{}{
-		"Status": overall,
-		"Services": map[string]bool{
-			"Database": dbOK,
-			"Nats":     natsOK,
-			"Minio":    minioOK,
+		"status": overall,
+		"services": map[string]bool{
+			"database": dbOK,
+			"nats":     natsOK,
+			"minio":    minioOK,
 		},
 	}
 	return c.JSON(dto.SuccessResp(status))

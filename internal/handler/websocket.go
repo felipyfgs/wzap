@@ -2,11 +2,12 @@ package handler
 
 import (
 	"wzap/internal/config"
+	"wzap/internal/dto"
 	"wzap/internal/logger"
 	wsHub "wzap/internal/websocket"
 
-	"github.com/gofiber/fiber/v2"
 	ws "github.com/gofiber/contrib/websocket"
+	"github.com/gofiber/fiber/v2"
 )
 
 type WebSocketHandler struct {
@@ -26,7 +27,7 @@ func (h *WebSocketHandler) Upgrade() fiber.Handler {
 				token = c.Get("Authorization")
 			}
 			if token == "" || token != h.cfg.APIKey {
-				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+				return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Invalid or missing token"))
 			}
 			c.Locals("allowed", true)
 			return c.Next()

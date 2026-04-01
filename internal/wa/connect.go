@@ -21,7 +21,7 @@ import (
 	"wzap/internal/webhook"
 )
 
-func NewManager(ctx context.Context, cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.Nats, d *webhook.Dispatcher) (*Manager, error) {
+func NewManager(ctx context.Context, cfg *config.Config, sessionRepo *repo.SessionRepository, n *broker.NATS, d *webhook.Dispatcher) (*Manager, error) {
 	waLevel, err := zerolog.ParseLevel(strings.ToLower(cfg.WALogLevel))
 	if err != nil {
 		waLevel = zerolog.InfoLevel

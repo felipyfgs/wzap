@@ -41,13 +41,13 @@ type WSBroadcaster interface {
 
 type Dispatcher struct {
 	webhookRepo      *repo.WebhookRepository
-	nats             *broker.Nats
+	nats             *broker.NATS
 	httpClient       *http.Client
 	globalWebhookURL string
 	ws               WSBroadcaster
 }
 
-func New(webhookRepo *repo.WebhookRepository, nats *broker.Nats, globalWebhookURL string) *Dispatcher {
+func New(webhookRepo *repo.WebhookRepository, nats *broker.NATS, globalWebhookURL string) *Dispatcher {
 	return &Dispatcher{
 		webhookRepo:      webhookRepo,
 		nats:             nats,
@@ -74,7 +74,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	for _, wh := range webhooks {
 		wh := wh
 		if wh.NATSEnabled && d.nats != nil {
-			go d.publishToNats(wh, payload)
+			go d.publishToNATS(wh, payload)
 		} else {
 			go d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
 		}
@@ -89,7 +89,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	}
 }
 
-func (d *Dispatcher) publishToNats(wh model.Webhook, payload []byte) {
+func (d *Dispatcher) publishToNATS(wh model.Webhook, payload []byte) {
 	msg := deliverMsg{
 		WebhookID: wh.ID,
 		URL:       wh.URL,

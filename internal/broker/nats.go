@@ -12,13 +12,13 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-type Nats struct {
+type NATS struct {
 	Conn *nats.Conn
 	JS   jetstream.JetStream
 }
 
-func New(cfg *config.Config) (*Nats, error) {
-	nc, err := nats.Connect(cfg.NatsURL,
+func New(cfg *config.Config) (*NATS, error) {
+	nc, err := nats.Connect(cfg.NATSURL,
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(10),
 		nats.ReconnectWait(time.Second),
@@ -62,13 +62,13 @@ func New(cfg *config.Config) (*Nats, error) {
 
 	logger.Info().Msg("Successfully connected to NATS JetStream")
 
-	return &Nats{
+	return &NATS{
 		Conn: nc,
 		JS:   js,
 	}, nil
 }
 
-func (n *Nats) Close() {
+func (n *NATS) Close() {
 	if n.Conn != nil {
 		logger.Info().Msg("Closing NATS connection")
 		if err := n.Conn.Drain(); err != nil {
@@ -78,12 +78,12 @@ func (n *Nats) Close() {
 	}
 }
 
-func (n *Nats) Publish(ctx context.Context, subject string, data []byte) error {
+func (n *NATS) Publish(ctx context.Context, subject string, data []byte) error {
 	_, err := n.JS.Publish(ctx, subject, data)
 	return err
 }
 
-func (n *Nats) Health() error {
+func (n *NATS) Health() error {
 	if !n.Conn.IsConnected() {
 		return fmt.Errorf("NATS not connected")
 	}

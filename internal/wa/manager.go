@@ -24,7 +24,7 @@ type Manager struct {
 	ctx                context.Context
 	sessionRepo        *repo.SessionRepository
 	container          *sqlstore.Container
-	nats               *broker.Nats
+	nats               *broker.NATS
 	dispatcher         *webhook.Dispatcher
 	cfg                *config.Config
 	waLog              waLog.Logger

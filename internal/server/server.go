@@ -22,13 +22,13 @@ type Server struct {
 	Config *config.Config
 
 	db     *database.DB
-	nats   *broker.Nats
+	nats   *broker.NATS
 	minio  *storage.Minio
 	ctx    context.Context
 	cancel context.CancelFunc
 }
 
-func New(cfg *config.Config, db *database.DB, n *broker.Nats, m *storage.Minio) *Server {
+func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) *Server {
 	app := fiber.New(fiber.Config{
 		ServerHeader:          "wzap",
 		DisableStartupMessage: true,

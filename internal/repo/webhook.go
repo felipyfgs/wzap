@@ -21,7 +21,7 @@ func NewWebhookRepository(db *pgxpool.Pool) *WebhookRepository {
 func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error {
 	query := `INSERT INTO wz_webhooks (id, session_id, url, secret, events, enabled, nats_enabled, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)`
-	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.Enabled, w.NatsEnabled, w.CreatedAt)
+	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.Enabled, w.NATSEnabled, w.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert webhook: %w", err)
 	}
@@ -41,7 +41,7 @@ func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID strin
 	var webhooks []model.Webhook
 	for rows.Next() {
 		var w model.Webhook
-		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NatsEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
+		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
 			return nil, err
 		}
 		webhooks = append(webhooks, w)
@@ -66,7 +66,7 @@ func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, ses
 	var webhooks []model.Webhook
 	for rows.Next() {
 		var w model.Webhook
-		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NatsEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
+		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
 			return nil, err
 		}
 		webhooks = append(webhooks, w)

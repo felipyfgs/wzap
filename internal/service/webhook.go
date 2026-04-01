@@ -32,7 +32,7 @@ func (s *WebhookService) Create(ctx context.Context, sessionID string, req dto.C
 		Secret:      req.Secret,
 		Events:      events,
 		Enabled:     true,
-		NatsEnabled: req.NatsEnabled,
+		NATSEnabled: req.NATSEnabled,
 		CreatedAt:   time.Now(),
 	}
 

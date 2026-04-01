@@ -121,7 +121,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 	}
 
 	// Phase 2: load device and build client — no lock held, no network calls.
-	deviceJID, err := m.sessionRepo.GetJid(ctx, sessionID)
+	deviceJID, err := m.sessionRepo.GetJID(ctx, sessionID)
 	if err != nil {
 		return nil, nil, fmt.Errorf("session not found: %w", err)
 	}
@@ -153,14 +153,14 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		case *events.Connected:
 			if client.Store.ID != nil {
 				jidStr := client.Store.ID.String()
-				if err := m.sessionRepo.UpdateJid(m.ctx, sessionID, jidStr); err != nil {
+				if err := m.sessionRepo.UpdateJID(m.ctx, sessionID, jidStr); err != nil {
 					logger.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid")
 				}
 				logger.Info().Str("session", sessionID).Str("jid", jidStr).Msg("Session paired")
 			}
 		case *events.PairSuccess:
 			jidStr := v.ID.String()
-			if err := m.sessionRepo.UpdateJid(m.ctx, sessionID, jidStr); err != nil {
+			if err := m.sessionRepo.UpdateJID(m.ctx, sessionID, jidStr); err != nil {
 				logger.Error().Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid on pair")
 			}
 			_ = m.sessionRepo.UpdateQRCode(m.ctx, sessionID, "")

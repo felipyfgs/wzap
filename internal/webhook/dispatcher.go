@@ -60,7 +60,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	for _, wh := range webhooks {
 		wh := wh
-		if wh.NatsEnabled && d.nats != nil {
+		if wh.NATSEnabled && d.nats != nil {
 			go d.publishToNats(wh, payload)
 		} else {
 			go d.deliverHTTP(wh.URL, wh.Secret, payload)

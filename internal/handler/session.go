@@ -27,7 +27,7 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *
 
 // Create godoc
 // @Summary     Create a new session (Admin Only)
-// @Description Creates a new session with an auto-generated or custom apiKey. Returns the full session object including the apiKey.
+// @Description Creates a new session with an auto-generated or custom token. Returns the full session object including the token.
 // @Tags        Sessions
 // @Accept      json
 // @Produce     json
@@ -35,7 +35,7 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *
 // @Success     201  {object} dto.APIResponse{Data=dto.SessionCreatedResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     403  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions [post]
 func (h *SessionHandler) Create(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
@@ -57,12 +57,12 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 
 // List godoc
 // @Summary     List sessions (Admin Only)
-// @Description Returns all sessions. APIKey is never included in responses.
+// @Description Returns all sessions. Token is never included in list responses.
 // @Tags        Sessions
 // @Produce     json
 // @Success     200 {object} dto.APIResponse{Data=[]dto.SessionResp}
 // @Failure     403 {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions [get]
 func (h *SessionHandler) List(c *fiber.Ctx) error {
 	if c.Locals("authRole") != "admin" {
@@ -79,13 +79,13 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 
 // Get godoc
 // @Summary     Get session
-// @Description Returns the session identified by :sessionId (name or id). APIKey is not included.
+// @Description Returns the session identified by :sessionId (name or id). Token is not included.
 // @Tags        Sessions
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse{Data=dto.SessionResp}
 // @Failure     404 {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId} [get]
 func (h *SessionHandler) Get(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
@@ -105,7 +105,7 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 // @Param       sessionId path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
 // @Failure     500 {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId} [delete]
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
@@ -125,7 +125,7 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 // @Success     200 {object} dto.APIResponse{Data=dto.ConnectResp}
 // @Failure     409 {object} dto.APIError "QR pairing already pending"
 // @Failure     500 {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/connect [post]
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
@@ -156,7 +156,7 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 // @Param       sessionId path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
 // @Failure     500 {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
@@ -175,7 +175,7 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 // @Param       sessionId path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse{Data=dto.QRResp}
 // @Failure     404 {object} dto.APIError "No QR code available yet"
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)

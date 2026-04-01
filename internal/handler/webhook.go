@@ -24,7 +24,7 @@ func NewWebhookHandler(webhookSvc *service.WebhookService) *WebhookHandler {
 // @Param       sessionId   path     string                 true "Session name or ID"
 // @Param       body        body     dto.CreateWebhookReq true "Webhook data"
 // @Success     200  {object} dto.APIResponse
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/webhooks [post]
 func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)
@@ -48,7 +48,7 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId   path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/webhooks [get]
 func (h *WebhookHandler) List(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)
@@ -68,7 +68,7 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 // @Param       sessionId   path string true "Session name or ID"
 // @Param       wid         path string true "Webhook ID"
 // @Success     200 {object} dto.APIResponse
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/webhooks/{wid} [delete]
 func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)

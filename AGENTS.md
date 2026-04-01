@@ -97,6 +97,9 @@ import (
 - Success: `c.JSON(dto.SuccessResp(data))`.
 - Add Swagger godoc above each handler (`@Summary`, `@Router`, …).
 
+### Authentication
+- Auth header: `Authorization: <token>` (without Bearer prefix).
+
 ## 4 · Conventions
 
 - **No comments** unless explicitly requested.

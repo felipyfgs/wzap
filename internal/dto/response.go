@@ -1,32 +1,32 @@
 package dto
 
 type APIResponse struct {
-	Success bool        `json:"Success"`
-	Data    interface{} `json:"Data,omitempty"`
-	Message string      `json:"Message"`
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Message string      `json:"message"`
 }
 
 type APIError struct {
-	Success bool   `json:"Success"`
-	Error   string `json:"Error"`
-	Message string `json:"Message,omitempty"`
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+	Message string `json:"message,omitempty"`
 }
 
 type MidResp struct {
-	Mid string `json:"Mid"`
+	Mid string `json:"messageId"`
 }
 
 type ConnectResp struct {
-	Status string `json:"Status"`
+	Status string `json:"status"`
 }
 
 type QRResp struct {
-	QRCode string `json:"QRCode"`
-	Image  string `json:"Image"`
+	QRCode string `json:"qrCode"`
+	Image  string `json:"image"`
 }
 
 type PictureIDResp struct {
-	PictureID string `json:"PictureId"`
+	PictureID string `json:"pictureId"`
 }
 
 func SuccessResp(data interface{}) APIResponse {

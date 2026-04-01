@@ -1,8 +1,8 @@
 package dto
 
 type CreateWebhookReq struct {
-	URL         string   `json:"URL" validate:"required,url"`
-	Secret      string   `json:"Secret,omitempty"`
-	Events      []string `json:"Events" validate:"required"`
-	NatsEnabled bool     `json:"NatsEnabled"`
+	URL         string   `json:"url" validate:"required,url"`
+	Secret      string   `json:"secret,omitempty"`
+	Events      []string `json:"events" validate:"required"`
+	NATSEnabled bool     `json:"natsEnabled"`
 }

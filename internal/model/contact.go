@@ -1,16 +1,16 @@
 package model
 
 type Contact struct {
-	JID        string `json:"Jid"`
-	Name       string `json:"Name,omitempty"`
-	PushName   string `json:"PushName,omitempty"`
-	Picture    string `json:"Picture,omitempty"`
-	IsBusiness bool   `json:"IsBusiness"`
+	JID        string `json:"jid"`
+	Name       string `json:"name,omitempty"`
+	PushName   string `json:"pushName,omitempty"`
+	Picture    string `json:"picture,omitempty"`
+	IsBusiness bool   `json:"isBusiness"`
 }
 
 type Group struct {
-	JID          string `json:"Jid"`
-	Name         string `json:"Name"`
-	Participants int    `json:"Participants"`
-	IsAdmin      bool   `json:"IsAdmin"`
+	JID          string `json:"jid"`
+	Name         string `json:"name"`
+	Participants int    `json:"participants"`
+	IsAdmin      bool   `json:"isAdmin"`
 }

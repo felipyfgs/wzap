@@ -10,6 +10,7 @@ import (
 	"wzap/internal/broker"
 	"wzap/internal/config"
 	"wzap/internal/database"
+	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/middleware"
 	"wzap/internal/storage"
@@ -35,10 +36,7 @@ func New(cfg *config.Config, db *database.DB, n *broker.Nats, m *storage.Minio) 
 			if e, ok := err.(*fiber.Error); ok {
 				code = e.Code
 			}
-			return c.Status(code).JSON(fiber.Map{
-				"success": false,
-				"error":   err.Error(),
-			})
+			return c.Status(code).JSON(dto.ErrorResp("Error", err.Error()))
 		},
 	})
 

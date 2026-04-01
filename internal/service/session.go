@@ -98,7 +98,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 				URL:         wh.URL,
 				Events:      wh.Events,
 				Enabled:     wh.Enabled,
-				NatsEnabled: wh.NatsEnabled,
+				NATSEnabled: wh.NATSEnabled,
 				CreatedAt:   wh.CreatedAt,
 				UpdatedAt:   wh.UpdatedAt,
 			}

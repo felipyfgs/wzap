@@ -1,45 +1,45 @@
 package dto
 
 type CreateGroupReq struct {
-	Name         string   `json:"Name" example:"My Awesome Group"`
-	Participants []string `json:"Participants" example:"5511999999999,5511888888888"`
+	Name         string   `json:"name" example:"My Awesome Group"`
+	Participants []string `json:"participants" example:"5511999999999,5511888888888"`
 }
 
 type GroupInviteLinkResp struct {
-	Link string `json:"Link"`
+	Link string `json:"link"`
 }
 
 type GroupJoinReq struct {
-	InviteCode string `json:"InviteCode" validate:"required"`
+	InviteCode string `json:"inviteCode" validate:"required"`
 }
 
 type GroupParticipantReq struct {
-	GroupJID     string   `json:"GroupJid" validate:"required"`
-	Participants []string `json:"Participants" validate:"required" example:"5511999999999"`
-	Action       string   `json:"Action" validate:"required" example:"add"`
+	GroupJID     string   `json:"groupJid" validate:"required"`
+	Participants []string `json:"participants" validate:"required" example:"5511999999999"`
+	Action       string   `json:"action" validate:"required" example:"add"`
 }
 
 type GroupRequestActionReq struct {
-	GroupJID     string   `json:"GroupJid" validate:"required"`
-	Participants []string `json:"Participants" validate:"required" example:"5511999999999"`
-	Action       string   `json:"Action" validate:"required" example:"approve"`
+	GroupJID     string   `json:"groupJid" validate:"required"`
+	Participants []string `json:"participants" validate:"required" example:"5511999999999"`
+	Action       string   `json:"action" validate:"required" example:"approve"`
 }
 
 type GroupTextReq struct {
-	GroupJID string `json:"GroupJid" validate:"required"`
-	Text     string `json:"Text" validate:"required"`
+	GroupJID string `json:"groupJid" validate:"required"`
+	Text     string `json:"text" validate:"required"`
 }
 
 type GroupPhotoReq struct {
-	GroupJID string `json:"GroupJid" validate:"required"`
-	Image    string `json:"Image" validate:"required"`
+	GroupJID string `json:"groupJid" validate:"required"`
+	Image    string `json:"image" validate:"required"`
 }
 
 type GroupSettingReq struct {
-	GroupJID string `json:"GroupJid" validate:"required"`
-	Enabled  bool   `json:"Enabled"`
+	GroupJID string `json:"groupJid" validate:"required"`
+	Enabled  bool   `json:"enabled"`
 }
 
 type GroupJIDReq struct {
-	GroupJID string `json:"GroupJid" validate:"required"`
+	GroupJID string `json:"groupJid" validate:"required"`
 }

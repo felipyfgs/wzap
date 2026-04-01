@@ -3,7 +3,7 @@ package handler
 import "github.com/gofiber/fiber/v2"
 
 func getSessionID(c *fiber.Ctx) (string, error) {
-	val, ok := c.Locals("sessionId").(string)
+	val, ok := c.Locals("sessionID").(string)
 	if !ok || val == "" {
 		return "", fiber.NewError(fiber.StatusBadRequest, "session identification is required")
 	}
@@ -11,6 +11,6 @@ func getSessionID(c *fiber.Ctx) (string, error) {
 }
 
 func mustGetSessionID(c *fiber.Ctx) string {
-	val, _ := c.Locals("sessionId").(string)
+	val, _ := c.Locals("sessionID").(string)
 	return val
 }

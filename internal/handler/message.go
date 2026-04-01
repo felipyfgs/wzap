@@ -26,7 +26,7 @@ func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/text [post]
 func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -56,7 +56,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/image [post]
 func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendImage)
@@ -72,7 +72,7 @@ func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/video [post]
 func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendVideo)
@@ -88,7 +88,7 @@ func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/document [post]
 func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendDocument)
@@ -104,7 +104,7 @@ func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/audio [post]
 func (h *MessageHandler) SendAudio(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendAudio)
@@ -142,7 +142,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/contact [post]
 func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -170,7 +170,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/location [post]
 func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -198,7 +198,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/poll [post]
 func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -226,7 +226,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/sticker [post]
 func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -254,7 +254,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/link [post]
 func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -282,7 +282,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/edit [post]
 func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -310,7 +310,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/delete [post]
 func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -338,7 +338,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/reaction [post]
 func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -366,7 +366,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/read [post]
 func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -393,7 +393,7 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 // @Success     200  {object} dto.APIResponse
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
-// @Security    ApiKey
+// @Security    Authorization
 // @Router      /messages/presence [post]
 func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

@@ -106,7 +106,7 @@ func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status 
 	return nil
 }
 
-func (r *SessionRepository) UpdateJid(ctx context.Context, id string, jid string) error {
+func (r *SessionRepository) UpdateJID(ctx context.Context, id string, jid string) error {
 	_, err := r.db.Exec(ctx,
 		`UPDATE wz_sessions SET jid = $1, connected = 1, status = 'connected', updated_at = NOW() WHERE id = $2`,
 		jid, id)
@@ -136,7 +136,7 @@ func (r *SessionRepository) ClearDevice(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *SessionRepository) GetJid(ctx context.Context, id string) (string, error) {
+func (r *SessionRepository) GetJID(ctx context.Context, id string) (string, error) {
 	var jid string
 	err := r.db.QueryRow(ctx,
 		`SELECT COALESCE(jid, '') FROM wz_sessions WHERE id = $1`,

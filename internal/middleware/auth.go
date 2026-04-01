@@ -18,9 +18,9 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 			return c.Status(fiber.StatusServiceUnavailable).JSON(dto.ErrorResp("Misconfigured", "API_KEY is not set"))
 		}
 
-		token := c.Get("ApiKey")
+		token := c.Get("Authorization")
 		if token == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing ApiKey header"))
+			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing Authorization header"))
 		}
 
 		if token == cfg.APIKey {
@@ -31,7 +31,7 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 		session, err := sessionRepo.FindByAPIKey(c.Context(), token)
 		if err == nil {
 			c.Locals("authRole", "session")
-			c.Locals("sessionId", session.ID)
+			c.Locals("sessionID", session.ID)
 			return c.Next()
 		}
 

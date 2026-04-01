@@ -3,32 +3,32 @@ package model
 import "time"
 
 type SessionProxy struct {
-	Host     string `json:"Host,omitempty"`
-	Port     int    `json:"Port,omitempty"`
-	Protocol string `json:"Protocol,omitempty"`
-	Username string `json:"Username,omitempty"`
-	Password string `json:"Password,omitempty"`
+	Host     string `json:"host,omitempty"`
+	Port     int    `json:"port,omitempty"`
+	Protocol string `json:"protocol,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type SessionSettings struct {
-	AlwaysOnline  bool   `json:"AlwaysOnline"`
-	RejectCall    bool   `json:"RejectCall"`
-	MsgRejectCall string `json:"MsgRejectCall,omitempty"`
-	ReadMessages  bool   `json:"ReadMessages"`
-	IgnoreGroups  bool   `json:"IgnoreGroups"`
-	IgnoreStatus  bool   `json:"IgnoreStatus"`
+	AlwaysOnline  bool   `json:"alwaysOnline"`
+	RejectCall    bool   `json:"rejectCall"`
+	MsgRejectCall string `json:"msgRejectCall,omitempty"`
+	ReadMessages  bool   `json:"readMessages"`
+	IgnoreGroups  bool   `json:"ignoreGroups"`
+	IgnoreStatus  bool   `json:"ignoreStatus"`
 }
 
 type Session struct {
-	ID        string          `json:"Id"`
-	Name      string          `json:"Name"`
-	APIKey    string          `json:"ApiKey,omitempty"`
-	JID       string          `json:"Jid,omitempty"`
-	QRCode    string          `json:"QRCode,omitempty"`
-	Connected int             `json:"Connected"`
-	Status    string          `json:"Status"`
-	Proxy     SessionProxy    `json:"Proxy"`
-	Settings  SessionSettings `json:"Settings"`
-	CreatedAt time.Time       `json:"CreatedAt"`
-	UpdatedAt time.Time       `json:"UpdatedAt"`
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	APIKey    string          `json:"apiKey,omitempty"`
+	JID       string          `json:"jid,omitempty"`
+	QRCode    string          `json:"qrCode,omitempty"`
+	Connected int             `json:"connected"`
+	Status    string          `json:"status"`
+	Proxy     SessionProxy    `json:"proxy"`
+	Settings  SessionSettings `json:"settings"`
+	CreatedAt time.Time       `json:"createdAt"`
+	UpdatedAt time.Time       `json:"updatedAt"`
 }

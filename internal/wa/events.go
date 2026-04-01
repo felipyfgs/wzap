@@ -20,11 +20,11 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	case *events.Message:
 		eventType = model.EventMessage
 		natsData = map[string]interface{}{
-			"Id":        v.Info.ID,
-			"PushName":  v.Info.PushName,
-			"Message":   v.Message,
-			"Timestamp": v.Info.Timestamp.Unix(),
-			"FromMe":    v.Info.IsFromMe,
+			"id":        v.Info.ID,
+			"pushName":  v.Info.PushName,
+			"message":   v.Message,
+			"timestamp": v.Info.Timestamp.Unix(),
+			"fromMe":    v.Info.IsFromMe,
 		}
 		logger.Info().
 			Str("session", sessionID).
@@ -36,10 +36,10 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	case *events.Receipt:
 		eventType = model.EventReceipt
 		natsData = map[string]interface{}{
-			"Type":      v.Type,
-			"Mid":       v.MessageIDs,
-			"From":      v.SourceString(),
-			"Timestamp": v.Timestamp.Unix(),
+			"type":       v.Type,
+			"messageIds": v.MessageIDs,
+			"from":       v.SourceString(),
+			"timestamp":  v.Timestamp.Unix(),
 		}
 		logger.Debug().
 			Str("session", sessionID).
@@ -57,61 +57,61 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	case *events.LoggedOut:
 		eventType = model.EventLoggedOut
 		natsData = map[string]interface{}{
-			"Reason": v.Reason,
+			"reason": v.Reason,
 		}
 		logger.Warn().Str("session", sessionID).Str("reason", v.Reason.String()).Msg("Session logged out")
 	case *events.PairSuccess:
 		eventType = model.EventPairSuccess
 		natsData = map[string]interface{}{
-			"Jid": v.ID.String(),
+			"jid": v.ID.String(),
 		}
 		logger.Info().Str("session", sessionID).Str("jid", v.ID.String()).Msg("Pair success")
 	case *events.GroupInfo:
 		eventType = model.EventGroupInfo
 		natsData = map[string]interface{}{
-			"Jid":    v.JID.String(),
-			"Notify": v.Notify,
+			"jid":    v.JID.String(),
+			"notify": v.Notify,
 		}
 		logger.Debug().Str("session", sessionID).Str("group", v.JID.String()).Msg("Group info update")
 	case *events.Presence:
 		eventType = model.EventPresence
 		natsData = map[string]interface{}{
-			"From":        v.From.String(),
-			"Unavailable": v.Unavailable,
-			"LastSeen":    v.LastSeen,
+			"from":        v.From.String(),
+			"unavailable": v.Unavailable,
+			"lastSeen":    v.LastSeen,
 		}
 		logger.Debug().Str("session", sessionID).Str("from", v.From.String()).Msg("Presence update")
 	case *events.ChatPresence:
 		eventType = model.EventChatPresence
 		natsData = map[string]interface{}{
-			"Chat":  v.Chat.String(),
-			"State": v.State,
+			"chat":  v.Chat.String(),
+			"state": v.State,
 		}
 		logger.Debug().Str("session", sessionID).Str("chat", v.Chat.String()).Str("state", string(v.State)).Msg("Chat presence")
 	case *events.CallOffer:
 		eventType = model.EventCallOffer
 		natsData = map[string]interface{}{
-			"CallId": v.CallID,
-			"From":   v.From.String(),
+			"callId": v.CallID,
+			"from":   v.From.String(),
 		}
 		logger.Info().Str("session", sessionID).Str("from", v.From.String()).Msg("Incoming call")
 	case *events.CallTerminate:
 		eventType = model.EventCallTerminate
 		natsData = map[string]interface{}{
-			"CallId": v.CallID,
-			"From":   v.From.String(),
+			"callId": v.CallID,
+			"from":   v.From.String(),
 		}
 		logger.Debug().Str("session", sessionID).Str("from", v.From.String()).Msg("Call terminated")
 	case *events.NewsletterJoin:
 		eventType = model.EventNewsletterJoin
 		natsData = map[string]interface{}{
-			"Jid": v.ID,
+			"jid": v.ID,
 		}
 		logger.Debug().Str("session", sessionID).Msg("Newsletter joined")
 	case *events.NewsletterLeave:
 		eventType = model.EventNewsletterLeave
 		natsData = map[string]interface{}{
-			"Jid": v.ID.String(),
+			"jid": v.ID.String(),
 		}
 		logger.Debug().Str("session", sessionID).Msg("Newsletter left")
 	default:
@@ -119,10 +119,10 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	}
 
 	payload := map[string]interface{}{
-		"EventId":   uuid.NewString(),
-		"SessionId": sessionID,
-		"Event":     eventType,
-		"Timestamp": time.Now().Format(time.RFC3339),
+		"eventId":   uuid.NewString(),
+		"sessionId": sessionID,
+		"event":     eventType,
+		"timestamp": time.Now().Format(time.RFC3339),
 	}
 	for k, v := range natsData {
 		payload[k] = v

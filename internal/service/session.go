@@ -159,6 +159,10 @@ func (s *SessionService) Update(ctx context.Context, id string, req dto.SessionU
 		return nil, err
 	}
 
+	if s.engine != nil {
+		s.engine.UpdateSessionName(id, session.Name)
+	}
+
 	resp := dto.SessionToResp(*session)
 	return &resp, nil
 }

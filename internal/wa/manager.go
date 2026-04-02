@@ -18,8 +18,9 @@ type MediaAutoUploadFunc func(sessionID, messageID, mimeType string, downloadabl
 type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{})
 
 type Manager struct {
-	clients map[string]*whatsmeow.Client
-	mu      sync.RWMutex
+	clients      map[string]*whatsmeow.Client
+	sessionNames map[string]string // cache de sessionID -> name
+	mu           sync.RWMutex
 
 	ctx                context.Context
 	sessionRepo        *repo.SessionRepository
@@ -38,4 +39,32 @@ func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {
 
 func (m *Manager) SetMessagePersist(fn MessagePersistFunc) {
 	m.OnMessageReceived = fn
+}
+
+func (m *Manager) UpdateSessionName(sessionID, name string) {
+	m.mu.Lock()
+	m.sessionNames[sessionID] = name
+	m.mu.Unlock()
+}
+
+func (m *Manager) getSessionName(sessionID string) string {
+	m.mu.RLock()
+	name, ok := m.sessionNames[sessionID]
+	m.mu.RUnlock()
+
+	if ok {
+		return name
+	}
+
+	// Buscar do banco se não estiver em cache
+	if m.sessionRepo != nil {
+		session, err := m.sessionRepo.FindByID(m.ctx, sessionID)
+		if err == nil {
+			m.mu.Lock()
+			m.sessionNames[sessionID] = session.Name
+			m.mu.Unlock()
+			return session.Name
+		}
+	}
+	return ""
 }

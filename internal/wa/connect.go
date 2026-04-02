@@ -34,14 +34,15 @@ func NewManager(ctx context.Context, cfg *config.Config, sessionRepo *repo.Sessi
 	}
 
 	return &Manager{
-		clients:     make(map[string]*whatsmeow.Client),
-		ctx:         ctx,
-		sessionRepo: sessionRepo,
-		container:   container,
-		nats:        n,
-		dispatcher:  d,
-		cfg:         cfg,
-		waLog:       waLogger,
+		clients:      make(map[string]*whatsmeow.Client),
+		sessionNames: make(map[string]string),
+		ctx:          ctx,
+		sessionRepo:  sessionRepo,
+		container:    container,
+		nats:         n,
+		dispatcher:   d,
+		cfg:          cfg,
+		waLog:        waLogger,
 	}, nil
 }
 
@@ -65,6 +66,14 @@ func (m *Manager) ReconnectAll(ctx context.Context) error {
 				logger.Error().Err(delErr).Str("jid", jidStr).Msg("Failed to delete orphan device")
 			}
 			continue
+		}
+
+		// Buscar e armazenar nome da sessão
+		session, err := m.sessionRepo.FindByID(ctx, sessionID)
+		if err == nil {
+			m.mu.Lock()
+			m.sessionNames[sessionID] = session.Name
+			m.mu.Unlock()
 		}
 
 		client := whatsmeow.NewClient(device, m.waLog)
@@ -143,6 +152,14 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 	}
 
 	client = whatsmeow.NewClient(device, m.waLog)
+
+	// Buscar e armazenar nome da sessão
+	session, err := m.sessionRepo.FindByID(ctx, sessionID)
+	if err == nil {
+		m.mu.Lock()
+		m.sessionNames[sessionID] = session.Name
+		m.mu.Unlock()
+	}
 
 	client.AddEventHandler(func(evt interface{}) {
 		m.handleEvent(sessionID, evt)

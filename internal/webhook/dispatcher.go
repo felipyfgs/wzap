@@ -65,11 +65,15 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	logger.Debug().Str("session", sessionID).Str("event", string(eventType)).Str("globalWebhookURL", d.globalWebhookURL).Msg("Dispatching webhook")
+
 	webhooks, err := d.webhookRepo.FindActiveBySessionAndEvent(ctx, sessionID, string(eventType))
 	if err != nil {
 		logger.Error().Err(err).Str("session", sessionID).Str("event", string(eventType)).Msg("Failed to fetch webhooks for dispatch")
 		return
 	}
+
+	logger.Debug().Int("webhooks", len(webhooks)).Msg("Active webhooks found")
 
 	for _, wh := range webhooks {
 		wh := wh
@@ -81,6 +85,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	}
 
 	if d.globalWebhookURL != "" {
+		logger.Debug().Str("url", d.globalWebhookURL).Msg("Sending to global webhook")
 		go d.deliverHTTPWithRetry(d.globalWebhookURL, "", payload)
 	}
 
@@ -222,6 +227,8 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("non-2xx status: %d", resp.StatusCode)
 	}
+
+	logger.Info().Str("url", url).Int("status", resp.StatusCode).Msg("Webhook delivered successfully")
 	return nil
 }
 

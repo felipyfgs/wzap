@@ -3,8 +3,55 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
 const toast = useToast()
+const { sessions, refreshSessions } = useSession()
 
 const open = ref(false)
+
+// ── Session sidebar ─────────────────────────────────────────
+const isSessionRoute = computed(() =>
+  route.path.startsWith('/sessions/') && !!route.params.id
+)
+
+const currentSessionId = computed(() => route.params.id as string || '')
+
+const sessionNavLinks = computed(() => {
+  const id = currentSessionId.value
+  if (!id) return []
+  return [{
+    label: 'Overview',
+    icon: 'i-lucide-layout-dashboard',
+    to: `/sessions/${id}`,
+    exact: true
+  }, {
+    label: 'Messages',
+    icon: 'i-lucide-message-square',
+    to: `/sessions/${id}/messages`
+  }, {
+    label: 'Contacts',
+    icon: 'i-lucide-users',
+    to: `/sessions/${id}/contacts`
+  }, {
+    label: 'Groups',
+    icon: 'i-lucide-users-2',
+    to: `/sessions/${id}/groups`
+  }, {
+    label: 'Webhooks',
+    icon: 'i-lucide-webhook',
+    to: `/sessions/${id}/webhooks`
+  }, {
+    label: 'Media',
+    icon: 'i-lucide-image',
+    to: `/sessions/${id}/media`
+  }, {
+    label: 'Settings',
+    icon: 'i-lucide-settings-2',
+    to: `/sessions/${id}/settings`
+  }]
+})
+
+watch(isSessionRoute, (val) => {
+  if (val && sessions.value.length === 0) refreshSessions()
+}, { immediate: true })
 
 const links = [[{
   label: 'Dashboard',
@@ -122,7 +169,9 @@ onMounted(async () => {
 
 <template>
   <UDashboardGroup unit="rem">
+    <!-- Sidebar raiz — visível fora de sessão -->
     <UDashboardSidebar
+      v-if="!isSessionRoute"
       id="default"
       v-model:open="open"
       collapsible
@@ -156,6 +205,34 @@ onMounted(async () => {
 
       <template #footer="{ collapsed }">
         <UserMenu :collapsed="collapsed" />
+      </template>
+    </UDashboardSidebar>
+
+    <!-- Sidebar de sessão — visível dentro de /sessions/:id -->
+    <UDashboardSidebar
+      v-if="isSessionRoute"
+      id="session"
+      collapsible
+      resizable
+      class="bg-elevated/25"
+      :ui="{ footer: 'lg:border-t lg:border-default' }"
+    >
+      <template #header="{ collapsed }">
+        <SessionsMenu :collapsed="collapsed" />
+      </template>
+
+      <template #default="{ collapsed }">
+        <UNavigationMenu
+          :collapsed="collapsed"
+          :items="sessionNavLinks"
+          orientation="vertical"
+          tooltip
+          popover
+        />
+      </template>
+
+      <template #footer>
+        <UserMenu />
       </template>
     </UDashboardSidebar>
 

@@ -19,6 +19,7 @@ export interface Session {
   settings?: {
     alwaysOnline: boolean
     rejectCall: boolean
+    msgRejectCall?: string
     readMessages: boolean
     ignoreGroups: boolean
     ignoreStatus: boolean

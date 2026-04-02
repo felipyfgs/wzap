@@ -27,6 +27,8 @@ logs/
 # Whatsmeow sessions (contains sensitive data)
 sessions/
 *.session
+!web/app/pages/sessions/
+!web/app/components/sessions/
 *.db
 *.sqlite
 *.sqlite3

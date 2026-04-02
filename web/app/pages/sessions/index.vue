@@ -2,6 +2,7 @@
 import type { Session } from '~/types'
 
 const { api, isAuthenticated } = useWzap()
+const { refreshSessions: refreshShared } = useSession()
 const toast = useToast()
 
 const sessions = ref<Session[]>([])
@@ -15,6 +16,7 @@ async function fetchSessions() {
   try {
     const res: any = await api('/sessions')
     sessions.value = res.data || []
+    await refreshShared()
   } catch {
     sessions.value = []
   }
@@ -71,6 +73,8 @@ function statusColor(status: string) {
 
 function dropdownItems(session: Session) {
   return [
+    { label: 'Open', icon: 'i-lucide-arrow-right', onSelect: () => navigateTo(`/sessions/${session.id}`) },
+    { type: 'separator' as const },
     session.status === 'connected'
       ? { label: 'Disconnect', icon: 'i-lucide-unplug', onSelect: () => disconnectSession(session.id) }
       : { label: 'Connect', icon: 'i-lucide-plug', onSelect: () => connectSession(session) },
@@ -172,23 +176,28 @@ onMounted(() => {
           <template #footer>
             <div class="flex items-center gap-2">
               <UButton
-                v-if="session.status !== 'connected'"
-                icon="i-lucide-plug"
-                label="Connect"
+                icon="i-lucide-arrow-right"
+                label="Open"
                 size="sm"
                 color="primary"
                 variant="soft"
                 class="flex-1"
+                :to="`/sessions/${session.id}`"
+              />
+              <UButton
+                v-if="session.status !== 'connected'"
+                icon="i-lucide-plug"
+                size="sm"
+                color="neutral"
+                variant="ghost"
                 @click="connectSession(session)"
               />
               <UButton
                 v-else
                 icon="i-lucide-unplug"
-                label="Disconnect"
                 size="sm"
                 color="warning"
-                variant="soft"
-                class="flex-1"
+                variant="ghost"
                 @click="disconnectSession(session.id)"
               />
               <UButton

@@ -1,11 +1,14 @@
 <script setup lang="ts">
-const { api, isAuthenticated } = useWzap()
+import type { Session } from '~/types'
 
-const sessions = ref<any[]>([])
+const { api, isAuthenticated } = useWzap()
+const toast = useToast()
+
+const sessions = ref<Session[]>([])
 const loading = ref(true)
-const showCreate = ref(false)
-const newName = ref('')
-const creating = ref(false)
+const nameFilter = ref('')
+const qrModal = useTemplateRef('qrModal')
+const qrSession = ref<Session | null>(null)
 
 async function fetchSessions() {
   loading.value = true
@@ -18,48 +21,69 @@ async function fetchSessions() {
   loading.value = false
 }
 
-async function createSession() {
-  creating.value = true
+async function connectSession(session: Session) {
   try {
-    await api('/sessions', {
-      method: 'POST',
-      body: { name: newName.value }
-    })
-    newName.value = ''
-    showCreate.value = false
+    const res: any = await api(`/sessions/${session.id}/connect`, { method: 'POST' })
+    const status = res.data?.status
+    if (status === 'PAIRING') {
+      qrSession.value = session
+      await nextTick()
+      qrModal.value?.show()
+    } else {
+      toast.add({ title: 'Session connected', color: 'success' })
+    }
     await fetchSessions()
   } catch {
-    // handle error
-  }
-  creating.value = false
-}
-
-async function connectSession(id: string) {
-  try {
-    await api(`/sessions/${id}/connect`, { method: 'POST' })
-    await fetchSessions()
-  } catch {
-    // handle error
+    toast.add({ title: 'Failed to connect session', color: 'error' })
   }
 }
 
 async function disconnectSession(id: string) {
   try {
     await api(`/sessions/${id}/disconnect`, { method: 'POST' })
+    toast.add({ title: 'Session disconnected', color: 'neutral' })
     await fetchSessions()
   } catch {
-    // handle error
+    toast.add({ title: 'Failed to disconnect session', color: 'error' })
   }
 }
 
 async function deleteSession(id: string) {
   try {
     await api(`/sessions/${id}`, { method: 'DELETE' })
+    toast.add({ title: 'Session deleted', color: 'success' })
     await fetchSessions()
   } catch {
-    // handle error
+    toast.add({ title: 'Failed to delete session', color: 'error' })
   }
 }
+
+function statusColor(status: string) {
+  const map: Record<string, 'success' | 'warning' | 'error' | 'neutral' | 'info'> = {
+    connected: 'success',
+    connecting: 'warning',
+    pairing: 'info',
+    disconnected: 'neutral',
+    error: 'error'
+  }
+  return map[status?.toLowerCase()] ?? 'neutral'
+}
+
+function dropdownItems(session: Session) {
+  return [
+    session.status === 'connected'
+      ? { label: 'Disconnect', icon: 'i-lucide-unplug', onSelect: () => disconnectSession(session.id) }
+      : { label: 'Connect', icon: 'i-lucide-plug', onSelect: () => connectSession(session) },
+    { type: 'separator' as const },
+    { label: 'Delete', icon: 'i-lucide-trash', color: 'error' as const, onSelect: () => deleteSession(session.id) }
+  ]
+}
+
+const filteredSessions = computed(() =>
+  sessions.value.filter(s =>
+    !nameFilter.value || s.name.toLowerCase().includes(nameFilter.value.toLowerCase())
+  )
+)
 
 onMounted(() => {
   if (!isAuthenticated.value) {
@@ -74,74 +98,118 @@ onMounted(() => {
   <UDashboardPanel id="sessions">
     <template #header>
       <UDashboardNavbar title="Sessions">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
         <template #right>
-          <UButton icon="i-lucide-plus" label="New Session" color="primary" @click="showCreate = true" />
+          <SessionsAddModal @created="fetchSessions" />
         </template>
       </UDashboardNavbar>
+
+      <UDashboardToolbar>
+        <template #left>
+          <UInput
+            v-model="nameFilter"
+            icon="i-lucide-search"
+            placeholder="Filter sessions..."
+            class="max-w-xs"
+          />
+        </template>
+        <template #right>
+          <span class="text-sm text-muted">{{ filteredSessions.length }} session(s)</span>
+        </template>
+      </UDashboardToolbar>
     </template>
 
-    <div class="p-4 space-y-4">
-      <UCard v-if="showCreate">
-        <form @submit.prevent="createSession" class="flex items-end gap-3">
-          <UFormField label="Session Name" class="flex-1">
-            <UInput v-model="newName" placeholder="my-session" />
-          </UFormField>
-          <UButton type="submit" :loading="creating" color="primary">Create</UButton>
-          <UButton variant="ghost" @click="showCreate = false">Cancel</UButton>
-        </form>
-      </UCard>
-
-      <div v-if="loading" class="text-center py-8">
-        <UIcon name="i-lucide-loader-2" class="animate-spin text-2xl" />
+    <template #body>
+      <div v-if="loading" class="flex items-center justify-center py-24">
+        <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-muted" />
       </div>
 
-      <UCard v-for="session in sessions" :key="session.id">
-        <div class="flex items-center justify-between">
-          <div>
-            <h3 class="font-semibold text-lg">{{ session.name }}</h3>
-            <p class="text-sm text-(--ui-text-muted)">
-              {{ session.id }}
-              <span v-if="session.jid"> &middot; {{ session.jid }}</span>
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <UBadge :color="session.status === 'connected' ? 'success' : 'error'" variant="subtle">
-              {{ session.status }}
-            </UBadge>
-            <UButton
-              v-if="session.status !== 'connected'"
-              icon="i-lucide-plug"
-              size="sm"
-              variant="soft"
-              color="primary"
-              @click="connectSession(session.id)"
-            >
-              Connect
-            </UButton>
-            <UButton
-              v-else
-              icon="i-lucide-unplug"
-              size="sm"
-              variant="soft"
-              color="warning"
-              @click="disconnectSession(session.id)"
-            >
-              Disconnect
-            </UButton>
-            <UButton
-              icon="i-lucide-trash-2"
-              size="sm"
-              variant="soft"
-              color="error"
-              @click="deleteSession(session.id)"
-            />
-          </div>
-        </div>
-      </UCard>
+      <div
+        v-else-if="filteredSessions.length === 0"
+        class="flex flex-col items-center justify-center py-24 gap-3 text-muted"
+      >
+        <UIcon name="i-lucide-smartphone" class="size-10" />
+        <p class="text-sm">No sessions found. Create one to get started.</p>
+      </div>
 
-      <p v-if="!loading && sessions.length === 0" class="text-center text-(--ui-text-muted) py-8">
-        No sessions yet. Create one to get started.
-      </p>
-    </div>
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <UCard
+          v-for="session in filteredSessions"
+          :key="session.id"
+          class="flex flex-col gap-0"
+          :ui="{ body: 'flex-1' }"
+        >
+          <template #header>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="i-lucide-smartphone" class="size-4 shrink-0 text-muted" />
+                <span class="font-semibold truncate">{{ session.name }}</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <UBadge :color="statusColor(session.status)" variant="subtle" class="capitalize">
+                  {{ session.status }}
+                </UBadge>
+                <UDropdownMenu :items="[dropdownItems(session)]" :content="{ align: 'end' }">
+                  <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" size="xs" />
+                </UDropdownMenu>
+              </div>
+            </div>
+          </template>
+
+          <div class="space-y-1.5 text-sm">
+            <div class="flex items-center gap-2 text-muted">
+              <UIcon name="i-lucide-hash" class="size-3.5 shrink-0" />
+              <span class="truncate font-mono text-xs">{{ session.id }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-muted">
+              <UIcon name="i-lucide-phone" class="size-3.5 shrink-0" />
+              <span>{{ session.jid || 'Not paired' }}</span>
+            </div>
+          </div>
+
+          <template #footer>
+            <div class="flex items-center gap-2">
+              <UButton
+                v-if="session.status !== 'connected'"
+                icon="i-lucide-plug"
+                label="Connect"
+                size="sm"
+                color="primary"
+                variant="soft"
+                class="flex-1"
+                @click="connectSession(session)"
+              />
+              <UButton
+                v-else
+                icon="i-lucide-unplug"
+                label="Disconnect"
+                size="sm"
+                color="warning"
+                variant="soft"
+                class="flex-1"
+                @click="disconnectSession(session.id)"
+              />
+              <UButton
+                icon="i-lucide-trash-2"
+                size="sm"
+                color="error"
+                variant="ghost"
+                @click="deleteSession(session.id)"
+              />
+            </div>
+          </template>
+        </UCard>
+      </div>
+
+      <SessionsQRModal
+        v-if="qrSession"
+        ref="qrModal"
+        :session-id="qrSession.id"
+        :session-name="qrSession.name"
+        @connected="fetchSessions"
+      />
+    </template>
   </UDashboardPanel>
 </template>

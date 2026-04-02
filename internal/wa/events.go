@@ -311,28 +311,41 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		return
 	}
 
-	// Serialização bruta do evento whatsmeow (sem transformações)
-	evtBytes, err := json.Marshal(evt)
-	if err != nil {
-		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to serialize event")
-		return
-	}
 	var data map[string]interface{}
-	if err := json.Unmarshal(evtBytes, &data); err != nil {
-		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to unmarshal event")
-		return
-	}
 
-	// Campos error não serializam via json.Marshal (interface{} → {}).
-	// Injetamos o texto do erro manualmente nos dois eventos afetados.
 	switch v := evt.(type) {
-	case *events.PairError:
-		if v.Error != nil {
-			data["Error"] = v.Error.Error()
+	case *events.HistorySync:
+		data = map[string]interface{}{}
+		if v.Data != nil {
+			data["syncType"] = v.Data.GetSyncType().String()
+			data["chunkOrder"] = v.Data.GetChunkOrder()
+			data["progress"] = v.Data.GetProgress()
+			data["conversationCount"] = len(v.Data.GetConversations())
 		}
-	case *events.CATRefreshError:
-		if v.Error != nil {
-			data["Error"] = v.Error.Error()
+	default:
+		evtBytes, err := json.Marshal(evt)
+		if err != nil {
+			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to serialize event")
+			return
+		}
+		if err := json.Unmarshal(evtBytes, &data); err != nil {
+			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to unmarshal event")
+			return
+		}
+
+		// Campos error não serializam via json.Marshal (interface{} → {}).
+		switch v2 := evt.(type) {
+		case *events.PairError:
+			if v2.Error != nil {
+				data["Error"] = v2.Error.Error()
+			}
+		case *events.CATRefreshError:
+			if v2.Error != nil {
+				data["Error"] = v2.Error.Error()
+			}
+		case *events.Message:
+			delete(data, "RawMessage")
+			delete(data, "SourceWebMsg")
 		}
 	}
 
@@ -351,8 +364,11 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		return
 	}
 
+	const maxNATSPayloadSize = 512 * 1024 // 512 KB
 	if m.nats != nil {
-		if err := m.nats.Publish(m.ctx, "wzap.events."+sessionID, bytes); err != nil {
+		if len(bytes) > maxNATSPayloadSize {
+			logger.Debug().Str("session", sessionID).Str("event", string(eventType)).Int("size", len(bytes)).Msg("Event payload too large for NATS, skipping")
+		} else if err := m.nats.Publish(m.ctx, "wzap.events."+sessionID, bytes); err != nil {
 			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
 		}
 	}

@@ -8,44 +8,23 @@ let ws: WebSocket | null = null
 
 function connect() {
   if (ws) ws.close()
-
   const wsUrl = apiBase.value.replace(/^http/, 'ws') + '/ws?token=' + token.value
   ws = new WebSocket(wsUrl)
-
-  ws.onopen = () => {
-    connected.value = true
-  }
-
+  ws.onopen = () => { connected.value = true }
   ws.onmessage = (e) => {
     try {
       const data = JSON.parse(e.data)
-      events.value.unshift({
-        id: Date.now(),
-        timestamp: new Date().toLocaleTimeString(),
-        ...data
-      })
-      if (events.value.length > maxEvents) {
-        events.value = events.value.slice(0, maxEvents)
-      }
-    } catch {
-      // ignore parse errors
-    }
+      events.value.unshift({ id: Date.now(), timestamp: new Date().toLocaleTimeString(), ...data })
+      if (events.value.length > maxEvents) events.value = events.value.slice(0, maxEvents)
+    } catch {}
   }
-
-  ws.onclose = () => {
-    connected.value = false
-  }
-
-  ws.onerror = () => {
-    connected.value = false
-  }
+  ws.onclose = () => { connected.value = false }
+  ws.onerror = () => { connected.value = false }
 }
 
 function disconnect() {
-  if (ws) {
-    ws.close()
-    ws = null
-  }
+  ws?.close()
+  ws = null
 }
 
 function clearEvents() {
@@ -59,15 +38,17 @@ onMounted(() => {
   }
 })
 
-onUnmounted(() => {
-  disconnect()
-})
+onUnmounted(() => disconnect())
 </script>
 
 <template>
   <UDashboardPanel id="logs">
     <template #header>
       <UDashboardNavbar title="Live Events">
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
+
         <template #right>
           <div class="flex items-center gap-2">
             <UBadge :color="connected ? 'success' : 'neutral'" variant="subtle">
@@ -89,8 +70,10 @@ onUnmounted(() => {
               @click="disconnect"
             />
             <UButton
+              v-if="events.length"
               icon="i-lucide-trash-2"
               label="Clear"
+              color="neutral"
               variant="ghost"
               @click="clearEvents"
             />
@@ -99,24 +82,29 @@ onUnmounted(() => {
       </UDashboardNavbar>
     </template>
 
-    <div class="p-4">
-      <div v-if="events.length === 0" class="text-center text-(--ui-text-muted) py-12">
-        <UIcon name="i-lucide-radio" class="text-4xl mb-2" />
-        <p>No events yet. Connect to start receiving live events.</p>
+    <template #body>
+      <div v-if="events.length === 0" class="flex flex-col items-center justify-center py-24 gap-3 text-muted">
+        <UIcon name="i-lucide-radio" class="size-10" />
+        <p class="text-sm">No events yet. Click <strong>Connect</strong> to start receiving live events.</p>
       </div>
 
-      <div v-else class="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto">
-        <UCard v-for="evt in events" :key="evt.id" class="text-sm">
-          <div class="flex items-start justify-between">
-            <div>
-              <UBadge color="primary" variant="subtle" class="mr-2">{{ evt.event || 'unknown' }}</UBadge>
-              <span class="text-(--ui-text-muted)">{{ evt.timestamp }}</span>
+      <div v-else class="space-y-2">
+        <UCard
+          v-for="evt in events"
+          :key="evt.id"
+          class="text-sm"
+          :ui="{ body: 'p-3' }"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-2">
+              <UBadge color="primary" variant="subtle">{{ evt.event || 'unknown' }}</UBadge>
+              <span v-if="evt.sessionId" class="text-xs text-muted">{{ evt.sessionId }}</span>
             </div>
-            <span v-if="evt.sessionId" class="text-xs text-(--ui-text-muted)">{{ evt.sessionId }}</span>
+            <span class="text-xs text-muted">{{ evt.timestamp }}</span>
           </div>
-          <pre class="mt-2 text-xs overflow-x-auto whitespace-pre-wrap text-(--ui-text-muted)">{{ JSON.stringify(evt, null, 2) }}</pre>
+          <pre class="text-xs overflow-x-auto whitespace-pre-wrap text-muted">{{ JSON.stringify(evt, null, 2) }}</pre>
         </UCard>
       </div>
-    </div>
+    </template>
   </UDashboardPanel>
 </template>

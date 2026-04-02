@@ -90,9 +90,6 @@ func (m *Manager) ReconnectAll(ctx context.Context) error {
 			continue
 		}
 
-		if err := m.sessionRepo.SetConnected(ctx, sessionID, 1); err != nil {
-			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to set connected status")
-		}
 		if err := m.sessionRepo.UpdateStatus(ctx, sessionID, "connected"); err != nil {
 			logger.Error().Err(err).Str("session", sessionID).Msg("Failed to update status to connected")
 		}
@@ -183,7 +180,7 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 			_ = m.sessionRepo.UpdateQRCode(m.ctx, sessionID, "")
 			logger.Info().Str("session", sessionID).Str("jid", jidStr).Msg("QR pairing successful")
 		case *events.Disconnected:
-			if err := m.sessionRepo.SetConnected(m.ctx, sessionID, 0); err != nil {
+			if err := m.sessionRepo.UpdateStatus(m.ctx, sessionID, "disconnected"); err != nil {
 				logger.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
 			}
 		case *events.LoggedOut:
@@ -254,7 +251,7 @@ func (m *Manager) Disconnect(sessionID string) error {
 		delete(m.clients, sessionID)
 	}
 
-	if err := m.sessionRepo.SetConnected(m.ctx, sessionID, 0); err != nil {
+	if err := m.sessionRepo.UpdateStatus(m.ctx, sessionID, "disconnected"); err != nil {
 		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to set disconnected status")
 	}
 	return nil

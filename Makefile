@@ -1,6 +1,6 @@
 # wzap Makefile
 
-.PHONY: help dev build run tidy up down clean install-tools docs
+.PHONY: help dev build run tidy up down clean install-tools docs web-install web-dev web-build dev-all
 
 # Variables
 APP_NAME=wzap
@@ -44,3 +44,15 @@ install-tools: ## Install development tools (golangci-lint, swag)
 docs: ## Generate Swagger documentation
 	swag init -g main.go -o docs --parseInternal --useStructName \
 		-d cmd/wzap,internal/handler,internal/dto,internal/model,internal/service,internal/repo
+
+web-install: ## Install frontend dependencies
+	cd web && pnpm install
+
+web-dev: ## Run the frontend dev server
+	cd web && pnpm dev
+
+web-build: ## Build the frontend for production
+	cd web && pnpm build
+
+dev-all: ## Run backend and frontend concurrently
+	make dev & make web-dev

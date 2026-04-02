@@ -7,9 +7,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"wzap/internal/broker"
@@ -20,12 +22,24 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 )
 
+type permanentDeliveryError struct {
+	statusCode int
+	err        error
+}
+
+func (e *permanentDeliveryError) Error() string { return e.err.Error() }
+func (e *permanentDeliveryError) Unwrap() error { return e.err }
+
 const (
-	natsDeliverSubject  = "wzap.webhook.deliver"
-	httpTimeout         = 10 * time.Second
-	maxDeliverAttempts  = 5
-	maxHTTPRetries      = 3
-	httpRetryBaseDelay  = 2 * time.Second
+	natsDeliverSubject = "wzap.webhook.deliver"
+	httpTimeout        = 10 * time.Second
+	maxDeliverAttempts = 5
+	maxHTTPRetries     = 3
+	httpRetryBaseDelay = 2 * time.Second
+	maxWebhookPayload  = 512 * 1024 // 512 KB
+
+	globalBackoffBase = 5 * time.Second
+	globalBackoffMax  = 30 * time.Minute
 )
 
 type deliverMsg struct {
@@ -40,11 +54,13 @@ type WSBroadcaster interface {
 }
 
 type Dispatcher struct {
-	webhookRepo      *repo.WebhookRepository
-	nats             *broker.NATS
-	httpClient       *http.Client
-	globalWebhookURL string
-	ws               WSBroadcaster
+	webhookRepo       *repo.WebhookRepository
+	nats              *broker.NATS
+	httpClient        *http.Client
+	globalWebhookURL  string
+	globalFailures    atomic.Uint64
+	globalLastAttempt atomic.Int64
+	ws                WSBroadcaster
 }
 
 func New(webhookRepo *repo.WebhookRepository, nats *broker.NATS, globalWebhookURL string) *Dispatcher {
@@ -75,6 +91,14 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	logger.Debug().Int("webhooks", len(webhooks)).Msg("Active webhooks found")
 
+	if len(payload) > maxWebhookPayload {
+		logger.Debug().Str("session", sessionID).Str("event", string(eventType)).Int("size", len(payload)).Msg("Event payload too large for webhook delivery, skipping")
+		if d.ws != nil {
+			d.ws.Broadcast(sessionID, payload)
+		}
+		return
+	}
+
 	for _, wh := range webhooks {
 		wh := wh
 		if wh.NATSEnabled && d.nats != nil {
@@ -84,9 +108,9 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 		}
 	}
 
-	if d.globalWebhookURL != "" {
+	if d.globalWebhookURL != "" && d.shouldAttemptGlobal() {
 		logger.Debug().Str("url", d.globalWebhookURL).Msg("Sending to global webhook")
-		go d.deliverHTTPWithRetry(d.globalWebhookURL, "", payload)
+		go d.deliverGlobalWebhook(payload)
 	}
 
 	if d.ws != nil {
@@ -118,6 +142,11 @@ func (d *Dispatcher) publishToNATS(wh model.Webhook, payload []byte) {
 func (d *Dispatcher) deliverHTTPWithRetry(url, secret string, payload []byte) {
 	for attempt := 0; attempt <= maxHTTPRetries; attempt++ {
 		if err := d.deliverHTTPWithErr(url, secret, payload); err != nil {
+			var permErr *permanentDeliveryError
+			if errors.As(err, &permErr) {
+				logger.Warn().Err(err).Str("url", url).Int("status", permErr.statusCode).Msg("Webhook HTTP delivery failed permanently (4xx, no retry)")
+				return
+			}
 			if attempt < maxHTTPRetries {
 				delay := httpRetryBaseDelay * time.Duration(1<<uint(attempt))
 				logger.Warn().Err(err).Str("url", url).Int("attempt", attempt+1).Dur("retryIn", delay).Msg("Webhook HTTP delivery failed, retrying")
@@ -127,6 +156,42 @@ func (d *Dispatcher) deliverHTTPWithRetry(url, secret string, payload []byte) {
 			logger.Error().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed after all retries")
 		}
 		return
+	}
+}
+
+func (d *Dispatcher) shouldAttemptGlobal() bool {
+	failures := d.globalFailures.Load()
+	if failures == 0 {
+		return true
+	}
+
+	backoff := globalBackoffBase * time.Duration(1<<min(failures-1, 10))
+	if backoff > globalBackoffMax {
+		backoff = globalBackoffMax
+	}
+
+	lastAttempt := time.Unix(0, d.globalLastAttempt.Load())
+	return time.Since(lastAttempt) >= backoff
+}
+
+func (d *Dispatcher) deliverGlobalWebhook(payload []byte) {
+	d.globalLastAttempt.Store(time.Now().UnixNano())
+
+	if err := d.deliverHTTPWithErr(d.globalWebhookURL, "", payload); err != nil {
+		failures := d.globalFailures.Add(1)
+		var permErr *permanentDeliveryError
+		if errors.As(err, &permErr) {
+			logger.Warn().Err(err).Str("url", d.globalWebhookURL).Int("status", permErr.statusCode).
+				Uint64("failures", failures).Msg("Global webhook URL returned 4xx, backing off")
+		} else {
+			logger.Warn().Err(err).Str("url", d.globalWebhookURL).
+				Uint64("failures", failures).Msg("Global webhook delivery failed, backing off")
+		}
+		return
+	}
+
+	if failures := d.globalFailures.Swap(0); failures > 0 {
+		logger.Info().Str("url", d.globalWebhookURL).Uint64("previousFailures", failures).Msg("Global webhook recovered")
 	}
 }
 
@@ -185,8 +250,14 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 			}
 
 			if err := d.deliverHTTPWithErr(dm.URL, dm.Secret, dm.Payload); err != nil {
-				logger.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Msg("NATS webhook delivery failed, will retry")
-				_ = msg.Nak()
+				var permErr *permanentDeliveryError
+				if errors.As(err, &permErr) {
+					logger.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Int("status", permErr.statusCode).Msg("NATS webhook delivery failed permanently (4xx), terminating message")
+					_ = msg.Term()
+				} else {
+					logger.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Msg("NATS webhook delivery failed, will retry")
+					_ = msg.Nak()
+				}
 			} else {
 				_ = msg.Ack()
 			}
@@ -225,7 +296,11 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 	_, _ = io.Copy(io.Discard, resp.Body)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("non-2xx status: %d", resp.StatusCode)
+		err := fmt.Errorf("non-2xx status: %d", resp.StatusCode)
+		if resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
+			return &permanentDeliveryError{statusCode: resp.StatusCode, err: err}
+		}
+		return err
 	}
 
 	logger.Info().Str("url", url).Int("status", resp.StatusCode).Msg("Webhook delivered successfully")

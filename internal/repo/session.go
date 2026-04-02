@@ -107,9 +107,13 @@ func (r *SessionRepository) UpdateSession(ctx context.Context, session *model.Se
 }
 
 func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+	connected := 0
+	if status == "connected" {
+		connected = 1
+	}
 	_, err := r.db.Exec(ctx,
-		`UPDATE wz_sessions SET status = $1, updated_at = NOW() WHERE id = $2`,
-		status, id)
+		`UPDATE wz_sessions SET status = $1, connected = $2, updated_at = NOW() WHERE id = $3`,
+		status, connected, id)
 	if err != nil {
 		return fmt.Errorf("failed to update status for session %s: %w", id, err)
 	}

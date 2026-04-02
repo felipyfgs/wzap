@@ -3,6 +3,41 @@ import type { AvatarProps } from '@nuxt/ui'
 export type UserStatus = 'subscribed' | 'unsubscribed' | 'bounced'
 export type SaleStatus = 'paid' | 'failed' | 'refunded'
 
+export interface Session {
+  id: string
+  name: string
+  apiKey?: string
+  jid?: string
+  qrCode?: string
+  connected: number
+  status: string
+  proxy?: {
+    host?: string
+    port?: number
+    protocol?: string
+  }
+  settings?: {
+    alwaysOnline: boolean
+    rejectCall: boolean
+    readMessages: boolean
+    ignoreGroups: boolean
+    ignoreStatus: boolean
+  }
+  createdAt?: string
+  updatedAt?: string
+}
+
+export interface Webhook {
+  id: string
+  sessionId: string
+  url: string
+  secret?: string
+  events: string[]
+  enabled: boolean
+  natsEnabled: boolean
+  createdAt?: string
+}
+
 export interface User {
   id: number
   name: string

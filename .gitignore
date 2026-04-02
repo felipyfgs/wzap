@@ -13,7 +13,7 @@ go.work
 # Build artifacts
 bin/
 dist/
-wzap
+/wzap
 
 # Environment files
 .env
@@ -61,3 +61,11 @@ ssl/
 
 # Factory MCP config (may contain credentials)
 .factory/mcp.json
+
+# Opencode config
+.opencode/
+opencode.json
+
+# Test coverage
+coverage.out
+*.coverprofile

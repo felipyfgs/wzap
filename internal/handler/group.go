@@ -24,7 +24,8 @@ func NewGroupHandler(groupSvc *service.GroupService) *GroupHandler {
 // @Produce     json
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups [get]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups [get]
 func (h *GroupHandler) List(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -46,7 +47,8 @@ func (h *GroupHandler) List(c *fiber.Ctx) error {
 // @Param       request body dto.CreateGroupReq true "Group properties"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/create [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/create [post]
 func (h *GroupHandler) Create(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -77,7 +79,8 @@ func (h *GroupHandler) Create(c *fiber.Ctx) error {
 // @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/info [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/info [post]
 func (h *GroupHandler) Info(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -108,7 +111,8 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 // @Param       reset query bool false "Reset the invite link"
 // @Success     200 {object} dto.APIResponse{Data=dto.GroupInviteLinkResp}
 // @Security    Authorization
-// @Router      /groups/invite-link [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/invite-link [post]
 func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -137,7 +141,8 @@ func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 // @Param       request body dto.GroupJoinReq true "Invite Code Payload"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/invite-info [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/invite-info [post]
 func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -168,7 +173,8 @@ func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 // @Param       request body dto.GroupJoinReq true "Invite Code"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/join [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/join [post]
 func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -195,7 +201,8 @@ func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 // @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/leave [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/leave [post]
 func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -223,7 +230,8 @@ func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 // @Param       request body dto.GroupParticipantReq true "Participants and action"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/participants [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/participants [post]
 func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -251,7 +259,8 @@ func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 // @Param       request body dto.GroupJIDReq true "Target Group JID Payload"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/requests [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/requests [post]
 func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -279,7 +288,8 @@ func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 // @Param       request body dto.GroupRequestActionReq true "Participants and action (approve/reject)"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/requests/action [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/requests/action [post]
 func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -308,7 +318,8 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 // @Param       request body dto.GroupTextReq true "New name"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/name [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/name [post]
 func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -339,7 +350,8 @@ func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 // @Param       request body dto.GroupTextReq true "New description"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/description [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/description [post]
 func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -370,7 +382,8 @@ func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 // @Param       request body dto.GroupPhotoReq true "Base64 encoded photo"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/photo [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/photo [post]
 func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -404,7 +417,8 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 // @Param       request body dto.GroupSettingReq true "Enabled state"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/announce [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/announce [post]
 func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -435,7 +449,8 @@ func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 // @Param       request body dto.GroupSettingReq true "Enabled state"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/locked [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/locked [post]
 func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -466,7 +481,8 @@ func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 // @Param       request body dto.GroupSettingReq true "Enabled state"
 // @Success     200 {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/join-approval [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/join-approval [post]
 func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -497,7 +513,8 @@ func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 // @Param       body body     dto.GroupJIDReq true "Group JID"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/photo/remove [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/photo/remove [post]
 func (h *GroupHandler) RemovePhoto(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -522,7 +539,8 @@ func (h *GroupHandler) RemovePhoto(c *fiber.Ctx) error {
 // @Param       body body     dto.GroupEphemeralReq true "Ephemeral settings"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /groups/ephemeral [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/groups/ephemeral [post]
 func (h *GroupHandler) SetEphemeral(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {

@@ -24,7 +24,8 @@ func NewNewsletterHandler(newsletterSvc *service.NewsletterService) *NewsletterH
 // @Param       body body     dto.CreateNewsletterReq true "Newsletter payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/create [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/create [post]
 func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -49,7 +50,8 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 // @Param       jid query string true "Newsletter JID"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/info [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/info [post]
 func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -74,7 +76,8 @@ func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 // @Param       code query string true "Newsletter invite code"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/invite [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/invite [post]
 func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -98,7 +101,8 @@ func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 // @Produce     json
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/list [get]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/list [get]
 func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -120,7 +124,8 @@ func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 // @Param       body body     dto.NewsletterMessageReq true "Messages pagination payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/messages [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/messages [post]
 func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -148,7 +153,8 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /newsletter/subscribe [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/subscribe [post]
 func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -173,7 +179,8 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 // @Param       body body     dto.NewsletterSubscribeReq true "Newsletter JID"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/unsubscribe [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/unsubscribe [post]
 func (h *NewsletterHandler) Unsubscribe(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -198,7 +205,8 @@ func (h *NewsletterHandler) Unsubscribe(c *fiber.Ctx) error {
 // @Param       body body     dto.NewsletterMuteReq true "Mute payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/mute [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/mute [post]
 func (h *NewsletterHandler) Mute(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -223,7 +231,8 @@ func (h *NewsletterHandler) Mute(c *fiber.Ctx) error {
 // @Param       body body     dto.NewsletterReactReq true "Reaction payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/react [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/react [post]
 func (h *NewsletterHandler) React(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -248,7 +257,8 @@ func (h *NewsletterHandler) React(c *fiber.Ctx) error {
 // @Param       body body     dto.NewsletterMarkViewedReq true "Mark viewed payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /newsletter/viewed [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/newsletter/viewed [post]
 func (h *NewsletterHandler) MarkViewed(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {

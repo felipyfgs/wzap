@@ -23,7 +23,8 @@ func NewCommunityHandler(communitySvc *service.CommunityService) *CommunityHandl
 // @Param       body body     dto.CreateCommunityReq true "Community payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /community/create [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/community/create [post]
 func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -49,7 +50,8 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 // @Param       body body     dto.CommunityParticipantReq true "Community participant payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /community/participant/add [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/community/participant/add [post]
 func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -75,7 +77,8 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 // @Param       body body     dto.CommunityParticipantReq true "Community participant payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /community/participant/remove [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/community/participant/remove [post]
 func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {

@@ -22,12 +22,13 @@ func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
+// @Param       sessionId path string true "Session name or ID"
 // @Param       body body     dto.SendTextReq true "Message payload"
 // @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/text [post]
+// @Router      /sessions/{sessionId}/messages/text [post]
 func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -50,6 +51,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 // @Summary     Send an image message
 // @Description Sends a base64-encoded image to a WhatsApp JID with optional caption
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
@@ -57,7 +59,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/image [post]
+// @Router      /sessions/{sessionId}/messages/image [post]
 func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendImage)
 }
@@ -66,6 +68,7 @@ func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 // @Summary     Send a video message
 // @Description Sends a base64-encoded video to a WhatsApp JID with optional caption
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
@@ -73,7 +76,7 @@ func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/video [post]
+// @Router      /sessions/{sessionId}/messages/video [post]
 func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendVideo)
 }
@@ -82,6 +85,7 @@ func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 // @Summary     Send a document
 // @Description Sends a base64-encoded file as a document. Use filename to set the display name.
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
@@ -89,7 +93,7 @@ func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/document [post]
+// @Router      /sessions/{sessionId}/messages/document [post]
 func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendDocument)
 }
@@ -98,6 +102,7 @@ func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 // @Summary     Send an audio message
 // @Description Sends a base64-encoded audio file as a voice note (PTT)
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendMediaReq true "Media payload"
@@ -105,7 +110,7 @@ func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/audio [post]
+// @Router      /sessions/{sessionId}/messages/audio [post]
 func (h *MessageHandler) SendAudio(c *fiber.Ctx) error {
 	return h.sendMedia(c, h.msgSvc.SendAudio)
 }
@@ -136,6 +141,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 // @Summary     Send a contact card
 // @Description Sends a vCard contact message via WhatsApp to the specified recipient
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendContactReq true "Contact payload"
@@ -143,7 +149,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/contact [post]
+// @Router      /sessions/{sessionId}/messages/contact [post]
 func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -164,6 +170,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 // @Summary     Send a location message
 // @Description Sends a GPS location message with optional name and address to the specified recipient
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendLocationReq true "Location payload"
@@ -171,7 +178,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/location [post]
+// @Router      /sessions/{sessionId}/messages/location [post]
 func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -192,6 +199,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 // @Summary     Send a poll message
 // @Description Sends a poll with multiple choice options. selectableCount controls how many options a recipient may choose (0 = unlimited)
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendPollReq true "Poll payload"
@@ -199,7 +207,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/poll [post]
+// @Router      /sessions/{sessionId}/messages/poll [post]
 func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -220,6 +228,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 // @Summary     Send a sticker
 // @Description Sends a base64-encoded sticker image (WebP) to the specified recipient
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendStickerReq true "Sticker payload"
@@ -227,7 +236,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/sticker [post]
+// @Router      /sessions/{sessionId}/messages/sticker [post]
 func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -248,6 +257,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 // @Summary     Send a link preview message
 // @Description Sends a hyperlink with optional title and description as a rich preview message
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendLinkReq true "Link payload"
@@ -255,7 +265,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/link [post]
+// @Router      /sessions/{sessionId}/messages/link [post]
 func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -276,6 +286,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 // @Summary     Edit a sent message
 // @Description Edits a previously sent message by mid, replacing its text content
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.EditMessageReq true "Edit payload"
@@ -283,7 +294,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/edit [post]
+// @Router      /sessions/{sessionId}/messages/edit [post]
 func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -304,6 +315,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 // @Summary     Delete a sent message
 // @Description Revokes a previously sent message for all recipients (unsend)
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.DeleteMessageReq true "Delete payload"
@@ -311,7 +323,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/delete [post]
+// @Router      /sessions/{sessionId}/messages/delete [post]
 func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -332,6 +344,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 // @Summary     React to a message
 // @Description Adds an emoji reaction to a message. Pass an empty string for reaction to remove an existing one.
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.ReactMessageReq true "Reaction payload"
@@ -339,7 +352,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/reaction [post]
+// @Router      /sessions/{sessionId}/messages/reaction [post]
 func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -360,6 +373,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 // @Summary     Mark a message as read
 // @Description Sends a read receipt for a specific message (removes unread indicator)
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.MarkReadReq true "Mark read payload"
@@ -367,7 +381,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/read [post]
+// @Router      /sessions/{sessionId}/messages/read [post]
 func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -387,6 +401,7 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 // @Summary     Set typing/recording presence
 // @Description Sends a chat presence indicator. Accepted values for presence: typing, recording, paused
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SetPresenceReq true "Presence payload"
@@ -394,7 +409,7 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/presence [post]
+// @Router      /sessions/{sessionId}/messages/presence [post]
 func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -414,6 +429,7 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 // @Summary     Send a button message
 // @Description Sends a message with interactive buttons
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendButtonReq true "Button message payload"
@@ -421,7 +437,7 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/button [post]
+// @Router      /sessions/{sessionId}/messages/button [post]
 func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -444,6 +460,7 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 // @Summary     Send a list message
 // @Description Sends a message with interactive list sections
 // @Tags        Messages
+// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
 // @Param       body body     dto.SendListReq true "List message payload"
@@ -451,7 +468,7 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 // @Failure     400  {object} dto.APIError
 // @Failure     500  {object} dto.APIError
 // @Security    Authorization
-// @Router      /messages/list [post]
+// @Router      /sessions/{sessionId}/messages/list [post]
 func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {

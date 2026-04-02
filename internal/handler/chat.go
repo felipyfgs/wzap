@@ -23,7 +23,8 @@ func NewChatHandler(chatSvc *service.ChatService) *ChatHandler {
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/archive [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/archive [post]
 func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -48,7 +49,8 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/mute [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/mute [post]
 func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -73,7 +75,8 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/pin [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/pin [post]
 func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -98,7 +101,8 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 // @Param       body body     dto.ChatActionReq true "Chat JID payload"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/unpin [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/unpin [post]
 func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -123,7 +127,8 @@ func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 // @Param       body body     dto.ChatActionReq true "Chat JID"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/unarchive [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/unarchive [post]
 func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -148,7 +153,8 @@ func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
 // @Param       body body     dto.ChatActionReq true "Chat JID"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/unmute [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/unmute [post]
 func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -173,7 +179,8 @@ func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
 // @Param       body body     dto.ChatActionReq true "Chat JID"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/delete [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/delete [post]
 func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -198,7 +205,8 @@ func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
 // @Param       body body     dto.ChatMarkReadReq true "Chat JID + message IDs"
 // @Success     200  {object} dto.APIResponse
 // @Security    Authorization
-// @Router      /chat/read [post]
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/read [post]
 func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {

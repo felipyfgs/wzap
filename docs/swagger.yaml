@@ -831,993 +831,6 @@ info:
   title: wzap API
   version: "1.0"
 paths:
-  /chat/archive:
-    post:
-      consumes:
-      - application/json
-      description: Archives a chat identified by JID, moving it out of the main chat
-        list
-      parameters:
-      - description: Chat JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Archive a chat
-      tags:
-      - Chat
-  /chat/delete:
-    post:
-      consumes:
-      - application/json
-      description: Permanently deletes a chat (including media)
-      parameters:
-      - description: Chat JID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Delete a chat
-      tags:
-      - Chat
-  /chat/mute:
-    post:
-      consumes:
-      - application/json
-      description: Mutes notifications for a chat identified by JID
-      parameters:
-      - description: Chat JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Mute a chat
-      tags:
-      - Chat
-  /chat/pin:
-    post:
-      consumes:
-      - application/json
-      description: Pins a chat to the top of the chat list
-      parameters:
-      - description: Chat JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Pin a chat
-      tags:
-      - Chat
-  /chat/read:
-    post:
-      consumes:
-      - application/json
-      description: Marks specific messages in a chat as read
-      parameters:
-      - description: Chat JID + message IDs
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatMarkReadReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Mark chat as read
-      tags:
-      - Chat
-  /chat/unarchive:
-    post:
-      consumes:
-      - application/json
-      description: Removes a chat from the archived list
-      parameters:
-      - description: Chat JID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Unarchive a chat
-      tags:
-      - Chat
-  /chat/unmute:
-    post:
-      consumes:
-      - application/json
-      description: Removes mute from a chat
-      parameters:
-      - description: Chat JID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Unmute a chat
-      tags:
-      - Chat
-  /chat/unpin:
-    post:
-      consumes:
-      - application/json
-      description: Removes a chat from the pinned position at the top of the chat
-        list
-      parameters:
-      - description: Chat JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ChatActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Unpin a chat
-      tags:
-      - Chat
-  /community/create:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new WhatsApp Community (a group of groups) with a name
-        and optional description
-      parameters:
-      - description: Community payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/CreateCommunityReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Create a community
-      tags:
-      - Community
-  /community/participant/add:
-    post:
-      consumes:
-      - application/json
-      description: Adds one or more subgroups (by JID) as participants to an existing
-        community
-      parameters:
-      - description: Community participant payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/CommunityParticipantReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Add subgroup to community
-      tags:
-      - Community
-  /community/participant/remove:
-    post:
-      consumes:
-      - application/json
-      description: Removes one or more subgroups (by JID) from an existing community
-      parameters:
-      - description: Community participant payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/CommunityParticipantReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Remove subgroup from community
-      tags:
-      - Community
-  /contacts:
-    get:
-      description: Returns all contacts from the WhatsApp session
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: List contacts
-      tags:
-      - Contacts
-  /contacts/avatar:
-    post:
-      consumes:
-      - application/json
-      description: Fetches the profile picture URL and picture ID for the given WhatsApp
-        JID
-      parameters:
-      - description: JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/GetAvatarReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/GetAvatarResp'
-              type: object
-      security:
-      - Authorization: []
-      summary: Get contact avatar
-      tags:
-      - Contacts
-  /contacts/block:
-    post:
-      consumes:
-      - application/json
-      description: Blocks a WhatsApp contact by JID, preventing them from sending
-        messages
-      parameters:
-      - description: JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/BlockContactReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Block a contact
-      tags:
-      - Contacts
-  /contacts/blocklist:
-    get:
-      description: Returns the full list of JIDs currently blocked by the session
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get blocked contacts list
-      tags:
-      - Contacts
-  /contacts/check:
-    post:
-      consumes:
-      - application/json
-      description: Checks if phone numbers are registered on WhatsApp
-      parameters:
-      - description: Phone numbers
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/CheckContactReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Check contacts on WhatsApp
-      tags:
-      - Contacts
-  /contacts/info:
-    post:
-      consumes:
-      - application/json
-      description: Fetches detailed user info (status, profile picture, devices) for
-        one or more WhatsApp JIDs
-      parameters:
-      - description: JIDs payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/GetUserInfoReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  items:
-                    $ref: '#/definitions/UserInfoResp'
-                  type: array
-              type: object
-      security:
-      - Authorization: []
-      summary: Get user info for JIDs
-      tags:
-      - Contacts
-  /contacts/presence:
-    post:
-      consumes:
-      - application/json
-      description: Subscribes to presence updates for a contact (online/offline/typing)
-      parameters:
-      - description: JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SubscribePresenceReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Subscribe to presence
-      tags:
-      - Contacts
-  /contacts/privacy:
-    get:
-      description: Retrieves the current session's WhatsApp privacy settings (last-seen,
-        profile photo, status visibility)
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get privacy settings
-      tags:
-      - Contacts
-    post:
-      consumes:
-      - application/json
-      description: Updates a privacy setting (groupadd, last, status, profile, readreceipts,
-        online, calladd)
-      parameters:
-      - description: Privacy setting
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SetPrivacyReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Set privacy setting
-      tags:
-      - Contacts
-  /contacts/profile-picture:
-    post:
-      consumes:
-      - application/json
-      description: Updates the session account's WhatsApp profile picture with a base64-encoded
-        image
-      parameters:
-      - description: Base64 image payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SetProfilePictureReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/PictureIDResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Set profile picture
-      tags:
-      - Contacts
-  /contacts/status:
-    post:
-      consumes:
-      - application/json
-      description: Updates the session's WhatsApp "About" status message
-      parameters:
-      - description: Status message
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SetStatusMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Set status message
-      tags:
-      - Contacts
-  /contacts/unblock:
-    post:
-      consumes:
-      - application/json
-      description: Unblocks a previously blocked WhatsApp contact by JID
-      parameters:
-      - description: JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/BlockContactReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Unblock a contact
-      tags:
-      - Contacts
-  /groups:
-    get:
-      description: Returns all WhatsApp groups the session is part of
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: List joined groups
-      tags:
-      - Groups
-  /groups/announce:
-    post:
-      consumes:
-      - application/json
-      description: Sets whether only admins can send messages in the group
-      parameters:
-      - description: Enabled state
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupSettingReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Set group announce mode
-      tags:
-      - Groups
-  /groups/create:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new WhatsApp group with the given participants
-      parameters:
-      - description: Group properties
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/CreateGroupReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Create a new group
-      tags:
-      - Groups
-  /groups/description:
-    post:
-      consumes:
-      - application/json
-      description: Updates the description of the specified WhatsApp group
-      parameters:
-      - description: New description
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupTextReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Update group description
-      tags:
-      - Groups
-  /groups/ephemeral:
-    post:
-      consumes:
-      - application/json
-      description: 'Sets the disappearing messages timer for a group (in seconds:
-        0, 86400, 604800, 7776000)'
-      parameters:
-      - description: Ephemeral settings
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/GroupEphemeralReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Set ephemeral timer
-      tags:
-      - Groups
-  /groups/info:
-    post:
-      consumes:
-      - application/json
-      description: Get detailed information about a group by JID
-      parameters:
-      - description: Target Group JID Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get group info
-      tags:
-      - Groups
-  /groups/invite-info:
-    post:
-      consumes:
-      - application/json
-      description: Previews a group's info using an invite code without joining
-      parameters:
-      - description: Invite Code Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJoinReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get group info from invite link
-      tags:
-      - Groups
-  /groups/invite-link:
-    post:
-      description: Gets the invite link for a WhatsApp group, optionally resetting
-        it
-      parameters:
-      - description: Target Group JID Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
-      - description: Reset the invite link
-        in: query
-        name: reset
-        type: boolean
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/GroupInviteLinkResp'
-              type: object
-      security:
-      - Authorization: []
-      summary: Get group invite link
-      tags:
-      - Groups
-  /groups/join:
-    post:
-      consumes:
-      - application/json
-      description: Joins a group using an invite code
-      parameters:
-      - description: Invite Code
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJoinReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Join group via link
-      tags:
-      - Groups
-  /groups/join-approval:
-    post:
-      consumes:
-      - application/json
-      description: Activates or deactivates the admin approval system for new members
-      parameters:
-      - description: Enabled state
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupSettingReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Set group join approval mode
-      tags:
-      - Groups
-  /groups/leave:
-    post:
-      description: Leaves a specified WhatsApp group
-      parameters:
-      - description: Target Group JID Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Leave group
-      tags:
-      - Groups
-  /groups/locked:
-    post:
-      consumes:
-      - application/json
-      description: Sets whether only admins can edit group info
-      parameters:
-      - description: Enabled state
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupSettingReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Set group locked mode
-      tags:
-      - Groups
-  /groups/name:
-    post:
-      consumes:
-      - application/json
-      description: Updates the name of the specified WhatsApp group
-      parameters:
-      - description: New name
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupTextReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Update group name
-      tags:
-      - Groups
-  /groups/participants:
-    post:
-      consumes:
-      - application/json
-      description: Add, remove, promote or demote participants in a group
-      parameters:
-      - description: Participants and action
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupParticipantReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Update group participants
-      tags:
-      - Groups
-  /groups/photo:
-    post:
-      consumes:
-      - application/json
-      description: Updates the profile picture of the specified WhatsApp group
-      parameters:
-      - description: Base64 encoded photo
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupPhotoReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Update group photo
-      tags:
-      - Groups
-  /groups/photo/remove:
-    post:
-      consumes:
-      - application/json
-      description: Removes the current group profile photo
-      parameters:
-      - description: Group JID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Remove group photo
-      tags:
-      - Groups
-  /groups/requests:
-    post:
-      description: Get the list of participants that requested to join the group
-      parameters:
-      - description: Target Group JID Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get group join requests
-      tags:
-      - Groups
-  /groups/requests/action:
-    post:
-      consumes:
-      - application/json
-      description: Approves or rejects participants that requested to join the group
-      parameters:
-      - description: Participants and action (approve/reject)
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupRequestActionReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Approve/Reject group join requests
-      tags:
-      - Groups
   /health:
     get:
       description: Returns the health status of the API and its dependencies
@@ -1831,939 +844,6 @@ paths:
       summary: Health check
       tags:
       - Health
-  /label/chat:
-    post:
-      consumes:
-      - application/json
-      description: Applies a label to an entire chat conversation
-      parameters:
-      - description: Label chat payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/LabelChatReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Add label to chat
-      tags:
-      - Labels
-  /label/edit:
-    post:
-      consumes:
-      - application/json
-      description: Edits an existing label's name, color, or marks it as deleted
-      parameters:
-      - description: Edit label payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/EditLabelReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Edit a label
-      tags:
-      - Labels
-  /label/message:
-    post:
-      consumes:
-      - application/json
-      description: Applies a label to a specific message within a chat
-      parameters:
-      - description: Label message payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/LabelMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Add label to message
-      tags:
-      - Labels
-  /messages/audio:
-    post:
-      consumes:
-      - application/json
-      description: Sends a base64-encoded audio file as a voice note (PTT)
-      parameters:
-      - description: Media payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendMediaReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send an audio message
-      tags:
-      - Messages
-  /messages/button:
-    post:
-      consumes:
-      - application/json
-      description: Sends a message with interactive buttons
-      parameters:
-      - description: Button message payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendButtonReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a button message
-      tags:
-      - Messages
-  /messages/contact:
-    post:
-      consumes:
-      - application/json
-      description: Sends a vCard contact message via WhatsApp to the specified recipient
-      parameters:
-      - description: Contact payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendContactReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a contact card
-      tags:
-      - Messages
-  /messages/delete:
-    post:
-      consumes:
-      - application/json
-      description: Revokes a previously sent message for all recipients (unsend)
-      parameters:
-      - description: Delete payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/DeleteMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Delete a sent message
-      tags:
-      - Messages
-  /messages/document:
-    post:
-      consumes:
-      - application/json
-      description: Sends a base64-encoded file as a document. Use filename to set
-        the display name.
-      parameters:
-      - description: Media payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendMediaReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a document
-      tags:
-      - Messages
-  /messages/edit:
-    post:
-      consumes:
-      - application/json
-      description: Edits a previously sent message by mid, replacing its text content
-      parameters:
-      - description: Edit payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/EditMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Edit a sent message
-      tags:
-      - Messages
-  /messages/image:
-    post:
-      consumes:
-      - application/json
-      description: Sends a base64-encoded image to a WhatsApp JID with optional caption
-      parameters:
-      - description: Media payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendMediaReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send an image message
-      tags:
-      - Messages
-  /messages/link:
-    post:
-      consumes:
-      - application/json
-      description: Sends a hyperlink with optional title and description as a rich
-        preview message
-      parameters:
-      - description: Link payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendLinkReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a link preview message
-      tags:
-      - Messages
-  /messages/list:
-    post:
-      consumes:
-      - application/json
-      description: Sends a message with interactive list sections
-      parameters:
-      - description: List message payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendListReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a list message
-      tags:
-      - Messages
-  /messages/location:
-    post:
-      consumes:
-      - application/json
-      description: Sends a GPS location message with optional name and address to
-        the specified recipient
-      parameters:
-      - description: Location payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendLocationReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a location message
-      tags:
-      - Messages
-  /messages/poll:
-    post:
-      consumes:
-      - application/json
-      description: Sends a poll with multiple choice options. selectableCount controls
-        how many options a recipient may choose (0 = unlimited)
-      parameters:
-      - description: Poll payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendPollReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a poll message
-      tags:
-      - Messages
-  /messages/presence:
-    post:
-      consumes:
-      - application/json
-      description: 'Sends a chat presence indicator. Accepted values for presence:
-        typing, recording, paused'
-      parameters:
-      - description: Presence payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SetPresenceReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Set typing/recording presence
-      tags:
-      - Messages
-  /messages/reaction:
-    post:
-      consumes:
-      - application/json
-      description: Adds an emoji reaction to a message. Pass an empty string for reaction
-        to remove an existing one.
-      parameters:
-      - description: Reaction payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ReactMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: React to a message
-      tags:
-      - Messages
-  /messages/read:
-    post:
-      consumes:
-      - application/json
-      description: Sends a read receipt for a specific message (removes unread indicator)
-      parameters:
-      - description: Mark read payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/MarkReadReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Mark a message as read
-      tags:
-      - Messages
-  /messages/sticker:
-    post:
-      consumes:
-      - application/json
-      description: Sends a base64-encoded sticker image (WebP) to the specified recipient
-      parameters:
-      - description: Sticker payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendStickerReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a sticker
-      tags:
-      - Messages
-  /messages/text:
-    post:
-      consumes:
-      - application/json
-      description: Sends a plain text message to a WhatsApp JID (user or group)
-      parameters:
-      - description: Message payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendTextReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a text message
-      tags:
-      - Messages
-  /messages/video:
-    post:
-      consumes:
-      - application/json
-      description: Sends a base64-encoded video to a WhatsApp JID with optional caption
-      parameters:
-      - description: Media payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/SendMediaReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MidResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Send a video message
-      tags:
-      - Messages
-  /newsletter/create:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new WhatsApp Newsletter (channel) with optional description
-        and profile picture
-      parameters:
-      - description: Newsletter payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/CreateNewsletterReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Create a newsletter
-      tags:
-      - Newsletter
-  /newsletter/info:
-    post:
-      description: Retrieves metadata about a newsletter by its JID
-      parameters:
-      - description: Newsletter JID
-        in: query
-        name: jid
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get newsletter info
-      tags:
-      - Newsletter
-  /newsletter/invite:
-    post:
-      description: Retrieves newsletter metadata from an invite code without subscribing
-      parameters:
-      - description: Newsletter invite code
-        in: query
-        name: code
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get newsletter info from invite code
-      tags:
-      - Newsletter
-  /newsletter/list:
-    get:
-      description: Returns all newsletters the current session is subscribed to
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: List subscribed newsletters
-      tags:
-      - Newsletter
-  /newsletter/messages:
-    post:
-      consumes:
-      - application/json
-      description: Fetches messages from a newsletter; supports pagination via before_id
-        cursor and count
-      parameters:
-      - description: Messages pagination payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/NewsletterMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Get newsletter messages
-      tags:
-      - Newsletter
-  /newsletter/mute:
-    post:
-      consumes:
-      - application/json
-      description: Toggles mute status for a newsletter
-      parameters:
-      - description: Mute payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/NewsletterMuteReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Mute/unmute a newsletter
-      tags:
-      - Newsletter
-  /newsletter/react:
-    post:
-      consumes:
-      - application/json
-      description: Sends a reaction to a newsletter message
-      parameters:
-      - description: Reaction payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/NewsletterReactReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: React to a newsletter message
-      tags:
-      - Newsletter
-  /newsletter/subscribe:
-    post:
-      consumes:
-      - application/json
-      description: Subscribes the current session to a newsletter identified by its
-        JID
-      parameters:
-      - description: Newsletter JID payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/NewsletterSubscribeReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Subscribe to a newsletter
-      tags:
-      - Newsletter
-  /newsletter/unsubscribe:
-    post:
-      consumes:
-      - application/json
-      description: Unfollows a newsletter
-      parameters:
-      - description: Newsletter JID
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/NewsletterSubscribeReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Unsubscribe from a newsletter
-      tags:
-      - Newsletter
-  /newsletter/viewed:
-    post:
-      consumes:
-      - application/json
-      description: Marks newsletter messages as viewed by server IDs
-      parameters:
-      - description: Mark viewed payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/NewsletterMarkViewedReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Mark newsletter messages as viewed
-      tags:
-      - Newsletter
   /sessions:
     get:
       description: Returns all sessions. Token is never included in list responses.
@@ -2921,6 +1001,329 @@ paths:
       summary: Update session
       tags:
       - Sessions
+  /sessions/{sessionId}/chat/archive:
+    post:
+      consumes:
+      - application/json
+      description: Archives a chat identified by JID, moving it out of the main chat
+        list
+      parameters:
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Archive a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/delete:
+    post:
+      consumes:
+      - application/json
+      description: Permanently deletes a chat (including media)
+      parameters:
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Delete a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/mute:
+    post:
+      consumes:
+      - application/json
+      description: Mutes notifications for a chat identified by JID
+      parameters:
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Mute a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/pin:
+    post:
+      consumes:
+      - application/json
+      description: Pins a chat to the top of the chat list
+      parameters:
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Pin a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/read:
+    post:
+      consumes:
+      - application/json
+      description: Marks specific messages in a chat as read
+      parameters:
+      - description: Chat JID + message IDs
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatMarkReadReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Mark chat as read
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unarchive:
+    post:
+      consumes:
+      - application/json
+      description: Removes a chat from the archived list
+      parameters:
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Unarchive a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unmute:
+    post:
+      consumes:
+      - application/json
+      description: Removes mute from a chat
+      parameters:
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Unmute a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unpin:
+    post:
+      consumes:
+      - application/json
+      description: Removes a chat from the pinned position at the top of the chat
+        list
+      parameters:
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Unpin a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/community/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp Community (a group of groups) with a name
+        and optional description
+      parameters:
+      - description: Community payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CreateCommunityReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Create a community
+      tags:
+      - Community
+  /sessions/{sessionId}/community/participant/add:
+    post:
+      consumes:
+      - application/json
+      description: Adds one or more subgroups (by JID) as participants to an existing
+        community
+      parameters:
+      - description: Community participant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CommunityParticipantReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Add subgroup to community
+      tags:
+      - Community
+  /sessions/{sessionId}/community/participant/remove:
+    post:
+      consumes:
+      - application/json
+      description: Removes one or more subgroups (by JID) from an existing community
+      parameters:
+      - description: Community participant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CommunityParticipantReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Remove subgroup from community
+      tags:
+      - Community
   /sessions/{sessionId}/connect:
     post:
       description: Connects a WhatsApp session. Returns status CONNECTED, PAIRING
@@ -2956,6 +1359,360 @@ paths:
       summary: Connect session
       tags:
       - Sessions
+  /sessions/{sessionId}/contacts:
+    get:
+      description: Returns all contacts from the WhatsApp session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: List contacts
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/avatar:
+    post:
+      consumes:
+      - application/json
+      description: Fetches the profile picture URL and picture ID for the given WhatsApp
+        JID
+      parameters:
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GetAvatarReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/GetAvatarResp'
+              type: object
+      security:
+      - Authorization: []
+      summary: Get contact avatar
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/block:
+    post:
+      consumes:
+      - application/json
+      description: Blocks a WhatsApp contact by JID, preventing them from sending
+        messages
+      parameters:
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/BlockContactReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Block a contact
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/blocklist:
+    get:
+      description: Returns the full list of JIDs currently blocked by the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get blocked contacts list
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/check:
+    post:
+      consumes:
+      - application/json
+      description: Checks if phone numbers are registered on WhatsApp
+      parameters:
+      - description: Phone numbers
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CheckContactReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Check contacts on WhatsApp
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/info:
+    post:
+      consumes:
+      - application/json
+      description: Fetches detailed user info (status, profile picture, devices) for
+        one or more WhatsApp JIDs
+      parameters:
+      - description: JIDs payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GetUserInfoReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  items:
+                    $ref: '#/definitions/UserInfoResp'
+                  type: array
+              type: object
+      security:
+      - Authorization: []
+      summary: Get user info for JIDs
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/presence:
+    post:
+      consumes:
+      - application/json
+      description: Subscribes to presence updates for a contact (online/offline/typing)
+      parameters:
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SubscribePresenceReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Subscribe to presence
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/privacy:
+    get:
+      description: Retrieves the current session's WhatsApp privacy settings (last-seen,
+        profile photo, status visibility)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get privacy settings
+      tags:
+      - Contacts
+    post:
+      consumes:
+      - application/json
+      description: Updates a privacy setting (groupadd, last, status, profile, readreceipts,
+        online, calladd)
+      parameters:
+      - description: Privacy setting
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SetPrivacyReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Set privacy setting
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/profile-picture:
+    post:
+      consumes:
+      - application/json
+      description: Updates the session account's WhatsApp profile picture with a base64-encoded
+        image
+      parameters:
+      - description: Base64 image payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SetProfilePictureReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/PictureIDResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Set profile picture
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/status:
+    post:
+      consumes:
+      - application/json
+      description: Updates the session's WhatsApp "About" status message
+      parameters:
+      - description: Status message
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SetStatusMessageReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Set status message
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/unblock:
+    post:
+      consumes:
+      - application/json
+      description: Unblocks a previously blocked WhatsApp contact by JID
+      parameters:
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/BlockContactReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Unblock a contact
+      tags:
+      - Contacts
   /sessions/{sessionId}/disconnect:
     post:
       description: Disconnects the active WhatsApp session without removing the device
@@ -2982,6 +1739,612 @@ paths:
       summary: Disconnect session
       tags:
       - Sessions
+  /sessions/{sessionId}/groups:
+    get:
+      description: Returns all WhatsApp groups the session is part of
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: List joined groups
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/announce:
+    post:
+      consumes:
+      - application/json
+      description: Sets whether only admins can send messages in the group
+      parameters:
+      - description: Enabled state
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupSettingReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Set group announce mode
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp group with the given participants
+      parameters:
+      - description: Group properties
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateGroupReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Create a new group
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/description:
+    post:
+      consumes:
+      - application/json
+      description: Updates the description of the specified WhatsApp group
+      parameters:
+      - description: New description
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupTextReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Update group description
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/ephemeral:
+    post:
+      consumes:
+      - application/json
+      description: 'Sets the disappearing messages timer for a group (in seconds:
+        0, 86400, 604800, 7776000)'
+      parameters:
+      - description: Ephemeral settings
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupEphemeralReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Set ephemeral timer
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/info:
+    post:
+      consumes:
+      - application/json
+      description: Get detailed information about a group by JID
+      parameters:
+      - description: Target Group JID Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get group info
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/invite-info:
+    post:
+      consumes:
+      - application/json
+      description: Previews a group's info using an invite code without joining
+      parameters:
+      - description: Invite Code Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJoinReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get group info from invite link
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/invite-link:
+    post:
+      description: Gets the invite link for a WhatsApp group, optionally resetting
+        it
+      parameters:
+      - description: Target Group JID Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
+      - description: Reset the invite link
+        in: query
+        name: reset
+        type: boolean
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/GroupInviteLinkResp'
+              type: object
+      security:
+      - Authorization: []
+      summary: Get group invite link
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/join:
+    post:
+      consumes:
+      - application/json
+      description: Joins a group using an invite code
+      parameters:
+      - description: Invite Code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJoinReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Join group via link
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/join-approval:
+    post:
+      consumes:
+      - application/json
+      description: Activates or deactivates the admin approval system for new members
+      parameters:
+      - description: Enabled state
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupSettingReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Set group join approval mode
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/leave:
+    post:
+      description: Leaves a specified WhatsApp group
+      parameters:
+      - description: Target Group JID Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Leave group
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/locked:
+    post:
+      consumes:
+      - application/json
+      description: Sets whether only admins can edit group info
+      parameters:
+      - description: Enabled state
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupSettingReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Set group locked mode
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/name:
+    post:
+      consumes:
+      - application/json
+      description: Updates the name of the specified WhatsApp group
+      parameters:
+      - description: New name
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupTextReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Update group name
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/participants:
+    post:
+      consumes:
+      - application/json
+      description: Add, remove, promote or demote participants in a group
+      parameters:
+      - description: Participants and action
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupParticipantReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Update group participants
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/photo:
+    post:
+      consumes:
+      - application/json
+      description: Updates the profile picture of the specified WhatsApp group
+      parameters:
+      - description: Base64 encoded photo
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupPhotoReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Update group photo
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/photo/remove:
+    post:
+      consumes:
+      - application/json
+      description: Removes the current group profile photo
+      parameters:
+      - description: Group JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Remove group photo
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/requests:
+    post:
+      description: Get the list of participants that requested to join the group
+      parameters:
+      - description: Target Group JID Payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get group join requests
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/requests/action:
+    post:
+      consumes:
+      - application/json
+      description: Approves or rejects participants that requested to join the group
+      parameters:
+      - description: Participants and action (approve/reject)
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/GroupRequestActionReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Approve/Reject group join requests
+      tags:
+      - Groups
+  /sessions/{sessionId}/label/chat:
+    post:
+      consumes:
+      - application/json
+      description: Applies a label to an entire chat conversation
+      parameters:
+      - description: Label chat payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/LabelChatReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Add label to chat
+      tags:
+      - Labels
+  /sessions/{sessionId}/label/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edits an existing label's name, color, or marks it as deleted
+      parameters:
+      - description: Edit label payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/EditLabelReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Edit a label
+      tags:
+      - Labels
+  /sessions/{sessionId}/label/message:
+    post:
+      consumes:
+      - application/json
+      description: Applies a label to a specific message within a chat
+      parameters:
+      - description: Label message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/LabelMessageReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Add label to message
+      tags:
+      - Labels
   /sessions/{sessionId}/logout:
     post:
       description: Logs out the WhatsApp device (requires re-scan), but keeps the
@@ -3071,6 +2434,1003 @@ paths:
       summary: List messages
       tags:
       - Messages
+  /sessions/{sessionId}/messages/audio:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded audio file as a voice note (PTT)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send an audio message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/button:
+    post:
+      consumes:
+      - application/json
+      description: Sends a message with interactive buttons
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Button message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendButtonReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a button message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/contact:
+    post:
+      consumes:
+      - application/json
+      description: Sends a vCard contact message via WhatsApp to the specified recipient
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Contact payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a contact card
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/delete:
+    post:
+      consumes:
+      - application/json
+      description: Revokes a previously sent message for all recipients (unsend)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Delete payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/DeleteMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Delete a sent message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/document:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded file as a document. Use filename to set
+        the display name.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a document
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edits a previously sent message by mid, replacing its text content
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Edit payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/EditMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Edit a sent message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/image:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded image to a WhatsApp JID with optional caption
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send an image message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/link:
+    post:
+      consumes:
+      - application/json
+      description: Sends a hyperlink with optional title and description as a rich
+        preview message
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Link payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendLinkReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a link preview message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/list:
+    post:
+      consumes:
+      - application/json
+      description: Sends a message with interactive list sections
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: List message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendListReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a list message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/location:
+    post:
+      consumes:
+      - application/json
+      description: Sends a GPS location message with optional name and address to
+        the specified recipient
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Location payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendLocationReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a location message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/poll:
+    post:
+      consumes:
+      - application/json
+      description: Sends a poll with multiple choice options. selectableCount controls
+        how many options a recipient may choose (0 = unlimited)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Poll payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendPollReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a poll message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/presence:
+    post:
+      consumes:
+      - application/json
+      description: 'Sends a chat presence indicator. Accepted values for presence:
+        typing, recording, paused'
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Presence payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SetPresenceReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Set typing/recording presence
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/reaction:
+    post:
+      consumes:
+      - application/json
+      description: Adds an emoji reaction to a message. Pass an empty string for reaction
+        to remove an existing one.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Reaction payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ReactMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: React to a message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/read:
+    post:
+      consumes:
+      - application/json
+      description: Sends a read receipt for a specific message (removes unread indicator)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Mark read payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/MarkReadReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Mark a message as read
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/sticker:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded sticker image (WebP) to the specified recipient
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Sticker payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendStickerReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a sticker
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/text:
+    post:
+      consumes:
+      - application/json
+      description: Sends a plain text message to a WhatsApp JID (user or group)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a text message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/video:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded video to a WhatsApp JID with optional caption
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a video message
+      tags:
+      - Messages
+  /sessions/{sessionId}/newsletter/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp Newsletter (channel) with optional description
+        and profile picture
+      parameters:
+      - description: Newsletter payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CreateNewsletterReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Create a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/info:
+    post:
+      description: Retrieves metadata about a newsletter by its JID
+      parameters:
+      - description: Newsletter JID
+        in: query
+        name: jid
+        required: true
+        type: string
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get newsletter info
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/invite:
+    post:
+      description: Retrieves newsletter metadata from an invite code without subscribing
+      parameters:
+      - description: Newsletter invite code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get newsletter info from invite code
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/list:
+    get:
+      description: Returns all newsletters the current session is subscribed to
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: List subscribed newsletters
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/messages:
+    post:
+      consumes:
+      - application/json
+      description: Fetches messages from a newsletter; supports pagination via before_id
+        cursor and count
+      parameters:
+      - description: Messages pagination payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/NewsletterMessageReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Get newsletter messages
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/mute:
+    post:
+      consumes:
+      - application/json
+      description: Toggles mute status for a newsletter
+      parameters:
+      - description: Mute payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/NewsletterMuteReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Mute/unmute a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/react:
+    post:
+      consumes:
+      - application/json
+      description: Sends a reaction to a newsletter message
+      parameters:
+      - description: Reaction payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/NewsletterReactReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: React to a newsletter message
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/subscribe:
+    post:
+      consumes:
+      - application/json
+      description: Subscribes the current session to a newsletter identified by its
+        JID
+      parameters:
+      - description: Newsletter JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/NewsletterSubscribeReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Subscribe to a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/unsubscribe:
+    post:
+      consumes:
+      - application/json
+      description: Unfollows a newsletter
+      parameters:
+      - description: Newsletter JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/NewsletterSubscribeReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Unsubscribe from a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/viewed:
+    post:
+      consumes:
+      - application/json
+      description: Marks newsletter messages as viewed by server IDs
+      parameters:
+      - description: Mark viewed payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/NewsletterMarkViewedReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Mark newsletter messages as viewed
+      tags:
+      - Newsletter
   /sessions/{sessionId}/pair:
     post:
       consumes:
@@ -3200,6 +3560,64 @@ paths:
       summary: Get session status
       tags:
       - Sessions
+  /sessions/{sessionId}/unlabel/chat:
+    post:
+      consumes:
+      - application/json
+      description: Removes a label from a chat conversation
+      parameters:
+      - description: Label chat payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/LabelChatReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Remove label from chat
+      tags:
+      - Labels
+  /sessions/{sessionId}/unlabel/message:
+    post:
+      consumes:
+      - application/json
+      description: Removes a label from a specific message
+      parameters:
+      - description: Label message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/LabelMessageReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Remove label from message
+      tags:
+      - Labels
   /sessions/{sessionId}/webhooks:
     get:
       description: Returns all webhooks for the session
@@ -3309,54 +3727,6 @@ paths:
       summary: Update a webhook
       tags:
       - Webhooks
-  /unlabel/chat:
-    post:
-      consumes:
-      - application/json
-      description: Removes a label from a chat conversation
-      parameters:
-      - description: Label chat payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/LabelChatReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Remove label from chat
-      tags:
-      - Labels
-  /unlabel/message:
-    post:
-      consumes:
-      - application/json
-      description: Removes a label from a specific message
-      parameters:
-      - description: Label message payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/LabelMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-      security:
-      - Authorization: []
-      summary: Remove label from message
-      tags:
-      - Labels
 securityDefinitions:
   Authorization:
     description: Session or admin token (without Bearer prefix)

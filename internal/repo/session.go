@@ -18,9 +18,9 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 }
 
 func (r *SessionRepository) Create(ctx context.Context, session *model.Session) error {
-	query := `INSERT INTO wz_sessions (id, name, api_key, status, proxy, settings, created_at, updated_at)
+	query := `INSERT INTO wz_sessions (id, name, token, status, proxy, settings, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
-	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.APIKey, session.Status, session.Proxy, session.Settings, session.CreatedAt, session.UpdatedAt)
+	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.Token, session.Status, session.Proxy, session.Settings, session.CreatedAt, session.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert session: %w", err)
 	}
@@ -28,7 +28,7 @@ func (r *SessionRepository) Create(ctx context.Context, session *model.Session) 
 }
 
 func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error) {
-	query := `SELECT id, name, COALESCE(api_key, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
+	query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
 		connected, status, proxy, settings, created_at, updated_at
 		FROM wz_sessions ORDER BY created_at DESC`
 
@@ -41,7 +41,7 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 	var sessions []model.Session
 	for rows.Next() {
 		var s model.Session
-		if err := rows.Scan(&s.ID, &s.Name, &s.APIKey, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan session: %w", err)
 		}
 		sessions = append(sessions, s)
@@ -50,12 +50,12 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 }
 
 func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Session, error) {
-	query := `SELECT id, name, COALESCE(api_key, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
+	query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
 		connected, status, proxy, settings, created_at, updated_at
 		FROM wz_sessions WHERE id = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.APIKey, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found: %w", err)
 	}
@@ -63,27 +63,27 @@ func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Ses
 }
 
 func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model.Session, error) {
-	query := `SELECT id, name, COALESCE(api_key, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
+	query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
 		connected, status, proxy, settings, created_at, updated_at
 		FROM wz_sessions WHERE name = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.APIKey, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found: %w", err)
 	}
 	return &s, nil
 }
 
-func (r *SessionRepository) FindByAPIKey(ctx context.Context, apiKey string) (*model.Session, error) {
+func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*model.Session, error) {
 	query := `SELECT id, name, COALESCE(jid, ''), COALESCE(qr_code, ''),
 		connected, status, proxy, settings, created_at, updated_at
-		FROM wz_sessions WHERE api_key = $1`
+		FROM wz_sessions WHERE token = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, apiKey).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, token).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("session not found for api_key: %w", err)
+		return nil, fmt.Errorf("session not found for token: %w", err)
 	}
 	return &s, nil
 }

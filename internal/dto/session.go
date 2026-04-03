@@ -42,7 +42,7 @@ type WebhookCreateInline struct {
 
 type SessionCreateReq struct {
 	Name     string               `json:"name" validate:"required"`
-	APIKey   string               `json:"apiKey,omitempty"`
+	Token    string               `json:"token,omitempty"`
 	Proxy    SessionProxy         `json:"proxy,omitempty"`
 	Webhook  *WebhookCreateInline `json:"webhook,omitempty"`
 	Settings SessionSettings      `json:"settings,omitempty"`
@@ -63,7 +63,7 @@ type SessionResp struct {
 type SessionCreatedResp struct {
 	ID        string          `json:"id"`
 	Name      string          `json:"name"`
-	APIKey    string          `json:"apiKey"`
+	Token     string          `json:"token"`
 	JID       string          `json:"jid,omitempty"`
 	Connected int             `json:"connected"`
 	Status    string          `json:"status"`

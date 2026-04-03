@@ -26,7 +26,7 @@ func (h *WebSocketHandler) Upgrade() fiber.Handler {
 			if token == "" {
 				token = c.Get("Authorization")
 			}
-			if token == "" || token != h.cfg.APIKey {
+			if token == "" || token != h.cfg.AdminToken {
 				return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Invalid or missing token"))
 			}
 			c.Locals("allowed", true)

@@ -41,16 +41,16 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		return nil, fmt.Errorf("name must contain only letters, numbers, hyphens and underscores")
 	}
 
-	apiKey := req.APIKey
-	if apiKey == "" {
-		apiKey = "sk_" + uuid.NewString()
+	token := req.Token
+	if token == "" {
+		token = "sk_" + uuid.NewString()
 	}
 
 	now := time.Now()
 	session := &model.Session{
 		ID:        uuid.NewString(),
 		Name:      req.Name,
-		APIKey:    apiKey,
+		Token:     token,
 		Status:    "disconnected",
 		Proxy:     model.SessionProxy(req.Proxy),
 		Settings:  model.SessionSettings(req.Settings),
@@ -65,7 +65,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	resp := &dto.SessionCreatedResp{
 		ID:        session.ID,
 		Name:      session.Name,
-		APIKey:    session.APIKey,
+		Token:     session.Token,
 		Status:    session.Status,
 		Connected: session.Connected,
 		Proxy:     req.Proxy,

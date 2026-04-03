@@ -16,7 +16,7 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS wz_sessions (
     id          VARCHAR(100) PRIMARY KEY,
     name        VARCHAR(100) NOT NULL UNIQUE,
-    api_key     VARCHAR(255) NOT NULL UNIQUE,
+    token       VARCHAR(255) NOT NULL UNIQUE,
     jid         VARCHAR(255) NOT NULL DEFAULT '',
     qr_code     TEXT NOT NULL DEFAULT '',
     connected   INTEGER NOT NULL DEFAULT 0,
@@ -30,8 +30,8 @@ CREATE TABLE IF NOT EXISTS wz_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_wz_sessions_name
     ON wz_sessions (name);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_wz_sessions_api_key
-    ON wz_sessions (api_key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_wz_sessions_token
+    ON wz_sessions (token);
 CREATE INDEX IF NOT EXISTS idx_wz_sessions_status
     ON wz_sessions (status);
 CREATE INDEX IF NOT EXISTS idx_wz_sessions_connected
@@ -47,7 +47,7 @@ CREATE TRIGGER trg_wz_sessions_updated_at
 
 COMMENT ON TABLE  wz_sessions          IS 'WhatsApp sessions managed by wzap';
 COMMENT ON COLUMN wz_sessions.name     IS 'Unique URL-safe session identifier (^[a-zA-Z0-9_-]+$)';
-COMMENT ON COLUMN wz_sessions.api_key  IS 'API key for session-scoped authentication';
+COMMENT ON COLUMN wz_sessions.token    IS 'Session token for authentication';
 COMMENT ON COLUMN wz_sessions.jid      IS 'WhatsApp device JID from whatsmeow (set after pairing)';
 
 -- =====================================================

@@ -608,14 +608,14 @@ definitions:
     type: object
   SessionCreateReq:
     properties:
-      apiKey:
-        type: string
       name:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
       settings:
         $ref: '#/definitions/SessionSettings'
+      token:
+        type: string
       webhook:
         $ref: '#/definitions/WebhookCreateInline'
     required:
@@ -623,8 +623,6 @@ definitions:
     type: object
   SessionCreatedResp:
     properties:
-      apiKey:
-        type: string
       connected:
         type: integer
       createdAt:
@@ -641,10 +639,25 @@ definitions:
         $ref: '#/definitions/SessionSettings'
       status:
         type: string
+      token:
+        type: string
       updatedAt:
         type: string
       webhook:
         $ref: '#/definitions/WebhookResp'
+    type: object
+  SessionProfileResp:
+    properties:
+      businessName:
+        type: string
+      pictureUrl:
+        type: string
+      platform:
+        type: string
+      pushName:
+        type: string
+      status:
+        type: string
     type: object
   SessionProxy:
     properties:
@@ -3472,6 +3485,37 @@ paths:
       security:
       - Authorization: []
       summary: Pair via phone number
+      tags:
+      - Sessions
+  /sessions/{sessionId}/profile:
+    get:
+      description: Returns the WhatsApp profile info for this session (push name,
+        picture, bio). Requires an active connection.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/SessionProfileResp'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Get WhatsApp profile
       tags:
       - Sessions
   /sessions/{sessionId}/qr:

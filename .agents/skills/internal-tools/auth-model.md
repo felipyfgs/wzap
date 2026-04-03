@@ -1,131 +1,74 @@
 # Auth Model — wzap
 
-wzap uses a single HTTP header (`ApiKey`) with two distinct roles derived from the token value. There is no JWT, no OAuth, and no session cookie.
+Two roles derived from the `Authorization` header. No JWT, no OAuth, no session cookie.
 
----
-
-## middleware.Auth — how it works
+## middleware.Auth
 
 File: `internal/middleware/auth.go`
 
 ```go
-func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
-    return func(c *fiber.Ctx) error {
-        // Dev mode: no API_KEY configured → grant admin to everyone
-        if cfg.APIKey == "" {
-            c.Locals("authRole", "admin")
-            return c.Next()
-        }
+token := c.Get("Authorization")  // raw header, NO "Bearer" prefix
 
-        token := c.Get("ApiKey")
-        if token == "" {
-            return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing ApiKey header"))
-        }
+// 1. Admin: token == cfg.AdminToken (env ADMIN_TOKEN)
+c.Locals("authRole", "admin")
 
-        // Global admin token (env API_KEY)
-        if token == cfg.APIKey {
-            c.Locals("authRole", "admin")
-            return c.Next()
-        }
-
-        // Per-session token (sk_<uuid> stored in "wzSessions"."apiKey")
-        session, err := sessionRepo.FindByAPIKey(c.Context(), token)
-        if err == nil {
-            c.Locals("authRole", "session")
-            c.Locals("sessionId", session.ID)
-            return c.Next()
-        }
-
-        return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Invalid token"))
-    }
-}
+// 2. Session: sessionRepo.FindByToken(ctx, token) — matches token column in wz_sessions
+c.Locals("authRole", "session")
+c.Locals("sessionID", session.ID)
 ```
 
----
+If `cfg.AdminToken` is empty → returns `503 Misconfigured`.
 
-## Roles summary
+## Roles
 
-| Scenario | `c.Locals("authRole")` | `c.Locals("sessionId")` |
+| Scenario | `authRole` | `sessionID` |
 |---|---|---|
-| `API_KEY` env empty (dev) | `"admin"` | not set |
-| Header matches `cfg.APIKey` | `"admin"` | not set |
-| Header matches a session `apiKey` | `"session"` | session UUID |
-| No header / unknown token | — | 401 returned |
+| `ADMIN_TOKEN` env empty (dev) | `503 Misconfigured` | — |
+| Header matches `cfg.AdminToken` | `"admin"` | not set |
+| Header matches session `token` | `"session"` | session UUID |
+| No/invalid header | — | 401 returned |
 
----
-
-## Admin guard pattern
-
-Use this check at the top of any admin-only handler body:
+## Admin guard
 
 ```go
-func (h *SessionHandler) Create(c *fiber.Ctx) error {
-    if c.Locals("authRole") != "admin" {
-        return c.Status(fiber.StatusForbidden).JSON(
-            dto.ErrorResp("Forbidden", "Admin access required"),
-        )
-    }
-    // ... rest of handler
+if c.Locals("authRole") != "admin" {
+    return c.Status(fiber.StatusForbidden).JSON(dto.ErrorResp("Forbidden", "Admin access required"))
 }
 ```
 
-Currently admin-only routes:
-- `POST /sessions` — create a new session
-- `GET /sessions` — list all sessions
-
----
+Currently admin-only routes: `POST /sessions`, `GET /sessions`.
 
 ## RequiredSession middleware
 
 File: `internal/middleware/session.go`
 
-Runs after `Auth` on all session-scoped routes (`/sessions/:sessionId/*`). It resolves `:sessionId` (which can be the session UUID **or** the session name) to a canonical UUID and stores it in `c.Locals("sessionId")`.
+Resolves `:sessionId` (name OR UUID):
+1. Try `sessionRepo.FindByName(ctx, param)`.
+2. Fallback `sessionRepo.FindByID(ctx, param)`.
+3. Row-level security: if `authRole == "session"`, token's session ID must match resolved session.
+4. Overwrites `c.Locals("sessionID", session.ID)` — always canonical UUID.
+
+## Route groups
 
 ```go
-// Reading the resolved session ID inside a handler:
-id := c.Locals("sessionId").(string)
-```
-
-Callers with the admin token (`authRole == "admin"`) can access any session ID. Callers with a session token (`authRole == "session"`) can only access the session whose `apiKey` they provided — the middleware enforces this automatically.
-
----
-
-## Route groups in router.go
-
-```go
-// Auth applied to all routes in this group
 grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))
 
-// Admin-only — no session resolution
+// Admin-only
 grp.Post("/sessions", sessionHandler.Create)
 grp.Get("/sessions", sessionHandler.List)
 
-// Session-scoped — RequiredSession resolves :sessionId
+// Session-scoped
 reqSession := middleware.RequiredSession(sessionRepo)
 sess := grp.Group("/sessions/:sessionId", reqSession)
-
 sess.Get("/", sessionHandler.Get)
-sess.Delete("/", sessionHandler.Delete)
-// ... all other session-scoped routes
+sess.Post("/messages/text", messageHandler.SendText)
+// ... all session-scoped routes
 ```
 
-**Rule:** new admin-only routes go under `grp`; new session-scoped routes go under `sess`.
-
----
-
-## Environment variables
-
-| Variable | Effect |
-|---|---|
-| `API_KEY=""` | Dev mode — every caller is admin; **never use in production** |
-| `API_KEY="<secret>"` | Only callers presenting this exact value are admin |
-
-The API key is loaded in `internal/config/config.go` via `getEnv("API_KEY", "")`.
-
----
+New admin routes → `grp`. New session-scoped routes → `sess`.
 
 ## Security invariants
 
-1. `apiKey` values from `"wzSessions"` must **never** appear in response bodies of list endpoints or in log lines.
-2. The `Auth` middleware must be applied to every route — the only exceptions are `/health` and `/swagger/*`.
-3. A session-role caller must only be able to operate on their own session — `RequiredSession` enforces this by comparing the resolved session ID against `c.Locals("sessionId")`.
+1. `token` from `wz_sessions` must never appear in response bodies or log lines.
+2. Auth middleware must be on every route except `/health` and `/swagger/*`.
+3. Session-role callers can only access their own session — `RequiredSession` enforces this.

@@ -1,86 +1,94 @@
 # Code Patterns — wzap Service Integration
 
-Concrete, copy-paste-ready snippets from the actual codebase. All examples follow the established conventions.
+Copy-paste-ready snippets from the real codebase.
 
----
-
-## 1. DTO (internal/dto/)
+## DTO
 
 ```go
-// internal/dto/message.go
-
 type SendTextReq struct {
-    JID  string `json:"jid"`
-    Text string `json:"text"`
+    Phone string `json:"phone" validate:"required"`
+    Body  string `json:"body" validate:"required"`
 }
 
-type SendTextResp struct {
-    MessageID string `json:"messageId"`
+type MidResp struct {
+    Mid string `json:"messageId"`
 }
 ```
 
-- Use `json:"camelCase"` tags.
-- Add `omitempty` only when nil/zero is meaningful.
-- Keep request DTOs separate from response DTOs.
+- Request: `<Action><Resource>Req`. Response: `<Resource>Resp`.
+- `json:"camelCase"`. `omitempty` on optional/sensitive fields.
+- Update DTOs use pointer fields: `*string`, `*bool` (nil = not provided).
+- Slice fields: `validate:"required,min=1"`.
 
----
-
-## 2. Handler (internal/handler/)
+## Handler
 
 ```go
-// internal/handler/message.go
-
 type MessageHandler struct {
-    messageSvc *service.MessageService
+    msgSvc *service.MessageService
 }
 
-func NewMessageHandler(messageSvc *service.MessageService) *MessageHandler {
-    return &MessageHandler{messageSvc: messageSvc}
+func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
+    return &MessageHandler{msgSvc: msgSvc}
 }
 
 // SendText godoc
-// @Summary     Send text message
-// @Description Sends a plain text message to a WhatsApp JID
+// @Summary     Send a text message
+// @Description Sends a plain text message to a WhatsApp JID (user or group)
 // @Tags        Messages
 // @Accept      json
 // @Produce     json
-// @Param       sessionId path     string           true "Session name or ID"
-// @Param       body      body     dto.SendTextReq  true "Message payload"
-// @Success     200       {object} dto.APIResponse
-// @Failure     400       {object} dto.APIResponse
-// @Security    ApiKey
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body     dto.SendTextReq true "Message payload"
+// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400  {object} dto.APIError
+// @Failure     500  {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/text [post]
 func (h *MessageHandler) SendText(c *fiber.Ctx) error {
-    id := c.Locals("sessionId").(string)
-
+    id, err := getSessionID(c)
+    if err != nil {
+        return err
+    }
     var req dto.SendTextReq
-    if err := c.BodyParser(&req); err != nil {
-        return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
+    if err := parseAndValidate(c, &req); err != nil {
+        return err
     }
 
-    msgID, err := h.messageSvc.SendText(c.Context(), id, req)
+    msgID, err := h.msgSvc.SendText(c.Context(), id, req)
     if err != nil {
         return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", err.Error()))
     }
 
-    return c.JSON(dto.SuccessResp(map[string]string{"messageId": msgID}))
+    return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
 ```
 
-**Admin-only guard** (place at the top of the handler body):
+### Admin-only guard (top of handler body)
+
 ```go
 if c.Locals("authRole") != "admin" {
     return c.Status(fiber.StatusForbidden).JSON(dto.ErrorResp("Forbidden", "Admin access required"))
 }
 ```
 
----
-
-## 3. Service (internal/service/)
+### Response helpers
 
 ```go
-// internal/service/message.go
+c.JSON(dto.SuccessResp(data))                                    // 200
+c.Status(fiber.StatusCreated).JSON(dto.SuccessResp(data))        // 201
+c.JSON(dto.SuccessResp(nil))                                     // 200 ack
+c.Status(400).JSON(dto.ErrorResp("Bad Request", msg))            // 400
+c.Status(404).JSON(dto.ErrorResp("Not Found", msg))              // 404
+c.Status(500).JSON(dto.ErrorResp("Internal Server Error", msg))  // 500
+```
 
+### Error titles by context
+
+`"Bad Request"`, `"Validation Error"`, `"Forbidden"`, `"Not Found"`, `"Create Error"`, `"Update Error"`, `"Delete Error"`, `"List Error"`, `"Send Error"`, `"Connection Error"`, `"Disconnect Error"`, `"Pair Error"`.
+
+## Service
+
+```go
 type MessageService struct {
     engine *wa.Manager
 }
@@ -98,13 +106,13 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
         return "", fmt.Errorf("client not connected")
     }
 
-    jid, err := parseJID(req.JID)
+    jid, err := parseJID(req.Phone)
     if err != nil {
         return "", err
     }
 
-    msg := &waProto.Message{
-        Conversation: proto.String(req.Text),
+    msg := &waE2E.Message{
+        Conversation: proto.String(req.Body),
     }
 
     resp, err := client.SendMessage(ctx, jid, msg)
@@ -117,27 +125,25 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 ```
 
 Key rules:
-- Always call `engine.GetClient(sessionID)` first.
-- Always check `client.IsConnected()` before sending.
-- Wrap errors: `fmt.Errorf("failed to <action>: %w", err)`.
-- The `parseJID` helper lives in `internal/service/message.go`; reuse it or copy it.
+- Always `engine.GetClient(sessionID)` first, then `client.IsConnected()`.
+- Wrap errors with `%w`. Return WhatsApp message ID (`resp.ID`) from send ops.
+- `parseJID` handles bare phone numbers and full JIDs.
 
----
-
-## 4. Repo (internal/repo/)
+## Repo
 
 ### QueryRow — single result
 
 ```go
 func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Session, error) {
-    query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-        "connected", "status", "proxy", "settings", "createdAt", "updatedAt"
-        FROM "wzSessions" WHERE "id" = $1`
+    query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
+        connected, status, proxy, settings, created_at, updated_at
+        FROM wz_sessions WHERE id = $1`
 
     var s model.Session
     err := r.db.QueryRow(ctx, query, id).Scan(
-        &s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected,
-        &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt,
+        &s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode,
+        &s.Connected, &s.Status, &s.Proxy, &s.Settings,
+        &s.CreatedAt, &s.UpdatedAt,
     )
     if err != nil {
         return nil, fmt.Errorf("session not found: %w", err)
@@ -150,9 +156,9 @@ func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Ses
 
 ```go
 func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error) {
-    query := `SELECT "id", "name", COALESCE("jid", ''), COALESCE("qrCode", ''),
-        "connected", "status", "proxy", "settings", "createdAt", "updatedAt"
-        FROM "wzSessions" ORDER BY "createdAt" DESC`
+    query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
+        connected, status, proxy, settings, created_at, updated_at
+        FROM wz_sessions ORDER BY created_at DESC`
 
     rows, err := r.db.Query(ctx, query)
     if err != nil {
@@ -163,8 +169,9 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
     var sessions []model.Session
     for rows.Next() {
         var s model.Session
-        if err := rows.Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected,
-            &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt); err != nil {
+        if err := rows.Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode,
+            &s.Connected, &s.Status, &s.Proxy, &s.Settings,
+            &s.CreatedAt, &s.UpdatedAt); err != nil {
             return nil, fmt.Errorf("failed to scan session: %w", err)
         }
         sessions = append(sessions, s)
@@ -176,63 +183,53 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 ### Exec — insert / update / delete
 
 ```go
-func (r *SessionRepository) UpdateStatus(ctx context.Context, id string, status string) error {
-    _, err := r.db.Exec(ctx,
-        `UPDATE "wzSessions" SET "status" = $1 WHERE "id" = $2`,
-        status, id,
+func (r *SessionRepository) Create(ctx context.Context, session *model.Session) error {
+    query := `INSERT INTO wz_sessions (id, name, token, status, proxy, settings, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+    _, err := r.db.Exec(ctx, query,
+        session.ID, session.Name, session.Token, session.Status,
+        session.Proxy, session.Settings, session.CreatedAt, session.UpdatedAt,
     )
     if err != nil {
-        return fmt.Errorf("failed to update status for session %s: %w", id, err)
+        return fmt.Errorf("failed to insert session: %w", err)
     }
     return nil
 }
 ```
 
----
-
-## 5. Route registration (internal/server/router.go)
+### JSONB array containment
 
 ```go
-// Session-scoped (requires valid session apiKey or admin apiKey + :sessionId):
-sess.Post("/messages/text", messageHandler.SendText)
-sess.Get("/contacts", contactHandler.List)
+func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, sessionID, eventType string) ([]model.Webhook, error) {
+    query := `SELECT id, session_id, url, COALESCE(secret, ''),
+        events, enabled, nats_enabled, created_at, updated_at
+        FROM wz_webhooks
+        WHERE session_id = $1 AND enabled = true
+          AND (events @> $2::jsonb OR events @> '["All"]'::jsonb)`
 
-// Admin-only (requires global API_KEY):
+    eventJSON, _ := json.Marshal([]string{eventType})
+    rows, err := r.db.Query(ctx, query, sessionID, eventJSON)
+    // ... rows.Close(), loop, rows.Err()
+}
+```
+
+## Route registration
+
+```go
+// Admin-only (under grp):
 grp.Post("/sessions", sessionHandler.Create)
 grp.Get("/sessions", sessionHandler.List)
+
+// Session-scoped (under sess):
+sess.Post("/messages/text", messageHandler.SendText)
+sess.Get("/contacts", contactHandler.List)
 ```
 
-- `grp` = `s.App.Group("/", middleware.Auth(...))` — auth required, no session resolved.
-- `sess` = `grp.Group("/sessions/:sessionId", reqSession)` — auth + session ID resolved into `c.Locals("sessionId")`.
-
----
-
-## 6. Dependency wiring (internal/server/router.go)
-
-When adding a new handler that needs a new service:
+## Dependency wiring
 
 ```go
-// 1. Instantiate the service (in SetupRoutes)
-myNewSvc := service.NewMyNewService(engine)
-
-// 2. Instantiate the handler
-myNewHandler := handler.NewMyNewHandler(myNewSvc)
-
-// 3. Register routes
-sess.Post("/my-domain/action", myNewHandler.DoAction)
-```
-
----
-
-## 7. Response helpers
-
-```go
-// Success
-return c.JSON(dto.SuccessResp(data))
-return c.Status(fiber.StatusCreated).JSON(dto.SuccessResp(session))
-
-// Error
-return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
-return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "session not found"))
-return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+// In SetupRoutes — order: repos → hub/dispatcher → engine → services → callbacks → handlers
+mySvc := service.NewMyService(engine)
+myHandler := handler.NewMyHandler(mySvc)
+sess.Post("/my-domain/action", myHandler.DoAction)
 ```

@@ -47,27 +47,27 @@ internal/
 
 ## Autenticação
 
-Dois níveis de acesso, resolvidos pelo middleware `Auth` via header `ApiKey`:
+Dois níveis de acesso, resolvidos pelo middleware `Auth` via header `Authorization`:
 
 ```
-ApiKey: <token>
+Authorization: <token>
 ```
 
 ### Admin
-O token coincide com a variável de ambiente `API_KEY`. Tem acesso completo: pode criar e listar sessões de qualquer usuário.
+O token coincide com a variável de ambiente `ADMIN_TOKEN`. Tem acesso completo: pode criar e listar sessões de qualquer usuário.
 
 ### Sessão
-O token é o `apiKey` de uma sessão específica (gerado na criação). Só pode operar sobre essa sessão. Tentativas de acessar outra sessão retornam `403 Forbidden`.
+O token é o `token` de uma sessão específica (gerado na criação). Só pode operar sobre essa sessão. Tentativas de acessar outra sessão retornam `403 Forbidden`.
 
 ### Sem autenticação configurada
-Se `API_KEY` estiver vazio, todos os requests são tratados como admin.
+Se `ADMIN_TOKEN` estiver vazio, o middleware retorna `503 Misconfigured`.
 
 **Fluxo de resolução:**
 ```
-Header ApiKey
-  ├── == API_KEY global  →  role = "admin"
-  ├── == apiKey de sessão  →  role = "session", sessionId = session.ID
-  └── inválido  →  401 Unauthorized
+Header Authorization
+  ├── == ADMIN_TOKEN global  →  role = "admin"
+  ├── == token de sessão      →  role = "session", sessionId = session.ID
+  └── inválido               →  401 Unauthorized
 ```
 
 O middleware `RequiredSession` (aplicado às rotas `/sessions/:sessionId/*`) resolve o `:sessionId` por nome ou UUID e valida que um token de sessão não está acessando uma sessão alheia.
@@ -230,7 +230,7 @@ Base: `http://host:8080`
 |---|---|---|
 | `PORT` | `8080` | Porta HTTP |
 | `SERVER_HOST` | `0.0.0.0` | Host de bind |
-| `API_KEY` | _(vazio)_ | Token de admin; se vazio, auth desativada |
+| `ADMIN_TOKEN` | _(vazio)_ | Token master admin; se vazio, retorna 503 |
 | `LOG_LEVEL` | `info` | Nível de log (debug, info, warn, error) |
 | `ENVIRONMENT` | `development` | Nome do ambiente |
 | `DATABASE_URL` | `postgres://wzap:wzap123@localhost:5435/wzap?sslmode=disable` | DSN PostgreSQL |
@@ -252,7 +252,7 @@ Base: `http://host:8080`
 |---|---|---|
 | `id` | VARCHAR(100) PK | UUID da sessão |
 | `name` | VARCHAR(100) UNIQUE | Identificador amigável (`[a-zA-Z0-9_-]+`) |
-| `apiKey` | VARCHAR(255) UNIQUE | Token de autenticação da sessão |
+| `token` | VARCHAR(255) UNIQUE | Token de autenticação da sessão |
 | `jid` | VARCHAR(255) | JID WhatsApp (preenchido após pairing) |
 | `qrCode` | TEXT | QR code atual (string bruta do protocolo) |
 | `connected` | INTEGER | 0 = desconectado, 1 = conectado |
@@ -285,7 +285,7 @@ Cliente HTTP
     ▼
 [Fiber App]
     │
-[Auth Middleware] ─── ApiKey: <token>
+[Auth Middleware] ─── Authorization: <token>
     │                   ├── admin token  → role=admin
     │                   └── session key → role=session
     │

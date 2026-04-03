@@ -10,12 +10,12 @@ import (
 )
 
 func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
-	if cfg.APIKey == "" {
-		logger.Warn().Msg("API_KEY not set: all requests will be rejected")
+	if cfg.AdminToken == "" {
+		logger.Warn().Msg("ADMIN_TOKEN not set: all requests will be rejected")
 	}
 	return func(c *fiber.Ctx) error {
-		if cfg.APIKey == "" {
-			return c.Status(fiber.StatusServiceUnavailable).JSON(dto.ErrorResp("Misconfigured", "API_KEY is not set"))
+		if cfg.AdminToken == "" {
+			return c.Status(fiber.StatusServiceUnavailable).JSON(dto.ErrorResp("Misconfigured", "ADMIN_TOKEN is not set"))
 		}
 
 		token := c.Get("Authorization")
@@ -23,12 +23,12 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing Authorization header"))
 		}
 
-		if token == cfg.APIKey {
+		if token == cfg.AdminToken {
 			c.Locals("authRole", "admin")
 			return c.Next()
 		}
 
-		session, err := sessionRepo.FindByAPIKey(c.Context(), token)
+		session, err := sessionRepo.FindByToken(c.Context(), token)
 		if err == nil {
 			c.Locals("authRole", "session")
 			c.Locals("sessionID", session.ID)

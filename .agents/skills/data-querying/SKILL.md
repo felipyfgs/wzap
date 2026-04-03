@@ -1,85 +1,45 @@
 ---
 name: data-querying
-description: Add or extend Postgres queries in wzap's repo layer to answer operational questions about sessions, webhooks, and events. Use when a stakeholder needs session metrics, webhook delivery history, event statistics, or any data slice from the wzap database — and the answer should be reproducible via a typed Go method or a raw SQL artifact.
+description: Add or extend Postgres queries in wzap's repo layer to answer questions about sessions, webhooks, and events. Use when a stakeholder needs session metrics, webhook delivery history, event statistics, or any data slice from the wzap database — and the answer should be a typed Go method or a raw SQL artifact.
 ---
-# Skill: Data querying — wzap
 
-## Purpose
+Add or extend repository methods in `internal/repo/` to query the wzap Postgres database.
 
-Add or extend repository methods in `internal/repo/` to answer operational questions about sessions, webhooks, and WhatsApp events from the wzap Postgres database — producing results that are typed, safe, and re-runnable.
+## Workflow
 
-## When to use this skill
-
-- Someone needs **session metrics**: how many sessions are connected, disconnected, or in pairing state.
-- Someone needs **webhook analytics**: which webhooks fired, for which events, and to which URLs.
-- A new admin/monitoring feature needs a query not yet covered by existing repo methods.
-- A bug investigation requires understanding the state stored in `"wzSessions"` or `"wzWebhooks"`.
-
-## Data sources
-
-| Table | Package | Access via |
-|---|---|---|
-| `"wzSessions"` | `internal/repo/` | `SessionRepository` |
-| `"wzWebhooks"` | `internal/repo/` | `WebhookRepository` |
-
-Full column details are in `schema.md`. Query patterns and pgx snippets are in `query-patterns.md`.
-
-## Inputs
-
-- **Business question**: one or two sentences describing what needs to be known.
-- **Filters**: session ID, status, event type, date range, enabled flag, etc.
-- **Sensitivity**: `"apiKey"` and `"secret"` are sensitive — never include them in logs, response payloads, or analysis artifacts.
-
-## Out of scope
-
-- Direct queries against the whatsmeow SQLite device store (managed by the library).
-- Creating new Postgres tables or running migrations without an explicit migration PR.
-- Exporting raw `apiKey` or webhook `secret` values outside the secured API layer.
-
-## Conventions
-
-- All queries go through `pgxpool.Pool` via `r.db.QueryRow`, `r.db.Query`, or `r.db.Exec`.
-- Table and column names are camelCase wrapped in double quotes: `"wzSessions"`, `"apiKey"`, `"createdAt"`.
-- Nullable columns use `COALESCE`: `COALESCE("jid", '')`.
-- JSONB array containment for event filtering: `"events" @> $1::jsonb`.
-- Parameters are positional `$1`, `$2`, …
-- Errors are wrapped: `fmt.Errorf("failed to <action>: %w", err)`.
-
-## Required artifacts
-
-- A typed Go method on the appropriate repository struct, committed to `internal/repo/`.
-- OR a raw SQL file committed to a clearly named location with a comment header explaining intent.
-- A short summary of the query's methodology, assumptions, and any known data-quality caveats.
-
-## Implementation checklist
-
-1. Identify which table(s) are involved — consult `schema.md`.
-2. Determine whether an existing repo method already covers the need (check `SessionRepository` and `WebhookRepository`).
-3. Draft the SQL, validate it against a limited filter (e.g. single session ID) first.
-4. Implement the Go method following the pgx patterns in `query-patterns.md`.
+1. Identify which table(s) are involved — read [schema.md](schema.md).
+2. Check if an existing repo method already covers the need (`SessionRepository`, `WebhookRepository`, `MessageRepository`).
+3. Draft the SQL, validate against a limited filter first.
+4. Implement the Go method following the pgx patterns in [query-patterns.md](query-patterns.md).
 5. Add the method to the right repository struct; do not add raw SQL outside the repo layer.
-6. Verify with `go build ./...` and `go test -v -race ./internal/repo/...`.
+6. Verify: `go build ./... && go test -v -race ./internal/repo/...`
 
-## Verification
+## Tables
 
-```bash
-go build ./...
-go test -v -race ./internal/repo/...
-```
+| Table | Repo | Purpose |
+|---|---|---|
+| `wz_sessions` | `SessionRepository` | WhatsApp sessions |
+| `wz_webhooks` | `WebhookRepository` | Webhook subscriptions |
+| `wz_messages` | `MessageRepository` | Persisted messages |
 
-The skill is complete when:
+## Rules
 
-- The query returns correct results for known sessions and webhooks.
-- No `apiKey` or `secret` value appears in logs, test output, or analysis artifacts.
-- Another engineer can re-run the query or call the new repo method without modification.
+- All queries go through `r.db *pgxpool.Pool` via `QueryRow`, `Query`, or `Exec`.
+- Table/column names are `snake_case`: `wz_sessions`, `token`, `created_at`. No double quotes needed.
+- Nullable text columns: `COALESCE(col, '')` in SELECT.
+- Parameters: positional `$1`, `$2`, …
+- JSONB containment: `events @> $1::jsonb`.
+- Wrap errors: `fmt.Errorf("failed to <verb> <noun>: %w", err)`.
+- `context.Context` always first param. Receiver is `r`.
 
-## Safety and escalation
+## Sensitive fields
 
-- `"apiKey"` in `"wzSessions"` is equivalent to a bearer token — treat it like a password; never select it in list queries or log it.
-- `"secret"` in `"wzWebhooks"` is used for HMAC signing — same rule applies.
-- If the query requires joining tables that don't exist yet, stop and create a migration PR first.
+- `token` in `wz_sessions` is a bearer token — never SELECT it in list queries or log it.
+- `secret` in `wz_webhooks` is for HMAC signing — same rule.
 
-## Companion files
+## Gotchas
 
-- `schema.md` — full column list for `"wzSessions"` and `"wzWebhooks"`.
-- `query-patterns.md` — pgx QueryRow, Query, Exec, and JSONB patterns with real examples.
+- `wz_sessions.jid` has a unique partial index (`WHERE jid IS NOT NULL AND jid != ''`) — empty strings are allowed for multiple unpaired sessions.
+- `wz_webhooks.session_id` has `ON DELETE CASCADE` — deleting a session removes its webhooks.
+- `wz_messages` has a composite primary key `(id, session_id)` — use upsert with `ON CONFLICT (id, session_id) DO NOTHING`.
+- `updated_at` is auto-updated by a trigger — no need to set manually in UPDATE queries (though the repo code does set it defensively).

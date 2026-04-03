@@ -4258,6 +4258,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/sessions/{sessionId}/profile": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Returns the WhatsApp profile info for this session (push name, picture, bio). Requires an active connection.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Get WhatsApp profile",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/SessionProfileResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions/{sessionId}/qr": {
             "get": {
                 "security": [
@@ -5584,9 +5636,6 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "apiKey": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 },
@@ -5596,6 +5645,9 @@ const docTemplate = `{
                 "settings": {
                     "$ref": "#/definitions/SessionSettings"
                 },
+                "token": {
+                    "type": "string"
+                },
                 "webhook": {
                     "$ref": "#/definitions/WebhookCreateInline"
                 }
@@ -5604,9 +5656,6 @@ const docTemplate = `{
         "SessionCreatedResp": {
             "type": "object",
             "properties": {
-                "apiKey": {
-                    "type": "string"
-                },
                 "connected": {
                     "type": "integer"
                 },
@@ -5631,11 +5680,34 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "token": {
+                    "type": "string"
+                },
                 "updatedAt": {
                     "type": "string"
                 },
                 "webhook": {
                     "$ref": "#/definitions/WebhookResp"
+                }
+            }
+        },
+        "SessionProfileResp": {
+            "type": "object",
+            "properties": {
+                "businessName": {
+                    "type": "string"
+                },
+                "pictureUrl": {
+                    "type": "string"
+                },
+                "platform": {
+                    "type": "string"
+                },
+                "pushName": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

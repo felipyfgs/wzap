@@ -55,7 +55,7 @@ Group imports in **three** groups separated by blank lines:
 ### Naming
 - **Exported**: `PascalCase` — `SessionService`, `NewHealthHandler`, `SendText`
 - **Unexported**: `camelCase` — `getSessionID`, `sessionNameRegex`
-- **Acronyms**: keep uppercase — `APIKey`, `ID`, `URL`, `JID`, `NATS`, `S3`
+- **Acronyms**: keep uppercase — `ID`, `URL`, `JID`, `NATS`, `S3`
 - **Constructors**: `New<Type>(…)` — `NewServer`, `NewSessionService`
 
 ### Types & Structs

@@ -2,39 +2,44 @@
 import type { Session } from '~/types'
 
 const { api, isAuthenticated } = useWzap()
-const { refreshSessions: refreshShared } = useSession()
+const { sessions, loadingSessions, refreshSessions } = useSession()
 const toast = useToast()
 
-const sessions = ref<Session[]>([])
-const loading = ref(true)
 const nameFilter = ref('')
+const statusFilter = ref('all')
+const visibleTokenIds = ref<string[]>([])
 const qrModal = useTemplateRef('qrModal')
 const qrSession = ref<Session | null>(null)
 
-async function fetchSessions() {
-  loading.value = true
-  try {
-    const res: any = await api('/sessions')
-    sessions.value = res.data || []
-    await refreshShared()
-  } catch {
-    sessions.value = []
-  }
-  loading.value = false
+const statusOptions = [
+  { label: 'All', value: 'all' },
+  { label: 'Connected', value: 'connected' },
+  { label: 'Disconnected', value: 'disconnected' },
+  { label: 'Pairing', value: 'pairing' }
+]
+
+function toggleToken(id: string) {
+  const idx = visibleTokenIds.value.indexOf(id)
+  if (idx >= 0) visibleTokenIds.value.splice(idx, 1)
+  else visibleTokenIds.value.push(id)
+}
+
+async function copyText(text: string, label: string) {
+  await navigator.clipboard.writeText(text)
+  toast.add({ title: `${label} copied`, color: 'success' })
 }
 
 async function connectSession(session: Session) {
   try {
     const res: any = await api(`/sessions/${session.id}/connect`, { method: 'POST' })
-    const status = res.data?.status
-    if (status === 'PAIRING') {
+    if (res.data?.status === 'PAIRING') {
       qrSession.value = session
       await nextTick()
       qrModal.value?.show()
     } else {
       toast.add({ title: 'Session connected', color: 'success' })
     }
-    await fetchSessions()
+    await refreshSessions()
   } catch {
     toast.add({ title: 'Failed to connect session', color: 'error' })
   }
@@ -44,7 +49,7 @@ async function disconnectSession(id: string) {
   try {
     await api(`/sessions/${id}/disconnect`, { method: 'POST' })
     toast.add({ title: 'Session disconnected', color: 'neutral' })
-    await fetchSessions()
+    await refreshSessions()
   } catch {
     toast.add({ title: 'Failed to disconnect session', color: 'error' })
   }
@@ -54,21 +59,10 @@ async function deleteSession(id: string) {
   try {
     await api(`/sessions/${id}`, { method: 'DELETE' })
     toast.add({ title: 'Session deleted', color: 'success' })
-    await fetchSessions()
+    await refreshSessions()
   } catch {
     toast.add({ title: 'Failed to delete session', color: 'error' })
   }
-}
-
-function statusColor(status: string) {
-  const map: Record<string, 'success' | 'warning' | 'error' | 'neutral' | 'info'> = {
-    connected: 'success',
-    connecting: 'warning',
-    pairing: 'info',
-    disconnected: 'neutral',
-    error: 'error'
-  }
-  return map[status?.toLowerCase()] ?? 'neutral'
 }
 
 function dropdownItems(session: Session) {
@@ -84,9 +78,11 @@ function dropdownItems(session: Session) {
 }
 
 const filteredSessions = computed(() =>
-  sessions.value.filter(s =>
-    !nameFilter.value || s.name.toLowerCase().includes(nameFilter.value.toLowerCase())
-  )
+  sessions.value.filter(s => {
+    const matchesName = !nameFilter.value || s.name.toLowerCase().includes(nameFilter.value.toLowerCase())
+    const matchesStatus = statusFilter.value === 'all' || s.status === statusFilter.value
+    return matchesName && matchesStatus
+  })
 )
 
 onMounted(() => {
@@ -94,7 +90,7 @@ onMounted(() => {
     navigateTo('/login')
     return
   }
-  fetchSessions()
+  refreshSessions()
 })
 </script>
 
@@ -106,7 +102,7 @@ onMounted(() => {
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <SessionsAddModal @created="fetchSessions" />
+          <SessionsAddModal @created="refreshSessions" />
         </template>
       </UDashboardNavbar>
 
@@ -118,6 +114,15 @@ onMounted(() => {
             placeholder="Filter sessions..."
             class="max-w-xs"
           />
+          <USelectMenu
+            v-model="statusFilter"
+            :items="statusOptions"
+            value-key="value"
+            :search-input="false"
+            size="sm"
+            color="neutral"
+            class="w-36"
+          />
         </template>
         <template #right>
           <span class="text-sm text-muted">{{ filteredSessions.length }} session(s)</span>
@@ -126,7 +131,7 @@ onMounted(() => {
     </template>
 
     <template #body>
-      <div v-if="loading" class="flex items-center justify-center py-24">
+      <div v-if="loadingSessions" class="flex items-center justify-center py-24">
         <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-muted" />
       </div>
 
@@ -152,7 +157,7 @@ onMounted(() => {
                 <span class="font-semibold truncate">{{ session.name }}</span>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <UBadge :color="statusColor(session.status)" variant="subtle" class="capitalize">
+                <UBadge :color="sessionStatusColor(session.status)" variant="subtle" class="capitalize">
                   {{ session.status }}
                 </UBadge>
                 <UDropdownMenu :items="[dropdownItems(session)]" :content="{ align: 'end' }">
@@ -162,14 +167,48 @@ onMounted(() => {
             </div>
           </template>
 
-          <div class="space-y-1.5 text-sm">
-            <div class="flex items-center gap-2 text-muted">
-              <UIcon name="i-lucide-hash" class="size-3.5 shrink-0" />
-              <span class="truncate font-mono text-xs">{{ session.id }}</span>
+          <div class="space-y-2 text-sm">
+            <!-- Session ID -->
+            <div class="flex items-center justify-between gap-2 text-muted">
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="i-lucide-hash" class="size-3.5 shrink-0" />
+                <span class="truncate font-mono text-xs">{{ session.id }}</span>
+              </div>
+              <UButton icon="i-lucide-copy" size="xs" color="neutral" variant="ghost" class="shrink-0" @click="copyText(session.id, 'Session ID')" />
             </div>
+
+            <!-- Phone / JID -->
             <div class="flex items-center gap-2 text-muted">
               <UIcon name="i-lucide-phone" class="size-3.5 shrink-0" />
-              <span>{{ session.jid || 'Not paired' }}</span>
+              <template v-if="session.jid">
+                <span class="font-mono text-xs">+{{ parseJID(session.jid).phone }}</span>
+                <UBadge v-if="parseJID(session.jid).device > 0" size="xs" color="neutral" variant="subtle">
+                  Device {{ parseJID(session.jid).device }}
+                </UBadge>
+              </template>
+              <span v-else class="text-xs italic">Not paired</span>
+            </div>
+
+            <!-- Token -->
+            <div v-if="session.apiKey" class="flex items-center justify-between gap-2 text-muted">
+              <div class="flex items-center gap-2 min-w-0">
+                <UIcon name="i-lucide-key" class="size-3.5 shrink-0" />
+                <span class="font-mono text-xs truncate">
+                  {{ visibleTokenIds.includes(session.id) ? session.apiKey : '••••••••••••' }}
+                </span>
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                <UButton
+                  :icon="visibleTokenIds.includes(session.id) ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  size="xs" color="neutral" variant="ghost"
+                  @click="toggleToken(session.id)"
+                />
+                <UButton
+                  icon="i-lucide-copy"
+                  size="xs" color="neutral" variant="ghost"
+                  @click="copyText(session.apiKey!, 'Token')"
+                />
+              </div>
             </div>
           </div>
 
@@ -217,7 +256,7 @@ onMounted(() => {
         ref="qrModal"
         :session-id="qrSession.id"
         :session-name="qrSession.name"
-        @connected="fetchSessions"
+        @connected="refreshSessions"
       />
     </template>
   </UDashboardPanel>

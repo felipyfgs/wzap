@@ -48,3 +48,33 @@ type GroupEphemeralReq struct {
 	GroupJID string `json:"groupJid" validate:"required"`
 	Duration int    `json:"duration" validate:"required"`
 }
+
+type GroupParticipantResp struct {
+	JID          string `json:"jid"`
+	PhoneNumber  string `json:"phoneNumber,omitempty"`
+	LID          string `json:"lid,omitempty"`
+	IsAdmin      bool   `json:"isAdmin"`
+	IsSuperAdmin bool   `json:"isSuperAdmin"`
+	DisplayName  string `json:"displayName,omitempty"`
+}
+
+type SubgroupResp struct {
+	JID  string `json:"jid"`
+	Name string `json:"name,omitempty"`
+}
+
+type GroupDetailResp struct {
+	JID            string                `json:"jid"`
+	Name           string                `json:"name"`
+	Topic          string                `json:"topic,omitempty"`
+	IsAdmin        bool                  `json:"isAdmin"`
+	IsParent       bool                  `json:"isParent"`
+	IsLocked       bool                  `json:"isLocked"`
+	IsAnnounce     bool                  `json:"isAnnounce"`
+	JoinApproval   bool                  `json:"joinApproval"`
+	IsEphemeral    bool                  `json:"isEphemeral"`
+	EphemeralTimer uint32                `json:"ephemeralTimer"`
+	Participants   []GroupParticipantResp `json:"participants"`
+	Subgroups      []SubgroupResp         `json:"subgroups,omitempty"`
+	CreatedAt      string                `json:"createdAt,omitempty"`
+}

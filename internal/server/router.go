@@ -103,6 +103,7 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/logout", sessionHandler.Logout)
 	sess.Post("/pair", sessionHandler.Pair)
 	sess.Get("/qr", sessionHandler.QR)
+	sess.Get("/profile", sessionHandler.Profile)
 
 	// 3. Messaging
 	sess.Post("/messages/text", messageHandler.SendText)

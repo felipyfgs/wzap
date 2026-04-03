@@ -28,7 +28,8 @@ func (h *ContactHandler) List(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	contacts, err := h.contactSvc.List(c.Context(), id)
+	filter := c.Query("filter", "saved")
+	contacts, err := h.contactSvc.List(c.Context(), id, filter)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
 	}

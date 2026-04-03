@@ -89,6 +89,14 @@ type SessionStatusResp struct {
 	Status    string `json:"status"`
 }
 
+type SessionProfileResp struct {
+	PushName     string `json:"pushName,omitempty"`
+	BusinessName string `json:"businessName,omitempty"`
+	Platform     string `json:"platform,omitempty"`
+	PictureURL   string `json:"pictureUrl,omitempty"`
+	Status       string `json:"status,omitempty"`
+}
+
 type PairPhoneReq struct {
 	Phone string `json:"phone" validate:"required"`
 }

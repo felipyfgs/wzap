@@ -1,11 +1,12 @@
 import { createSharedComposable } from '@vueuse/core'
-import type { Session } from '~/types'
+import type { Session, SessionProfile } from '~/types'
 
 const _useSession = () => {
   const { api, isAuthenticated } = useWzap()
 
   const sessions = useState<Session[]>('session_list', () => [])
   const current = useState<Session | null>('session_current', () => null)
+  const profile = useState<SessionProfile | null>('session_profile', () => null)
   const loadingSessions = useState<boolean>('session_list_loading', () => false)
 
   async function refreshSessions() {
@@ -21,16 +22,31 @@ const _useSession = () => {
     }
   }
 
+  async function refreshProfile(id: string) {
+    try {
+      const res: any = await api(`/sessions/${id}/profile`)
+      profile.value = res.data
+    } catch {
+      profile.value = null
+    }
+  }
+
   async function refreshCurrent(id: string) {
     try {
       const res: any = await api(`/sessions/${id}`)
       current.value = res.data
+      if (res.data?.status === 'connected') {
+        await refreshProfile(id)
+      } else {
+        profile.value = null
+      }
     } catch {
       current.value = null
+      profile.value = null
     }
   }
 
-  return { sessions, current, loadingSessions, refreshSessions, refreshCurrent }
+  return { sessions, current, profile, loadingSessions, refreshSessions, refreshCurrent }
 }
 
 export const useSession = createSharedComposable(_useSession)

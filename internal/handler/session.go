@@ -295,6 +295,25 @@ func (h *SessionHandler) Logout(c *fiber.Ctx) error {
 	return c.JSON(dto.SuccessResp(nil))
 }
 
+// Profile godoc
+// @Summary     Get WhatsApp profile
+// @Description Returns the WhatsApp profile info for this session (push name, picture, bio). Requires an active connection.
+// @Tags        Sessions
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse{Data=dto.SessionProfileResp}
+// @Failure     404 {object} dto.APIError
+// @Security    Authorization
+// @Router      /sessions/{sessionId}/profile [get]
+func (h *SessionHandler) Profile(c *fiber.Ctx) error {
+	id := mustGetSessionID(c)
+	profile, err := h.sessionSvc.Profile(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(profile))
+}
+
 // Reconnect godoc
 // @Summary     Reconnect session
 // @Description Disconnects and reconnects the session

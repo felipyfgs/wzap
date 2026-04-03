@@ -2,68 +2,57 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
-const fileRef = ref<HTMLInputElement>()
-
-const profileSchema = z.object({
-  name: z.string().min(2, 'Too short'),
-  email: z.string().email('Invalid email'),
-  username: z.string().min(2, 'Too short'),
-  avatar: z.string().optional(),
-  bio: z.string().optional()
-})
-
-type ProfileSchema = z.output<typeof profileSchema>
-
-const profile = reactive<Partial<ProfileSchema>>({
-  name: 'Benjamin Canac',
-  email: 'ben@nuxtlabs.com',
-  username: 'benjamincanac',
-  avatar: undefined,
-  bio: undefined
-})
+const { api, apiBase, setApiBase, token, setToken } = useWzap()
 const toast = useToast()
-async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
-  toast.add({
-    title: 'Success',
-    description: 'Your settings have been updated.',
-    icon: 'i-lucide-check',
-    color: 'success'
-  })
-  console.log(event.data)
+
+const schema = z.object({
+  apiBase: z.string().url('Must be a valid URL'),
+  token: z.string().min(1, 'Token is required')
+})
+
+type Schema = z.output<typeof schema>
+
+const state = reactive<Schema>({
+  apiBase: apiBase.value,
+  token: token.value
+})
+
+const testing = ref(false)
+const healthResult = ref<{ status: string; services: Record<string, boolean> } | null>(null)
+
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  setApiBase(event.data.apiBase)
+  setToken(event.data.token)
+  toast.add({ title: 'Settings saved', color: 'success' })
 }
 
-function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-
-  if (!input.files?.length) {
-    return
+async function testConnection() {
+  testing.value = true
+  healthResult.value = null
+  try {
+    setApiBase(state.apiBase)
+    setToken(state.token)
+    const res: any = await api('/health')
+    healthResult.value = res.data
+  } catch {
+    healthResult.value = { status: 'UNREACHABLE', services: {} }
   }
-
-  profile.avatar = URL.createObjectURL(input.files[0]!)
-}
-
-function onFileClick() {
-  fileRef.value?.click()
+  testing.value = false
 }
 </script>
 
 <template>
-  <UForm
-    id="settings"
-    :schema="profileSchema"
-    :state="profile"
-    @submit="onSubmit"
-  >
+  <UForm id="settings-general" :schema="schema" :state="state" @submit="onSubmit">
     <UPageCard
-      title="Profile"
-      description="These informations will be displayed publicly."
+      title="API Connection"
+      description="Configure the wzap API endpoint and authentication token."
       variant="naked"
       orientation="horizontal"
       class="mb-4"
     >
       <UButton
-        form="settings"
-        label="Save changes"
+        form="settings-general"
+        label="Save"
         color="neutral"
         type="submit"
         class="w-fit lg:ms-auto"
@@ -72,87 +61,60 @@ function onFileClick() {
 
     <UPageCard variant="subtle">
       <UFormField
-        name="name"
-        label="Name"
-        description="Will appear on receipts, invoices, and other communication."
+        name="apiBase"
+        label="API Base URL"
+        description="The base URL of your wzap instance, e.g. http://localhost:8080"
         required
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
-        <UInput
-          v-model="profile.name"
-          autocomplete="off"
-        />
+        <UInput v-model="state.apiBase" placeholder="http://localhost:8080" class="w-full max-w-xs" />
       </UFormField>
+
       <USeparator />
+
       <UFormField
-        name="email"
-        label="Email"
-        description="Used to sign in, for email receipts and product updates."
+        name="token"
+        label="Admin Token"
+        description="The admin token set in your wzap configuration."
         required
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
-        <UInput
-          v-model="profile.email"
-          type="email"
-          autocomplete="off"
-        />
+        <UInput v-model="state.token" type="password" placeholder="your-admin-token" autocomplete="off" class="w-full max-w-xs" />
       </UFormField>
+
       <USeparator />
-      <UFormField
-        name="username"
-        label="Username"
-        description="Your unique username for logging in and your profile URL."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput
-          v-model="profile.username"
-          type="username"
-          autocomplete="off"
-        />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="avatar"
-        label="Avatar"
-        description="JPG, GIF or PNG. 1MB Max."
-        class="flex max-sm:flex-col justify-between sm:items-center gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3">
-          <UAvatar
-            :src="profile.avatar"
-            :alt="profile.name"
-            size="lg"
-          />
-          <UButton
-            label="Choose"
-            color="neutral"
-            @click="onFileClick"
-          />
-          <input
-            ref="fileRef"
-            type="file"
-            class="hidden"
-            accept=".jpg, .jpeg, .png, .gif"
-            @change="onFileChange"
-          >
+
+      <div class="flex max-sm:flex-col justify-between sm:items-center gap-4">
+        <div>
+          <p class="text-sm font-medium">Connection Status</p>
+          <p class="text-sm text-muted">Test the connection to your wzap API.</p>
         </div>
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="bio"
-        label="Bio"
-        description="Brief description for your profile. URLs are hyperlinked."
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-        :ui="{ container: 'w-full' }"
-      >
-        <UTextarea
-          v-model="profile.bio"
-          :rows="5"
-          autoresize
-          class="w-full"
-        />
-      </UFormField>
+        <div class="flex items-center gap-3">
+          <template v-if="healthResult">
+            <UBadge
+              :color="healthResult.status === 'UP' ? 'success' : healthResult.status === 'DEGRADED' ? 'warning' : 'error'"
+              variant="subtle"
+              size="lg"
+            >
+              {{ healthResult.status }}
+            </UBadge>
+            <div v-if="healthResult.services" class="flex gap-2 text-xs text-muted">
+              <span v-for="(ok, svc) in healthResult.services" :key="svc" class="flex items-center gap-1">
+                <UIcon :name="ok ? 'i-lucide-check-circle' : 'i-lucide-x-circle'" :class="ok ? 'text-success' : 'text-error'" class="size-3" />
+                {{ svc }}
+              </span>
+            </div>
+          </template>
+          <UButton
+            label="Test Connection"
+            icon="i-lucide-plug"
+            color="neutral"
+            variant="outline"
+            :loading="testing"
+            @click="testConnection"
+          />
+        </div>
+      </div>
     </UPageCard>
   </UForm>
 </template>

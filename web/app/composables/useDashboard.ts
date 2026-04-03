@@ -7,10 +7,8 @@ const _useDashboard = () => {
 
   defineShortcuts({
     'g-h': () => router.push('/'),
-    'g-i': () => router.push('/inbox'),
-    'g-c': () => router.push('/customers'),
-    'g-s': () => router.push('/settings'),
-    'n': () => isNotificationsSlideoverOpen.value = !isNotificationsSlideoverOpen.value
+    'g-s': () => router.push('/sessions'),
+    'g-w': () => router.push('/webhooks')
   })
 
   watch(() => route.fullPath, () => {

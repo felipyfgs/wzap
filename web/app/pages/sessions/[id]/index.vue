@@ -1,26 +1,22 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
-import type { Session } from '~/types'
 
 const route = useRoute()
 const { api } = useWzap()
-const { refreshSessions } = useSession()
+const { current: session, profile, refreshCurrent, refreshSessions } = useSession()
 const toast = useToast()
 
 const sessionId = computed(() => route.params.id as string)
-const session = ref<Session | null>(null)
 const loading = ref(true)
 const qrModal = useTemplateRef('qrModal')
 
 async function fetchSession() {
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${sessionId.value}`)
-    session.value = res.data
-  } catch {
-    session.value = null
+    await refreshCurrent(sessionId.value)
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 }
 
 async function connect() {
@@ -81,17 +77,6 @@ async function deleteSession() {
   } catch {
     toast.add({ title: 'Failed to delete session', color: 'error' })
   }
-}
-
-function statusColor(status: string) {
-  const map: Record<string, 'success' | 'warning' | 'error' | 'neutral' | 'info'> = {
-    connected: 'success',
-    connecting: 'warning',
-    pairing: 'info',
-    disconnected: 'neutral',
-    error: 'error'
-  }
-  return map[status?.toLowerCase()] ?? 'neutral'
 }
 
 const isConnected = computed(() => session.value?.status === 'connected')
@@ -213,8 +198,7 @@ watch(sessionId, fetchSession, { immediate: true })
       <!-- Content -->
       <div v-else class="space-y-6">
 
-        <!-- Bloco A: Stats row -->
-        <SessionsStatsRow :session="session" />
+        <SessionsStatsRow :session="session" :profile="profile" />
 
         <!-- Bloco B: cards individuais -->
         <div class="grid lg:grid-cols-2 gap-4">

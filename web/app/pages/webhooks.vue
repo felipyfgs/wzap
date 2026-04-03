@@ -7,7 +7,7 @@ import type { Session, Webhook } from '~/types'
 const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
-const UToggle = resolveComponent('UToggle')
+const UToggle = resolveComponent('USwitch')
 
 const { api, isAuthenticated } = useWzap()
 const toast = useToast()

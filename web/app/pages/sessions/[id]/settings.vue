@@ -4,15 +4,16 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 
 const route = useRoute()
 const { api } = useWzap()
+const { refreshCurrent } = useSession()
 const toast = useToast()
 
 const sessionId = computed(() => route.params.id as string)
 
 const loading = ref(true)
 const saving = ref(false)
+const sessionName = ref('')
 
 const settingsSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
   alwaysOnline: z.boolean(),
   readMessages: z.boolean(),
   rejectCall: z.boolean(),
@@ -29,7 +30,6 @@ const settingsSchema = z.object({
 type SettingsSchema = z.output<typeof settingsSchema>
 
 const state = reactive<Partial<SettingsSchema>>({
-  name: '',
   alwaysOnline: false,
   readMessages: false,
   rejectCall: false,
@@ -48,7 +48,7 @@ async function fetchSession() {
   try {
     const res: any = await api(`/sessions/${sessionId.value}`)
     const s = res.data
-    state.name = s.name
+    sessionName.value = s.name
     state.alwaysOnline = s.settings?.alwaysOnline ?? false
     state.readMessages = s.settings?.readMessages ?? false
     state.rejectCall = s.settings?.rejectCall ?? false
@@ -72,7 +72,6 @@ async function onSubmit(event: FormSubmitEvent<SettingsSchema>) {
     await api(`/sessions/${sessionId.value}`, {
       method: 'PUT',
       body: {
-        name: event.data.name,
         settings: {
           alwaysOnline: event.data.alwaysOnline,
           readMessages: event.data.readMessages,
@@ -91,6 +90,7 @@ async function onSubmit(event: FormSubmitEvent<SettingsSchema>) {
       }
     })
     toast.add({ title: 'Settings saved', color: 'success' })
+    await refreshCurrent(sessionId.value)
   } catch {
     toast.add({ title: 'Failed to save settings', color: 'error' })
   }
@@ -129,10 +129,10 @@ watch(sessionId, fetchSession, { immediate: true })
         class="space-y-4"
         @submit="onSubmit"
       >
-        <!-- General -->
+        <!-- Behavior -->
         <UPageCard
-          title="General"
-          description="Basic session information."
+          title="Behavior"
+          description="Configure how this session reacts to incoming events."
           variant="naked"
           orientation="horizontal"
           class="mb-0"
@@ -149,33 +149,12 @@ watch(sessionId, fetchSession, { immediate: true })
 
         <UPageCard variant="subtle">
           <UFormField
-            name="name"
-            label="Session name"
-            description="Identifier used in the API and this dashboard."
-            required
-            class="flex max-sm:flex-col justify-between items-start gap-4"
-          >
-            <UInput v-model="state.name" placeholder="my-session" autocomplete="off" class="w-full max-w-xs" />
-          </UFormField>
-        </UPageCard>
-
-        <!-- Behavior -->
-        <UPageCard
-          title="Behavior"
-          description="Configure how this session reacts to incoming events."
-          variant="naked"
-          orientation="horizontal"
-          class="mt-6 mb-0"
-        />
-
-        <UPageCard variant="subtle">
-          <UFormField
             name="alwaysOnline"
             label="Always Online"
             description="Keep presence as Online even when the app is idle."
             class="flex max-sm:flex-col justify-between sm:items-center gap-4"
           >
-            <UToggle v-model="state.alwaysOnline" />
+            <USwitch v-model="state.alwaysOnline" />
           </UFormField>
 
           <USeparator />
@@ -186,7 +165,7 @@ watch(sessionId, fetchSession, { immediate: true })
             description="Automatically mark incoming messages as read."
             class="flex max-sm:flex-col justify-between sm:items-center gap-4"
           >
-            <UToggle v-model="state.readMessages" />
+            <USwitch v-model="state.readMessages" />
           </UFormField>
 
           <USeparator />
@@ -197,7 +176,7 @@ watch(sessionId, fetchSession, { immediate: true })
             description="Automatically reject incoming WhatsApp calls."
             class="flex max-sm:flex-col justify-between sm:items-center gap-4"
           >
-            <UToggle v-model="state.rejectCall" />
+            <USwitch v-model="state.rejectCall" />
           </UFormField>
 
           <template v-if="state.rejectCall">
@@ -220,7 +199,7 @@ watch(sessionId, fetchSession, { immediate: true })
             description="Do not emit webhook events for group messages."
             class="flex max-sm:flex-col justify-between sm:items-center gap-4"
           >
-            <UToggle v-model="state.ignoreGroups" />
+            <USwitch v-model="state.ignoreGroups" />
           </UFormField>
 
           <USeparator />
@@ -231,7 +210,7 @@ watch(sessionId, fetchSession, { immediate: true })
             description="Do not emit webhook events for WhatsApp Status updates."
             class="flex max-sm:flex-col justify-between sm:items-center gap-4"
           >
-            <UToggle v-model="state.ignoreStatus" />
+            <USwitch v-model="state.ignoreStatus" />
           </UFormField>
         </UPageCard>
 

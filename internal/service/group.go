@@ -8,9 +8,29 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/wa"
 )
+
+func bestContactName(c types.ContactInfo) string {
+	if !c.Found {
+		return ""
+	}
+	if c.FullName != "" {
+		return c.FullName
+	}
+	if c.PushName != "" {
+		return c.PushName
+	}
+	if c.BusinessName != "" {
+		return c.BusinessName
+	}
+	if c.FirstName != "" {
+		return c.FirstName
+	}
+	return ""
+}
 
 type GroupService struct {
 	engine *wa.Manager
@@ -28,6 +48,9 @@ func (s *GroupService) List(ctx context.Context, sessionID string) ([]model.Grou
 	if !client.IsConnected() {
 		return nil, fmt.Errorf("client not connected")
 	}
+	if client.Store.ID == nil {
+		return nil, fmt.Errorf("client not logged in")
+	}
 
 	groups, err := client.GetJoinedGroups(ctx)
 	if err != nil {
@@ -36,21 +59,30 @@ func (s *GroupService) List(ctx context.Context, sessionID string) ([]model.Grou
 
 	var result []model.Group
 	ownJID := client.Store.ID
+	ownLID := client.Store.GetLID()
 
 	for _, gw := range groups {
 		isAdmin := false
+		members := 0
+		subgroups := 0
 		for _, part := range gw.Participants {
-			if part.JID.User == ownJID.User && (part.IsAdmin || part.IsSuperAdmin) {
+			if part.JID.Server == types.GroupServer {
+				subgroups++
+			} else {
+				members++
+			}
+			if isOwnParticipant(part, ownJID, ownLID) && (part.IsAdmin || part.IsSuperAdmin) {
 				isAdmin = true
-				break
 			}
 		}
 
 		result = append(result, model.Group{
 			JID:          gw.JID.String(),
 			Name:         gw.Name,
-			Participants: len(gw.Participants),
+			Participants: members,
+			Subgroups:    subgroups,
 			IsAdmin:      isAdmin,
+			IsParent:     gw.IsParent,
 		})
 	}
 
@@ -94,13 +126,16 @@ func (s *GroupService) CreateGroup(ctx context.Context, sessionID string, req dt
 	}, nil
 }
 
-func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID string) (*model.Group, error) {
+func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID string) (*dto.GroupDetailResp, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
 	}
 	if !client.IsConnected() {
 		return nil, fmt.Errorf("client not connected")
+	}
+	if client.Store.ID == nil {
+		return nil, fmt.Errorf("client not logged in")
 	}
 
 	jid, err := types.ParseJID(groupJID)
@@ -113,20 +148,96 @@ func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID s
 		return nil, fmt.Errorf("failed to get group info: %w", err)
 	}
 
+	allContacts, contactsErr := client.Store.Contacts.GetAllContacts(ctx)
+	if contactsErr != nil {
+		logger.Warn().Err(contactsErr).Str("session", sessionID).Msg("failed to load contacts for group info")
+	}
+	contactName := func(j types.JID) string {
+		if c, ok := allContacts[j]; ok {
+			return bestContactName(c)
+		}
+		return ""
+	}
+
 	isAdmin := false
 	ownJID := client.Store.ID
+	ownLID := client.Store.GetLID()
+	participants := make([]dto.GroupParticipantResp, 0, len(info.Participants))
 	for _, part := range info.Participants {
-		if part.JID.User == ownJID.User && (part.IsAdmin || part.IsSuperAdmin) {
+		if ownJID != nil && isOwnParticipant(part, ownJID, ownLID) && (part.IsAdmin || part.IsSuperAdmin) {
 			isAdmin = true
-			break
+		}
+
+		phoneJID := part.PhoneNumber
+		if phoneJID.IsEmpty() && !part.LID.IsEmpty() {
+			if pn, pnErr := client.Store.LIDs.GetPNForLID(ctx, part.LID); pnErr == nil && !pn.IsEmpty() {
+				phoneJID = pn
+			}
+		}
+
+		var displayName string
+		if !phoneJID.IsEmpty() {
+			displayName = contactName(phoneJID)
+		}
+		if displayName == "" && !part.LID.IsEmpty() {
+			displayName = contactName(part.LID)
+		}
+		if displayName == "" && part.JID.Server != types.HiddenUserServer && !part.JID.IsEmpty() {
+			displayName = contactName(part.JID)
+		}
+
+		var phoneNumber, lid string
+		if !phoneJID.IsEmpty() {
+			phoneNumber = phoneJID.String()
+		}
+		if !part.LID.IsEmpty() {
+			lid = part.LID.String()
+		}
+
+		participants = append(participants, dto.GroupParticipantResp{
+			JID:          part.JID.String(),
+			PhoneNumber:  phoneNumber,
+			LID:          lid,
+			IsAdmin:      part.IsAdmin,
+			IsSuperAdmin: part.IsSuperAdmin,
+			DisplayName:  displayName,
+		})
+	}
+
+	var createdAt string
+	if !info.GroupCreated.IsZero() {
+		createdAt = info.GroupCreated.Format("2006-01-02T15:04:05Z")
+	}
+
+	var subgroups []dto.SubgroupResp
+	if info.IsParent {
+		if sgs, sgErr := client.GetSubGroups(ctx, jid); sgErr != nil {
+			logger.Warn().Err(sgErr).Str("session", sessionID).Str("group", groupJID).Msg("failed to get subgroups")
+		} else {
+			subgroups = make([]dto.SubgroupResp, 0, len(sgs))
+			for _, sg := range sgs {
+				subgroups = append(subgroups, dto.SubgroupResp{
+					JID:  sg.JID.String(),
+					Name: sg.Name,
+				})
+			}
 		}
 	}
 
-	return &model.Group{
-		JID:          info.JID.String(),
-		Name:         info.Name,
-		Participants: len(info.Participants),
-		IsAdmin:      isAdmin,
+	return &dto.GroupDetailResp{
+		JID:            info.JID.String(),
+		Name:           info.Name,
+		Topic:          info.Topic,
+		IsAdmin:        isAdmin,
+		IsParent:       info.IsParent,
+		IsLocked:       info.IsLocked,
+		IsAnnounce:     info.IsAnnounce,
+		JoinApproval:   info.IsJoinApprovalRequired,
+		IsEphemeral:    info.IsEphemeral,
+		EphemeralTimer: info.DisappearingTimer,
+		Participants:   participants,
+		Subgroups:      subgroups,
+		CreatedAt:      createdAt,
 	}, nil
 }
 
@@ -433,4 +544,11 @@ func (s *GroupService) SetEphemeral(ctx context.Context, sessionID, groupJID str
 		return fmt.Errorf("invalid group JID: %w", err)
 	}
 	return client.SetDisappearingTimer(ctx, jid, duration, time.Now())
+}
+
+func isOwnParticipant(part types.GroupParticipant, ownJID *types.JID, ownLID types.JID) bool {
+	if ownJID == nil {
+		return false
+	}
+	return part.JID.User == ownJID.User || (ownLID.User != "" && part.JID.User == ownLID.User)
 }

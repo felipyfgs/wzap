@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"time"
 
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/model"
@@ -195,4 +197,37 @@ func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionSta
 
 func (s *SessionService) SetStatus(ctx context.Context, id string, status string) error {
 	return s.repo.UpdateStatus(ctx, id, status)
+}
+
+func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionProfileResp, error) {
+	client, err := s.engine.GetClient(id)
+	if err != nil {
+		return nil, fmt.Errorf("session not connected: %w", err)
+	}
+
+	resp := &dto.SessionProfileResp{
+		PushName:     client.Store.PushName,
+		BusinessName: client.Store.BusinessName,
+		Platform:     client.Store.Platform,
+	}
+
+	if !client.IsConnected() || client.Store.ID == nil {
+		return resp, nil
+	}
+
+	selfJID := client.Store.ID.ToNonAD()
+	if pic, picErr := client.GetProfilePictureInfo(ctx, selfJID, &whatsmeow.GetProfilePictureParams{}); picErr != nil {
+		logger.Warn().Err(picErr).Str("session", id).Msg("failed to get profile picture")
+	} else if pic != nil {
+		resp.PictureURL = pic.URL
+	}
+
+	if info, infoErr := client.GetUserInfo(ctx, []types.JID{*client.Store.ID}); infoErr == nil {
+		for _, v := range info {
+			resp.Status = v.Status
+			break
+		}
+	}
+
+	return resp, nil
 }

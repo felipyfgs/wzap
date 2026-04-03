@@ -47,7 +47,7 @@ func (s *ContactService) CheckContacts(ctx context.Context, sessionID string, re
 	return results, nil
 }
 
-func (s *ContactService) List(ctx context.Context, sessionID string) ([]model.Contact, error) {
+func (s *ContactService) List(ctx context.Context, sessionID string, filter string) ([]model.Contact, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return nil, err
@@ -60,13 +60,17 @@ func (s *ContactService) List(ctx context.Context, sessionID string) ([]model.Co
 
 	var result []model.Contact
 	for jid, info := range contacts {
-		if jid.Server == types.GroupServer {
+		if jid.Server == types.GroupServer || jid.Server == types.HiddenUserServer {
+			continue
+		}
+		if filter == "saved" && info.FullName == "" && info.FirstName == "" {
 			continue
 		}
 		result = append(result, model.Contact{
-			JID:      jid.String(),
-			Name:     info.FullName,
-			PushName: info.PushName,
+			JID:          jid.String(),
+			Name:         info.FullName,
+			PushName:     info.PushName,
+			BusinessName: info.BusinessName,
 		})
 	}
 
@@ -89,7 +93,7 @@ func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req dt
 
 	info, err := client.GetProfilePictureInfo(ctx, jid, &whatsmeow.GetProfilePictureParams{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get avatar: %w", err)
+		return &dto.GetAvatarResp{}, nil
 	}
 
 	if info == nil {
@@ -212,7 +216,7 @@ func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string
 		return "", fmt.Errorf("invalid base64: %w", err)
 	}
 
-	return client.SetGroupPhoto(ctx, *client.Store.ID, data)
+	return client.SetGroupPhoto(ctx, client.Store.ID.ToNonAD(), data)
 }
 
 func (s *ContactService) SubscribePresence(ctx context.Context, sessionID string, req dto.SubscribePresenceReq) error {

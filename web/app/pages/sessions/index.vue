@@ -7,7 +7,6 @@ const toast = useToast()
 
 const nameFilter = ref('')
 const statusFilter = ref('all')
-const visibleTokenIds = ref<string[]>([])
 const qrModal = useTemplateRef('qrModal')
 const qrSession = ref<Session | null>(null)
 
@@ -18,15 +17,37 @@ const statusOptions = [
   { label: 'Pairing', value: 'pairing' }
 ]
 
-function toggleToken(id: string) {
-  const idx = visibleTokenIds.value.indexOf(id)
-  if (idx >= 0) visibleTokenIds.value.splice(idx, 1)
-  else visibleTokenIds.value.push(id)
-}
-
 async function copyText(text: string, label: string) {
   await navigator.clipboard.writeText(text)
   toast.add({ title: `${label} copied`, color: 'success' })
+}
+
+function timeAgo(dateStr?: string): string {
+  if (!dateStr) return ''
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString()
+}
+
+function platformIcon(platform?: string): string {
+  if (!platform) return ''
+  const map: Record<string, string> = {
+    android: 'i-simple-icons-android',
+    ios: 'i-simple-icons-apple',
+    web: 'i-lucide-globe',
+    desktop: 'i-lucide-monitor'
+  }
+  return map[platform.toLowerCase()] || 'i-lucide-smartphone'
+}
+
+function sessionInitials(name: string): string {
+  return name.slice(0, 2).toUpperCase()
 }
 
 async function connectSession(session: Session) {
@@ -148,106 +169,95 @@ onMounted(() => {
           v-for="session in filteredSessions"
           :key="session.id"
           class="flex flex-col gap-0"
-          :ui="{ body: 'flex-1' }"
+          :ui="{ body: 'flex-1 !p-0' }"
         >
-          <template #header>
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2 min-w-0">
-                <UIcon name="i-lucide-smartphone" class="size-4 shrink-0 text-muted" />
-                <span class="font-semibold truncate">{{ session.name }}</span>
-              </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <UBadge :color="sessionStatusColor(session.status)" variant="subtle" class="capitalize">
-                  {{ session.status }}
-                </UBadge>
+          <div class="flex items-center gap-3 px-4 py-3">
+            <div class="relative shrink-0">
+              <span class="flex size-9 items-center justify-center rounded-full bg-elevated text-xs font-bold ring-1 ring-default">
+                {{ sessionInitials(session.name) }}
+              </span>
+              <span
+                class="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-white dark:ring-gray-900"
+                :class="{
+                  'bg-success': session.status === 'connected',
+                  'bg-warning': session.status === 'connecting',
+                  'bg-info': session.status === 'pairing',
+                  'bg-muted': session.status === 'disconnected',
+                  'bg-error': session.status === 'error'
+                }"
+              />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center justify-between gap-1">
+                <span class="font-semibold text-sm text-highlighted truncate">{{ session.name }}</span>
                 <UDropdownMenu :items="[dropdownItems(session)]" :content="{ align: 'end' }">
-                  <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" size="xs" />
+                  <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" size="xs" class="shrink-0 -mr-1" />
                 </UDropdownMenu>
               </div>
-            </div>
-          </template>
-
-          <div class="space-y-2 text-sm">
-            <!-- Session ID -->
-            <div class="flex items-center justify-between gap-2 text-muted">
-              <div class="flex items-center gap-2 min-w-0">
-                <UIcon name="i-lucide-hash" class="size-3.5 shrink-0" />
-                <span class="truncate font-mono text-xs">{{ session.id }}</span>
-              </div>
-              <UButton icon="i-lucide-copy" size="xs" color="neutral" variant="ghost" class="shrink-0" @click="copyText(session.id, 'Session ID')" />
-            </div>
-
-            <!-- Phone / JID -->
-            <div class="flex items-center gap-2 text-muted">
-              <UIcon name="i-lucide-phone" class="size-3.5 shrink-0" />
-              <template v-if="session.jid">
-                <span class="font-mono text-xs">+{{ parseJID(session.jid).phone }}</span>
-                <UBadge v-if="parseJID(session.jid).device > 0" size="xs" color="neutral" variant="subtle">
-                  Device {{ parseJID(session.jid).device }}
-                </UBadge>
-              </template>
-              <span v-else class="text-xs italic">Not paired</span>
-            </div>
-
-            <!-- Token -->
-            <div v-if="session.apiKey" class="flex items-center justify-between gap-2 text-muted">
-              <div class="flex items-center gap-2 min-w-0">
-                <UIcon name="i-lucide-key" class="size-3.5 shrink-0" />
-                <span class="font-mono text-xs truncate">
-                  {{ visibleTokenIds.includes(session.id) ? session.apiKey : '••••••••••••' }}
-                </span>
-              </div>
-              <div class="flex items-center gap-1 shrink-0">
-                <UButton
-                  :icon="visibleTokenIds.includes(session.id) ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                  size="xs" color="neutral" variant="ghost"
-                  @click="toggleToken(session.id)"
-                />
-                <UButton
-                  icon="i-lucide-copy"
-                  size="xs" color="neutral" variant="ghost"
-                  @click="copyText(session.apiKey!, 'Token')"
-                />
+              <div class="flex items-center gap-1.5 text-xs text-muted mt-0.5">
+                <span v-if="session.businessName || session.pushName" class="truncate">{{ session.businessName || session.pushName }}</span>
+                <span v-if="session.businessName || session.pushName" class="text-dimmed">·</span>
+                <UBadge :color="sessionStatusColor(session.status)" variant="subtle" size="xs" class="capitalize">{{ session.status }}</UBadge>
               </div>
             </div>
           </div>
 
-          <template #footer>
-            <div class="flex items-center gap-2">
-              <UButton
-                icon="i-lucide-arrow-right"
-                label="Open"
-                size="sm"
-                color="primary"
-                variant="soft"
-                class="flex-1"
-                :to="`/sessions/${session.id}`"
-              />
-              <UButton
-                v-if="session.status !== 'connected'"
-                icon="i-lucide-plug"
-                size="sm"
-                color="neutral"
-                variant="ghost"
-                @click="connectSession(session)"
-              />
-              <UButton
-                v-else
-                icon="i-lucide-unplug"
-                size="sm"
-                color="warning"
-                variant="ghost"
-                @click="disconnectSession(session.id)"
-              />
-              <UButton
-                icon="i-lucide-trash-2"
-                size="sm"
-                color="error"
-                variant="ghost"
-                @click="deleteSession(session.id)"
-              />
+          <div class="border-t border-default px-4 py-2">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+              <span v-if="session.jid" class="flex items-center gap-1">
+                <UIcon name="i-lucide-phone" class="size-3" />
+                +{{ parseJID(session.jid).phone }}
+              </span>
+              <span v-else class="italic">Not paired</span>
+              <span v-if="session.platform" class="flex items-center gap-1 capitalize">
+                <UIcon :name="platformIcon(session.platform)" class="size-3" />
+                {{ session.platform }}
+              </span>
+              <span v-if="session.proxy?.host" class="flex items-center gap-1">
+                <UIcon name="i-lucide-shield" class="size-3" />
+                {{ session.proxy.host }}
+              </span>
+              <span v-if="session.createdAt" class="flex items-center gap-1">
+                <UIcon name="i-lucide-clock" class="size-3" />
+                {{ timeAgo(session.createdAt) }}
+              </span>
             </div>
-          </template>
+          </div>
+
+          <div class="border-t border-default px-4 py-2 flex items-center gap-1.5">
+            <UButton
+              icon="i-lucide-arrow-right"
+              label="Open"
+              size="xs"
+              color="primary"
+              variant="soft"
+              class="flex-1"
+              :to="`/sessions/${session.id}`"
+            />
+            <UButton
+              v-if="session.status !== 'connected'"
+              icon="i-lucide-plug"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              @click="connectSession(session)"
+            />
+            <UButton
+              v-else
+              icon="i-lucide-unplug"
+              size="xs"
+              color="warning"
+              variant="ghost"
+              @click="disconnectSession(session.id)"
+            />
+            <UButton
+              icon="i-lucide-trash-2"
+              size="xs"
+              color="error"
+              variant="ghost"
+              @click="deleteSession(session.id)"
+            />
+          </div>
         </UCard>
       </div>
 

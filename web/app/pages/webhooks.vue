@@ -155,7 +155,8 @@ onMounted(async () => {
             :items="sessionItems"
             value-key="value"
             placeholder="Select session"
-            class="w-48"
+            size="sm"
+            class="w-40"
           />
           <WebhooksAddModal
             v-if="selectedSessionId"

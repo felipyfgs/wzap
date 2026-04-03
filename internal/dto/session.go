@@ -49,15 +49,18 @@ type SessionCreateReq struct {
 }
 
 type SessionResp struct {
-	ID        string          `json:"id"`
-	Name      string          `json:"name"`
-	JID       string          `json:"jid,omitempty"`
-	Connected int             `json:"connected"`
-	Status    string          `json:"status"`
-	Proxy     SessionProxy    `json:"proxy"`
-	Settings  SessionSettings `json:"settings"`
-	CreatedAt time.Time       `json:"createdAt"`
-	UpdatedAt time.Time       `json:"updatedAt"`
+	ID           string          `json:"id"`
+	Name         string          `json:"name"`
+	JID          string          `json:"jid,omitempty"`
+	Connected    int             `json:"connected"`
+	Status       string          `json:"status"`
+	Proxy        SessionProxy    `json:"proxy"`
+	Settings     SessionSettings `json:"settings"`
+	PushName     string          `json:"pushName,omitempty"`
+	BusinessName string          `json:"businessName,omitempty"`
+	Platform     string          `json:"platform,omitempty"`
+	CreatedAt    time.Time       `json:"createdAt"`
+	UpdatedAt    time.Time       `json:"updatedAt"`
 }
 
 type SessionCreatedResp struct {
@@ -105,16 +108,19 @@ type PairPhoneResp struct {
 	PairingCode string `json:"pairingCode"`
 }
 
-func SessionToResp(s model.Session) SessionResp {
+func SessionToResp(s model.Session, pushName, businessName, platform string) SessionResp {
 	return SessionResp{
-		ID:        s.ID,
-		Name:      s.Name,
-		JID:       s.JID,
-		Connected: s.Connected,
-		Status:    s.Status,
-		Proxy:     SessionProxy(s.Proxy),
-		Settings:  SessionSettings(s.Settings),
-		CreatedAt: s.CreatedAt,
-		UpdatedAt: s.UpdatedAt,
+		ID:           s.ID,
+		Name:         s.Name,
+		JID:          s.JID,
+		Connected:    s.Connected,
+		Status:       s.Status,
+		Proxy:        SessionProxy(s.Proxy),
+		Settings:     SessionSettings(s.Settings),
+		PushName:     pushName,
+		BusinessName: businessName,
+		Platform:     platform,
+		CreatedAt:    s.CreatedAt,
+		UpdatedAt:    s.UpdatedAt,
 	}
 }

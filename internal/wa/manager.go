@@ -17,20 +17,48 @@ import (
 type MediaAutoUploadFunc func(sessionID, messageID, mimeType string, downloadable whatsmeow.DownloadableMessage)
 type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{})
 
+type ClientInfo struct {
+	PushName     string
+	BusinessName string
+	Platform     string
+}
+
+func (m *Manager) GetClientInfo(sessionID string) *ClientInfo {
+	m.mu.RLock()
+	client, exists := m.clients[sessionID]
+	m.mu.RUnlock()
+
+	if !exists || client.Store == nil {
+		return nil
+	}
+
+	info := &ClientInfo{
+		PushName:     client.Store.PushName,
+		BusinessName: client.Store.BusinessName,
+		Platform:     client.Store.Platform,
+	}
+
+	if info.PushName == "" && info.BusinessName == "" && info.Platform == "" {
+		return nil
+	}
+
+	return info
+}
+
 type Manager struct {
 	clients      map[string]*whatsmeow.Client
 	sessionNames map[string]string // cache de sessionID -> name
 	mu           sync.RWMutex
 
-	ctx                context.Context
-	sessionRepo        *repo.SessionRepository
-	container          *sqlstore.Container
-	nats               *broker.NATS
-	dispatcher         *webhook.Dispatcher
-	cfg                *config.Config
-	waLog              waLog.Logger
-	OnMediaReceived    MediaAutoUploadFunc
-	OnMessageReceived  MessagePersistFunc
+	ctx               context.Context
+	sessionRepo       *repo.SessionRepository
+	container         *sqlstore.Container
+	nats              *broker.NATS
+	dispatcher        *webhook.Dispatcher
+	cfg               *config.Config
+	waLog             waLog.Logger
+	OnMediaReceived   MediaAutoUploadFunc
+	OnMessageReceived MessagePersistFunc
 }
 
 func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {

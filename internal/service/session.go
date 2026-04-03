@@ -110,6 +110,16 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	return resp, nil
 }
 
+func (s *SessionService) enrichWithProfile(session model.Session) dto.SessionResp {
+	var pushName, businessName, platform string
+	if info := s.engine.GetClientInfo(session.ID); info != nil {
+		pushName = info.PushName
+		businessName = info.BusinessName
+		platform = info.Platform
+	}
+	return dto.SessionToResp(session, pushName, businessName, platform)
+}
+
 func (s *SessionService) List(ctx context.Context) ([]dto.SessionResp, error) {
 	sessions, err := s.repo.FindAll(ctx)
 	if err != nil {
@@ -117,7 +127,7 @@ func (s *SessionService) List(ctx context.Context) ([]dto.SessionResp, error) {
 	}
 	resp := make([]dto.SessionResp, len(sessions))
 	for i, sess := range sessions {
-		resp[i] = dto.SessionToResp(sess)
+		resp[i] = s.enrichWithProfile(sess)
 	}
 	return resp, nil
 }
@@ -127,7 +137,7 @@ func (s *SessionService) Get(ctx context.Context, id string) (*dto.SessionResp, 
 	if err != nil {
 		return nil, err
 	}
-	resp := dto.SessionToResp(*session)
+	resp := s.enrichWithProfile(*session)
 	return &resp, nil
 }
 
@@ -165,7 +175,7 @@ func (s *SessionService) Update(ctx context.Context, id string, req dto.SessionU
 		s.engine.UpdateSessionName(id, session.Name)
 	}
 
-	resp := dto.SessionToResp(*session)
+	resp := s.enrichWithProfile(*session)
 	return &resp, nil
 }
 

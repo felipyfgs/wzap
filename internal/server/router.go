@@ -53,6 +53,7 @@ func (s *Server) SetupRoutes() error {
 
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
 	engine.SetMessagePersist(historySvc.PersistMessage)
+	messageSvc.SetMessagePersist(historySvc.PersistMessage)
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)

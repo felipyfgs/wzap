@@ -22,11 +22,27 @@ import (
 )
 
 type MessageService struct {
-	engine *wa.Manager
+	engine    *wa.Manager
+	persistFn wa.MessagePersistFunc
 }
 
 func NewMessageService(engine *wa.Manager) *MessageService {
 	return &MessageService{engine: engine}
+}
+
+func (s *MessageService) SetMessagePersist(fn wa.MessagePersistFunc) {
+	s.persistFn = fn
+}
+
+func (s *MessageService) persistSent(sessionID, messageID, chatJID, msgType, body, mediaType string, client *whatsmeow.Client) {
+	if s.persistFn == nil {
+		return
+	}
+	senderJID := ""
+	if client.Store.ID != nil {
+		senderJID = client.Store.ID.String()
+	}
+	s.persistFn(sessionID, messageID, chatJID, senderJID, true, msgType, body, mediaType, time.Now().Unix(), nil)
 }
 
 func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto.SendTextReq) (string, error) {
@@ -55,6 +71,8 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 	if err != nil {
 		return "", fmt.Errorf("failed to send text message: %w", err)
 	}
+
+	s.persistSent(sessionID, resp.ID, jid.String(), "text", req.Body, "", client)
 
 	return resp.ID, nil
 }
@@ -170,11 +188,25 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		}
 	}
 
+	var msgType string
+	switch mediaType {
+	case whatsmeow.MediaImage:
+		msgType = "image"
+	case whatsmeow.MediaVideo:
+		msgType = "video"
+	case whatsmeow.MediaDocument:
+		msgType = "document"
+	case whatsmeow.MediaAudio:
+		msgType = "audio"
+	}
+
 	opts := buildSendOpts(req.CustomID)
 	resp, err := client.SendMessage(ctx, jid, &msg, opts...)
 	if err != nil {
 		return "", fmt.Errorf("failed to send media message: %w", err)
 	}
+
+	s.persistSent(sessionID, resp.ID, jid.String(), msgType, req.Caption, req.MimeType, client)
 
 	return resp.ID, nil
 }
@@ -201,6 +233,8 @@ func (s *MessageService) SendContact(ctx context.Context, sessionID string, req 
 	if err != nil {
 		return "", fmt.Errorf("failed to send contact message: %w", err)
 	}
+
+	s.persistSent(sessionID, resp.ID, jid.String(), "contact", req.Name, "", client)
 
 	return resp.ID, nil
 }
@@ -230,6 +264,8 @@ func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req
 		return "", fmt.Errorf("failed to send location message: %w", err)
 	}
 
+	s.persistSent(sessionID, resp.ID, jid.String(), "location", req.Name, "", client)
+
 	return resp.ID, nil
 }
 
@@ -250,6 +286,8 @@ func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req dto
 	if err != nil {
 		return "", fmt.Errorf("failed to send poll message: %w", err)
 	}
+
+	s.persistSent(sessionID, resp.ID, jid.String(), "poll", req.Name, "", client)
 
 	return resp.ID, nil
 }
@@ -292,6 +330,8 @@ func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req 
 		return "", fmt.Errorf("failed to send sticker message: %w", err)
 	}
 
+	s.persistSent(sessionID, resp.ID, jid.String(), "sticker", "", req.MimeType, client)
+
 	return resp.ID, nil
 }
 
@@ -319,6 +359,8 @@ func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto
 		return "", fmt.Errorf("failed to send link message: %w", err)
 	}
 
+	s.persistSent(sessionID, resp.ID, jid.String(), "text", req.URL, "", client)
+
 	return resp.ID, nil
 }
 
@@ -343,6 +385,8 @@ func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req 
 	if err != nil {
 		return "", fmt.Errorf("failed to edit message: %w", err)
 	}
+
+	s.persistSent(sessionID, resp.ID, jid.String(), "text", req.Body, "", client)
 
 	return resp.ID, nil
 }
@@ -501,6 +545,8 @@ func (s *MessageService) SendButton(ctx context.Context, sessionID string, req d
 		return "", fmt.Errorf("failed to send button message: %w", err)
 	}
 
+	s.persistSent(sessionID, resp.ID, jid.String(), "buttons", req.Body, "", client)
+
 	return resp.ID, nil
 }
 
@@ -551,6 +597,8 @@ func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto
 	if err != nil {
 		return "", fmt.Errorf("failed to send list message: %w", err)
 	}
+
+	s.persistSent(sessionID, resp.ID, jid.String(), "list", req.Title, "", client)
 
 	return resp.ID, nil
 }

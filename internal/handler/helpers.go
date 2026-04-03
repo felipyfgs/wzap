@@ -32,7 +32,7 @@ func parseAndValidate(c *fiber.Ctx, req interface{}) error {
 		_ = c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 		return fiber.ErrBadRequest
 	}
-	
+
 	if err := mw.Validate.Struct(req); err != nil {
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			var msgs []string

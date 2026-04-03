@@ -10,6 +10,7 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
+	"wzap/internal/metrics"
 	"wzap/internal/model"
 	"wzap/internal/repo"
 	"wzap/internal/wa"
@@ -61,6 +62,8 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	if err := s.repo.Create(ctx, session); err != nil {
 		return nil, fmt.Errorf("failed to create session: %w", err)
 	}
+
+	metrics.SessionsTotal.Inc()
 
 	resp := &dto.SessionCreatedResp{
 		ID:        session.ID,
@@ -239,5 +242,18 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 		}
 	}
 
+	return resp, nil
+}
+
+func (s *SessionService) Restart(ctx context.Context, id string) (*dto.SessionResp, error) {
+	_ = s.engine.Disconnect(id)
+	time.Sleep(1 * time.Second)
+	if _, _, err := s.engine.Connect(ctx, id); err != nil {
+		return nil, fmt.Errorf("failed to restart session: %w", err)
+	}
+	resp, err := s.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 	return resp, nil
 }

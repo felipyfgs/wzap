@@ -7,14 +7,14 @@ import (
 )
 
 func TestBuildContextInfo_Nil(t *testing.T) {
-	if buildContextInfo(nil) != nil {
+	if buildContextInfo(nil, nil) != nil {
 		t.Error("expected nil for nil input")
 	}
 }
 
 func TestBuildContextInfo_EmptyMessageID(t *testing.T) {
 	r := &dto.ReplyContext{MessageID: "", Participant: "5511@s.whatsapp.net"}
-	if buildContextInfo(r) != nil {
+	if buildContextInfo(r, nil) != nil {
 		t.Error("expected nil when MessageID is empty")
 	}
 }
@@ -25,7 +25,7 @@ func TestBuildContextInfo_Full(t *testing.T) {
 		Participant:  "5511@s.whatsapp.net",
 		MentionedJID: []string{"5522@s.whatsapp.net"},
 	}
-	ci := buildContextInfo(r)
+	ci := buildContextInfo(r, nil)
 	if ci == nil {
 		t.Fatal("expected non-nil ContextInfo")
 	}
@@ -37,6 +37,16 @@ func TestBuildContextInfo_Full(t *testing.T) {
 	}
 	if len(ci.MentionedJID) != 1 || ci.MentionedJID[0] != "5522@s.whatsapp.net" {
 		t.Error("unexpected MentionedJID")
+	}
+}
+
+func TestBuildContextInfo_MentionedJIDsOnly(t *testing.T) {
+	ci := buildContextInfo(nil, []string{"5511@s.whatsapp.net"})
+	if ci == nil {
+		t.Fatal("expected non-nil ContextInfo for MentionedJIDs only")
+	}
+	if len(ci.MentionedJID) != 1 || ci.MentionedJID[0] != "5511@s.whatsapp.net" {
+		t.Errorf("unexpected MentionedJID: %v", ci.MentionedJID)
 	}
 }
 

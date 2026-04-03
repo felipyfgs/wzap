@@ -24,15 +24,16 @@ type SessionSettings struct {
 }
 
 type WebhookResp struct {
-	ID          string    `json:"id"`
-	SessionID   string    `json:"sessionId"`
-	URL         string    `json:"url"`
-	Secret      string    `json:"secret,omitempty"`
-	Events      []string  `json:"events"`
-	Enabled     bool      `json:"enabled"`
-	NATSEnabled bool      `json:"natsEnabled"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          string            `json:"id"`
+	SessionID   string            `json:"sessionId"`
+	URL         string            `json:"url"`
+	Secret      string            `json:"secret,omitempty"`
+	Events      []string          `json:"events"`
+	EventURLs   map[string]string `json:"eventUrls"`
+	Enabled     bool              `json:"enabled"`
+	NATSEnabled bool              `json:"natsEnabled"`
+	CreatedAt   time.Time         `json:"createdAt"`
+	UpdatedAt   time.Time         `json:"updatedAt"`
 }
 
 type WebhookCreateInline struct {
@@ -106,6 +107,10 @@ type PairPhoneReq struct {
 
 type PairPhoneResp struct {
 	PairingCode string `json:"pairingCode"`
+}
+
+type UpdateProfileNameReq struct {
+	Name string `json:"name" validate:"required"`
 }
 
 func SessionToResp(s model.Session, pushName, businessName, platform string) SessionResp {

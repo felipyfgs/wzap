@@ -16,6 +16,7 @@ import (
 
 	"wzap/internal/broker"
 	"wzap/internal/logger"
+	"wzap/internal/metrics"
 	"wzap/internal/model"
 	"wzap/internal/repo"
 
@@ -101,10 +102,14 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	for _, wh := range webhooks {
 		wh := wh
+		url := wh.URL
+		if specificURL, ok := wh.EventURLs[string(eventType)]; ok && specificURL != "" {
+			url = specificURL
+		}
 		if wh.NATSEnabled && d.nats != nil {
 			go d.publishToNATS(wh, payload)
 		} else {
-			go d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
+			go d.deliverHTTPWithRetry(url, wh.Secret, payload)
 		}
 	}
 
@@ -266,6 +271,7 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 }
 
 func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) error {
+	start := time.Now()
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
@@ -285,7 +291,10 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 	}
 
 	resp, err := d.httpClient.Do(req)
+	duration := time.Since(start).Seconds()
+	metrics.WebhooksDuration.Observe(duration)
 	if err != nil {
+		metrics.WebhooksFailed.Inc()
 		return fmt.Errorf("http post: %w", err)
 	}
 	defer func() {
@@ -297,12 +306,14 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		err := fmt.Errorf("non-2xx status: %d", resp.StatusCode)
+		metrics.WebhooksFailed.Inc()
 		if resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != http.StatusTooManyRequests {
 			return &permanentDeliveryError{statusCode: resp.StatusCode, err: err}
 		}
 		return err
 	}
 
+	metrics.WebhooksDelivered.Inc()
 	logger.Info().Str("url", url).Int("status", resp.StatusCode).Msg("Webhook delivered successfully")
 	return nil
 }

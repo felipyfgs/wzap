@@ -34,6 +34,7 @@ func (s *WebhookService) Create(ctx context.Context, sessionID string, req dto.C
 		URL:         req.URL,
 		Secret:      req.Secret,
 		Events:      events,
+		EventURLs:   req.EventURLs,
 		Enabled:     true,
 		NATSEnabled: req.NATSEnabled,
 		CreatedAt:   time.Now(),
@@ -64,6 +65,9 @@ func (s *WebhookService) Update(ctx context.Context, sessionID, webhookID string
 	}
 	if req.Events != nil {
 		wh.Events = req.Events
+	}
+	if req.EventURLs != nil {
+		wh.EventURLs = req.EventURLs
 	}
 	if req.Enabled != nil {
 		wh.Enabled = *req.Enabled

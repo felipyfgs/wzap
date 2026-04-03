@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os/exec"
+	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow"
@@ -122,4 +124,29 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, mimeType string, do
 
 		logger.Debug().Str("session", sessionID).Str("mid", messageID).Msg("Auto-upload: media stored in S3")
 	}()
+}
+
+func convertToOGG(input []byte) ([]byte, error) {
+	cmd := exec.Command("ffmpeg", "-i", "pipe:0", "-c:a", "libopus", "-f", "ogg", "pipe:1")
+	cmd.Stdin = bytes.NewReader(input)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("ffmpeg conversion failed: %w, stderr: %s", err, stderr.String())
+	}
+
+	return out.Bytes(), nil
+}
+
+func isOGGOpus(mimeType string) bool {
+	return strings.Contains(strings.ToLower(mimeType), "ogg") ||
+		strings.Contains(strings.ToLower(mimeType), "opus")
+}
+
+func checkFFmpegAvailable() bool {
+	_, err := exec.LookPath("ffmpeg")
+	return err == nil
 }

@@ -42,6 +42,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/metrics": {
+            "get": {
+                "description": "Exposes Prometheus metrics for monitoring wzap instance",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "Metrics"
+                ],
+                "summary": "Prometheus metrics endpoint",
+                "responses": {
+                    "200": {
+                        "description": "Prometheus text format metrics",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions": {
             "get": {
                 "security": [
@@ -664,6 +684,58 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/chat/unread": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Marks a chat as unread. Note: WhatsApp protocol does not support this operation directly.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Mark chat as unread",
+                "parameters": [
+                    {
+                        "description": "Chat JID",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ChatMarkUnreadReq"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "501": {
+                        "description": "Not implemented by WhatsApp protocol",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2992,6 +3064,76 @@ const docTemplate = `{
                 }
             }
         },
+        "/sessions/{sessionId}/messages/forward": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Forwards an existing message to another chat or group",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Messages"
+                ],
+                "summary": "Forward a message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Forward message payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ForwardMessageReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions/{sessionId}/messages/image": {
             "post": {
                 "security": [
@@ -3511,6 +3653,216 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/messages/status/image": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Sends an image to WhatsApp Stories/Status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Status"
+                ],
+                "summary": "Send an image status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status image payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SendStatusMediaReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/messages/status/text": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Sends a text message to WhatsApp Stories/Status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Status"
+                ],
+                "summary": "Send a text status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status text payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SendStatusTextReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/messages/status/video": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Sends a video to WhatsApp Stories/Status",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Status"
+                ],
+                "summary": "Send a video status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status video payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/SendStatusMediaReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/MidResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -4310,6 +4662,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/sessions/{sessionId}/profile/name": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Updates the session's WhatsApp profile display name (push name)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Contacts"
+                ],
+                "summary": "Update profile name",
+                "parameters": [
+                    {
+                        "description": "Profile name",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateProfileNameReq"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions/{sessionId}/qr": {
             "get": {
                 "security": [
@@ -4391,6 +4789,58 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/restart": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Disconnects and reconnects the session without losing state",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sessions"
+                ],
+                "summary": "Restart session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/SessionResp"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
@@ -4799,6 +5249,17 @@ const docTemplate = `{
                 }
             }
         },
+        "ChatMarkUnreadReq": {
+            "type": "object",
+            "required": [
+                "jid"
+            ],
+            "properties": {
+                "jid": {
+                    "type": "string"
+                }
+            }
+        },
         "CheckContactReq": {
             "type": "object",
             "required": [
@@ -4896,6 +5357,12 @@ const docTemplate = `{
                 "url"
             ],
             "properties": {
+                "eventUrls": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "events": {
                     "type": "array",
                     "items": {
@@ -4957,6 +5424,25 @@ const docTemplate = `{
             ],
             "properties": {
                 "body": {
+                    "type": "string"
+                },
+                "messageId": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                }
+            }
+        },
+        "ForwardMessageReq": {
+            "type": "object",
+            "required": [
+                "fromJid",
+                "messageId",
+                "phone"
+            ],
+            "properties": {
+                "fromJid": {
                     "type": "string"
                 },
                 "messageId": {
@@ -5418,6 +5904,12 @@ const docTemplate = `{
                 "footer": {
                     "type": "string"
                 },
+                "mentionedJids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "phone": {
                     "type": "string"
                 },
@@ -5488,6 +5980,12 @@ const docTemplate = `{
                 "footer": {
                     "type": "string"
                 },
+                "mentionedJids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "phone": {
                     "type": "string"
                 },
@@ -5550,6 +6048,12 @@ const docTemplate = `{
                 "fileName": {
                     "type": "string"
                 },
+                "mentionedJids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "mimeType": {
                     "type": "string"
                 },
@@ -5590,6 +6094,46 @@ const docTemplate = `{
                 }
             }
         },
+        "SendStatusMediaReq": {
+            "type": "object",
+            "required": [
+                "mimeType"
+            ],
+            "properties": {
+                "base64": {
+                    "type": "string"
+                },
+                "caption": {
+                    "type": "string"
+                },
+                "customId": {
+                    "type": "string"
+                },
+                "fileName": {
+                    "type": "string"
+                },
+                "mimeType": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "SendStatusTextReq": {
+            "type": "object",
+            "required": [
+                "text"
+            ],
+            "properties": {
+                "customId": {
+                    "type": "string"
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
         "SendStickerReq": {
             "type": "object",
             "required": [
@@ -5621,6 +6165,12 @@ const docTemplate = `{
                 },
                 "customId": {
                     "type": "string"
+                },
+                "mentionedJids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "phone": {
                     "type": "string"
@@ -5734,6 +6284,9 @@ const docTemplate = `{
         "SessionResp": {
             "type": "object",
             "properties": {
+                "businessName": {
+                    "type": "string"
+                },
                 "connected": {
                     "type": "integer"
                 },
@@ -5749,8 +6302,14 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
+                "platform": {
+                    "type": "string"
+                },
                 "proxy": {
                     "$ref": "#/definitions/SessionProxy"
+                },
+                "pushName": {
+                    "type": "string"
                 },
                 "settings": {
                     "$ref": "#/definitions/SessionSettings"
@@ -5886,11 +6445,28 @@ const docTemplate = `{
                 }
             }
         },
+        "UpdateProfileNameReq": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "UpdateWebhookReq": {
             "type": "object",
             "properties": {
                 "enabled": {
                     "type": "boolean"
+                },
+                "eventUrls": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "events": {
                     "type": "array",
@@ -5951,6 +6527,12 @@ const docTemplate = `{
                 },
                 "enabled": {
                     "type": "boolean"
+                },
+                "eventUrls": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "events": {
                     "type": "array",

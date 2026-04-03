@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	"wzap/internal/dto"
@@ -258,4 +259,17 @@ func (s *ContactService) SetStatusMessage(ctx context.Context, sessionID string,
 	}
 
 	return client.SetStatusMessage(ctx, req.Status)
+}
+
+func (s *ContactService) UpdateProfileName(ctx context.Context, sessionID string, name string) error {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+	if !client.IsConnected() {
+		return fmt.Errorf("client not connected")
+	}
+
+	patch := appstate.BuildSettingPushName(name)
+	return client.SendAppState(ctx, patch)
 }

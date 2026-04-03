@@ -1,0 +1,1 @@
+ALTER TABLE wz_webhooks ADD COLUMN IF NOT EXISTS event_urls JSONB NOT NULL DEFAULT '{}';

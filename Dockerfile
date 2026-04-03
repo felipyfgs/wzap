@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o /app/wzap cmd/wzap/mai
 # --- runtime ---
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates tzdata curl
+RUN apk add --no-cache ca-certificates tzdata curl ffmpeg
 
 RUN addgroup -S wzap && adduser -S wzap -G wzap -h /app
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"wzap/internal/dto"
+	"wzap/internal/metrics"
 	"wzap/internal/service"
 	"wzap/internal/wa"
 
@@ -192,6 +193,10 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 		status = "CONNECTING"
 	}
 
+	if status == "CONNECTED" {
+		metrics.SessionsConnected.Inc()
+	}
+
 	return c.JSON(dto.SuccessResp(dto.ConnectResp{Status: status}))
 }
 
@@ -210,6 +215,8 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	if err := h.engine.Disconnect(id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", err.Error()))
 	}
+
+	metrics.SessionsConnected.Dec()
 
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -331,4 +338,24 @@ func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(dto.SuccessResp(nil))
+}
+
+// Restart godoc
+// @Summary     Restart session
+// @Description Disconnects and reconnects the session without losing state
+// @Tags        Sessions
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse{Data=dto.SessionResp}
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
+// @Router      /sessions/{sessionId}/restart [post]
+func (h *SessionHandler) Restart(c *fiber.Ctx) error {
+	id := mustGetSessionID(c)
+	session, err := h.sessionSvc.Restart(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Restart Error", err.Error()))
+	}
+
+	return c.JSON(dto.SuccessResp(session))
 }

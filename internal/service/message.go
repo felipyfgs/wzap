@@ -18,6 +18,8 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"wzap/internal/dto"
+	"wzap/internal/logger"
+	"wzap/internal/metrics"
 	"wzap/internal/wa"
 )
 
@@ -43,6 +45,7 @@ func (s *MessageService) persistSent(sessionID, messageID, chatJID, msgType, bod
 		senderJID = client.Store.ID.String()
 	}
 	s.persistFn(sessionID, messageID, chatJID, senderJID, true, msgType, body, mediaType, time.Now().Unix(), nil)
+	metrics.MessagesSent.Inc()
 }
 
 func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto.SendTextReq) (string, error) {
@@ -62,7 +65,7 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 	msg := &waE2E.Message{
 		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 			Text:        proto.String(req.Body),
-			ContextInfo: buildContextInfo(req.ReplyTo),
+			ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
 		},
 	}
 
@@ -120,6 +123,21 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		}
 	}
 
+	if mediaType == whatsmeow.MediaAudio && !isOGGOpus(req.MimeType) {
+		if checkFFmpegAvailable() {
+			convertedData, convErr := convertToOGG(data)
+			if convErr != nil {
+				logger.Warn().Err(convErr).Str("session", sessionID).Msg("Failed to convert audio to OGG, sending original")
+			} else {
+				data = convertedData
+				req.MimeType = "audio/ogg"
+				logger.Debug().Str("session", sessionID).Msg("Audio converted to OGG Opus format")
+			}
+		} else {
+			logger.Warn().Str("session", sessionID).Msg("ffmpeg not available, sending audio without conversion")
+		}
+	}
+
 	uploaded, err := client.Upload(ctx, data, mediaType)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload media: %w", err)
@@ -127,7 +145,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 
 	var msg waE2E.Message
 
-	ci := buildContextInfo(req.ReplyTo)
+	ci := buildContextInfo(req.ReplyTo, req.MentionedJIDs)
 
 	switch mediaType {
 	case whatsmeow.MediaImage:
@@ -477,19 +495,27 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 	return client.SendChatPresence(ctx, jid, presence, media)
 }
 
-func buildContextInfo(reply *dto.ReplyContext) *waE2E.ContextInfo {
-	if reply == nil || reply.MessageID == "" {
+func buildContextInfo(reply *dto.ReplyContext, mentionedJIDs []string) *waE2E.ContextInfo {
+	ci := &waE2E.ContextInfo{}
+
+	if reply != nil && reply.MessageID != "" {
+		ci.StanzaID = proto.String(reply.MessageID)
+		if reply.Participant != "" {
+			ci.Participant = proto.String(reply.Participant)
+		}
+		if len(reply.MentionedJID) > 0 {
+			ci.MentionedJID = reply.MentionedJID
+		}
+	}
+
+	if len(mentionedJIDs) > 0 {
+		ci.MentionedJID = mentionedJIDs
+	}
+
+	if ci.StanzaID == nil && ci.Participant == nil && len(ci.MentionedJID) == 0 {
 		return nil
 	}
-	ci := &waE2E.ContextInfo{
-		StanzaID: proto.String(reply.MessageID),
-	}
-	if reply.Participant != "" {
-		ci.Participant = proto.String(reply.Participant)
-	}
-	if len(reply.MentionedJID) > 0 {
-		ci.MentionedJID = reply.MentionedJID
-	}
+
 	return ci
 }
 
@@ -533,7 +559,7 @@ func (s *MessageService) SendButton(ctx context.Context, sessionID string, req d
 					FooterText:  proto.String(req.Footer),
 					Buttons:     buttons,
 					HeaderType:  waE2E.ButtonsMessage_EMPTY.Enum(),
-					ContextInfo: buildContextInfo(req.ReplyTo),
+					ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
 				},
 			},
 		},
@@ -588,7 +614,7 @@ func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto
 			ButtonText:  proto.String(req.ButtonText),
 			ListType:    waE2E.ListMessage_SINGLE_SELECT.Enum(),
 			Sections:    sections,
-			ContextInfo: buildContextInfo(req.ReplyTo),
+			ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
 		},
 	}
 
@@ -599,6 +625,138 @@ func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto
 	}
 
 	s.persistSent(sessionID, resp.ID, jid.String(), "list", req.Title, "", client)
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) SendStatusText(ctx context.Context, sessionID string, req dto.SendStatusTextReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+	if !client.IsConnected() {
+		return "", fmt.Errorf("client not connected")
+	}
+
+	msg := &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+			Text: proto.String(req.Text),
+		},
+	}
+
+	opts := buildSendOpts(req.CustomID)
+	resp, err := client.SendMessage(ctx, types.StatusBroadcastJID, msg, opts...)
+	if err != nil {
+		return "", fmt.Errorf("failed to send status text: %w", err)
+	}
+
+	s.persistSent(sessionID, resp.ID, types.StatusBroadcastJID.String(), "status_text", req.Text, "", client)
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) SendStatusMedia(ctx context.Context, sessionID string, req dto.SendStatusMediaReq, mediaType whatsmeow.MediaType) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+	if !client.IsConnected() {
+		return "", fmt.Errorf("client not connected")
+	}
+
+	var data []byte
+	if req.Base64 != "" {
+		data, err = base64.StdEncoding.DecodeString(req.Base64)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode base64: %w", err)
+		}
+	} else if req.URL != "" {
+		data, err = downloadURL(req.URL)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		return "", fmt.Errorf("either base64 or url is required")
+	}
+
+	uploaded, err := client.Upload(ctx, data, mediaType)
+	if err != nil {
+		return "", fmt.Errorf("failed to upload media: %w", err)
+	}
+
+	msg := &waE2E.Message{}
+
+	switch mediaType {
+	case whatsmeow.MediaImage:
+		msg.ImageMessage = &waE2E.ImageMessage{
+			URL:           proto.String(uploaded.URL),
+			Mimetype:      proto.String(req.MimeType),
+			FileEncSHA256: uploaded.FileEncSHA256,
+			FileSHA256:    uploaded.FileSHA256,
+			FileLength:    proto.Uint64(uint64(len(data))),
+			Caption:       proto.String(req.Caption),
+		}
+	case whatsmeow.MediaVideo:
+		msg.VideoMessage = &waE2E.VideoMessage{
+			URL:           proto.String(uploaded.URL),
+			Mimetype:      proto.String(req.MimeType),
+			FileEncSHA256: uploaded.FileEncSHA256,
+			FileSHA256:    uploaded.FileSHA256,
+			FileLength:    proto.Uint64(uint64(len(data))),
+			Caption:       proto.String(req.Caption),
+		}
+	default:
+		return "", fmt.Errorf("unsupported media type for status")
+	}
+
+	opts := buildSendOpts(req.CustomID)
+	resp, err := client.SendMessage(ctx, types.StatusBroadcastJID, msg, opts...)
+	if err != nil {
+		return "", fmt.Errorf("failed to send status media: %w", err)
+	}
+
+	msgType := "status_image"
+	if mediaType == whatsmeow.MediaVideo {
+		msgType = "status_video"
+	}
+
+	s.persistSent(sessionID, resp.ID, types.StatusBroadcastJID.String(), msgType, req.Caption, string(mediaType), client)
+
+	return resp.ID, nil
+}
+
+func (s *MessageService) ForwardMessage(ctx context.Context, sessionID string, req dto.ForwardMessageReq) (string, error) {
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+	if !client.IsConnected() {
+		return "", fmt.Errorf("client not connected")
+	}
+
+	destJID, err := parseJID(req.Phone)
+	if err != nil {
+		return "", err
+	}
+
+	msgID := whatsmeow.GenerateMessageID()
+	msg := &waE2E.Message{
+		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+			ContextInfo: &waE2E.ContextInfo{
+				IsForwarded:     proto.Bool(true),
+				ForwardingScore: proto.Uint32(1),
+				StanzaID:        proto.String(req.MessageID),
+				RemoteJID:       proto.String(req.FromJID),
+			},
+		},
+	}
+
+	resp, err := client.SendMessage(ctx, destJID, msg, whatsmeow.SendRequestExtra{ID: msgID})
+	if err != nil {
+		return "", fmt.Errorf("failed to forward message: %w", err)
+	}
+
+	s.persistSent(sessionID, resp.ID, destJID.String(), "forward", "", "", client)
 
 	return resp.ID, nil
 }

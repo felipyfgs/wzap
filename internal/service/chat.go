@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mau.fi/whatsmeow/appstate"
@@ -140,4 +141,8 @@ func (s *ChatService) MarkRead(ctx context.Context, sessionID string, req dto.Ch
 	}
 
 	return client.MarkRead(ctx, ids, time.Now(), jid, jid)
+}
+
+func (s *ChatService) MarkUnread(ctx context.Context, sessionID string, req dto.ChatMarkUnreadReq) error {
+	return fmt.Errorf("marking a chat as unread is not supported by the WhatsApp protocol")
 }

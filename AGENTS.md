@@ -13,17 +13,11 @@ Guide for agentic coding agents operating in the **wzap** repository (Go 1.25).
 | **Run a single test** | `go test -v -race -run TestName ./path/to/pkg` |
 | Run tests for one package | `go test -v -race ./internal/service/...` |
 | Lint | `golangci-lint run ./...` (install via `make install-tools`) |
-| Tidy modules | `make tidy` (`go mod tidy`) |
+| Tidy modules | `go mod tidy` |
 | Start services (Postgres, MinIO, NATS) | `make up` |
 | Generate Swagger docs | `make docs` |
 
-CI (`.github/workflows/ci.yml`) runs on every PR and push to `main`:
-- **lint**: golangci-lint with 5min timeout
-- **test**: `go test -v -race -coverprofile=coverage.out ./...`
-- **build**: compile binary + upload artifact
-- **docker**: build & push multi-arch image to GHCR (main only)
-
-Docker image is pushed to `ghcr.io/<owner>/wzap` with tags `latest` and `<sha>`.
+CI (`.github/workflows/ci.yml`) runs lint + test + build on every PR.
 
 ## 2 · Project Structure
 
@@ -47,56 +41,42 @@ internal/
   websocket/         WebSocket hub for real-time events
   testutil/          Shared test helpers (NewApp, DoRequest, ParseResp)
 docs/                Generated Swagger docs
+web/                 Nuxt UI dashboard (Vue 3 + Nuxt UI Pro)
 ```
 
 ## 3 · Code Style
 
 ### Imports
-Group imports in this order, separated by blank lines:
-1. Standard library
-2. Third-party packages (`github.com/…`, `go.mau.fi/…`)
-3. Internal packages (`wzap/internal/…`)
-
-```go
-import (
-    "context"
-    "fmt"
-
-    "github.com/gofiber/fiber/v2"
-    "github.com/rs/zerolog/log"
-
-    "wzap/internal/dto"
-    "wzap/internal/service"
-)
-```
+Group imports in **three** groups separated by blank lines:
+1. Standard library (`"context"`, `"fmt"`, …)
+2. Third-party packages (`"github.com/…"`, `"go.mau.fi/…"`, `"google.golang.org/…"`)
+3. Internal packages (`"wzap/internal/…"`)
 
 ### Naming
 - **Exported**: `PascalCase` — `SessionService`, `NewHealthHandler`, `SendText`
 - **Unexported**: `camelCase` — `getSessionID`, `sessionNameRegex`
-- **Constants / enum-like**: `PascalCase` prefix + `PascalCase` value — `MsgTypeText`, `EventMessage`
 - **Acronyms**: keep uppercase — `APIKey`, `ID`, `URL`, `JID`, `NATS`, `S3`
 - **Constructors**: `New<Type>(…)` — `NewServer`, `NewSessionService`
-- **Private helpers in handlers**: lowercase — `parseAndValidate`, `mustGetSessionID`
 
 ### Types & Structs
 - JSON struct tags use `json:"camelCase"`, add `omitempty` where nil/zero is meaningful.
 - Use `validate:"required"` tags on DTO fields for request validation via `go-playground/validator`.
-- Prefer concrete types over `interface{}`; use `any` only at API boundaries (e.g. `dto.SuccessResp(data interface{})`).
+- Use `validate:"required,min=1"` on slice fields to reject empty arrays.
+- Prefer concrete types over `interface{}`; use `any` only at API boundaries (e.g. `dto.SuccessResp`).
 - Define request/response DTOs in `internal/dto/`; domain models in `internal/model/`.
 - Use pointers for optional update fields: `*string`, `*SessionProxy` (nil = not provided).
+- Initialize slices with `make([]T, 0)` to avoid JSON `null` instead of `[]`.
 
 ### Error Handling
 - Wrap errors: `fmt.Errorf("failed to create session: %w", err)`.
 - Return errors up the call stack; handle at handler level.
-- In handlers, respond with `dto.ErrorResp(title, message)` and appropriate HTTP status.
-- Use `logger.Warn().Err(err).Msg(…)` for non-fatal errors (e.g., inline webhook creation).
+- In handlers, respond with `dto.ErrorResp(title, msg)` and appropriate HTTP status. Never expose raw `err.Error()` from service/database layer — log internally instead.
+- Use `logger.Warn().Err(err).Msg(…)` for non-fatal errors.
 - For fatal startup errors, use `logger.Fatal().Err(err).Msg(…)`.
-- Fiber-specific: return `fiber.NewError(code, msg)` for framework-level errors.
 
 ### Logging
 - Use the `internal/logger` wrapper (not `zerolog/log` directly): `logger.Info()`, `logger.Warn()`, etc.
 - Chain `.Str()`, `.Err()`, `.Int()` for structured fields; end with `.Msg(…)`.
-- Example: `logger.Info().Str("addr", addr).Msg("Starting API server")`.
 
 ### Context
 - Pass `context.Context` as the **first** parameter to service/repo methods.
@@ -107,18 +87,13 @@ import (
 - Parse + validate: `parseAndValidate(c, &req)` — handles BodyParser and struct validation.
 - Success: `c.JSON(dto.SuccessResp(data))` with appropriate status code.
 - Error: `c.Status(code).JSON(dto.ErrorResp(title, msg))`.
-- Get session ID: `getSessionID(c)` (returns error) or `mustGetSessionID(c)` (panics-safe, for admin routes).
+- Get session ID: `mustGetSessionID(c)` (for routes behind `RequiredSession` middleware).
 - Add Swagger godoc above each handler (`@Summary`, `@Router`, `@Tags`, etc.).
 
 ### Authentication Flow
-- Auth middleware (`middleware.Auth`) reads `Authorization` header (token only, no Bearer prefix).
+- Auth middleware (`middleware.Auth`) reads `Authorization` header (token only, no Bearer prefix). Uses constant-time comparison.
 - Sets `c.Locals("authRole", "admin"|"session")` and `c.Locals("sessionID", id)`.
 - `middleware.RequiredSession` resolves `:sessionId` param (name or UUID → session.ID).
-
-### Validation
-- Global validator instance: `middleware.Validate` (initialized in `middleware/validate.go`).
-- `parseAndValidate` helper in `handler/helpers.go` parses body + runs struct validation.
-- Validation errors returned as 400 with field-level detail messages.
 
 ## 4 · Testing Conventions
 
@@ -128,7 +103,6 @@ import (
 - Use `fiber.New(fiber.Config{DisableStartupMessage: true})` in tests.
 - Use `httptest.NewRequest` + `app.Test(req, -1)` for HTTP testing.
 - Test file `internal/testutil/fiber.go` provides `NewApp()`, `DoRequest()`, `ParseResp()`.
-- Stub services with nil when only testing handler validation (nil repo causes 500, not panic).
 
 ## 5 · Conventions
 
@@ -141,33 +115,15 @@ import (
 
 ## 6 · Agent Configuration
 
-This project is dual-compatible with **OpenCode** (`.opencode/`) and **Cursor/Factory** (`.factory/`).
-
-### Directory layout
-
 ```
-.factory/
+.agents/
   rules/                  Global rules (language.md)
   skills/                 Reusable agent skills (SKILL.md + companion docs)
     data-querying/        Postgres query patterns & schema reference
     internal-tools/       Admin-only endpoint creation
     service-integration/  Handler/service/repo layer patterns & whatsmeow API
-.opencode/                OpenCode-compatible directory
-  skills/                 Symlinks → ../../.factory/skills/<name>/
-opencode.json             OpenCode config (loads AGENTS.md + .factory/rules/*.md)
-AGENTS.md                 This file — main rules (read by both OpenCode and Factory)
+  mcp.json                MCP servers (Nuxt UI, Nuxt, Postgres)
 ```
-
-### How it works
-
-| Tool | Rules source | Skills source |
-|---|---|---|
-| **OpenCode** | `AGENTS.md` + `opencode.json` instructions | `.opencode/skills/*/SKILL.md` (symlinks) |
-| **Cursor / Factory** | `.factory/rules/*.md` | `.factory/skills/*/SKILL.md` |
-
-- Skills are defined **once** in `.factory/skills/` and symlinked into `.opencode/skills/`.
-- `opencode.json` loads additional instructions from `.factory/rules/*.md`.
-- Both systems share the same `AGENTS.md` as the primary rules file.
 
 ### Available skills
 
@@ -177,8 +133,6 @@ AGENTS.md                 This file — main rules (read by both OpenCode and Fa
 | `internal-tools` | Build admin-only operational endpoints |
 | `service-integration` | Add HTTP endpoints, WhatsApp features, or repo methods |
 
-## 7 · External Rules
+### External Rules
 
-- **`.factory/rules/language.md`**: "Always respond in Brazilian Portuguese (pt-BR), regardless of the input language."
-- **No Cursor rules** found (`.cursor/` or `.cursorrules`).
-- **No Copilot instructions** found (`.github/copilot-instructions.md`).
+- **`.agents/rules/language.md`**: "Always respond in Brazilian Portuguese (pt-BR), regardless of the input language."

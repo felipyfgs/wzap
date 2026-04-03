@@ -61,13 +61,9 @@ ssl/
 # Kilo config (local)
 .kilo/
 
-# Factory MCP config (may contain credentials)
-.factory/mcp.json
+# Agents MCP config (may contain credentials)
+.agents/mcp.json
 
-# Opencode config
-.opencode/
-opencode.json
-
-# Test coverage
+# Coverage
 coverage.out
 *.coverprofile

@@ -322,3 +322,30 @@ func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
+
+// UpdateProfileName godoc
+// @Summary     Update profile name
+// @Description Updates the session's WhatsApp profile display name (push name)
+// @Tags        Contacts
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.UpdateProfileNameReq true "Profile name"
+// @Success     200  {object} dto.APIResponse
+// @Security    Authorization
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/profile/name [post]
+func (h *ContactHandler) UpdateProfileName(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.UpdateProfileNameReq
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
+	}
+
+	if err := h.contactSvc.UpdateProfileName(c.Context(), id, req.Name); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Profile Name Error", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}

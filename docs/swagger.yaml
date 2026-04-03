@@ -52,6 +52,13 @@ definitions:
     - jid
     - messageIds
     type: object
+  ChatMarkUnreadReq:
+    properties:
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
   CheckContactReq:
     properties:
       phones:
@@ -113,6 +120,10 @@ definitions:
     type: object
   CreateWebhookReq:
     properties:
+      eventUrls:
+        additionalProperties:
+          type: string
+        type: object
       events:
         items:
           type: string
@@ -160,6 +171,19 @@ definitions:
         type: string
     required:
     - body
+    - messageId
+    - phone
+    type: object
+  ForwardMessageReq:
+    properties:
+      fromJid:
+        type: string
+      messageId:
+        type: string
+      phone:
+        type: string
+    required:
+    - fromJid
     - messageId
     - phone
     type: object
@@ -458,6 +482,10 @@ definitions:
         type: string
       footer:
         type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
       phone:
         type: string
       replyTo:
@@ -504,6 +532,10 @@ definitions:
         type: string
       footer:
         type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
       phone:
         type: string
       replyTo:
@@ -549,6 +581,10 @@ definitions:
         type: string
       fileName:
         type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
       mimeType:
         type: string
       phone:
@@ -579,6 +615,32 @@ definitions:
     - options
     - phone
     type: object
+  SendStatusMediaReq:
+    properties:
+      base64:
+        type: string
+      caption:
+        type: string
+      customId:
+        type: string
+      fileName:
+        type: string
+      mimeType:
+        type: string
+      url:
+        type: string
+    required:
+    - mimeType
+    type: object
+  SendStatusTextReq:
+    properties:
+      customId:
+        type: string
+      text:
+        type: string
+    required:
+    - text
+    type: object
   SendStickerReq:
     properties:
       base64:
@@ -598,6 +660,10 @@ definitions:
         type: string
       customId:
         type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
       phone:
         type: string
       replyTo:
@@ -674,6 +740,8 @@ definitions:
     type: object
   SessionResp:
     properties:
+      businessName:
+        type: string
       connected:
         type: integer
       createdAt:
@@ -684,8 +752,12 @@ definitions:
         type: string
       name:
         type: string
+      platform:
+        type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
+      pushName:
+        type: string
       settings:
         $ref: '#/definitions/SessionSettings'
       status:
@@ -773,10 +845,21 @@ definitions:
     required:
     - phone
     type: object
+  UpdateProfileNameReq:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
   UpdateWebhookReq:
     properties:
       enabled:
         type: boolean
+      eventUrls:
+        additionalProperties:
+          type: string
+        type: object
       events:
         items:
           type: string
@@ -816,6 +899,10 @@ definitions:
         type: string
       enabled:
         type: boolean
+      eventUrls:
+        additionalProperties:
+          type: string
+        type: object
       events:
         items:
           type: string
@@ -857,6 +944,19 @@ paths:
       summary: Health check
       tags:
       - Health
+  /metrics:
+    get:
+      description: Exposes Prometheus metrics for monitoring wzap instance
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Prometheus text format metrics
+          schema:
+            type: string
+      summary: Prometheus metrics endpoint
+      tags:
+      - Metrics
   /sessions:
     get:
       description: Returns all sessions. Token is never included in list responses.
@@ -1246,6 +1346,40 @@ paths:
       security:
       - Authorization: []
       summary: Unpin a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unread:
+    post:
+      consumes:
+      - application/json
+      description: 'Marks a chat as unread. Note: WhatsApp protocol does not support
+        this operation directly.'
+      parameters:
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ChatMarkUnreadReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "501":
+          description: Not implemented by WhatsApp protocol
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Mark chat as unread
       tags:
       - Chat
   /sessions/{sessionId}/community/create:
@@ -2700,6 +2834,48 @@ paths:
       summary: Edit a sent message
       tags:
       - Messages
+  /sessions/{sessionId}/messages/forward:
+    post:
+      consumes:
+      - application/json
+      description: Forwards an existing message to another chat or group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Forward message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ForwardMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Forward a message
+      tags:
+      - Messages
   /sessions/{sessionId}/messages/image:
     post:
       consumes:
@@ -3031,6 +3207,132 @@ paths:
       summary: Mark a message as read
       tags:
       - Messages
+  /sessions/{sessionId}/messages/status/image:
+    post:
+      consumes:
+      - application/json
+      description: Sends an image to WhatsApp Stories/Status
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Status image payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendStatusMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send an image status
+      tags:
+      - Status
+  /sessions/{sessionId}/messages/status/text:
+    post:
+      consumes:
+      - application/json
+      description: Sends a text message to WhatsApp Stories/Status
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Status text payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendStatusTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a text status
+      tags:
+      - Status
+  /sessions/{sessionId}/messages/status/video:
+    post:
+      consumes:
+      - application/json
+      description: Sends a video to WhatsApp Stories/Status
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Status video payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/SendStatusMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Send a video status
+      tags:
+      - Status
   /sessions/{sessionId}/messages/sticker:
     post:
       consumes:
@@ -3518,6 +3820,35 @@ paths:
       summary: Get WhatsApp profile
       tags:
       - Sessions
+  /sessions/{sessionId}/profile/name:
+    post:
+      consumes:
+      - application/json
+      description: Updates the session's WhatsApp profile display name (push name)
+      parameters:
+      - description: Profile name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateProfileNameReq'
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+      security:
+      - Authorization: []
+      summary: Update profile name
+      tags:
+      - Contacts
   /sessions/{sessionId}/qr:
     get:
       description: Returns the current QR code string and a base64 PNG image. Call
@@ -3572,6 +3903,36 @@ paths:
       security:
       - Authorization: []
       summary: Reconnect session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/restart:
+    post:
+      description: Disconnects and reconnects the session without losing state
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/SessionResp'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Restart session
       tags:
       - Sessions
   /sessions/{sessionId}/status:

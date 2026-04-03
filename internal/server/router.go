@@ -53,6 +53,7 @@ func (s *Server) SetupRoutes() error {
 
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
 	engine.SetMessagePersist(historySvc.PersistMessage)
+	messageSvc.SetMessagePersist(historySvc.PersistMessage)
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)
@@ -75,6 +76,10 @@ func (s *Server) SetupRoutes() error {
 
 	// Health (No Auth)
 	s.App.Get("/health", healthHandler.Check)
+
+	// Metrics (No Auth - Prometheus)
+	metricsHandler := handler.NewMetricsHandler()
+	s.App.Get("/metrics", metricsHandler.Serve)
 
 	// WebSocket (token via query param or Authorization header)
 	s.App.Use("/ws", wsHandler.Upgrade())
@@ -100,6 +105,7 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/connect", sessionHandler.Connect)
 	sess.Post("/disconnect", sessionHandler.Disconnect)
 	sess.Post("/reconnect", sessionHandler.Reconnect)
+	sess.Post("/restart", sessionHandler.Restart)
 	sess.Post("/logout", sessionHandler.Logout)
 	sess.Post("/pair", sessionHandler.Pair)
 	sess.Get("/qr", sessionHandler.QR)
@@ -123,6 +129,10 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/messages/presence", messageHandler.SetPresence)
 	sess.Post("/messages/button", messageHandler.SendButton)
 	sess.Post("/messages/list", messageHandler.SendList)
+	sess.Post("/messages/status/text", messageHandler.SendStatusText)
+	sess.Post("/messages/status/image", messageHandler.SendStatusImage)
+	sess.Post("/messages/status/video", messageHandler.SendStatusVideo)
+	sess.Post("/messages/forward", messageHandler.ForwardMessage)
 
 	// 3.1. Media & History
 	sess.Get("/media/:messageId", mediaHandler.GetMedia)
@@ -141,6 +151,7 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/contacts/presence", contactHandler.SubscribePresence)
 	sess.Post("/contacts/privacy", contactHandler.SetPrivacy)
 	sess.Post("/contacts/status", contactHandler.SetStatusMessage)
+	sess.Post("/profile/name", contactHandler.UpdateProfileName)
 
 	// 5. Groups
 	sess.Get("/groups", groupHandler.List)
@@ -171,6 +182,7 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/chat/unmute", chatHandler.Unmute)
 	sess.Post("/chat/delete", chatHandler.DeleteChat)
 	sess.Post("/chat/read", chatHandler.MarkRead)
+	sess.Post("/chat/unread", chatHandler.MarkUnread)
 
 	// 7. Labels
 	sess.Post("/label/chat", labelHandler.AddToChat)

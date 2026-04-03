@@ -9,11 +9,16 @@ defineProps<{
 const { sessions, current, refreshSessions } = useSession()
 const route = useRoute()
 
+const isSessionRoute = computed(() =>
+  route.path.startsWith('/sessions/') && !!route.params.id
+)
+
 const currentSessionId = computed(() => route.params.id as string || '')
 
-const selectedSession = computed<Session | null>(() =>
-  sessions.value.find(s => s.id === currentSessionId.value) ?? current.value
-)
+const selectedSession = computed<Session | null>(() => {
+  if (!isSessionRoute.value) return null
+  return sessions.value.find(s => s.id === currentSessionId.value) ?? current.value
+})
 
 function statusColor(status: string) {
   const map: Record<string, string> = {
@@ -25,6 +30,13 @@ function statusColor(status: string) {
   }
   return map[status?.toLowerCase()] ?? 'bg-muted'
 }
+
+const displayLabel = computed(() => {
+  if (!isSessionRoute.value) return 'All Sessions'
+  return selectedSession.value?.name || 'Select session'
+})
+
+const showLogo = computed(() => !isSessionRoute.value)
 
 const sessionInitials = computed(() => {
   const name = selectedSession.value?.name || '?'
@@ -70,12 +82,15 @@ onMounted(() => {
       :class="[!collapsed && 'py-2']"
       :ui="{ trailingIcon: 'text-dimmed' }"
       v-bind="{
-        label: collapsed ? undefined : (selectedSession?.name || 'Select session'),
+        label: collapsed ? undefined : displayLabel,
         trailingIcon: collapsed ? undefined : 'i-lucide-chevrons-up-down'
       }"
     >
       <template #leading>
-        <span class="relative flex size-5 shrink-0 items-center justify-center rounded-sm bg-elevated text-xs font-semibold ring-1 ring-default">
+        <span v-if="showLogo" class="flex size-5 shrink-0 items-center justify-center rounded-sm bg-primary text-xs font-bold text-white">
+          W
+        </span>
+        <span v-else class="relative flex size-5 shrink-0 items-center justify-center rounded-sm bg-elevated text-xs font-semibold ring-1 ring-default">
           {{ sessionInitials }}
           <span
             class="absolute -bottom-0.5 -right-0.5 size-2 rounded-full ring-1 ring-default"

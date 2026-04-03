@@ -64,17 +64,17 @@ type SubgroupResp struct {
 }
 
 type GroupDetailResp struct {
-	JID            string                `json:"jid"`
-	Name           string                `json:"name"`
-	Topic          string                `json:"topic,omitempty"`
-	IsAdmin        bool                  `json:"isAdmin"`
-	IsParent       bool                  `json:"isParent"`
-	IsLocked       bool                  `json:"isLocked"`
-	IsAnnounce     bool                  `json:"isAnnounce"`
-	JoinApproval   bool                  `json:"joinApproval"`
-	IsEphemeral    bool                  `json:"isEphemeral"`
-	EphemeralTimer uint32                `json:"ephemeralTimer"`
+	JID            string                 `json:"jid"`
+	Name           string                 `json:"name"`
+	Topic          string                 `json:"topic,omitempty"`
+	IsAdmin        bool                   `json:"isAdmin"`
+	IsParent       bool                   `json:"isParent"`
+	IsLocked       bool                   `json:"isLocked"`
+	IsAnnounce     bool                   `json:"isAnnounce"`
+	JoinApproval   bool                   `json:"joinApproval"`
+	IsEphemeral    bool                   `json:"isEphemeral"`
+	EphemeralTimer uint32                 `json:"ephemeralTimer"`
 	Participants   []GroupParticipantResp `json:"participants"`
 	Subgroups      []SubgroupResp         `json:"subgroups,omitempty"`
-	CreatedAt      string                `json:"createdAt,omitempty"`
+	CreatedAt      string                 `json:"createdAt,omitempty"`
 }

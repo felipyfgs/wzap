@@ -21,9 +21,12 @@ func NewWebhookService(repo *repo.WebhookRepository) *WebhookService {
 }
 
 func (s *WebhookService) Create(ctx context.Context, sessionID string, req dto.CreateWebhookReq) (*model.Webhook, error) {
-	events := make([]string, len(req.Events))
-	for i, e := range req.Events {
-		events[i] = string(e)
+	events := make([]string, 0, len(req.Events))
+	for _, e := range req.Events {
+		if !model.IsValidEventType(model.EventType(e)) {
+			return nil, fmt.Errorf("invalid event type: %s", e)
+		}
+		events = append(events, e)
 	}
 	webhook := &model.Webhook{
 		ID:          uuid.NewString(),
@@ -31,6 +34,7 @@ func (s *WebhookService) Create(ctx context.Context, sessionID string, req dto.C
 		URL:         req.URL,
 		Secret:      req.Secret,
 		Events:      events,
+		EventURLs:   req.EventURLs,
 		Enabled:     true,
 		NATSEnabled: req.NATSEnabled,
 		CreatedAt:   time.Now(),
@@ -61,6 +65,9 @@ func (s *WebhookService) Update(ctx context.Context, sessionID, webhookID string
 	}
 	if req.Events != nil {
 		wh.Events = req.Events
+	}
+	if req.EventURLs != nil {
+		wh.EventURLs = req.EventURLs
 	}
 	if req.Enabled != nil {
 		wh.Enabled = *req.Enabled

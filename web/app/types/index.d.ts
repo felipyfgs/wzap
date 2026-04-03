@@ -19,6 +19,9 @@ export interface Session {
   qrCode?: string
   connected: number
   status: string
+  pushName?: string
+  businessName?: string
+  platform?: string
   proxy?: {
     host?: string
     port?: number

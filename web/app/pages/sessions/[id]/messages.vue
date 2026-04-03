@@ -13,7 +13,7 @@ interface Message {
   fromMe: boolean
   msgType: string
   body: string
-  timestamp: number
+  timestamp: string
 }
 
 const messages = ref<Message[]>([])
@@ -35,7 +35,7 @@ async function fetchMessages() {
 const columns: TableColumn<Message>[] = [{
   accessorKey: 'timestamp',
   header: 'Time',
-  cell: ({ row }) => new Date(row.original.timestamp * 1000).toLocaleString()
+  cell: ({ row }) => new Date(row.original.timestamp).toLocaleString()
 }, {
   accessorKey: 'chatJid',
   header: 'Chat'

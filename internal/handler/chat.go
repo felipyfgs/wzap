@@ -221,3 +221,30 @@ func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
+
+// MarkUnread godoc
+// @Summary     Mark chat as unread
+// @Description Marks a chat as unread. Note: WhatsApp protocol does not support this operation directly.
+// @Tags        Chat
+// @Accept      json
+// @Produce     json
+// @Param       body body     dto.ChatMarkUnreadReq true "Chat JID"
+// @Success     200  {object} dto.APIResponse
+// @Failure     501  {object} dto.APIError "Not implemented by WhatsApp protocol"
+// @Security    Authorization
+// @Param       sessionId path string true "Session name or ID"
+// @Router      /sessions/{sessionId}/chat/unread [post]
+func (h *ChatHandler) MarkUnread(c *fiber.Ctx) error {
+	id, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
+	var req dto.ChatMarkUnreadReq
+	if err := parseAndValidate(c, &req); err != nil {
+		return err
+	}
+	if err := h.chatSvc.MarkUnread(c.Context(), id, req); err != nil {
+		return c.Status(fiber.StatusNotImplemented).JSON(dto.ErrorResp("Not Implemented", err.Error()))
+	}
+	return c.JSON(dto.SuccessResp(nil))
+}

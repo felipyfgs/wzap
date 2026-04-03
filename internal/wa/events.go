@@ -58,7 +58,6 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 
 	case *events.Receipt:
 		eventType = model.EventReceipt
-		// Ignora receipts não relevantes (sender, retry, hist_sync, etc.)
 		if v.Type != "" && v.Type != "read" && v.Type != "read-self" && v.Type != "played" && v.Type != "played-self" {
 			logger.Debug().Str("session", sessionID).Str("type", string(v.Type)).Msg("Receipt ignored")
 			return
@@ -69,7 +68,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventDeleteForMe
 		logger.Debug().Str("session", sessionID).Str("mid", v.MessageID).Msg("Message deleted for me")
 
-	// ── Connection / Session lifecycle ────────────────────────
+	// ── Connection ────────────────────────────────────────────
 	case *events.Connected:
 		eventType = model.EventConnected
 		logger.Info().Str("session", sessionID).Msg("Session connected")
@@ -78,13 +77,18 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventDisconnected
 		logger.Warn().Str("session", sessionID).Msg("Session disconnected")
 
-	case *events.ConnectFailure:
-		eventType = model.EventConnectFailure
-		logger.Error().Str("session", sessionID).Int("reason", int(v.Reason)).Msg("Connect failure")
+	case *events.ManualLoginReconnect:
+		eventType = model.EventManualLoginReconnect
+		logger.Info().Str("session", sessionID).Msg("Manual login reconnect")
 
-	case *events.LoggedOut:
-		eventType = model.EventLoggedOut
-		logger.Warn().Str("session", sessionID).Str("reason", v.Reason.String()).Msg("Session logged out")
+	// ── Pairing ───────────────────────────────────────────────
+	case *events.QR:
+		eventType = model.EventQR
+		logger.Debug().Str("session", sessionID).Int("codes", len(v.Codes)).Msg("QR codes received")
+
+	case *events.QRScannedWithoutMultidevice:
+		eventType = model.EventQRScannedWithoutMultidevice
+		logger.Warn().Str("session", sessionID).Msg("QR scanned without multidevice")
 
 	case *events.PairSuccess:
 		eventType = model.EventPairSuccess
@@ -93,6 +97,15 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	case *events.PairError:
 		eventType = model.EventPairError
 		logger.Error().Str("session", sessionID).Msg("Pair error")
+
+	// ── Connection Errors ─────────────────────────────────────
+	case *events.ConnectFailure:
+		eventType = model.EventConnectFailure
+		logger.Error().Str("session", sessionID).Int("reason", int(v.Reason)).Msg("Connect failure")
+
+	case *events.LoggedOut:
+		eventType = model.EventLoggedOut
+		logger.Warn().Str("session", sessionID).Str("reason", v.Reason.String()).Msg("Session logged out")
 
 	case *events.StreamError:
 		eventType = model.EventStreamError
@@ -122,11 +135,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventCATRefreshError
 		logger.Error().Str("session", sessionID).Msg("CAT refresh error")
 
-	case *events.ManualLoginReconnect:
-		eventType = model.EventManualLoginReconnect
-		logger.Info().Str("session", sessionID).Msg("Manual login reconnect")
-
-	// ── Contacts & Identity ──────────────────────────────────
+	// ── Contacts ──────────────────────────────────────────────
 	case *events.Contact:
 		eventType = model.EventContact
 		logger.Debug().Str("session", sessionID).Str("jid", v.JID.String()).Msg("Contact changed")
@@ -139,6 +148,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventBusinessName
 		logger.Debug().Str("session", sessionID).Str("jid", v.JID.String()).Msg("Business name changed")
 
+	// ── Profile & Identity ────────────────────────────────────
 	case *events.Picture:
 		eventType = model.EventPicture
 		logger.Debug().Str("session", sessionID).Str("jid", v.JID.String()).Msg("Picture changed")
@@ -151,7 +161,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventUserAbout
 		logger.Debug().Str("session", sessionID).Str("jid", v.JID.String()).Msg("User about changed")
 
-	// ── Groups ───────────────────────────────────────────────
+	// ── Groups ────────────────────────────────────────────────
 	case *events.GroupInfo:
 		eventType = model.EventGroupInfo
 		logger.Debug().Str("session", sessionID).Str("group", v.JID.String()).Msg("Group info update")
@@ -160,7 +170,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventJoinedGroup
 		logger.Info().Str("session", sessionID).Str("group", v.JID.String()).Msg("Joined group")
 
-	// ── Presence ─────────────────────────────────────────────
+	// ── Presence ──────────────────────────────────────────────
 	case *events.Presence:
 		eventType = model.EventPresence
 		logger.Debug().Str("session", sessionID).Str("jid", v.From.String()).Bool("unavailable", v.Unavailable).Msg("Presence update")
@@ -169,7 +179,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventChatPresence
 		logger.Debug().Str("session", sessionID).Str("chat", v.Chat.String()).Msg("Chat presence")
 
-	// ── Chat state ───────────────────────────────────────────
+	// ── Chat State ────────────────────────────────────────────
 	case *events.Archive:
 		eventType = model.EventArchive
 		logger.Debug().Str("session", sessionID).Str("jid", v.JID.String()).Msg("Chat archived")
@@ -202,7 +212,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventUnarchiveChatsSetting
 		logger.Debug().Str("session", sessionID).Msg("Unarchive chats setting changed")
 
-	// ── Labels ───────────────────────────────────────────────
+	// ── Labels ────────────────────────────────────────────────
 	case *events.LabelEdit:
 		eventType = model.EventLabelEdit
 		logger.Debug().Str("session", sessionID).Str("labelId", v.LabelID).Msg("Label edited")
@@ -215,7 +225,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventLabelAssociationMessage
 		logger.Debug().Str("session", sessionID).Str("labelId", v.LabelID).Msg("Label association message")
 
-	// ── Calls ────────────────────────────────────────────────
+	// ── Calls ─────────────────────────────────────────────────
 	case *events.CallOffer:
 		eventType = model.EventCallOffer
 		logger.Info().Str("session", sessionID).Str("from", v.From.String()).Msg("Incoming call")
@@ -252,7 +262,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventUnknownCallEvent
 		logger.Debug().Str("session", sessionID).Msg("Unknown call event")
 
-	// ── Newsletter ───────────────────────────────────────────
+	// ── Newsletter ────────────────────────────────────────────
 	case *events.NewsletterJoin:
 		eventType = model.EventNewsletterJoin
 		logger.Debug().Str("session", sessionID).Msg("Newsletter joined")
@@ -269,14 +279,22 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventNewsletterLiveUpdate
 		logger.Debug().Str("session", sessionID).Msg("Newsletter live update")
 
-	// ── Sync ─────────────────────────────────────────────────
+	// ── Sync ──────────────────────────────────────────────────
 	case *events.HistorySync:
 		eventType = model.EventHistorySync
 		logger.Info().Str("session", sessionID).Msg("History sync received")
 
+	case *events.AppState:
+		eventType = model.EventAppState
+		logger.Debug().Str("session", sessionID).Msg("App state received")
+
 	case *events.AppStateSyncComplete:
 		eventType = model.EventAppStateSyncComplete
 		logger.Debug().Str("session", sessionID).Msg("App state sync complete")
+
+	case *events.AppStateSyncError:
+		eventType = model.EventAppStateSyncError
+		logger.Debug().Str("session", sessionID).Msg("App state sync error")
 
 	case *events.OfflineSyncCompleted:
 		eventType = model.EventOfflineSyncCompleted
@@ -286,7 +304,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventOfflineSyncPreview
 		logger.Debug().Str("session", sessionID).Int("total", v.Total).Msg("Offline sync preview")
 
-	// ── Privacy & Settings ───────────────────────────────────
+	// ── Privacy & Settings ────────────────────────────────────
 	case *events.PrivacySettings:
 		eventType = model.EventPrivacySettings
 		logger.Debug().Str("session", sessionID).Msg("Privacy settings changed")
@@ -307,6 +325,11 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		eventType = model.EventBlocklist
 		logger.Debug().Str("session", sessionID).Msg("Blocklist received")
 
+	// ── FB/Meta Bridge ────────────────────────────────────────
+	case *events.FBMessage:
+		eventType = model.EventFBMessage
+		logger.Info().Str("session", sessionID).Msg("FB message received")
+
 	default:
 		return
 	}
@@ -322,6 +345,12 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 			data["progress"] = v.Data.GetProgress()
 			data["conversationCount"] = len(v.Data.GetConversations())
 		}
+	case *events.AppState:
+		data = map[string]interface{}{}
+		data["index"] = v.Index
+		if v.SyncActionValue != nil {
+			data["timestamp"] = v.GetTimestamp()
+		}
 	default:
 		evtBytes, err := json.Marshal(evt)
 		if err != nil {
@@ -333,7 +362,6 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 			return
 		}
 
-		// Campos error não serializam via json.Marshal (interface{} → {}).
 		switch v2 := evt.(type) {
 		case *events.PairError:
 			if v2.Error != nil {
@@ -343,19 +371,22 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 			if v2.Error != nil {
 				data["Error"] = v2.Error.Error()
 			}
+		case *events.AppStateSyncError:
+			if v2.Error != nil {
+				data["Error"] = v2.Error.Error()
+			}
 		case *events.Message:
 			delete(data, "RawMessage")
 			delete(data, "SourceWebMsg")
 		}
 	}
 
-	// Envelope wzap (única coisa que adicionamos ao redor do payload bruto)
 	payload := map[string]interface{}{
 		"event":     eventType,
 		"eventId":   uuid.NewString(),
 		"session":   map[string]interface{}{"id": sessionID, "name": m.getSessionName(sessionID)},
 		"timestamp": time.Now().Format(time.RFC3339),
-		"data":      data, // 100% whatsmeow, sem modificação
+		"data":      data,
 	}
 
 	bytes, err := json.Marshal(payload)
@@ -364,7 +395,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		return
 	}
 
-	const maxNATSPayloadSize = 512 * 1024 // 512 KB
+	const maxNATSPayloadSize = 512 * 1024
 	if m.nats != nil {
 		if len(bytes) > maxNATSPayloadSize {
 			logger.Debug().Str("session", sessionID).Str("event", string(eventType)).Int("size", len(bytes)).Msg("Event payload too large for NATS, skipping")

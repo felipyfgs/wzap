@@ -1,36 +1,39 @@
 package dto
 
 type ReplyContext struct {
-	MessageID   string   `json:"messageId,omitempty"`
-	Participant string   `json:"participant,omitempty"`
+	MessageID    string   `json:"messageId,omitempty"`
+	Participant  string   `json:"participant,omitempty"`
 	MentionedJID []string `json:"mentionedJid,omitempty"`
 }
 
 type SendTextReq struct {
-	Phone    string        `json:"phone" validate:"required"`
-	Body     string        `json:"body" validate:"required"`
-	CustomID string        `json:"customId,omitempty"`
-	ReplyTo  *ReplyContext `json:"replyTo,omitempty"`
+	Phone         string        `json:"phone" validate:"required"`
+	Body          string        `json:"body" validate:"required"`
+	CustomID      string        `json:"customId,omitempty"`
+	ReplyTo       *ReplyContext `json:"replyTo,omitempty"`
+	MentionedJIDs []string      `json:"mentionedJids,omitempty"`
 }
 
 type SendMediaReq struct {
-	Phone    string        `json:"phone" validate:"required"`
-	MimeType string        `json:"mimeType" validate:"required"`
-	Caption  string        `json:"caption"`
-	FileName string        `json:"fileName"`
-	Base64   string        `json:"base64"`
-	URL      string        `json:"url,omitempty"`
-	CustomID string        `json:"customId,omitempty"`
-	ReplyTo  *ReplyContext `json:"replyTo,omitempty"`
+	Phone         string        `json:"phone" validate:"required"`
+	MimeType      string        `json:"mimeType" validate:"required"`
+	Caption       string        `json:"caption"`
+	FileName      string        `json:"fileName"`
+	Base64        string        `json:"base64"`
+	URL           string        `json:"url,omitempty"`
+	CustomID      string        `json:"customId,omitempty"`
+	ReplyTo       *ReplyContext `json:"replyTo,omitempty"`
+	MentionedJIDs []string      `json:"mentionedJids,omitempty"`
 }
 
 type SendButtonReq struct {
-	Phone   string        `json:"phone" validate:"required"`
-	Body    string        `json:"body" validate:"required"`
-	Footer  string        `json:"footer,omitempty"`
-	Buttons []ButtonItem  `json:"buttons" validate:"required,min=1"`
-	CustomID string       `json:"customId,omitempty"`
-	ReplyTo *ReplyContext `json:"replyTo,omitempty"`
+	Phone         string        `json:"phone" validate:"required"`
+	Body          string        `json:"body" validate:"required"`
+	Footer        string        `json:"footer,omitempty"`
+	Buttons       []ButtonItem  `json:"buttons" validate:"required,min=1"`
+	CustomID      string        `json:"customId,omitempty"`
+	ReplyTo       *ReplyContext `json:"replyTo,omitempty"`
+	MentionedJIDs []string      `json:"mentionedJids,omitempty"`
 }
 
 type ButtonItem struct {
@@ -39,14 +42,15 @@ type ButtonItem struct {
 }
 
 type SendListReq struct {
-	Phone      string        `json:"phone" validate:"required"`
-	Title      string        `json:"title" validate:"required"`
-	Body       string        `json:"body" validate:"required"`
-	Footer     string        `json:"footer,omitempty"`
-	ButtonText string        `json:"buttonText" validate:"required"`
-	Sections   []ListSection `json:"sections" validate:"required,min=1"`
-	CustomID   string        `json:"customId,omitempty"`
-	ReplyTo    *ReplyContext `json:"replyTo,omitempty"`
+	Phone         string        `json:"phone" validate:"required"`
+	Title         string        `json:"title" validate:"required"`
+	Body          string        `json:"body" validate:"required"`
+	Footer        string        `json:"footer,omitempty"`
+	ButtonText    string        `json:"buttonText" validate:"required"`
+	Sections      []ListSection `json:"sections" validate:"required,min=1"`
+	CustomID      string        `json:"customId,omitempty"`
+	ReplyTo       *ReplyContext `json:"replyTo,omitempty"`
+	MentionedJIDs []string      `json:"mentionedJids,omitempty"`
 }
 
 type ListSection struct {
@@ -119,4 +123,24 @@ type MarkReadReq struct {
 type SetPresenceReq struct {
 	Phone string `json:"phone" validate:"required"`
 	State string `json:"state" validate:"required"`
+}
+
+type SendStatusTextReq struct {
+	Text     string `json:"text" validate:"required"`
+	CustomID string `json:"customId,omitempty"`
+}
+
+type SendStatusMediaReq struct {
+	MimeType string `json:"mimeType" validate:"required"`
+	Caption  string `json:"caption"`
+	FileName string `json:"fileName"`
+	Base64   string `json:"base64"`
+	URL      string `json:"url,omitempty"`
+	CustomID string `json:"customId,omitempty"`
+}
+
+type ForwardMessageReq struct {
+	MessageID string `json:"messageId" validate:"required"`
+	FromJID   string `json:"fromJid" validate:"required"`
+	Phone     string `json:"phone" validate:"required"`
 }

@@ -1,10 +1,29 @@
 package model
 
-// EventType represents a whatsmeow event name used for webhook filtering.
 type EventType string
 
-// EventAll subscribes to every event type.
+type EventCategory string
+
 const EventAll EventType = "All"
+
+const (
+	CategoryMessages         EventCategory = "Messages"
+	CategoryConnection       EventCategory = "Connection"
+	CategoryPairing          EventCategory = "Pairing"
+	CategoryConnectionErrors EventCategory = "Connection Errors"
+	CategoryContacts         EventCategory = "Contacts"
+	CategoryProfileIdentity  EventCategory = "Profile & Identity"
+	CategoryGroups           EventCategory = "Groups"
+	CategoryPresence         EventCategory = "Presence"
+	CategoryChatState        EventCategory = "Chat State"
+	CategoryLabels           EventCategory = "Labels"
+	CategoryCalls            EventCategory = "Calls"
+	CategoryNewsletter       EventCategory = "Newsletter"
+	CategorySync             EventCategory = "Sync"
+	CategoryPrivacySettings  EventCategory = "Privacy & Settings"
+	CategoryFBMetaBridge     EventCategory = "FB/Meta Bridge"
+	CategorySpecial          EventCategory = "Special"
+)
 
 // Messages
 const (
@@ -15,34 +34,46 @@ const (
 	EventDeleteForMe          EventType = "DeleteForMe"
 )
 
-// Connection / Session lifecycle
+// Connection
 const (
-	EventConnected                   EventType = "Connected"
-	EventDisconnected                EventType = "Disconnected"
-	EventConnectFailure              EventType = "ConnectFailure"
-	EventLoggedOut                   EventType = "LoggedOut"
-	EventPairSuccess                 EventType = "PairSuccess"
-	EventPairError                   EventType = "PairError"
-	EventQR                          EventType = "QR"
-	EventQRScannedWithoutMultidevice EventType = "QRScannedWithoutMultidevice"
-	EventStreamError                 EventType = "StreamError"
-	EventStreamReplaced              EventType = "StreamReplaced"
-	EventKeepAliveTimeout            EventType = "KeepAliveTimeout"
-	EventKeepAliveRestored           EventType = "KeepAliveRestored"
-	EventClientOutdated              EventType = "ClientOutdated"
-	EventTemporaryBan                EventType = "TemporaryBan"
-	EventCATRefreshError             EventType = "CATRefreshError"
-	EventManualLoginReconnect        EventType = "ManualLoginReconnect"
+	EventConnected            EventType = "Connected"
+	EventDisconnected         EventType = "Disconnected"
+	EventManualLoginReconnect EventType = "ManualLoginReconnect"
 )
 
-// Contacts & Identity
+// Pairing
 const (
-	EventContact        EventType = "Contact"
+	EventQR                          EventType = "QR"
+	EventQRScannedWithoutMultidevice EventType = "QRScannedWithoutMultidevice"
+	EventPairSuccess                 EventType = "PairSuccess"
+	EventPairError                   EventType = "PairError"
+)
+
+// Connection Errors
+const (
+	EventConnectFailure    EventType = "ConnectFailure"
+	EventLoggedOut         EventType = "LoggedOut"
+	EventStreamError       EventType = "StreamError"
+	EventStreamReplaced    EventType = "StreamReplaced"
+	EventKeepAliveTimeout  EventType = "KeepAliveTimeout"
+	EventKeepAliveRestored EventType = "KeepAliveRestored"
+	EventClientOutdated    EventType = "ClientOutdated"
+	EventTemporaryBan      EventType = "TemporaryBan"
+	EventCATRefreshError   EventType = "CATRefreshError"
+)
+
+// Contacts
+const (
+	EventContact      EventType = "Contact"
+	EventPushName     EventType = "PushName"
+	EventBusinessName EventType = "BusinessName"
+)
+
+// Profile & Identity
+const (
 	EventPicture        EventType = "Picture"
 	EventIdentityChange EventType = "IdentityChange"
 	EventUserAbout      EventType = "UserAbout"
-	EventPushName       EventType = "PushName"
-	EventBusinessName   EventType = "BusinessName"
 )
 
 // Groups
@@ -57,7 +88,7 @@ const (
 	EventChatPresence EventType = "ChatPresence"
 )
 
-// Chat state
+// Chat State
 const (
 	EventArchive               EventType = "Archive"
 	EventMute                  EventType = "Mute"
@@ -116,25 +147,33 @@ const (
 	EventBlocklist       EventType = "Blocklist"
 )
 
-// ValidEventTypes is the set of all supported event type values.
-// Used for webhook subscription validation.
+// FB/Meta Bridge
+const (
+	EventFBMessage EventType = "FBMessage"
+)
+
 var ValidEventTypes = func() map[EventType]bool {
 	types := []EventType{
 		EventAll,
 		// Messages
 		EventMessage, EventUndecryptableMessage, EventMediaRetry, EventReceipt, EventDeleteForMe,
 		// Connection
-		EventConnected, EventDisconnected, EventConnectFailure, EventLoggedOut,
-		EventPairSuccess, EventPairError, EventQR, EventQRScannedWithoutMultidevice,
-		EventStreamError, EventStreamReplaced, EventKeepAliveTimeout, EventKeepAliveRestored,
-		EventClientOutdated, EventTemporaryBan, EventCATRefreshError, EventManualLoginReconnect,
+		EventConnected, EventDisconnected, EventManualLoginReconnect,
+		// Pairing
+		EventQR, EventQRScannedWithoutMultidevice, EventPairSuccess, EventPairError,
+		// Connection Errors
+		EventConnectFailure, EventLoggedOut, EventStreamError, EventStreamReplaced,
+		EventKeepAliveTimeout, EventKeepAliveRestored, EventClientOutdated,
+		EventTemporaryBan, EventCATRefreshError,
 		// Contacts
-		EventContact, EventPicture, EventIdentityChange, EventUserAbout, EventPushName, EventBusinessName,
+		EventContact, EventPushName, EventBusinessName,
+		// Profile & Identity
+		EventPicture, EventIdentityChange, EventUserAbout,
 		// Groups
 		EventGroupInfo, EventJoinedGroup,
 		// Presence
 		EventPresence, EventChatPresence,
-		// Chat state
+		// Chat State
 		EventArchive, EventMute, EventPin, EventStar, EventClearChat,
 		EventDeleteChat, EventMarkChatAsRead, EventUnarchiveChatsSetting,
 		// Labels
@@ -147,8 +186,10 @@ var ValidEventTypes = func() map[EventType]bool {
 		// Sync
 		EventHistorySync, EventAppState, EventAppStateSyncComplete, EventAppStateSyncError,
 		EventOfflineSyncCompleted, EventOfflineSyncPreview,
-		// Privacy
+		// Privacy & Settings
 		EventPrivacySettings, EventPushNameSetting, EventUserStatusMute, EventBlocklistChange, EventBlocklist,
+		// FB/Meta Bridge
+		EventFBMessage,
 	}
 	m := make(map[EventType]bool, len(types))
 	for _, t := range types {
@@ -157,7 +198,50 @@ var ValidEventTypes = func() map[EventType]bool {
 	return m
 }()
 
-// IsValidEventType reports whether e is a recognised event type.
 func IsValidEventType(e EventType) bool {
 	return ValidEventTypes[e]
+}
+
+func CategoryFor(e EventType) EventCategory {
+	switch e {
+	case EventAll:
+		return CategorySpecial
+	case EventMessage, EventUndecryptableMessage, EventMediaRetry, EventReceipt, EventDeleteForMe:
+		return CategoryMessages
+	case EventConnected, EventDisconnected, EventManualLoginReconnect:
+		return CategoryConnection
+	case EventQR, EventQRScannedWithoutMultidevice, EventPairSuccess, EventPairError:
+		return CategoryPairing
+	case EventConnectFailure, EventLoggedOut, EventStreamError, EventStreamReplaced,
+		EventKeepAliveTimeout, EventKeepAliveRestored, EventClientOutdated,
+		EventTemporaryBan, EventCATRefreshError:
+		return CategoryConnectionErrors
+	case EventContact, EventPushName, EventBusinessName:
+		return CategoryContacts
+	case EventPicture, EventIdentityChange, EventUserAbout:
+		return CategoryProfileIdentity
+	case EventGroupInfo, EventJoinedGroup:
+		return CategoryGroups
+	case EventPresence, EventChatPresence:
+		return CategoryPresence
+	case EventArchive, EventMute, EventPin, EventStar, EventClearChat,
+		EventDeleteChat, EventMarkChatAsRead, EventUnarchiveChatsSetting:
+		return CategoryChatState
+	case EventLabelEdit, EventLabelAssociationChat, EventLabelAssociationMessage:
+		return CategoryLabels
+	case EventCallOffer, EventCallAccept, EventCallTerminate, EventCallOfferNotice,
+		EventCallRelayLatency, EventCallPreAccept, EventCallReject, EventCallTransport, EventUnknownCallEvent:
+		return CategoryCalls
+	case EventNewsletterJoin, EventNewsletterLeave, EventNewsletterMuteChange, EventNewsletterLiveUpdate:
+		return CategoryNewsletter
+	case EventHistorySync, EventAppState, EventAppStateSyncComplete, EventAppStateSyncError,
+		EventOfflineSyncCompleted, EventOfflineSyncPreview:
+		return CategorySync
+	case EventPrivacySettings, EventPushNameSetting, EventUserStatusMute, EventBlocklistChange, EventBlocklist:
+		return CategoryPrivacySettings
+	case EventFBMessage:
+		return CategoryFBMetaBridge
+	default:
+		return ""
+	}
 }

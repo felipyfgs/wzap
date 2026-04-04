@@ -1,0 +1,40 @@
+schema: spec-driven
+
+context: |
+  Tech stack: Go 1.25, Fiber v2 (HTTP), pgx/v5 (Postgres), NATS JetStream, MinIO S3, whatsmeow (WhatsApp engine), zerolog, prometheus
+  Frontend: Nuxt 3 (Vue 3 + Nuxt UI Pro) with pnpm
+  We use conventional commits
+  Domain: WhatsApp gateway/multi-session API with real-time WebSocket events and webhook delivery
+
+  Architecture layers (internal/):
+    handler/ → service/ → repo/ → database (pgx)
+    wa/ = whatsmeow engine (Manager, event handlers, JID helpers)
+    webhook/ = NATS consumer + WS broadcaster for event delivery
+    websocket/ = real-time hub for client connections
+    middleware/ = Auth, Logger, Recovery, CORS, RateLimit, Validate
+    dto/ = request/response payloads with validator tags
+    model/ = domain objects (Session, Message, Webhook, Events)
+
+  Code style: No comments unless requested, external test packages (package xxx_test), Swagger docs via make docs
+  Imports: 3 groups (stdlib, third-party, internal) separated by blank lines
+  Naming: PascalCase exported, camelCase unexported, acronyms uppercase (ID, URL, JID, NATS, S3)
+  JSON tags: json:"camelCase" with omitempty; validate:"required" on DTO fields
+  Error handling: Wrap with fmt.Errorf("%w"), handle at handler level, never expose raw errors to API
+  Auth: Token-based (no Bearer prefix), constant-time comparison, session-scoped tokens
+  Testing: Standard testing.T (no testify), fiber.Test with httptest, mock with nil, testutil helpers
+  Database: Raw SQL with positional params ($1, $2), embedded migrations via pgxpool
+  Services: context.Context as first param, typed dto responses, use wa.Manager for WhatsApp ops
+  Handlers: parseAndValidate(c, &req), dto.SuccessResp(data), dto.ErrorResp(title, msg)
+
+rules:
+  proposal:
+    - Keep proposals under 500 words
+    - Always include a "Non-goals" section
+    - Reference existing architecture layers when proposing changes
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Specify which layer(s) need changes (handler/service/repo/wa/etc)
+  implementation:
+    - Follow existing patterns in neighboring files
+    - Run golangci-lint and go test before marking complete
+    - Run make docs if handler annotations change

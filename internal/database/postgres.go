@@ -2,16 +2,14 @@ package database
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"wzap/internal/logger"
+	"wzap/migrations"
 )
 
-//go:embed migrations/*.sql
-var migrationsFS embed.FS
 
 type DB struct {
 	Pool *pgxpool.Pool
@@ -54,7 +52,7 @@ func (db *DB) Health(ctx context.Context) error {
 }
 
 func (db *DB) Migrate(ctx context.Context) error {
-	entries, err := migrationsFS.ReadDir("migrations")
+	entries, err := migrations.FS.ReadDir(".")
 	if err != nil {
 		return fmt.Errorf("failed to read migrations directory: %w", err)
 	}
@@ -65,7 +63,7 @@ func (db *DB) Migrate(ctx context.Context) error {
 			continue
 		}
 
-		sqlBytes, err := migrationsFS.ReadFile("migrations/" + name)
+		sqlBytes, err := migrations.FS.ReadFile(name)
 		if err != nil {
 			return fmt.Errorf("failed to read migration %s: %w", name, err)
 		}

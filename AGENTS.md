@@ -97,12 +97,16 @@ Group imports in **three** groups separated by blank lines:
 
 ## 4 · Testing Conventions
 
-- Use external test packages: `package handler_test`, `package dto_test`.
+- Use **external test packages** (`package handler_test`, `package dto_test`) for public API tests.
+- Use **internal test packages** (`package service`, `package wa`) only when testing unexported functions.
 - Use standard `testing.T` — no assertion libraries (no testify).
 - Create Fiber app per test group via helper functions (e.g., `newSessionApp()`, `newMessageApp()`).
 - Use `fiber.New(fiber.Config{DisableStartupMessage: true})` in tests.
 - Use `httptest.NewRequest` + `app.Test(req, -1)` for HTTP testing.
+- Mock dependencies by passing `nil` for services/repos when testing validation/error paths.
+- Simulate middleware in tests by setting `c.Locals("authRole", "admin")` and `c.Locals("sessionID", ...)` inline.
 - Test file `internal/testutil/fiber.go` provides `NewApp()`, `DoRequest()`, `ParseResp()`.
+- Error assertions: check status codes directly, use `t.Errorf`/`t.Fatalf`.
 
 ## 5 · Conventions
 
@@ -115,24 +119,6 @@ Group imports in **three** groups separated by blank lines:
 
 ## 6 · Agent Configuration
 
-```
-.agents/
-  rules/                  Global rules (language.md)
-  skills/                 Reusable agent skills (SKILL.md + companion docs)
-    data-querying/        Postgres query patterns & schema reference
-    internal-tools/       Admin-only endpoint creation
-    service-integration/  Handler/service/repo layer patterns & whatsmeow API
-  mcp.json                MCP servers (Nuxt UI, Nuxt, Postgres)
-```
-
-### Available skills
-
-| Skill | Description |
-|---|---|
-| `data-querying` | Add/extend Postgres queries in the repo layer |
-| `internal-tools` | Build admin-only operational endpoints |
-| `service-integration` | Add HTTP endpoints, WhatsApp features, or repo methods |
-
-### External Rules
-
-- **`.agents/rules/language.md`**: "Always respond in Brazilian Portuguese (pt-BR), regardless of the input language."
+- Always respond in Brazilian Portuguese (pt-BR), regardless of the input language.
+- Read this file before starting any task.
+- Check neighboring files for patterns before introducing new libraries or structures.

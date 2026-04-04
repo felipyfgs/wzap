@@ -24,10 +24,10 @@ func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body     dto.SendTextReq true "Message payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       body body dto.SendTextReq true "Message payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/text [post]
 func (h *MessageHandler) SendText(c *fiber.Ctx) error {
@@ -52,13 +52,13 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 // @Summary     Send an image message
 // @Description Sends a base64-encoded image to a WhatsApp JID with optional caption
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendMediaReq true "Media payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/image [post]
 func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
@@ -69,13 +69,13 @@ func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 // @Summary     Send a video message
 // @Description Sends a base64-encoded video to a WhatsApp JID with optional caption
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendMediaReq true "Media payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/video [post]
 func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
@@ -86,13 +86,13 @@ func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 // @Summary     Send a document
 // @Description Sends a base64-encoded file as a document. Use filename to set the display name.
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendMediaReq true "Media payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/document [post]
 func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
@@ -103,13 +103,13 @@ func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 // @Summary     Send an audio message
 // @Description Sends a base64-encoded audio file as a voice note (PTT)
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendMediaReq true "Media payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendMediaReq true "Media payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/audio [post]
 func (h *MessageHandler) SendAudio(c *fiber.Ctx) error {
@@ -142,13 +142,13 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 // @Summary     Send a contact card
 // @Description Sends a vCard contact message via WhatsApp to the specified recipient
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendContactReq true "Contact payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendContactReq true "Contact payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/contact [post]
 func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
@@ -171,13 +171,13 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 // @Summary     Send a location message
 // @Description Sends a GPS location message with optional name and address to the specified recipient
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendLocationReq true "Location payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendLocationReq true "Location payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/location [post]
 func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
@@ -200,13 +200,13 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 // @Summary     Send a poll message
 // @Description Sends a poll with multiple choice options. selectableCount controls how many options a recipient may choose (0 = unlimited)
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendPollReq true "Poll payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendPollReq true "Poll payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/poll [post]
 func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
@@ -229,13 +229,13 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 // @Summary     Send a sticker
 // @Description Sends a base64-encoded sticker image (WebP) to the specified recipient
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendStickerReq true "Sticker payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendStickerReq true "Sticker payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/sticker [post]
 func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
@@ -258,13 +258,13 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 // @Summary     Send a link preview message
 // @Description Sends a hyperlink with optional title and description as a rich preview message
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendLinkReq true "Link payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendLinkReq true "Link payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/link [post]
 func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
@@ -287,13 +287,13 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 // @Summary     Edit a sent message
 // @Description Edits a previously sent message by mid, replacing its text content
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.EditMessageReq true "Edit payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.EditMessageReq true "Edit payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/edit [post]
 func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
@@ -316,13 +316,13 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 // @Summary     Delete a sent message
 // @Description Revokes a previously sent message for all recipients (unsend)
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.DeleteMessageReq true "Delete payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.DeleteMessageReq true "Delete payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/delete [post]
 func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
@@ -345,13 +345,13 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 // @Summary     React to a message
 // @Description Adds an emoji reaction to a message. Pass an empty string for reaction to remove an existing one.
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ReactMessageReq true "Reaction payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ReactMessageReq true "Reaction payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/reaction [post]
 func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
@@ -374,13 +374,13 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 // @Summary     Mark a message as read
 // @Description Sends a read receipt for a specific message (removes unread indicator)
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.MarkReadReq true "Mark read payload"
-// @Success     200  {object} dto.APIResponse
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.MarkReadReq true "Mark read payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/read [post]
 func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
@@ -402,13 +402,13 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 // @Summary     Set typing/recording presence
 // @Description Sends a chat presence indicator. Accepted values for presence: typing, recording, paused
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SetPresenceReq true "Presence payload"
-// @Success     200  {object} dto.APIResponse
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SetPresenceReq true "Presence payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/presence [post]
 func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
@@ -430,13 +430,13 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 // @Summary     Send a button message
 // @Description Sends a message with interactive buttons
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendButtonReq true "Button message payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendButtonReq true "Button message payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/button [post]
 func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
@@ -461,13 +461,13 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 // @Summary     Send a list message
 // @Description Sends a message with interactive list sections
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendListReq true "List message payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendListReq true "List message payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/list [post]
 func (h *MessageHandler) SendList(c *fiber.Ctx) error {
@@ -492,13 +492,13 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 // @Summary     Send a text status
 // @Description Sends a text message to WhatsApp Stories/Status
 // @Tags        Status
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendStatusTextReq true "Status text payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendStatusTextReq true "Status text payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/status/text [post]
 func (h *MessageHandler) SendStatusText(c *fiber.Ctx) error {
@@ -523,13 +523,13 @@ func (h *MessageHandler) SendStatusText(c *fiber.Ctx) error {
 // @Summary     Send an image status
 // @Description Sends an image to WhatsApp Stories/Status
 // @Tags        Status
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendStatusMediaReq true "Status image payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendStatusMediaReq true "Status image payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/status/image [post]
 func (h *MessageHandler) SendStatusImage(c *fiber.Ctx) error {
@@ -540,13 +540,13 @@ func (h *MessageHandler) SendStatusImage(c *fiber.Ctx) error {
 // @Summary     Send a video status
 // @Description Sends a video to WhatsApp Stories/Status
 // @Tags        Status
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SendStatusMediaReq true "Status video payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SendStatusMediaReq true "Status video payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/status/video [post]
 func (h *MessageHandler) SendStatusVideo(c *fiber.Ctx) error {
@@ -584,13 +584,13 @@ func (h *MessageHandler) sendStatusMedia(c *fiber.Ctx, mediaType string) error {
 // @Summary     Forward a message
 // @Description Forwards an existing message to another chat or group
 // @Tags        Messages
-// @Param       sessionId path string true "Session name or ID"
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ForwardMessageReq true "Forward message payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ForwardMessageReq true "Forward message payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages/forward [post]
 func (h *MessageHandler) ForwardMessage(c *fiber.Ctx) error {

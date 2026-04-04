@@ -104,6 +104,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIError"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             },
@@ -279,6 +285,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIError"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             },
@@ -341,6 +353,13 @@ const docTemplate = `{
                 "summary": "Archive a chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID payload",
                         "name": "body",
                         "in": "body",
@@ -348,13 +367,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatActionReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -362,6 +374,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -387,6 +411,13 @@ const docTemplate = `{
                 "summary": "Delete a chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID",
                         "name": "body",
                         "in": "body",
@@ -394,13 +425,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatActionReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -408,6 +432,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -433,6 +469,13 @@ const docTemplate = `{
                 "summary": "Mute a chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID payload",
                         "name": "body",
                         "in": "body",
@@ -440,13 +483,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatActionReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -454,6 +490,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -479,6 +527,13 @@ const docTemplate = `{
                 "summary": "Pin a chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID payload",
                         "name": "body",
                         "in": "body",
@@ -486,13 +541,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatActionReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -500,6 +548,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -525,6 +585,13 @@ const docTemplate = `{
                 "summary": "Mark chat as read",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID + message IDs",
                         "name": "body",
                         "in": "body",
@@ -532,13 +599,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatMarkReadReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -546,6 +606,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -571,6 +643,13 @@ const docTemplate = `{
                 "summary": "Unarchive a chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID",
                         "name": "body",
                         "in": "body",
@@ -578,13 +657,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatActionReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -592,6 +664,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -617,6 +701,13 @@ const docTemplate = `{
                 "summary": "Unmute a chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID",
                         "name": "body",
                         "in": "body",
@@ -624,13 +715,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatActionReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -638,6 +722,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -663,6 +759,13 @@ const docTemplate = `{
                 "summary": "Unpin a chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID payload",
                         "name": "body",
                         "in": "body",
@@ -670,13 +773,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatActionReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -684,6 +780,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -709,6 +817,13 @@ const docTemplate = `{
                 "summary": "Mark chat as unread",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Chat JID",
                         "name": "body",
                         "in": "body",
@@ -716,13 +831,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/ChatMarkUnreadReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -730,6 +838,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     },
                     "501": {
@@ -761,6 +875,13 @@ const docTemplate = `{
                 "summary": "Create a community",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Community payload",
                         "name": "body",
                         "in": "body",
@@ -768,13 +889,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/CreateCommunityReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -782,6 +896,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -807,6 +933,13 @@ const docTemplate = `{
                 "summary": "Add subgroup to community",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Community participant payload",
                         "name": "body",
                         "in": "body",
@@ -814,13 +947,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/CommunityParticipantReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -828,6 +954,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -853,6 +991,13 @@ const docTemplate = `{
                 "summary": "Remove subgroup from community",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Community participant payload",
                         "name": "body",
                         "in": "body",
@@ -860,13 +1005,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/CommunityParticipantReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -874,6 +1012,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -967,6 +1117,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             }
@@ -991,6 +1147,13 @@ const docTemplate = `{
                 "summary": "Get contact avatar",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "JID payload",
                         "name": "body",
                         "in": "body",
@@ -998,13 +1161,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/GetAvatarReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1024,6 +1180,18 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1049,6 +1217,13 @@ const docTemplate = `{
                 "summary": "Block a contact",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "JID payload",
                         "name": "body",
                         "in": "body",
@@ -1056,13 +1231,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/BlockContactReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1070,6 +1238,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1105,6 +1285,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             }
@@ -1129,6 +1315,13 @@ const docTemplate = `{
                 "summary": "Check contacts on WhatsApp",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Phone numbers",
                         "name": "body",
                         "in": "body",
@@ -1136,13 +1329,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/CheckContactReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1150,6 +1336,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1175,6 +1373,13 @@ const docTemplate = `{
                 "summary": "Get user info for JIDs",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "JIDs payload",
                         "name": "body",
                         "in": "body",
@@ -1182,13 +1387,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/GetUserInfoReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1211,6 +1409,18 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1236,6 +1446,13 @@ const docTemplate = `{
                 "summary": "Subscribe to presence",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "JID payload",
                         "name": "body",
                         "in": "body",
@@ -1243,13 +1460,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/SubscribePresenceReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1257,6 +1467,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1292,6 +1514,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             },
@@ -1314,6 +1542,13 @@ const docTemplate = `{
                 "summary": "Set privacy setting",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Privacy setting",
                         "name": "body",
                         "in": "body",
@@ -1321,13 +1556,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/SetPrivacyReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1335,6 +1563,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1360,6 +1600,13 @@ const docTemplate = `{
                 "summary": "Set profile picture",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Base64 image payload",
                         "name": "body",
                         "in": "body",
@@ -1367,13 +1614,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/SetProfilePictureReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1430,6 +1670,13 @@ const docTemplate = `{
                 "summary": "Set status message",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Status message",
                         "name": "body",
                         "in": "body",
@@ -1437,13 +1684,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/SetStatusMessageReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1451,6 +1691,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1476,6 +1728,13 @@ const docTemplate = `{
                 "summary": "Unblock a contact",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "JID payload",
                         "name": "body",
                         "in": "body",
@@ -1483,13 +1742,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/BlockContactReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1497,6 +1749,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1572,6 +1836,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             }
@@ -1596,20 +1866,20 @@ const docTemplate = `{
                 "summary": "Set group announce mode",
                 "parameters": [
                     {
-                        "description": "Enabled state",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupSettingReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Enabled state",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupSettingReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -1617,6 +1887,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1642,20 +1924,20 @@ const docTemplate = `{
                 "summary": "Create a new group",
                 "parameters": [
                     {
-                        "description": "Group properties",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/CreateGroupReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Group properties",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateGroupReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -1663,6 +1945,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1688,20 +1982,20 @@ const docTemplate = `{
                 "summary": "Update group description",
                 "parameters": [
                     {
-                        "description": "New description",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupTextReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "New description",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupTextReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -1709,6 +2003,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1734,6 +2040,13 @@ const docTemplate = `{
                 "summary": "Set ephemeral timer",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Ephemeral settings",
                         "name": "body",
                         "in": "body",
@@ -1741,13 +2054,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/GroupEphemeralReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1755,6 +2061,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1780,20 +2098,20 @@ const docTemplate = `{
                 "summary": "Get group info",
                 "parameters": [
                     {
-                        "description": "Target Group JID Payload",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupJIDReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Target Group JID Payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJIDReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -1801,6 +2119,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1826,20 +2156,20 @@ const docTemplate = `{
                 "summary": "Get group info from invite link",
                 "parameters": [
                     {
-                        "description": "Invite Code Payload",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupJoinReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Invite Code Payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJoinReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -1847,6 +2177,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1860,6 +2202,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Gets the invite link for a WhatsApp group, optionally resetting it",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1869,8 +2214,15 @@ const docTemplate = `{
                 "summary": "Get group invite link",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Target Group JID Payload",
-                        "name": "request",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -1882,13 +2234,6 @@ const docTemplate = `{
                         "description": "Reset the invite link",
                         "name": "reset",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -1908,6 +2253,18 @@ const docTemplate = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1933,20 +2290,20 @@ const docTemplate = `{
                 "summary": "Join group via link",
                 "parameters": [
                     {
-                        "description": "Invite Code",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupJoinReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Invite Code",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJoinReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -1954,6 +2311,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -1979,20 +2348,20 @@ const docTemplate = `{
                 "summary": "Set group join approval mode",
                 "parameters": [
                     {
-                        "description": "Enabled state",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupSettingReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Enabled state",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupSettingReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2000,6 +2369,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2013,6 +2394,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Leaves a specified WhatsApp group",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2022,20 +2406,20 @@ const docTemplate = `{
                 "summary": "Leave group",
                 "parameters": [
                     {
-                        "description": "Target Group JID Payload",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupJIDReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Target Group JID Payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJIDReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2043,6 +2427,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2068,20 +2464,20 @@ const docTemplate = `{
                 "summary": "Set group locked mode",
                 "parameters": [
                     {
-                        "description": "Enabled state",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupSettingReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Enabled state",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupSettingReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2089,6 +2485,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2114,20 +2522,20 @@ const docTemplate = `{
                 "summary": "Update group name",
                 "parameters": [
                     {
-                        "description": "New name",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupTextReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "New name",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupTextReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2135,6 +2543,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2160,20 +2580,20 @@ const docTemplate = `{
                 "summary": "Update group participants",
                 "parameters": [
                     {
-                        "description": "Participants and action",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupParticipantReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Participants and action",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupParticipantReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2181,6 +2601,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2206,27 +2638,51 @@ const docTemplate = `{
                 "summary": "Update group photo",
                 "parameters": [
                     {
-                        "description": "Base64 encoded photo",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupPhotoReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Base64 encoded photo",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupPhotoReq"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "Data": {
+                                            "$ref": "#/definitions/PictureIDResp"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2252,6 +2708,13 @@ const docTemplate = `{
                 "summary": "Remove group photo",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Group JID",
                         "name": "body",
                         "in": "body",
@@ -2259,13 +2722,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/GroupJIDReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -2273,6 +2729,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2286,6 +2754,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Get the list of participants that requested to join the group",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2295,20 +2766,20 @@ const docTemplate = `{
                 "summary": "Get group join requests",
                 "parameters": [
                     {
-                        "description": "Target Group JID Payload",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupJIDReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Target Group JID Payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupJIDReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2316,6 +2787,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2341,20 +2824,20 @@ const docTemplate = `{
                 "summary": "Approve/Reject group join requests",
                 "parameters": [
                     {
-                        "description": "Participants and action (approve/reject)",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/GroupRequestActionReq"
-                        }
-                    },
-                    {
                         "type": "string",
                         "description": "Session name or ID",
                         "name": "sessionId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "description": "Participants and action (approve/reject)",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/GroupRequestActionReq"
+                        }
                     }
                 ],
                 "responses": {
@@ -2362,6 +2845,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2387,6 +2882,13 @@ const docTemplate = `{
                 "summary": "Add label to chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Label chat payload",
                         "name": "body",
                         "in": "body",
@@ -2394,13 +2896,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/LabelChatReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -2408,6 +2903,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2433,6 +2940,13 @@ const docTemplate = `{
                 "summary": "Edit a label",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Edit label payload",
                         "name": "body",
                         "in": "body",
@@ -2440,13 +2954,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/EditLabelReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -2454,6 +2961,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2479,6 +2998,13 @@ const docTemplate = `{
                 "summary": "Add label to message",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Label message payload",
                         "name": "body",
                         "in": "body",
@@ -2486,13 +3012,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/LabelMessageReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -2500,6 +3019,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -2639,6 +3170,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4110,6 +4647,13 @@ const docTemplate = `{
                 "summary": "Create a newsletter",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Newsletter payload",
                         "name": "body",
                         "in": "body",
@@ -4117,13 +4661,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/CreateNewsletterReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4131,6 +4668,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4154,16 +4703,16 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Newsletter JID",
-                        "name": "jid",
-                        "in": "query",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
+                        "description": "Newsletter JID",
+                        "name": "jid",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -4172,6 +4721,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4195,16 +4756,16 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Newsletter invite code",
-                        "name": "code",
-                        "in": "query",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
                         "required": true
                     },
                     {
                         "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
+                        "description": "Newsletter invite code",
+                        "name": "code",
+                        "in": "query",
                         "required": true
                     }
                 ],
@@ -4213,6 +4774,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4248,6 +4821,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
                         }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             }
@@ -4272,6 +4851,13 @@ const docTemplate = `{
                 "summary": "Get newsletter messages",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Messages pagination payload",
                         "name": "body",
                         "in": "body",
@@ -4279,13 +4865,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/NewsletterMessageReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4293,6 +4872,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4318,6 +4909,13 @@ const docTemplate = `{
                 "summary": "Mute/unmute a newsletter",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Mute payload",
                         "name": "body",
                         "in": "body",
@@ -4325,13 +4923,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/NewsletterMuteReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4339,6 +4930,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4364,6 +4967,13 @@ const docTemplate = `{
                 "summary": "React to a newsletter message",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Reaction payload",
                         "name": "body",
                         "in": "body",
@@ -4371,13 +4981,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/NewsletterReactReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4385,6 +4988,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4410,6 +5025,13 @@ const docTemplate = `{
                 "summary": "Subscribe to a newsletter",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Newsletter JID payload",
                         "name": "body",
                         "in": "body",
@@ -4417,13 +5039,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/NewsletterSubscribeReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4468,6 +5083,13 @@ const docTemplate = `{
                 "summary": "Unsubscribe from a newsletter",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Newsletter JID",
                         "name": "body",
                         "in": "body",
@@ -4475,13 +5097,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/NewsletterSubscribeReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4489,6 +5104,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4514,6 +5141,13 @@ const docTemplate = `{
                 "summary": "Mark newsletter messages as viewed",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Mark viewed payload",
                         "name": "body",
                         "in": "body",
@@ -4521,13 +5155,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/NewsletterMarkViewedReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4535,6 +5162,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4682,6 +5321,13 @@ const docTemplate = `{
                 "summary": "Update profile name",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Profile name",
                         "name": "body",
                         "in": "body",
@@ -4689,13 +5335,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/UpdateProfileNameReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4703,6 +5342,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4924,6 +5575,13 @@ const docTemplate = `{
                 "summary": "Remove label from chat",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Label chat payload",
                         "name": "body",
                         "in": "body",
@@ -4931,13 +5589,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/LabelChatReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4945,6 +5596,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -4970,6 +5633,13 @@ const docTemplate = `{
                 "summary": "Remove label from message",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Label message payload",
                         "name": "body",
                         "in": "body",
@@ -4977,13 +5647,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/LabelMessageReq"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
@@ -4991,6 +5654,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -5025,6 +5700,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -5069,6 +5750,18 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -5123,6 +5816,18 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
                     }
                 }
             },
@@ -5161,6 +5866,134 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/webhooks/cloud/{sessionId}": {
+            "get": {
+                "description": "Verifies the webhook subscription from WhatsApp Cloud API",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cloud Webhooks"
+                ],
+                "summary": "Verify Cloud API webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Webhook mode (subscribe)",
+                        "name": "hub.mode",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Verification token",
+                        "name": "hub.verify_token",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Challenge string",
+                        "name": "hub.challenge",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Challenge string",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Receives and processes webhooks from WhatsApp Cloud API",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cloud Webhooks"
+                ],
+                "summary": "Receive Cloud API webhook",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session name or ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "HMAC signature",
+                        "name": "X-Hub-Signature-256",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
                         }
                     }
                 }
@@ -5357,12 +6190,6 @@ const docTemplate = `{
                 "url"
             ],
             "properties": {
-                "eventUrls": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
                 "events": {
                     "type": "array",
                     "items": {
@@ -6186,7 +7013,26 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "appSecret": {
+                    "type": "string"
+                },
+                "businessAccountId": {
+                    "type": "string"
+                },
+                "engine": {
+                    "type": "string",
+                    "enum": [
+                        "whatsmeow",
+                        "cloud_api"
+                    ]
+                },
                 "name": {
+                    "type": "string"
+                },
+                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {
@@ -6200,16 +7046,25 @@ const docTemplate = `{
                 },
                 "webhook": {
                     "$ref": "#/definitions/WebhookCreateInline"
+                },
+                "webhookVerifyToken": {
+                    "type": "string"
                 }
             }
         },
         "SessionCreatedResp": {
             "type": "object",
             "properties": {
+                "businessAccountId": {
+                    "type": "string"
+                },
                 "connected": {
                     "type": "integer"
                 },
                 "createdAt": {
+                    "type": "string"
+                },
+                "engine": {
                     "type": "string"
                 },
                 "id": {
@@ -6219,6 +7074,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {
@@ -6284,13 +7142,22 @@ const docTemplate = `{
         "SessionResp": {
             "type": "object",
             "properties": {
+                "businessAccountId": {
+                    "type": "string"
+                },
                 "businessName": {
                     "type": "string"
+                },
+                "chatwootEnabled": {
+                    "type": "boolean"
                 },
                 "connected": {
                     "type": "integer"
                 },
                 "createdAt": {
+                    "type": "string"
+                },
+                "engine": {
                     "type": "string"
                 },
                 "id": {
@@ -6300,6 +7167,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "phoneNumberId": {
                     "type": "string"
                 },
                 "platform": {
@@ -6371,7 +7241,22 @@ const docTemplate = `{
         "SessionUpdateReq": {
             "type": "object",
             "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "appSecret": {
+                    "type": "string"
+                },
+                "businessAccountId": {
+                    "type": "string"
+                },
+                "engine": {
+                    "type": "string"
+                },
                 "name": {
+                    "type": "string"
+                },
+                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {
@@ -6379,6 +7264,9 @@ const docTemplate = `{
                 },
                 "settings": {
                     "$ref": "#/definitions/SessionSettings"
+                },
+                "webhookVerifyToken": {
+                    "type": "string"
                 }
             }
         },
@@ -6462,12 +7350,6 @@ const docTemplate = `{
                 "enabled": {
                     "type": "boolean"
                 },
-                "eventUrls": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
                 "events": {
                     "type": "array",
                     "items": {
@@ -6527,12 +7409,6 @@ const docTemplate = `{
                 },
                 "enabled": {
                     "type": "boolean"
-                },
-                "eventUrls": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
                 },
                 "events": {
                     "type": "array",

@@ -28,15 +28,19 @@ func NewCloudWebhookHandler(sessRepo *repo.SessionRepository, provider *cloudWA.
 	}
 }
 
-// Verify GET webhook verification
+// Verify godoc
 // @Summary     Verify Cloud API webhook
 // @Description Verifies the webhook subscription from WhatsApp Cloud API
 // @Tags        Cloud Webhooks
+// @Produce     json
+// @Param       sessionId path string true "Session name or ID"
 // @Param       hub.mode query string true "Webhook mode (subscribe)"
 // @Param       hub.verify_token query string true "Verification token"
 // @Param       hub.challenge query string true "Challenge string"
 // @Success     200 {string} string "Challenge string"
+// @Failure     400 {object} dto.APIError
 // @Failure     403 {object} dto.APIError
+// @Failure     404 {object} dto.APIError
 // @Router      /webhooks/cloud/{sessionId} [get]
 func (h *CloudWebhookHandler) Verify(c *fiber.Ctx) error {
 	id := c.Params("sessionId")
@@ -65,15 +69,18 @@ func (h *CloudWebhookHandler) Verify(c *fiber.Ctx) error {
 	return c.SendString(result)
 }
 
-// Handle POST inbound webhook from Cloud API
+// Handle godoc
 // @Summary     Receive Cloud API webhook
 // @Description Receives and processes webhooks from WhatsApp Cloud API
 // @Tags        Cloud Webhooks
 // @Accept      json
+// @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       X-Hub-Signature-256 header string false "HMAC signature"
 // @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
 // @Failure     401 {object} dto.APIError
+// @Failure     404 {object} dto.APIError
 // @Router      /webhooks/cloud/{sessionId} [post]
 func (h *CloudWebhookHandler) Handle(c *fiber.Ctx) error {
 	id := c.Params("sessionId")

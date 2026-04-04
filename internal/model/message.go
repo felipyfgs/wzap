@@ -15,4 +15,8 @@ type Message struct {
 	Raw       any       `json:"raw,omitempty"`
 	Timestamp time.Time `json:"timestamp"`
 	CreatedAt time.Time `json:"createdAt"`
+
+	CWMessageID      *int    `json:"cwMessageId,omitempty"`
+	CWConversationID *int    `json:"cwConversationId,omitempty"`
+	CWSourceID       *string `json:"cwSourceId,omitempty"`
 }

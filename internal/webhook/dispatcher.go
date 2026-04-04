@@ -54,6 +54,10 @@ type WSBroadcaster interface {
 	Broadcast(sessionID string, payload []byte)
 }
 
+type EventListener interface {
+	OnEvent(sessionID string, event model.EventType, payload []byte)
+}
+
 type Dispatcher struct {
 	webhookRepo       *repo.WebhookRepository
 	nats              *broker.NATS
@@ -62,6 +66,7 @@ type Dispatcher struct {
 	globalFailures    atomic.Uint64
 	globalLastAttempt atomic.Int64
 	ws                WSBroadcaster
+	listeners         []EventListener
 }
 
 func New(webhookRepo *repo.WebhookRepository, nats *broker.NATS, globalWebhookURL string) *Dispatcher {
@@ -75,6 +80,10 @@ func New(webhookRepo *repo.WebhookRepository, nats *broker.NATS, globalWebhookUR
 
 func (d *Dispatcher) SetWSBroadcaster(ws WSBroadcaster) {
 	d.ws = ws
+}
+
+func (d *Dispatcher) AddListener(l EventListener) {
+	d.listeners = append(d.listeners, l)
 }
 
 // Dispatch looks up active webhooks for the session/event and delivers the payload.
@@ -102,14 +111,10 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	for _, wh := range webhooks {
 		wh := wh
-		url := wh.URL
-		if specificURL, ok := wh.EventURLs[string(eventType)]; ok && specificURL != "" {
-			url = specificURL
-		}
 		if wh.NATSEnabled && d.nats != nil {
 			go d.publishToNATS(wh, payload)
 		} else {
-			go d.deliverHTTPWithRetry(url, wh.Secret, payload)
+			go d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
 		}
 	}
 
@@ -120,6 +125,10 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	if d.ws != nil {
 		d.ws.Broadcast(sessionID, payload)
+	}
+
+	for _, listener := range d.listeners {
+		go listener.OnEvent(sessionID, eventType, payload)
 	}
 }
 

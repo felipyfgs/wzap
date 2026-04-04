@@ -120,10 +120,6 @@ definitions:
     type: object
   CreateWebhookReq:
     properties:
-      eventUrls:
-        additionalProperties:
-          type: string
-        type: object
       events:
         items:
           type: string
@@ -674,7 +670,20 @@ definitions:
     type: object
   SessionCreateReq:
     properties:
+      accessToken:
+        type: string
+      appSecret:
+        type: string
+      businessAccountId:
+        type: string
+      engine:
+        enum:
+        - whatsmeow
+        - cloud_api
+        type: string
       name:
+        type: string
+      phoneNumberId:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
@@ -684,20 +693,28 @@ definitions:
         type: string
       webhook:
         $ref: '#/definitions/WebhookCreateInline'
+      webhookVerifyToken:
+        type: string
     required:
     - name
     type: object
   SessionCreatedResp:
     properties:
+      businessAccountId:
+        type: string
       connected:
         type: integer
       createdAt:
+        type: string
+      engine:
         type: string
       id:
         type: string
       jid:
         type: string
       name:
+        type: string
+      phoneNumberId:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
@@ -740,17 +757,25 @@ definitions:
     type: object
   SessionResp:
     properties:
+      businessAccountId:
+        type: string
       businessName:
         type: string
+      chatwootEnabled:
+        type: boolean
       connected:
         type: integer
       createdAt:
+        type: string
+      engine:
         type: string
       id:
         type: string
       jid:
         type: string
       name:
+        type: string
+      phoneNumberId:
         type: string
       platform:
         type: string
@@ -797,12 +822,24 @@ definitions:
     type: object
   SessionUpdateReq:
     properties:
+      accessToken:
+        type: string
+      appSecret:
+        type: string
+      businessAccountId:
+        type: string
+      engine:
+        type: string
       name:
+        type: string
+      phoneNumberId:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
       settings:
         $ref: '#/definitions/SessionSettings'
+      webhookVerifyToken:
+        type: string
     type: object
   SetPresenceReq:
     properties:
@@ -856,10 +893,6 @@ definitions:
     properties:
       enabled:
         type: boolean
-      eventUrls:
-        additionalProperties:
-          type: string
-        type: object
       events:
         items:
           type: string
@@ -899,10 +932,6 @@ definitions:
         type: string
       enabled:
         type: boolean
-      eventUrls:
-        additionalProperties:
-          type: string
-        type: object
       events:
         items:
           type: string
@@ -976,6 +1005,10 @@ paths:
               type: object
         "403":
           description: Forbidden
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/APIError'
       security:
@@ -1109,6 +1142,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Update session
@@ -1121,17 +1158,17 @@ paths:
       description: Archives a chat identified by JID, moving it out of the main chat
         list
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatActionReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1139,6 +1176,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Archive a chat
@@ -1150,17 +1195,17 @@ paths:
       - application/json
       description: Permanently deletes a chat (including media)
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatActionReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1168,6 +1213,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Delete a chat
@@ -1179,17 +1232,17 @@ paths:
       - application/json
       description: Mutes notifications for a chat identified by JID
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatActionReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1197,6 +1250,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Mute a chat
@@ -1208,17 +1269,17 @@ paths:
       - application/json
       description: Pins a chat to the top of the chat list
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatActionReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1226,6 +1287,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Pin a chat
@@ -1237,17 +1306,17 @@ paths:
       - application/json
       description: Marks specific messages in a chat as read
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID + message IDs
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatMarkReadReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1255,6 +1324,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Mark chat as read
@@ -1266,17 +1343,17 @@ paths:
       - application/json
       description: Removes a chat from the archived list
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatActionReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1284,6 +1361,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Unarchive a chat
@@ -1295,17 +1380,17 @@ paths:
       - application/json
       description: Removes mute from a chat
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatActionReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1313,6 +1398,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Unmute a chat
@@ -1325,17 +1418,17 @@ paths:
       description: Removes a chat from the pinned position at the top of the chat
         list
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatActionReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1343,6 +1436,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Unpin a chat
@@ -1355,17 +1456,17 @@ paths:
       description: 'Marks a chat as unread. Note: WhatsApp protocol does not support
         this operation directly.'
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Chat JID
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/ChatMarkUnreadReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1373,6 +1474,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
         "501":
           description: Not implemented by WhatsApp protocol
           schema:
@@ -1389,17 +1494,17 @@ paths:
       description: Creates a new WhatsApp Community (a group of groups) with a name
         and optional description
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Community payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/CreateCommunityReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1407,6 +1512,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Create a community
@@ -1419,17 +1532,17 @@ paths:
       description: Adds one or more subgroups (by JID) as participants to an existing
         community
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Community participant payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/CommunityParticipantReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1437,6 +1550,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Add subgroup to community
@@ -1448,17 +1569,17 @@ paths:
       - application/json
       description: Removes one or more subgroups (by JID) from an existing community
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Community participant payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/CommunityParticipantReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1466,6 +1587,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Remove subgroup from community
@@ -1522,6 +1651,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: List contacts
@@ -1534,17 +1667,17 @@ paths:
       description: Fetches the profile picture URL and picture ID for the given WhatsApp
         JID
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/GetAvatarReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1557,6 +1690,14 @@ paths:
                 Data:
                   $ref: '#/definitions/GetAvatarResp'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get contact avatar
@@ -1569,17 +1710,17 @@ paths:
       description: Blocks a WhatsApp contact by JID, preventing them from sending
         messages
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/BlockContactReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1587,6 +1728,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Block a contact
@@ -1608,6 +1757,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get blocked contacts list
@@ -1619,17 +1772,17 @@ paths:
       - application/json
       description: Checks if phone numbers are registered on WhatsApp
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Phone numbers
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/CheckContactReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1637,6 +1790,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Check contacts on WhatsApp
@@ -1649,17 +1810,17 @@ paths:
       description: Fetches detailed user info (status, profile picture, devices) for
         one or more WhatsApp JIDs
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: JIDs payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/GetUserInfoReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1674,6 +1835,14 @@ paths:
                     $ref: '#/definitions/UserInfoResp'
                   type: array
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get user info for JIDs
@@ -1685,17 +1854,17 @@ paths:
       - application/json
       description: Subscribes to presence updates for a contact (online/offline/typing)
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/SubscribePresenceReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1703,6 +1872,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Subscribe to presence
@@ -1725,6 +1902,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get privacy settings
@@ -1736,17 +1917,17 @@ paths:
       description: Updates a privacy setting (groupadd, last, status, profile, readreceipts,
         online, calladd)
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Privacy setting
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/SetPrivacyReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1754,6 +1935,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Set privacy setting
@@ -1766,17 +1955,17 @@ paths:
       description: Updates the session account's WhatsApp profile picture with a base64-encoded
         image
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Base64 image payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/SetProfilePictureReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1808,17 +1997,17 @@ paths:
       - application/json
       description: Updates the session's WhatsApp "About" status message
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Status message
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/SetStatusMessageReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1826,6 +2015,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Set status message
@@ -1837,17 +2034,17 @@ paths:
       - application/json
       description: Unblocks a previously blocked WhatsApp contact by JID
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/BlockContactReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -1855,6 +2052,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Unblock a contact
@@ -1902,6 +2107,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: List joined groups
@@ -1913,17 +2122,17 @@ paths:
       - application/json
       description: Sets whether only admins can send messages in the group
       parameters:
-      - description: Enabled state
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupSettingReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Enabled state
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupSettingReq'
       produces:
       - application/json
       responses:
@@ -1931,6 +2140,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Set group announce mode
@@ -1942,17 +2159,17 @@ paths:
       - application/json
       description: Creates a new WhatsApp group with the given participants
       parameters:
-      - description: Group properties
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/CreateGroupReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Group properties
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/CreateGroupReq'
       produces:
       - application/json
       responses:
@@ -1960,6 +2177,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Create a new group
@@ -1971,17 +2196,17 @@ paths:
       - application/json
       description: Updates the description of the specified WhatsApp group
       parameters:
-      - description: New description
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupTextReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: New description
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupTextReq'
       produces:
       - application/json
       responses:
@@ -1989,6 +2214,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Update group description
@@ -2001,17 +2234,17 @@ paths:
       description: 'Sets the disappearing messages timer for a group (in seconds:
         0, 86400, 604800, 7776000)'
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Ephemeral settings
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/GroupEphemeralReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2019,6 +2252,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Set ephemeral timer
@@ -2030,17 +2271,17 @@ paths:
       - application/json
       description: Get detailed information about a group by JID
       parameters:
-      - description: Target Group JID Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Target Group JID Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
       produces:
       - application/json
       responses:
@@ -2048,6 +2289,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get group info
@@ -2059,17 +2308,17 @@ paths:
       - application/json
       description: Previews a group's info using an invite code without joining
       parameters:
-      - description: Invite Code Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJoinReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Invite Code Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJoinReq'
       produces:
       - application/json
       responses:
@@ -2077,6 +2326,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get group info from invite link
@@ -2084,12 +2341,19 @@ paths:
       - Groups
   /sessions/{sessionId}/groups/invite-link:
     post:
+      consumes:
+      - application/json
       description: Gets the invite link for a WhatsApp group, optionally resetting
         it
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Target Group JID Payload
         in: body
-        name: request
+        name: body
         required: true
         schema:
           $ref: '#/definitions/GroupJIDReq'
@@ -2097,11 +2361,6 @@ paths:
         in: query
         name: reset
         type: boolean
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2114,6 +2373,14 @@ paths:
                 Data:
                   $ref: '#/definitions/GroupInviteLinkResp'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get group invite link
@@ -2125,17 +2392,17 @@ paths:
       - application/json
       description: Joins a group using an invite code
       parameters:
-      - description: Invite Code
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJoinReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Invite Code
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJoinReq'
       produces:
       - application/json
       responses:
@@ -2143,6 +2410,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Join group via link
@@ -2154,17 +2429,17 @@ paths:
       - application/json
       description: Activates or deactivates the admin approval system for new members
       parameters:
-      - description: Enabled state
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupSettingReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Enabled state
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupSettingReq'
       produces:
       - application/json
       responses:
@@ -2172,6 +2447,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Set group join approval mode
@@ -2179,19 +2462,21 @@ paths:
       - Groups
   /sessions/{sessionId}/groups/leave:
     post:
+      consumes:
+      - application/json
       description: Leaves a specified WhatsApp group
       parameters:
-      - description: Target Group JID Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Target Group JID Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
       produces:
       - application/json
       responses:
@@ -2199,6 +2484,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Leave group
@@ -2210,17 +2503,17 @@ paths:
       - application/json
       description: Sets whether only admins can edit group info
       parameters:
-      - description: Enabled state
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupSettingReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Enabled state
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupSettingReq'
       produces:
       - application/json
       responses:
@@ -2228,6 +2521,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Set group locked mode
@@ -2239,17 +2540,17 @@ paths:
       - application/json
       description: Updates the name of the specified WhatsApp group
       parameters:
-      - description: New name
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupTextReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: New name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupTextReq'
       produces:
       - application/json
       responses:
@@ -2257,6 +2558,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Update group name
@@ -2268,17 +2577,17 @@ paths:
       - application/json
       description: Add, remove, promote or demote participants in a group
       parameters:
-      - description: Participants and action
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupParticipantReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Participants and action
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupParticipantReq'
       produces:
       - application/json
       responses:
@@ -2286,6 +2595,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Update group participants
@@ -2297,24 +2614,37 @@ paths:
       - application/json
       description: Updates the profile picture of the specified WhatsApp group
       parameters:
-      - description: Base64 encoded photo
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupPhotoReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Base64 encoded photo
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupPhotoReq'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/APIResponse'
+            allOf:
+            - $ref: '#/definitions/APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/PictureIDResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Update group photo
@@ -2326,17 +2656,17 @@ paths:
       - application/json
       description: Removes the current group profile photo
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Group JID
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/GroupJIDReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2344,6 +2674,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Remove group photo
@@ -2351,19 +2689,21 @@ paths:
       - Groups
   /sessions/{sessionId}/groups/requests:
     post:
+      consumes:
+      - application/json
       description: Get the list of participants that requested to join the group
       parameters:
-      - description: Target Group JID Payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupJIDReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Target Group JID Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupJIDReq'
       produces:
       - application/json
       responses:
@@ -2371,6 +2711,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get group join requests
@@ -2382,17 +2730,17 @@ paths:
       - application/json
       description: Approves or rejects participants that requested to join the group
       parameters:
-      - description: Participants and action (approve/reject)
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/GroupRequestActionReq'
       - description: Session name or ID
         in: path
         name: sessionId
         required: true
         type: string
+      - description: Participants and action (approve/reject)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/GroupRequestActionReq'
       produces:
       - application/json
       responses:
@@ -2400,6 +2748,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Approve/Reject group join requests
@@ -2411,17 +2767,17 @@ paths:
       - application/json
       description: Applies a label to an entire chat conversation
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Label chat payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/LabelChatReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2429,6 +2785,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Add label to chat
@@ -2440,17 +2804,17 @@ paths:
       - application/json
       description: Edits an existing label's name, color, or marks it as deleted
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Edit label payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/EditLabelReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2458,6 +2822,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Edit a label
@@ -2469,17 +2841,17 @@ paths:
       - application/json
       description: Applies a label to a specific message within a chat
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Label message payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/LabelMessageReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -2487,6 +2859,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Add label to message
@@ -2576,6 +2956,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: List messages
@@ -3466,17 +3850,17 @@ paths:
       description: Creates a new WhatsApp Newsletter (channel) with optional description
         and profile picture
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Newsletter payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/CreateNewsletterReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3484,6 +3868,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Create a newsletter
@@ -3493,14 +3885,14 @@ paths:
     post:
       description: Retrieves metadata about a newsletter by its JID
       parameters:
-      - description: Newsletter JID
-        in: query
-        name: jid
-        required: true
-        type: string
       - description: Session name or ID
         in: path
         name: sessionId
+        required: true
+        type: string
+      - description: Newsletter JID
+        in: query
+        name: jid
         required: true
         type: string
       produces:
@@ -3510,6 +3902,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get newsletter info
@@ -3519,14 +3919,14 @@ paths:
     post:
       description: Retrieves newsletter metadata from an invite code without subscribing
       parameters:
-      - description: Newsletter invite code
-        in: query
-        name: code
-        required: true
-        type: string
       - description: Session name or ID
         in: path
         name: sessionId
+        required: true
+        type: string
+      - description: Newsletter invite code
+        in: query
+        name: code
         required: true
         type: string
       produces:
@@ -3536,6 +3936,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get newsletter info from invite code
@@ -3557,6 +3965,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: List subscribed newsletters
@@ -3569,17 +3981,17 @@ paths:
       description: Fetches messages from a newsletter; supports pagination via before_id
         cursor and count
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Messages pagination payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/NewsletterMessageReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3587,6 +3999,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Get newsletter messages
@@ -3598,17 +4018,17 @@ paths:
       - application/json
       description: Toggles mute status for a newsletter
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Mute payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/NewsletterMuteReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3616,6 +4036,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Mute/unmute a newsletter
@@ -3627,17 +4055,17 @@ paths:
       - application/json
       description: Sends a reaction to a newsletter message
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Reaction payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/NewsletterReactReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3645,6 +4073,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: React to a newsletter message
@@ -3657,17 +4093,17 @@ paths:
       description: Subscribes the current session to a newsletter identified by its
         JID
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Newsletter JID payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/NewsletterSubscribeReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3694,17 +4130,17 @@ paths:
       - application/json
       description: Unfollows a newsletter
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Newsletter JID
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/NewsletterSubscribeReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3712,6 +4148,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Unsubscribe from a newsletter
@@ -3723,17 +4167,17 @@ paths:
       - application/json
       description: Marks newsletter messages as viewed by server IDs
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Mark viewed payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/NewsletterMarkViewedReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3741,6 +4185,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Mark newsletter messages as viewed
@@ -3826,17 +4278,17 @@ paths:
       - application/json
       description: Updates the session's WhatsApp profile display name (push name)
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Profile name
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/UpdateProfileNameReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3844,6 +4296,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Update profile name
@@ -3971,17 +4431,17 @@ paths:
       - application/json
       description: Removes a label from a chat conversation
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Label chat payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/LabelChatReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -3989,6 +4449,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Remove label from chat
@@ -4000,17 +4468,17 @@ paths:
       - application/json
       description: Removes a label from a specific message
       parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
       - description: Label message payload
         in: body
         name: body
         required: true
         schema:
           $ref: '#/definitions/LabelMessageReq'
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -4018,6 +4486,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Remove label from message
@@ -4039,6 +4515,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: List webhooks
@@ -4067,6 +4547,14 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Create a webhook
@@ -4093,6 +4581,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Delete a webhook
@@ -4127,11 +4619,101 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
       security:
       - Authorization: []
       summary: Update a webhook
       tags:
       - Webhooks
+  /webhooks/cloud/{sessionId}:
+    get:
+      description: Verifies the webhook subscription from WhatsApp Cloud API
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Webhook mode (subscribe)
+        in: query
+        name: hub.mode
+        required: true
+        type: string
+      - description: Verification token
+        in: query
+        name: hub.verify_token
+        required: true
+        type: string
+      - description: Challenge string
+        in: query
+        name: hub.challenge
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge string
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIError'
+      summary: Verify Cloud API webhook
+      tags:
+      - Cloud Webhooks
+    post:
+      consumes:
+      - application/json
+      description: Receives and processes webhooks from WhatsApp Cloud API
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: HMAC signature
+        in: header
+        name: X-Hub-Signature-256
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIError'
+      summary: Receive Cloud API webhook
+      tags:
+      - Cloud Webhooks
 securityDefinitions:
   Authorization:
     description: Session or admin token (without Bearer prefix)

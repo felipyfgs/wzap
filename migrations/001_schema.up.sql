@@ -14,18 +14,23 @@ $$ LANGUAGE plpgsql;
 -- Sessions Table
 -- =====================================================
 CREATE TABLE IF NOT EXISTS wz_sessions (
-    id          VARCHAR(100) PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL UNIQUE,
-    token       VARCHAR(255) NOT NULL UNIQUE,
-    jid         VARCHAR(255) NOT NULL DEFAULT '',
-    qr_code     TEXT NOT NULL DEFAULT '',
-    connected   INTEGER NOT NULL DEFAULT 0,
-    status      VARCHAR(50) NOT NULL DEFAULT 'disconnected',
-    proxy       JSONB NOT NULL DEFAULT '{}',
-    settings    JSONB NOT NULL DEFAULT '{}',
-    metadata    JSONB,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                   VARCHAR(100) PRIMARY KEY,
+    name                 VARCHAR(100) NOT NULL UNIQUE,
+    token                VARCHAR(255) NOT NULL UNIQUE,
+    jid                  VARCHAR(255) NOT NULL DEFAULT '',
+    qr_code              TEXT NOT NULL DEFAULT '',
+    connected            INTEGER NOT NULL DEFAULT 0,
+    status               VARCHAR(50) NOT NULL DEFAULT 'disconnected',
+    engine               VARCHAR(20) DEFAULT 'whatsmeow',
+    phone_number_id      VARCHAR(100),
+    access_token         TEXT,
+    business_account_id  VARCHAR(100),
+    app_secret           TEXT,
+    webhook_verify_token VARCHAR(255),
+    proxy                JSONB NOT NULL DEFAULT '{}',
+    settings             JSONB NOT NULL DEFAULT '{}',
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_wz_sessions_name

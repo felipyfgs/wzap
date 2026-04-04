@@ -19,9 +19,9 @@ func NewWebhookRepository(db *pgxpool.Pool) *WebhookRepository {
 }
 
 func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error {
-	query := `INSERT INTO wz_webhooks (id, session_id, url, secret, events, event_urls, enabled, nats_enabled, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9)`
-	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.EventURLs, w.Enabled, w.NATSEnabled, w.CreatedAt)
+	query := `INSERT INTO wz_webhooks (id, session_id, url, secret, events, enabled, nats_enabled, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8)`
+	_, err := r.db.Exec(ctx, query, w.ID, w.SessionID, w.URL, w.Secret, w.Events, w.Enabled, w.NATSEnabled, w.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert webhook: %w", err)
 	}
@@ -29,7 +29,7 @@ func (r *WebhookRepository) Create(ctx context.Context, w *model.Webhook) error 
 }
 
 func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID string) ([]model.Webhook, error) {
-	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, COALESCE(event_urls, '{}'::jsonb), enabled, nats_enabled, created_at, updated_at
+	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, enabled, nats_enabled, created_at, updated_at
 		FROM wz_webhooks WHERE session_id = $1 ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(ctx, query, sessionID)
@@ -41,7 +41,7 @@ func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID strin
 	var webhooks []model.Webhook
 	for rows.Next() {
 		var w model.Webhook
-		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.EventURLs, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
+		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
 			return nil, err
 		}
 		webhooks = append(webhooks, w)
@@ -50,7 +50,7 @@ func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID strin
 }
 
 func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, sessionID string, eventType string) ([]model.Webhook, error) {
-	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, COALESCE(event_urls, '{}'::jsonb), enabled, nats_enabled, created_at, updated_at
+	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, enabled, nats_enabled, created_at, updated_at
 		FROM wz_webhooks
 		WHERE session_id = $1
 		  AND enabled = true
@@ -66,7 +66,7 @@ func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, ses
 	var webhooks []model.Webhook
 	for rows.Next() {
 		var w model.Webhook
-		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.EventURLs, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
+		if err := rows.Scan(&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt); err != nil {
 			return nil, err
 		}
 		webhooks = append(webhooks, w)
@@ -75,11 +75,11 @@ func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, ses
 }
 
 func (r *WebhookRepository) FindByID(ctx context.Context, sessionID, webhookID string) (*model.Webhook, error) {
-	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, COALESCE(event_urls, '{}'::jsonb), enabled, nats_enabled, created_at, updated_at
+	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, enabled, nats_enabled, created_at, updated_at
 		FROM wz_webhooks WHERE id = $1 AND session_id = $2`
 	var w model.Webhook
 	err := r.db.QueryRow(ctx, query, webhookID, sessionID).Scan(
-		&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.EventURLs, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt)
+		&w.ID, &w.SessionID, &w.URL, &w.Secret, &w.Events, &w.Enabled, &w.NATSEnabled, &w.CreatedAt, &w.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("webhook not found: %w", err)
 	}
@@ -88,9 +88,9 @@ func (r *WebhookRepository) FindByID(ctx context.Context, sessionID, webhookID s
 
 func (r *WebhookRepository) Update(ctx context.Context, w *model.Webhook) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE wz_webhooks SET url = $1, secret = $2, events = $3, event_urls = $4, enabled = $5, nats_enabled = $6, updated_at = NOW()
-		 WHERE id = $7 AND session_id = $8`,
-		w.URL, w.Secret, w.Events, w.EventURLs, w.Enabled, w.NATSEnabled, w.ID, w.SessionID)
+		`UPDATE wz_webhooks SET url = $1, secret = $2, events = $3, enabled = $4, nats_enabled = $5, updated_at = NOW()
+		 WHERE id = $6 AND session_id = $7`,
+		w.URL, w.Secret, w.Events, w.Enabled, w.NATSEnabled, w.ID, w.SessionID)
 	if err != nil {
 		return fmt.Errorf("failed to update webhook: %w", err)
 	}

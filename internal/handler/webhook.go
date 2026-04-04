@@ -21,9 +21,11 @@ func NewWebhookHandler(webhookSvc *service.WebhookService) *WebhookHandler {
 // @Tags        Webhooks
 // @Accept      json
 // @Produce     json
-// @Param       sessionId   path     string                 true "Session name or ID"
-// @Param       body        body     dto.CreateWebhookReq true "Webhook data"
-// @Success     200  {object} dto.APIResponse
+// @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.CreateWebhookReq true "Webhook data"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/webhooks [post]
 func (h *WebhookHandler) Create(c *fiber.Ctx) error {
@@ -46,8 +48,9 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 // @Description Returns all webhooks for the session
 // @Tags        Webhooks
 // @Produce     json
-// @Param       sessionId   path string true "Session name or ID"
+// @Param       sessionId path string true "Session name or ID"
 // @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/webhooks [get]
 func (h *WebhookHandler) List(c *fiber.Ctx) error {
@@ -66,10 +69,12 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 // @Tags        Webhooks
 // @Accept      json
 // @Produce     json
-// @Param       sessionId   path     string                true "Session name or ID"
-// @Param       wid         path     string                true "Webhook ID"
-// @Param       body        body     dto.UpdateWebhookReq  true "Webhook update data"
-// @Success     200  {object} dto.APIResponse
+// @Param       sessionId path string true "Session name or ID"
+// @Param       wid path string true "Webhook ID"
+// @Param       body body dto.UpdateWebhookReq true "Webhook update data"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/webhooks/{wid} [put]
 func (h *WebhookHandler) Update(c *fiber.Ctx) error {
@@ -94,9 +99,10 @@ func (h *WebhookHandler) Update(c *fiber.Ctx) error {
 // @Description Removes a webhook from the session
 // @Tags        Webhooks
 // @Produce     json
-// @Param       sessionId   path string true "Session name or ID"
-// @Param       wid         path string true "Webhook ID"
+// @Param       sessionId path string true "Session name or ID"
+// @Param       wid path string true "Webhook ID"
 // @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/webhooks/{wid} [delete]
 func (h *WebhookHandler) Delete(c *fiber.Ctx) error {

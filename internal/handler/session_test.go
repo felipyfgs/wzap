@@ -17,7 +17,7 @@ import (
 func newSessionApp(sessionSvc *service.SessionService) *fiber.App {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 	app.Use(recover.New())
-	h := handler.NewSessionHandler(sessionSvc, nil, nil)
+	h := handler.NewSessionHandler(sessionSvc, nil, nil, nil)
 
 	// Admin-scoped routes
 	grp := app.Group("/sessions")

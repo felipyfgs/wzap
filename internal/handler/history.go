@@ -22,11 +22,12 @@ func NewHistoryHandler(messageRepo *repo.MessageRepository) *HistoryHandler {
 // @Description Returns paginated message history for the session
 // @Tags        Messages
 // @Produce     json
-// @Param       sessionId path  string true  "Session name or ID"
-// @Param       chat      query string false "Chat JID filter"
-// @Param       limit     query int    false "Max results (default 50, max 100)"
-// @Param       offset    query int    false "Offset for pagination"
+// @Param       sessionId path string true "Session name or ID"
+// @Param       chat query string false "Chat JID filter"
+// @Param       limit query int false "Max results (default 50, max 100)"
+// @Param       offset query int false "Offset for pagination"
 // @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages [get]
 func (h *HistoryHandler) ListMessages(c *fiber.Ctx) error {

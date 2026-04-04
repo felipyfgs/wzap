@@ -74,6 +74,9 @@ coverage.out
 # OpenSpec
 openspec/
 
+# Factory
+.factory/
+
 # Windsurf
 .windsurf/
 

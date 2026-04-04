@@ -12,17 +12,21 @@ import (
 	"go.mau.fi/whatsmeow/proto/waE2E"
 
 	"wzap/internal/logger"
+	cloudWA "wzap/internal/provider/whatsapp"
+	"wzap/internal/repo"
 	"wzap/internal/storage"
 	"wzap/internal/wa"
 )
 
 type MediaService struct {
-	engine *wa.Manager
-	minio  *storage.Minio
+	engine    *wa.Manager
+	minio     *storage.Minio
+	provider  *cloudWA.Client
+	sessRepo  *repo.SessionRepository
 }
 
-func NewMediaService(engine *wa.Manager, minio *storage.Minio) *MediaService {
-	return &MediaService{engine: engine, minio: minio}
+func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository) *MediaService {
+	return &MediaService{engine: engine, minio: minio, provider: provider, sessRepo: sessRepo}
 }
 
 func (s *MediaService) DownloadAndStore(ctx context.Context, sessionID string, msg whatsmeow.DownloadableMessage, mimeType, messageID string) (string, error) {

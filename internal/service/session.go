@@ -15,6 +15,8 @@ import (
 	"wzap/internal/repo"
 	"wzap/internal/wa"
 
+	cloudWA "wzap/internal/provider/whatsapp"
+
 	"github.com/google/uuid"
 )
 
@@ -24,13 +26,15 @@ type SessionService struct {
 	repo        *repo.SessionRepository
 	webhookRepo *repo.WebhookRepository
 	engine      *wa.Manager
+	provider    *cloudWA.Client
 }
 
-func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager) *SessionService {
+func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager, provider *cloudWA.Client) *SessionService {
 	return &SessionService{
 		repo:        r,
 		webhookRepo: webhookRepo,
 		engine:      engine,
+		provider:    provider,
 	}
 }
 
@@ -48,15 +52,25 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	}
 
 	now := time.Now()
+	engine := req.Engine
+	if engine == "" {
+		engine = "whatsmeow"
+	}
 	session := &model.Session{
-		ID:        uuid.NewString(),
-		Name:      req.Name,
-		Token:     token,
-		Status:    "disconnected",
-		Proxy:     model.SessionProxy(req.Proxy),
-		Settings:  model.SessionSettings(req.Settings),
-		CreatedAt: now,
-		UpdatedAt: now,
+		ID:                 uuid.NewString(),
+		Name:               req.Name,
+		Token:              token,
+		Status:             "disconnected",
+		Engine:             engine,
+		PhoneNumberID:      req.PhoneNumberID,
+		AccessToken:        req.AccessToken,
+		BusinessAccountID:  req.BusinessAccountID,
+		AppSecret:          req.AppSecret,
+		WebhookVerifyToken: req.WebhookVerifyToken,
+		Proxy:              model.SessionProxy(req.Proxy),
+		Settings:           model.SessionSettings(req.Settings),
+		CreatedAt:          now,
+		UpdatedAt:          now,
 	}
 
 	if err := s.repo.Create(ctx, session); err != nil {
@@ -66,15 +80,18 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	metrics.SessionsTotal.Inc()
 
 	resp := &dto.SessionCreatedResp{
-		ID:        session.ID,
-		Name:      session.Name,
-		Token:     session.Token,
-		Status:    session.Status,
-		Connected: session.Connected,
-		Proxy:     req.Proxy,
-		Settings:  req.Settings,
-		CreatedAt: session.CreatedAt,
-		UpdatedAt: session.UpdatedAt,
+		ID:                session.ID,
+		Name:              session.Name,
+		Token:             session.Token,
+		Status:            session.Status,
+		Connected:         session.Connected,
+		Engine:            session.Engine,
+		PhoneNumberID:     session.PhoneNumberID,
+		BusinessAccountID: session.BusinessAccountID,
+		Proxy:             req.Proxy,
+		Settings:          req.Settings,
+		CreatedAt:         session.CreatedAt,
+		UpdatedAt:         session.UpdatedAt,
 	}
 
 	if req.Webhook != nil && req.Webhook.URL != "" {
@@ -163,6 +180,24 @@ func (s *SessionService) Update(ctx context.Context, id string, req dto.SessionU
 		}
 		session.Name = *req.Name
 	}
+	if req.Engine != nil {
+		session.Engine = *req.Engine
+	}
+	if req.PhoneNumberID != nil {
+		session.PhoneNumberID = *req.PhoneNumberID
+	}
+	if req.AccessToken != nil {
+		session.AccessToken = *req.AccessToken
+	}
+	if req.BusinessAccountID != nil {
+		session.BusinessAccountID = *req.BusinessAccountID
+	}
+	if req.AppSecret != nil {
+		session.AppSecret = *req.AppSecret
+	}
+	if req.WebhookVerifyToken != nil {
+		session.WebhookVerifyToken = *req.WebhookVerifyToken
+	}
 	if req.Proxy != nil {
 		session.Proxy = model.SessionProxy(*req.Proxy)
 	}
@@ -188,13 +223,24 @@ func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionSta
 		return nil, err
 	}
 
-	loggedIn := session.JID != ""
-	connected := session.Connected == 1
+	var loggedIn, connected bool
 
-	if s.engine != nil {
-		if client, cErr := s.engine.GetClient(id); cErr == nil {
-			connected = client.IsConnected()
-			loggedIn = client.Store.ID != nil
+	if session.Engine == "cloud_api" {
+		if s.provider != nil && session.PhoneNumberID != "" {
+			pn, err := s.provider.GetPhoneNumber(ctx, id, session.PhoneNumberID)
+			if err == nil && pn != nil {
+				connected = true
+				loggedIn = pn.Status == "connected"
+			}
+		}
+	} else {
+		loggedIn = session.JID != ""
+		connected = session.Connected == 1
+		if s.engine != nil {
+			if client, cErr := s.engine.GetClient(id); cErr == nil {
+				connected = client.IsConnected()
+				loggedIn = client.Store.ID != nil
+			}
 		}
 	}
 
@@ -213,6 +259,26 @@ func (s *SessionService) SetStatus(ctx context.Context, id string, status string
 }
 
 func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionProfileResp, error) {
+	session, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if session.Engine == "cloud_api" {
+		if s.provider != nil && session.PhoneNumberID != "" {
+			pn, err := s.provider.GetPhoneNumber(ctx, id, session.PhoneNumberID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get phone number: %w", err)
+			}
+			return &dto.SessionProfileResp{
+				PushName:     pn.VerifiedName,
+				BusinessName: "",
+				Platform:     pn.PlatformType,
+			}, nil
+		}
+		return &dto.SessionProfileResp{}, nil
+	}
+
 	client, err := s.engine.GetClient(id)
 	if err != nil {
 		return nil, fmt.Errorf("session not connected: %w", err)

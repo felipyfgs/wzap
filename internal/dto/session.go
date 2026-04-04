@@ -24,16 +24,15 @@ type SessionSettings struct {
 }
 
 type WebhookResp struct {
-	ID          string            `json:"id"`
-	SessionID   string            `json:"sessionId"`
-	URL         string            `json:"url"`
-	Secret      string            `json:"secret,omitempty"`
-	Events      []string          `json:"events"`
-	EventURLs   map[string]string `json:"eventUrls"`
-	Enabled     bool              `json:"enabled"`
-	NATSEnabled bool              `json:"natsEnabled"`
-	CreatedAt   time.Time         `json:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
+	ID          string    `json:"id"`
+	SessionID   string    `json:"sessionId"`
+	URL         string    `json:"url"`
+	Secret      string    `json:"secret,omitempty"`
+	Events      []string  `json:"events"`
+	Enabled     bool      `json:"enabled"`
+	NATSEnabled bool      `json:"natsEnabled"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 type WebhookCreateInline struct {
@@ -69,6 +68,7 @@ type SessionResp struct {
 	PushName          string          `json:"pushName,omitempty"`
 	BusinessName      string          `json:"businessName,omitempty"`
 	Platform          string          `json:"platform,omitempty"`
+	ChatwootEnabled   bool            `json:"chatwootEnabled"`
 	CreatedAt         time.Time       `json:"createdAt"`
 	UpdatedAt         time.Time       `json:"updatedAt"`
 }

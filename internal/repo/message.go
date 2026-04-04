@@ -88,3 +88,31 @@ func (r *MessageRepository) FindBySession(ctx context.Context, sessionID string,
 	}
 	return msgs, rows.Err()
 }
+
+func (r *MessageRepository) FindByID(ctx context.Context, sessionID, msgID string) (*model.Message, error) {
+	var m model.Message
+	err := r.db.QueryRow(ctx,
+		`SELECT id, session_id, chat_jid, sender_jid, from_me, msg_type, body,
+			COALESCE(media_type, ''), COALESCE(media_url, ''), COALESCE(raw, 'null'::jsonb), timestamp, created_at,
+			cw_message_id, cw_conversation_id, cw_source_id
+		 FROM wz_messages WHERE id = $1 AND session_id = $2`,
+		msgID, sessionID).Scan(
+		&m.ID, &m.SessionID, &m.ChatJID, &m.SenderJID, &m.FromMe, &m.MsgType, &m.Body,
+		&m.MediaType, &m.MediaURL, &m.Raw, &m.Timestamp, &m.CreatedAt,
+		&m.CWMessageID, &m.CWConversationID, &m.CWSourceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find message by ID: %w", err)
+	}
+	return &m, nil
+}
+
+func (r *MessageRepository) UpdateChatwootRef(ctx context.Context, sessionID, msgID string, cwMsgID, cwConvID int, sourceID string) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE wz_messages SET cw_message_id = $1, cw_conversation_id = $2, cw_source_id = $3
+		 WHERE id = $4 AND session_id = $5`,
+		cwMsgID, cwConvID, sourceID, msgID, sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to update chatwoot ref: %w", err)
+	}
+	return nil
+}

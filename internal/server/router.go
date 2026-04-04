@@ -1,14 +1,18 @@
 package server
 
 import (
+	"net/http"
+
 	ws "github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/swagger"
 
 	_ "wzap/docs"
 	"wzap/internal/handler"
+	"wzap/internal/integrations/chatwoot"
 	"wzap/internal/middleware"
 	"wzap/internal/repo"
 	"wzap/internal/service"
+	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/wa"
 	"wzap/internal/webhook"
 	wsHub "wzap/internal/websocket"
@@ -38,9 +42,13 @@ func (s *Server) SetupRoutes() error {
 
 	messageRepo := repo.NewMessageRepository(s.db.Pool)
 
+	// Initialize Cloud API Provider
+	configReader := service.NewSessionConfigReader(sessionRepo)
+	cloudProvider := cloudWA.NewClient(&http.Client{Timeout: s.Config.HTTPTimeout}, configReader)
+
 	// Initialize Services
-	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine)
-	messageSvc := service.NewMessageService(engine)
+	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, cloudProvider)
+	messageSvc := service.NewMessageService(engine, cloudProvider, sessionRepo)
 	contactSvc := service.NewContactService(engine)
 	groupSvc := service.NewGroupService(engine)
 	webhookSvc := service.NewWebhookService(webhookRepo)
@@ -48,8 +56,13 @@ func (s *Server) SetupRoutes() error {
 	newsletterSvc := service.NewNewsletterService(engine)
 	communitySvc := service.NewCommunityService(engine)
 	chatSvc := service.NewChatService(engine)
-	mediaSvc := service.NewMediaService(engine, s.minio)
+	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo)
 	historySvc := service.NewHistoryService(messageRepo)
+
+	chatwootRepo := chatwoot.NewRepository(s.db.Pool)
+	chatwootSvc := chatwoot.NewService(chatwootRepo, messageRepo, messageSvc)
+	chatwootHandler := chatwoot.NewHandler(chatwootSvc, chatwootRepo)
+	disp.AddListener(chatwootSvc)
 
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
 	engine.SetMessagePersist(historySvc.PersistMessage)
@@ -57,7 +70,7 @@ func (s *Server) SetupRoutes() error {
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)
-	sessionHandler := handler.NewSessionHandler(sessionSvc, engine)
+	sessionHandler := handler.NewSessionHandler(sessionSvc, engine, sessionRepo, chatwootRepo)
 	messageHandler := handler.NewMessageHandler(messageSvc)
 	contactHandler := handler.NewContactHandler(contactSvc)
 	groupHandler := handler.NewGroupHandler(groupSvc)
@@ -70,6 +83,7 @@ func (s *Server) SetupRoutes() error {
 	historyHandler := handler.NewHistoryHandler(messageRepo)
 
 	wsHandler := handler.NewWebSocketHandler(hub, s.Config)
+	cloudWebhookHandler := handler.NewCloudWebhookHandler(sessionRepo, cloudProvider, disp)
 
 	// Swagger UI (No Auth)
 	s.App.Get("/swagger/*", swagger.HandlerDefault)
@@ -213,6 +227,16 @@ func (s *Server) SetupRoutes() error {
 	sess.Get("/webhooks", webhookHandler.List)
 	sess.Put("/webhooks/:wid", webhookHandler.Update)
 	sess.Delete("/webhooks/:wid", webhookHandler.Delete)
+
+	// 11. Cloud API Webhooks (No Auth - validated via HMAC signature)
+	s.App.Post("/webhooks/cloud/:sessionId", cloudWebhookHandler.Handle)
+	s.App.Get("/webhooks/cloud/:sessionId", cloudWebhookHandler.Verify)
+
+	// 12. Chatwoot Integration
+	sess.Put("/integrations/chatwoot", chatwootHandler.Configure)
+	sess.Get("/integrations/chatwoot", chatwootHandler.GetConfig)
+	sess.Delete("/integrations/chatwoot", chatwootHandler.DeleteConfig)
+	s.App.Post("/chatwoot/webhook/:sessionId", chatwootHandler.IncomingWebhook)
 
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"wzap/internal/dto"
+	"wzap/internal/integrations/chatwoot"
 	"wzap/internal/metrics"
 	"wzap/internal/repo"
 	"wzap/internal/service"
@@ -16,16 +17,18 @@ import (
 )
 
 type SessionHandler struct {
-	sessionSvc *service.SessionService
-	engine     *wa.Manager
-	sessRepo   *repo.SessionRepository
+	sessionSvc   *service.SessionService
+	engine       *wa.Manager
+	sessRepo     *repo.SessionRepository
+	chatwootRepo *chatwoot.Repository
 }
 
-func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager, sessRepo *repo.SessionRepository) *SessionHandler {
+func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager, sessRepo *repo.SessionRepository, chatwootRepo *chatwoot.Repository) *SessionHandler {
 	return &SessionHandler{
-		sessionSvc: sessionSvc,
-		engine:     engine,
-		sessRepo:   sessRepo,
+		sessionSvc:   sessionSvc,
+		engine:       engine,
+		sessRepo:     sessRepo,
+		chatwootRepo: chatwootRepo,
 	}
 }
 
@@ -35,10 +38,10 @@ func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager, s
 // @Tags        Sessions
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SessionCreateReq true "Session data"
-// @Success     201  {object} dto.APIResponse{Data=dto.SessionCreatedResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     403  {object} dto.APIError
+// @Param       body body dto.SessionCreateReq true "Session data"
+// @Success     201 {object} dto.APIResponse{Data=dto.SessionCreatedResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     403 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions [post]
 func (h *SessionHandler) Create(c *fiber.Ctx) error {
@@ -66,6 +69,7 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 // @Produce     json
 // @Success     200 {object} dto.APIResponse{Data=[]dto.SessionResp}
 // @Failure     403 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions [get]
 func (h *SessionHandler) List(c *fiber.Ctx) error {
@@ -98,6 +102,12 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}
 
+	if h.chatwootRepo != nil {
+		if _, err := h.chatwootRepo.FindBySessionID(c.Context(), id); err == nil {
+			session.ChatwootEnabled = true
+		}
+	}
+
 	return c.JSON(dto.SuccessResp(session))
 }
 
@@ -127,9 +137,10 @@ func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body     dto.SessionUpdateReq true "Session update data"
+// @Param       body body dto.SessionUpdateReq true "Session update data"
 // @Success     200 {object} dto.APIResponse{Data=dto.SessionResp}
 // @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
 // @Security    Authorization
 // @Router      /sessions/{sessionId} [put]
 func (h *SessionHandler) Update(c *fiber.Ctx) error {
@@ -290,7 +301,7 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body     dto.PairPhoneReq true "Phone number"
+// @Param       body body dto.PairPhoneReq true "Phone number"
 // @Success     200 {object} dto.APIResponse{Data=dto.PairPhoneResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError

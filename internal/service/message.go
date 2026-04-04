@@ -52,6 +52,14 @@ func (s *MessageService) persistSent(sessionID, messageID, chatJID, msgType, bod
 	metrics.MessagesSent.Inc()
 }
 
+func (s *MessageService) persistSentCloud(sessionID, messageID, phone, msgType, body, mediaType string) {
+	if s.persistFn == nil {
+		return
+	}
+	s.persistFn(sessionID, messageID, phone, "", true, msgType, body, mediaType, time.Now().Unix(), nil)
+	metrics.MessagesSent.Inc()
+}
+
 func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto.SendTextReq) (string, error) {
 	session, err := s.sessRepo.FindByID(ctx, sessionID)
 	if err != nil {
@@ -114,6 +122,14 @@ func (s *MessageService) SendAudio(ctx context.Context, sessionID string, req dt
 }
 
 func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dto.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return s.sendMediaCloud(ctx, sessionID, req, mediaType)
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -246,7 +262,85 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 	return resp.ID, nil
 }
 
+func (s *MessageService) sendMediaCloud(ctx context.Context, sessionID string, req dto.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
+	var data []byte
+	var err error
+	if req.URL != "" {
+		data, err = downloadURL(req.URL)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		data, err = base64.StdEncoding.DecodeString(req.Base64)
+		if err != nil {
+			return "", fmt.Errorf("invalid base64: %w", err)
+		}
+	}
+
+	if req.FileName == "" {
+		req.FileName = "file"
+		ext, _ := mime.ExtensionsByType(req.MimeType)
+		if len(ext) > 0 {
+			req.FileName += ext[0]
+		}
+	}
+
+	uploadResp, err := s.provider.UploadMedia(ctx, sessionID, req.FileName, req.MimeType, data)
+	if err != nil {
+		return "", fmt.Errorf("failed to upload media to cloud api: %w", err)
+	}
+
+	media := &cloudWA.MediaIDOrURL{
+		ID:       uploadResp.ID,
+		Caption:  req.Caption,
+		Filename: req.FileName,
+	}
+
+	opts := buildSendOptsCloud(req.CustomID, req.ReplyTo)
+
+	var resp *cloudWA.MessageResponse
+	switch mediaType {
+	case whatsmeow.MediaImage:
+		resp, err = s.provider.SendImage(ctx, sessionID, req.Phone, media, opts...)
+	case whatsmeow.MediaVideo:
+		resp, err = s.provider.SendVideo(ctx, sessionID, req.Phone, media, opts...)
+	case whatsmeow.MediaDocument:
+		resp, err = s.provider.SendDocument(ctx, sessionID, req.Phone, media, opts...)
+	case whatsmeow.MediaAudio:
+		resp, err = s.provider.SendAudio(ctx, sessionID, req.Phone, media, opts...)
+	default:
+		return "", fmt.Errorf("unsupported media type for cloud api: %s", mediaType)
+	}
+	if err != nil {
+		return "", fmt.Errorf("failed to send media via cloud api: %w", err)
+	}
+
+	var msgType string
+	switch mediaType {
+	case whatsmeow.MediaImage:
+		msgType = "image"
+	case whatsmeow.MediaVideo:
+		msgType = "video"
+	case whatsmeow.MediaDocument:
+		msgType = "document"
+	case whatsmeow.MediaAudio:
+		msgType = "audio"
+	}
+
+	s.persistSentCloud(sessionID, resp.MessageID, req.Phone, msgType, req.Caption, req.MimeType)
+
+	return resp.MessageID, nil
+}
+
 func (s *MessageService) SendContact(ctx context.Context, sessionID string, req dto.SendContactReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return "", errCloudAPINotSupported
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -275,6 +369,18 @@ func (s *MessageService) SendContact(ctx context.Context, sessionID string, req 
 }
 
 func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req dto.SendLocationReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		resp, err := s.provider.SendLocation(ctx, sessionID, req.Phone, req.Latitude, req.Longitude, req.Name, req.Address)
+		if err != nil {
+			return "", fmt.Errorf("failed to send location via cloud api: %w", err)
+		}
+		return resp.MessageID, nil
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -304,30 +410,28 @@ func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req
 	return resp.ID, nil
 }
 
-func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req dto.SendPollReq) (string, error) {
-	client, err := s.engine.GetClient(sessionID)
-	if err != nil {
-		return "", err
-	}
-
-	jid, err := parseJID(req.Phone)
-	if err != nil {
-		return "", err
-	}
-
-	msg := client.BuildPollCreation(req.Name, req.Options, req.SelectableCount)
-
-	resp, err := client.SendMessage(ctx, jid, msg)
-	if err != nil {
-		return "", fmt.Errorf("failed to send poll message: %w", err)
-	}
-
-	s.persistSent(sessionID, resp.ID, jid.String(), "poll", req.Name, "", client)
-
-	return resp.ID, nil
-}
-
 func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req dto.SendStickerReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		data, err := base64.StdEncoding.DecodeString(req.Base64)
+		if err != nil {
+			return "", fmt.Errorf("invalid base64: %w", err)
+		}
+		uploadResp, err := s.provider.UploadMedia(ctx, sessionID, "sticker.webp", req.MimeType, data)
+		if err != nil {
+			return "", fmt.Errorf("failed to upload sticker to cloud api: %w", err)
+		}
+		media := &cloudWA.MediaIDOrURL{ID: uploadResp.ID}
+		resp, err := s.provider.SendSticker(ctx, sessionID, req.Phone, media)
+		if err != nil {
+			return "", fmt.Errorf("failed to send sticker via cloud api: %w", err)
+		}
+		return resp.MessageID, nil
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -371,6 +475,19 @@ func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req 
 }
 
 func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto.SendLinkReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		opts := []cloudWA.SendOption{cloudWA.WithPreviewURL(true)}
+		resp, err := s.provider.SendText(ctx, sessionID, req.Phone, req.URL, opts...)
+		if err != nil {
+			return "", fmt.Errorf("failed to send link via cloud api: %w", err)
+		}
+		return resp.MessageID, nil
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -400,6 +517,14 @@ func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto
 }
 
 func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req dto.EditMessageReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return "", errCloudAPINotSupported
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -427,6 +552,14 @@ func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req 
 }
 
 func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, req dto.DeleteMessageReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return "", errCloudAPINotSupported
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -448,6 +581,18 @@ func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, re
 }
 
 func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req dto.ReactMessageReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		resp, err := s.provider.SendReaction(ctx, sessionID, req.Phone, req.MessageID, req.Reaction)
+		if err != nil {
+			return "", fmt.Errorf("failed to react via cloud api: %w", err)
+		}
+		return resp.MessageID, nil
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -469,6 +614,14 @@ func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req
 }
 
 func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req dto.MarkReadReq) error {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+	if session.Engine == "cloud_api" {
+		return s.provider.MarkRead(ctx, sessionID, req.MessageID)
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -483,6 +636,14 @@ func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req dto
 }
 
 func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req dto.SetPresenceReq) error {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+	if session.Engine == "cloud_api" {
+		return errCloudAPINotSupported
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err
@@ -544,6 +705,36 @@ func buildSendOpts(customID string) []whatsmeow.SendRequestExtra {
 }
 
 func (s *MessageService) SendButton(ctx context.Context, sessionID string, req dto.SendButtonReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		buttons := make([]cloudWA.InteractiveButton, len(req.Buttons))
+		for i, b := range req.Buttons {
+			buttons[i] = cloudWA.InteractiveButton{
+				Type:  "reply",
+				Title: b.Text,
+				ID:    b.ID,
+			}
+		}
+		interactive := &cloudWA.Interactive{
+			Type: "button",
+			Action: &cloudWA.InteractiveAction{
+				Buttons: buttons,
+			},
+			Body: &cloudWA.InteractiveBody{Text: req.Body},
+		}
+		if req.Footer != "" {
+			interactive.Footer = &cloudWA.InteractiveFooter{Text: req.Footer}
+		}
+		resp, err := s.provider.SendInteractive(ctx, sessionID, req.Phone, interactive, buildSendOptsCloud(req.CustomID, req.ReplyTo)...)
+		if err != nil {
+			return "", fmt.Errorf("failed to send button via cloud api: %w", err)
+		}
+		return resp.MessageID, nil
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -594,6 +785,45 @@ func (s *MessageService) SendButton(ctx context.Context, sessionID string, req d
 }
 
 func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto.SendListReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		sections := make([]cloudWA.InteractiveSection, len(req.Sections))
+		for i, sec := range req.Sections {
+			rows := make([]cloudWA.InteractiveSectionRow, len(sec.Rows))
+			for j, r := range sec.Rows {
+				rows[j] = cloudWA.InteractiveSectionRow{
+					ID:          r.ID,
+					Title:       r.Title,
+					Description: r.Description,
+				}
+			}
+			sections[i] = cloudWA.InteractiveSection{
+				Title: sec.Title,
+				Rows:  rows,
+			}
+		}
+		interactive := &cloudWA.Interactive{
+			Type: "list",
+			Action: &cloudWA.InteractiveAction{
+				Button:   req.ButtonText,
+				Sections: sections,
+			},
+			Body:   &cloudWA.InteractiveBody{Text: req.Body},
+			Header: &cloudWA.InteractiveHeader{Type: "text", Text: req.Title},
+		}
+		if req.Footer != "" {
+			interactive.Footer = &cloudWA.InteractiveFooter{Text: req.Footer}
+		}
+		resp, err := s.provider.SendInteractive(ctx, sessionID, req.Phone, interactive, buildSendOptsCloud(req.CustomID, req.ReplyTo)...)
+		if err != nil {
+			return "", fmt.Errorf("failed to send list via cloud api: %w", err)
+		}
+		return resp.MessageID, nil
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -646,7 +876,46 @@ func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto
 	return resp.ID, nil
 }
 
+func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req dto.SendPollReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return "", errCloudAPINotSupported
+	}
+
+	client, err := s.engine.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	jid, err := parseJID(req.Phone)
+	if err != nil {
+		return "", err
+	}
+
+	msg := client.BuildPollCreation(req.Name, req.Options, req.SelectableCount)
+
+	resp, err := client.SendMessage(ctx, jid, msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to send poll message: %w", err)
+	}
+
+	s.persistSent(sessionID, resp.ID, jid.String(), "poll", req.Name, "", client)
+
+	return resp.ID, nil
+}
+
 func (s *MessageService) SendStatusText(ctx context.Context, sessionID string, req dto.SendStatusTextReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return "", errCloudAPINotSupported
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -673,6 +942,14 @@ func (s *MessageService) SendStatusText(ctx context.Context, sessionID string, r
 }
 
 func (s *MessageService) SendStatusMedia(ctx context.Context, sessionID string, req dto.SendStatusMediaReq, mediaType whatsmeow.MediaType) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return "", errCloudAPINotSupported
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -743,6 +1020,14 @@ func (s *MessageService) SendStatusMedia(ctx context.Context, sessionID string, 
 }
 
 func (s *MessageService) ForwardMessage(ctx context.Context, sessionID string, req dto.ForwardMessageReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		return "", errCloudAPINotSupported
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err

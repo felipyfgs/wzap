@@ -19,9 +19,10 @@ func NewContactHandler(contactSvc *service.ContactService) *ContactHandler {
 // @Description Returns all contacts from the WhatsApp session
 // @Tags        Contacts
 // @Produce     json
-// @Success     200 {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts [get]
 func (h *ContactHandler) List(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -42,10 +43,12 @@ func (h *ContactHandler) List(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.CheckContactReq true "Phone numbers"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.CheckContactReq true "Phone numbers"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/check [post]
 func (h *ContactHandler) Check(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -71,10 +74,12 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.GetAvatarReq true "JID payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.GetAvatarResp}
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.GetAvatarReq true "JID payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.GetAvatarResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/avatar [post]
 func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -98,10 +103,12 @@ func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.BlockContactReq true "JID payload"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.BlockContactReq true "JID payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/block [post]
 func (h *ContactHandler) Block(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -125,10 +132,12 @@ func (h *ContactHandler) Block(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.BlockContactReq true "JID payload"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.BlockContactReq true "JID payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/unblock [post]
 func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -151,9 +160,10 @@ func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 // @Description Returns the full list of JIDs currently blocked by the session
 // @Tags        Contacts
 // @Produce     json
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/blocklist [get]
 func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -173,10 +183,12 @@ func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.GetUserInfoReq true "JIDs payload"
-// @Success     200  {object} dto.APIResponse{Data=[]dto.UserInfoResp}
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.GetUserInfoReq true "JIDs payload"
+// @Success     200 {object} dto.APIResponse{Data=[]dto.UserInfoResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/info [post]
 func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -199,9 +211,10 @@ func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 // @Description Retrieves the current session's WhatsApp privacy settings (last-seen, profile photo, status visibility)
 // @Tags        Contacts
 // @Produce     json
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/privacy [get]
 func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -221,12 +234,12 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SetProfilePictureReq true "Base64 image payload"
-// @Success     200  {object} dto.APIResponse{Data=dto.PictureIDResp}
-// @Failure     400  {object} dto.APIError
-// @Failure     500  {object} dto.APIError
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SetProfilePictureReq true "Base64 image payload"
+// @Success     200 {object} dto.APIResponse{Data=dto.PictureIDResp}
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/profile-picture [post]
 func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -250,10 +263,12 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SubscribePresenceReq true "JID payload"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SubscribePresenceReq true "JID payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/presence [post]
 func (h *ContactHandler) SubscribePresence(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -276,10 +291,12 @@ func (h *ContactHandler) SubscribePresence(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SetPrivacyReq true "Privacy setting"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SetPrivacyReq true "Privacy setting"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/privacy [post]
 func (h *ContactHandler) SetPrivacy(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -303,10 +320,12 @@ func (h *ContactHandler) SetPrivacy(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.SetStatusMessageReq true "Status message"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.SetStatusMessageReq true "Status message"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/contacts/status [post]
 func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -329,10 +348,12 @@ func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
 // @Tags        Contacts
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.UpdateProfileNameReq true "Profile name"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.UpdateProfileNameReq true "Profile name"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/profile/name [post]
 func (h *ContactHandler) UpdateProfileName(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

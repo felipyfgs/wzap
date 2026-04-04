@@ -20,10 +20,12 @@ func NewChatHandler(chatSvc *service.ChatService) *ChatHandler {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatActionReq true "Chat JID payload"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatActionReq true "Chat JID payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/archive [post]
 func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -46,10 +48,12 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatActionReq true "Chat JID payload"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatActionReq true "Chat JID payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/mute [post]
 func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -72,10 +76,12 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatActionReq true "Chat JID payload"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatActionReq true "Chat JID payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/pin [post]
 func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -98,10 +104,12 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatActionReq true "Chat JID payload"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatActionReq true "Chat JID payload"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/unpin [post]
 func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -124,10 +132,12 @@ func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatActionReq true "Chat JID"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatActionReq true "Chat JID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/unarchive [post]
 func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -150,10 +160,12 @@ func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatActionReq true "Chat JID"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatActionReq true "Chat JID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/unmute [post]
 func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -176,10 +188,12 @@ func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatActionReq true "Chat JID"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatActionReq true "Chat JID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/delete [post]
 func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -202,10 +216,12 @@ func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatMarkReadReq true "Chat JID + message IDs"
-// @Success     200  {object} dto.APIResponse
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatMarkReadReq true "Chat JID + message IDs"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     500 {object} dto.APIError
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/read [post]
 func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
@@ -228,11 +244,12 @@ func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
 // @Tags        Chat
 // @Accept      json
 // @Produce     json
-// @Param       body body     dto.ChatMarkUnreadReq true "Chat JID"
-// @Success     200  {object} dto.APIResponse
-// @Failure     501  {object} dto.APIError "Not implemented by WhatsApp protocol"
-// @Security    Authorization
 // @Param       sessionId path string true "Session name or ID"
+// @Param       body body dto.ChatMarkUnreadReq true "Chat JID"
+// @Success     200 {object} dto.APIResponse
+// @Failure     400 {object} dto.APIError
+// @Failure     501 {object} dto.APIError "Not implemented by WhatsApp protocol"
+// @Security    Authorization
 // @Router      /sessions/{sessionId}/chat/unread [post]
 func (h *ChatHandler) MarkUnread(c *fiber.Ctx) error {
 	id, err := getSessionID(c)

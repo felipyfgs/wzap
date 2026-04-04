@@ -20,16 +20,20 @@ import (
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/metrics"
+	cloudWA "wzap/internal/provider/whatsapp"
+	"wzap/internal/repo"
 	"wzap/internal/wa"
 )
 
 type MessageService struct {
 	engine    *wa.Manager
+	provider  *cloudWA.Client
+	sessRepo  *repo.SessionRepository
 	persistFn wa.MessagePersistFunc
 }
 
-func NewMessageService(engine *wa.Manager) *MessageService {
-	return &MessageService{engine: engine}
+func NewMessageService(engine *wa.Manager, provider *cloudWA.Client, sessRepo *repo.SessionRepository) *MessageService {
+	return &MessageService{engine: engine, provider: provider, sessRepo: sessRepo}
 }
 
 func (s *MessageService) SetMessagePersist(fn wa.MessagePersistFunc) {
@@ -49,6 +53,19 @@ func (s *MessageService) persistSent(sessionID, messageID, chatJID, msgType, bod
 }
 
 func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto.SendTextReq) (string, error) {
+	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if session.Engine == "cloud_api" {
+		opts := buildSendOptsCloud(req.CustomID, req.ReplyTo)
+		resp, err := s.provider.SendText(ctx, sessionID, req.Phone, req.Body, opts...)
+		if err != nil {
+			return "", fmt.Errorf("failed to send text message via cloud api: %w", err)
+		}
+		return resp.MessageID, nil
+	}
+
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -781,7 +798,6 @@ func downloadURL(url string) ([]byte, error) {
 func parseJID(target string) (types.JID, error) {
 	jid, err := types.ParseJID(target)
 	if err != nil {
-		// If not a full JID, treat as phone number
 		if !strings.Contains(target, "@") {
 			return types.NewJID(target, types.DefaultUserServer), nil
 		}
@@ -789,3 +805,16 @@ func parseJID(target string) (types.JID, error) {
 	}
 	return jid, nil
 }
+
+func buildSendOptsCloud(customID string, reply *dto.ReplyContext) []cloudWA.SendOption {
+	var opts []cloudWA.SendOption
+	if customID != "" {
+		opts = append(opts, cloudWA.WithCustomID(customID))
+	}
+	if reply != nil && reply.MessageID != "" {
+		opts = append(opts, cloudWA.WithReplyTo(reply.MessageID))
+	}
+	return opts
+}
+
+var errCloudAPINotSupported = fmt.Errorf("operation not supported for cloud_api engine")

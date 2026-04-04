@@ -18,9 +18,9 @@ func NewSessionRepository(db *pgxpool.Pool) *SessionRepository {
 }
 
 func (r *SessionRepository) Create(ctx context.Context, session *model.Session) error {
-	query := `INSERT INTO wz_sessions (id, name, token, status, proxy, settings, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
-	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.Token, session.Status, session.Proxy, session.Settings, session.CreatedAt, session.UpdatedAt)
+	query := `INSERT INTO wz_sessions (id, name, token, status, engine, phone_number_id, access_token, business_account_id, app_secret, webhook_verify_token, proxy, settings, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`
+	_, err := r.db.Exec(ctx, query, session.ID, session.Name, session.Token, session.Status, session.Engine, session.PhoneNumberID, session.AccessToken, session.BusinessAccountID, session.AppSecret, session.WebhookVerifyToken, session.Proxy, session.Settings, session.CreatedAt, session.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to insert session: %w", err)
 	}
@@ -29,7 +29,9 @@ func (r *SessionRepository) Create(ctx context.Context, session *model.Session) 
 
 func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error) {
 	query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
-		connected, status, proxy, settings, created_at, updated_at
+		connected, status, COALESCE(engine, 'whatsmeow'), COALESCE(phone_number_id, ''),
+		COALESCE(access_token, ''), COALESCE(business_account_id, ''), COALESCE(app_secret, ''),
+		COALESCE(webhook_verify_token, ''), proxy, settings, created_at, updated_at
 		FROM wz_sessions ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(ctx, query)
@@ -41,7 +43,7 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 	var sessions []model.Session
 	for rows.Next() {
 		var s model.Session
-		if err := rows.Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Engine, &s.PhoneNumberID, &s.AccessToken, &s.BusinessAccountID, &s.AppSecret, &s.WebhookVerifyToken, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan session: %w", err)
 		}
 		sessions = append(sessions, s)
@@ -51,11 +53,13 @@ func (r *SessionRepository) FindAll(ctx context.Context) ([]model.Session, error
 
 func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Session, error) {
 	query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
-		connected, status, proxy, settings, created_at, updated_at
+		connected, status, COALESCE(engine, 'whatsmeow'), COALESCE(phone_number_id, ''),
+		COALESCE(access_token, ''), COALESCE(business_account_id, ''), COALESCE(app_secret, ''),
+		COALESCE(webhook_verify_token, ''), proxy, settings, created_at, updated_at
 		FROM wz_sessions WHERE id = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Engine, &s.PhoneNumberID, &s.AccessToken, &s.BusinessAccountID, &s.AppSecret, &s.WebhookVerifyToken, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found: %w", err)
 	}
@@ -64,11 +68,13 @@ func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Ses
 
 func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model.Session, error) {
 	query := `SELECT id, name, COALESCE(token, ''), COALESCE(jid, ''), COALESCE(qr_code, ''),
-		connected, status, proxy, settings, created_at, updated_at
+		connected, status, COALESCE(engine, 'whatsmeow'), COALESCE(phone_number_id, ''),
+		COALESCE(access_token, ''), COALESCE(business_account_id, ''), COALESCE(app_secret, ''),
+		COALESCE(webhook_verify_token, ''), proxy, settings, created_at, updated_at
 		FROM wz_sessions WHERE name = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Engine, &s.PhoneNumberID, &s.AccessToken, &s.BusinessAccountID, &s.AppSecret, &s.WebhookVerifyToken, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found: %w", err)
 	}
@@ -77,11 +83,13 @@ func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model
 
 func (r *SessionRepository) FindByToken(ctx context.Context, token string) (*model.Session, error) {
 	query := `SELECT id, name, COALESCE(jid, ''), COALESCE(qr_code, ''),
-		connected, status, proxy, settings, created_at, updated_at
+		connected, status, COALESCE(engine, 'whatsmeow'), COALESCE(phone_number_id, ''),
+		COALESCE(access_token, ''), COALESCE(business_account_id, ''), COALESCE(app_secret, ''),
+		COALESCE(webhook_verify_token, ''), proxy, settings, created_at, updated_at
 		FROM wz_sessions WHERE token = $1`
 
 	var s model.Session
-	err := r.db.QueryRow(ctx, query, token).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, token).Scan(&s.ID, &s.Name, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Engine, &s.PhoneNumberID, &s.AccessToken, &s.BusinessAccountID, &s.AppSecret, &s.WebhookVerifyToken, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("session not found for token: %w", err)
 	}
@@ -98,8 +106,8 @@ func (r *SessionRepository) Delete(ctx context.Context, id string) error {
 
 func (r *SessionRepository) UpdateSession(ctx context.Context, session *model.Session) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE wz_sessions SET name = $1, proxy = $2, settings = $3, updated_at = NOW() WHERE id = $4`,
-		session.Name, session.Proxy, session.Settings, session.ID)
+		`UPDATE wz_sessions SET name = $1, engine = $2, phone_number_id = $3, access_token = $4, business_account_id = $5, app_secret = $6, webhook_verify_token = $7, proxy = $8, settings = $9, updated_at = NOW() WHERE id = $10`,
+		session.Name, session.Engine, session.PhoneNumberID, session.AccessToken, session.BusinessAccountID, session.AppSecret, session.WebhookVerifyToken, session.Proxy, session.Settings, session.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update session %s: %w", session.ID, err)
 	}

@@ -73,3 +73,9 @@ coverage.out
 
 # OpenSpec
 openspec/
+
+# Windsurf
+.windsurf/
+
+# Temp
+temp/

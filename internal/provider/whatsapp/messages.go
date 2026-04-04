@@ -160,18 +160,13 @@ func (c *Client) SendReaction(ctx context.Context, sessionID, recipient, message
 }
 
 func (c *Client) MarkRead(ctx context.Context, sessionID, messageID string) error {
-	cfg, err := c.configReader.ReadConfig(ctx, sessionID)
-	if err != nil {
-		return fmt.Errorf("failed to read config for session %s: %w", sessionID, err)
-	}
-
 	payload := map[string]any{
 		"messaging_product": "whatsapp",
 		"status":            "read",
 		"message_id":        messageID,
 	}
 
-	_, err = c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), payload)
+	_, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), payload)
 	if err != nil {
 		return fmt.Errorf("failed to mark as read: %w", err)
 	}

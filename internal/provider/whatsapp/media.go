@@ -3,9 +3,11 @@ package whatsapp
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/textproto"
 )
 
@@ -69,7 +71,7 @@ func (c *Client) UploadMedia(ctx context.Context, sessionID, filename, mimeType 
 }
 
 func (c *Client) GetMediaURL(ctx context.Context, sessionID, mediaID string) (*MediaInfo, error) {
-	body, err := c.doBusinessRequest(ctx, "GET", mediaID, nil)
+	body, err := c.doBusinessRequest(ctx, sessionID, "GET", mediaID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get media info: %w", err)
 	}

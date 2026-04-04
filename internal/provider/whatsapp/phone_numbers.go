@@ -12,7 +12,7 @@ func (c *Client) ListPhoneNumbers(ctx context.Context, sessionID string) (*Phone
 	}
 
 	endpoint := cfg.BusinessAccountID + "/phone_numbers"
-	body, err := c.doBusinessRequest(ctx, "GET", endpoint, nil)
+	body, err := c.doBusinessRequest(ctx, sessionID, "GET", endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list phone numbers: %w", err)
 	}
@@ -26,7 +26,7 @@ func (c *Client) ListPhoneNumbers(ctx context.Context, sessionID string) (*Phone
 }
 
 func (c *Client) GetPhoneNumber(ctx context.Context, sessionID, phoneNumberID string) (*PhoneNumber, error) {
-	body, err := c.doBusinessRequest(ctx, "GET", phoneNumberID, nil)
+	body, err := c.doBusinessRequest(ctx, sessionID, "GET", phoneNumberID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get phone number: %w", err)
 	}

@@ -17,7 +17,7 @@ import (
 func newSessionApp(sessionSvc *service.SessionService) *fiber.App {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 	app.Use(recover.New())
-	h := handler.NewSessionHandler(sessionSvc, nil)
+	h := handler.NewSessionHandler(sessionSvc, nil, nil)
 
 	// Admin-scoped routes
 	grp := app.Group("/sessions")
@@ -42,7 +42,7 @@ func newSessionApp(sessionSvc *service.SessionService) *fiber.App {
 }
 
 func TestSessionCreate_BadJSON(t *testing.T) {
-	app := newSessionApp(service.NewSessionService(nil, nil, nil))
+	app := newSessionApp(service.NewSessionService(nil, nil, nil, nil))
 	req := httptest.NewRequest(http.MethodPost, "/sessions", bytes.NewBufferString("not-json"))
 	req.Header.Set("Content-Type", "application/json")
 	resp, _ := app.Test(req, -1)
@@ -52,7 +52,7 @@ func TestSessionCreate_BadJSON(t *testing.T) {
 }
 
 func TestSessionCreate_MissingName(t *testing.T) {
-	app := newSessionApp(service.NewSessionService(nil, nil, nil))
+	app := newSessionApp(service.NewSessionService(nil, nil, nil, nil))
 	body, _ := json.Marshal(dto.SessionCreateReq{})
 	req := httptest.NewRequest(http.MethodPost, "/sessions", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -63,7 +63,7 @@ func TestSessionCreate_MissingName(t *testing.T) {
 }
 
 func TestSessionPair_MissingPhone(t *testing.T) {
-	app := newSessionApp(service.NewSessionService(nil, nil, nil))
+	app := newSessionApp(service.NewSessionService(nil, nil, nil, nil))
 	body, _ := json.Marshal(dto.PairPhoneReq{})
 	req := httptest.NewRequest(http.MethodPost, "/sessions/sess1/pair", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -74,7 +74,7 @@ func TestSessionPair_MissingPhone(t *testing.T) {
 }
 
 func TestSessionUpdate_ValidEmptyBody(t *testing.T) {
-	app := newSessionApp(service.NewSessionService(nil, nil, nil))
+	app := newSessionApp(service.NewSessionService(nil, nil, nil, nil))
 	body, _ := json.Marshal(dto.SessionUpdateReq{})
 	req := httptest.NewRequest(http.MethodPut, "/sessions/sess1", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")

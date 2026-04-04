@@ -133,17 +133,20 @@ type UpdateProfileNameReq struct {
 
 func SessionToResp(s model.Session, pushName, businessName, platform string) SessionResp {
 	return SessionResp{
-		ID:           s.ID,
-		Name:         s.Name,
-		JID:          s.JID,
-		Connected:    s.Connected,
-		Status:       s.Status,
-		Proxy:        SessionProxy(s.Proxy),
-		Settings:     SessionSettings(s.Settings),
-		PushName:     pushName,
-		BusinessName: businessName,
-		Platform:     platform,
-		CreatedAt:    s.CreatedAt,
-		UpdatedAt:    s.UpdatedAt,
+		ID:                s.ID,
+		Name:              s.Name,
+		JID:               s.JID,
+		Connected:         s.Connected,
+		Status:            s.Status,
+		Engine:            s.Engine,
+		PhoneNumberID:     s.PhoneNumberID,
+		BusinessAccountID: s.BusinessAccountID,
+		Proxy:             SessionProxy(s.Proxy),
+		Settings:          SessionSettings(s.Settings),
+		PushName:          pushName,
+		BusinessName:      businessName,
+		Platform:          platform,
+		CreatedAt:         s.CreatedAt,
+		UpdatedAt:         s.UpdatedAt,
 	}
 }

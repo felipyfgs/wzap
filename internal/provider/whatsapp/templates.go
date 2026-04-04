@@ -17,7 +17,7 @@ func (c *Client) ListTemplates(ctx context.Context, sessionID string, limit int)
 		endpoint += buildQueryParams(url.Values{"limit": []string{fmt.Sprintf("%d", limit)}})
 	}
 
-	body, err := c.doBusinessRequest(ctx, "GET", endpoint, nil)
+	body, err := c.doBusinessRequest(ctx, sessionID, "GET", endpoint, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list templates: %w", err)
 	}
@@ -37,7 +37,7 @@ func (c *Client) CreateTemplate(ctx context.Context, sessionID string, req *Crea
 	}
 
 	endpoint := cfg.BusinessAccountID + "/message_templates"
-	body, err := c.doBusinessRequest(ctx, "POST", endpoint, req)
+	body, err := c.doBusinessRequest(ctx, sessionID, "POST", endpoint, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create template: %w", err)
 	}
@@ -51,7 +51,7 @@ func (c *Client) CreateTemplate(ctx context.Context, sessionID string, req *Crea
 }
 
 func (c *Client) GetTemplate(ctx context.Context, sessionID, templateID string) (*TemplateNode, error) {
-	body, err := c.doBusinessRequest(ctx, "GET", templateID, nil)
+	body, err := c.doBusinessRequest(ctx, sessionID, "GET", templateID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get template: %w", err)
 	}
@@ -65,7 +65,7 @@ func (c *Client) GetTemplate(ctx context.Context, sessionID, templateID string) 
 }
 
 func (c *Client) UpdateTemplate(ctx context.Context, sessionID, templateID string, req *UpdateTemplateRequest) (*TemplateNode, error) {
-	body, err := c.doBusinessRequest(ctx, "POST", templateID, req)
+	body, err := c.doBusinessRequest(ctx, sessionID, "POST", templateID, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update template: %w", err)
 	}
@@ -79,7 +79,7 @@ func (c *Client) UpdateTemplate(ctx context.Context, sessionID, templateID strin
 }
 
 func (c *Client) DeleteTemplate(ctx context.Context, sessionID, templateID string) error {
-	_, err := c.doBusinessRequest(ctx, "DELETE", templateID, nil)
+	_, err := c.doBusinessRequest(ctx, sessionID, "DELETE", templateID, nil)
 	if err != nil {
 		return fmt.Errorf("failed to delete template: %w", err)
 	}

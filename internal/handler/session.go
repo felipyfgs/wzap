@@ -6,6 +6,7 @@ import (
 
 	"wzap/internal/dto"
 	"wzap/internal/metrics"
+	"wzap/internal/repo"
 	"wzap/internal/service"
 	"wzap/internal/wa"
 
@@ -17,12 +18,14 @@ import (
 type SessionHandler struct {
 	sessionSvc *service.SessionService
 	engine     *wa.Manager
+	sessRepo   *repo.SessionRepository
 }
 
-func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager) *SessionHandler {
+func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager, sessRepo *repo.SessionRepository) *SessionHandler {
 	return &SessionHandler{
 		sessionSvc: sessionSvc,
 		engine:     engine,
+		sessRepo:   sessRepo,
 	}
 }
 
@@ -178,6 +181,15 @@ func (h *SessionHandler) Status(c *fiber.Ctx) error {
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 
+	session, err := h.sessRepo.FindByID(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	if session.Engine == "cloud_api" {
+		return c.JSON(dto.SuccessResp(dto.ConnectResp{Status: "CONNECTED"}))
+	}
+
 	client, qrChan, err := h.engine.Connect(c.Context(), id)
 	if err != nil {
 		if errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
@@ -212,6 +224,16 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 // @Router      /sessions/{sessionId}/disconnect [post]
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
+
+	session, err := h.sessRepo.FindByID(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	if session.Engine == "cloud_api" {
+		return c.JSON(dto.SuccessResp(nil))
+	}
+
 	if err := h.engine.Disconnect(id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", err.Error()))
 	}
@@ -233,6 +255,15 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 // @Router      /sessions/{sessionId}/qr [get]
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
+
+	session, err := h.sessRepo.FindByID(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	if session.Engine == "cloud_api" {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Not Supported", "QR not supported for cloud_api engine"))
+	}
 
 	qrCode, err := h.engine.GetQRCode(c.Context(), id)
 	if err != nil {
@@ -267,12 +298,19 @@ func (h *SessionHandler) QR(c *fiber.Ctx) error {
 // @Router      /sessions/{sessionId}/pair [post]
 func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
+
 	var req dto.PairPhoneReq
 	if err := parseAndValidate(c, &req); err != nil {
 		return err
 	}
-	if req.Phone == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "phone is required"))
+
+	session, err := h.sessRepo.FindByID(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	if session.Engine == "cloud_api" {
+		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Not Supported", "Pairing not supported for cloud_api engine"))
 	}
 
 	code, err := h.engine.PairPhone(c.Context(), id, req.Phone)
@@ -295,6 +333,16 @@ func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 // @Router      /sessions/{sessionId}/logout [post]
 func (h *SessionHandler) Logout(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
+
+	session, err := h.sessRepo.FindByID(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	if session.Engine == "cloud_api" {
+		return c.JSON(dto.SuccessResp(nil))
+	}
+
 	if err := h.engine.Logout(c.Context(), id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Logout Error", err.Error()))
 	}
@@ -333,6 +381,16 @@ func (h *SessionHandler) Profile(c *fiber.Ctx) error {
 // @Router      /sessions/{sessionId}/reconnect [post]
 func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
+
+	session, err := h.sessRepo.FindByID(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	if session.Engine == "cloud_api" {
+		return c.JSON(dto.SuccessResp(nil))
+	}
+
 	if err := h.engine.Reconnect(c.Context(), id); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Reconnect Error", err.Error()))
 	}
@@ -352,10 +410,24 @@ func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
 // @Router      /sessions/{sessionId}/restart [post]
 func (h *SessionHandler) Restart(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
-	session, err := h.sessionSvc.Restart(c.Context(), id)
+
+	session, err := h.sessRepo.FindByID(c.Context(), id)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+	}
+
+	if session.Engine == "cloud_api" {
+		resp, err := h.sessionSvc.Get(c.Context(), id)
+		if err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+		}
+		return c.JSON(dto.SuccessResp(resp))
+	}
+
+	resp, err := h.sessionSvc.Restart(c.Context(), id)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Restart Error", err.Error()))
 	}
 
-	return c.JSON(dto.SuccessResp(session))
+	return c.JSON(dto.SuccessResp(resp))
 }

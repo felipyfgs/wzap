@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/url"
 )
@@ -24,9 +23,6 @@ func (c *Client) doRequest(ctx context.Context, sessionID, method, endpoint stri
 	var contentType string
 
 	switch v := body.(type) {
-	case *multipart.Writer:
-		reqBody = v.FormDataContentType()
-		contentType = v.FormDataContentType()
 	case io.Reader:
 		reqBody = v
 	case nil:
@@ -149,10 +145,10 @@ func (c *Client) doRequestDownload(ctx context.Context, downloadURL string) ([]b
 	return body, contentType, nil
 }
 
-func (c *Client) doBusinessRequest(ctx context.Context, method, endpoint string, body any) ([]byte, error) {
-	cfg, err := c.configReader.ReadConfig(ctx, "")
+func (c *Client) doBusinessRequest(ctx context.Context, sessionID, method, endpoint string, body any) ([]byte, error) {
+	cfg, err := c.configReader.ReadConfig(ctx, sessionID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config: %w", err)
+		return nil, fmt.Errorf("failed to read config for session %s: %w", sessionID, err)
 	}
 	cfg.ApplyDefaults()
 

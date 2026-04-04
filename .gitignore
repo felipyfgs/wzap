@@ -71,9 +71,6 @@ coverage.out
 # OpenCode
 .opencode/
 
-# OpenSpec
-openspec/
-
 # Factory
 .factory/
 

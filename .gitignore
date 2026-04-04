@@ -80,5 +80,8 @@ openspec/
 # Windsurf
 .windsurf/
 
+# Agent
+.agent/
+
 # Temp
 temp/

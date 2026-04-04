@@ -51,7 +51,7 @@ func (c *Client) UploadMedia(ctx context.Context, sessionID, filename, mimeType 
 	if err != nil {
 		return nil, fmt.Errorf("upload request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := parseErrorResponse(resp); err != nil {
 		return nil, err
@@ -105,7 +105,7 @@ func (c *Client) DeleteMedia(ctx context.Context, sessionID, mediaID string) err
 	if err != nil {
 		return fmt.Errorf("delete request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := parseErrorResponse(resp); err != nil {
 		return err

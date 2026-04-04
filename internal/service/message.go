@@ -1041,7 +1041,7 @@ func (s *MessageService) ForwardMessage(ctx context.Context, sessionID string, r
 		return "", err
 	}
 
-	msgID := whatsmeow.GenerateMessageID()
+	msgID := client.GenerateMessageID()
 	msg := &waE2E.Message{
 		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 			ContextInfo: &waE2E.ContextInfo{

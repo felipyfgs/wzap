@@ -50,7 +50,7 @@ func (c *Client) doRequest(ctx context.Context, sessionID, method, endpoint stri
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := parseErrorResponse(resp); err != nil {
 		return nil, err
@@ -71,54 +71,6 @@ func (c *Client) doRequest(ctx context.Context, sessionID, method, endpoint stri
 	return &apiResp, nil
 }
 
-func (c *Client) doRequestRaw(ctx context.Context, sessionID, method, endpoint string, body any) ([]byte, error) {
-	cfg, err := c.configReader.ReadConfig(ctx, sessionID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config for session %s: %w", sessionID, err)
-	}
-	cfg.ApplyDefaults()
-
-	reqURL := c.buildURL(cfg, endpoint)
-
-	var reqBody io.Reader
-	var contentType string
-
-	switch v := body.(type) {
-	case io.Reader:
-		reqBody = v
-	case nil:
-		reqBody = nil
-	default:
-		data, err := json.Marshal(body)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal request body: %w", err)
-		}
-		reqBody = bytes.NewReader(data)
-		contentType = "application/json"
-	}
-
-	req, err := http.NewRequestWithContext(ctx, method, reqURL, reqBody)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("Authorization", "Bearer "+cfg.AccessToken)
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if err := parseErrorResponse(resp); err != nil {
-		return nil, err
-	}
-
-	return io.ReadAll(resp.Body)
-}
 
 func (c *Client) doRequestDownload(ctx context.Context, downloadURL string) ([]byte, string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL, nil)
@@ -130,7 +82,7 @@ func (c *Client) doRequestDownload(ctx context.Context, downloadURL string) ([]b
 	if err != nil {
 		return nil, "", fmt.Errorf("download request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 400 {
 		return nil, "", fmt.Errorf("download failed with status %d", resp.StatusCode)
@@ -177,7 +129,7 @@ func (c *Client) doBusinessRequest(ctx context.Context, sessionID, method, endpo
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if err := parseErrorResponse(resp); err != nil {
 		return nil, err

@@ -11,21 +11,37 @@ import (
 	"net/textproto"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
+type CWClient interface {
+	FilterContacts(ctx context.Context, phone string) ([]Contact, error)
+	CreateContact(ctx context.Context, req CreateContactReq) (*Contact, error)
+	UpdateContact(ctx context.Context, id int, req UpdateContactReq) error
+	ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error)
+	CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error)
+	UpdateConversationStatus(ctx context.Context, convID int, status string) error
+	CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error)
+	CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string) (*Message, error)
+	DeleteMessage(ctx context.Context, convID, msgID int) error
+	UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error
+	ListInboxes(ctx context.Context) ([]Inbox, error)
+	CreateInbox(ctx context.Context, name, webhookURL string) (*Inbox, error)
+}
+
 type Client struct {
-	baseURL   string
-	accountID int
-	token     string
+	baseURL    string
+	accountID  int
+	token      string
 	httpClient *http.Client
 }
 
 func NewClient(baseURL string, accountID int, token string, httpClient *http.Client) *Client {
 	baseURL = strings.TrimRight(baseURL, "/")
 	return &Client{
-		baseURL:   baseURL,
-		accountID: accountID,
-		token:     token,
+		baseURL:    baseURL,
+		accountID:  accountID,
+		token:      token,
 		httpClient: httpClient,
 	}
 }
@@ -84,10 +100,10 @@ func (c *Client) do(ctx context.Context, method, path string, body any, result a
 }
 
 type Contact struct {
-	ID           int              `json:"id"`
-	Name         string           `json:"name"`
-	PhoneNumber  string           `json:"phone_number"`
-	Email        string           `json:"email,omitempty"`
+	ID                   int            `json:"id"`
+	Name                 string         `json:"name"`
+	PhoneNumber          string         `json:"phone_number"`
+	Email                string         `json:"email,omitempty"`
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
 
@@ -114,10 +130,10 @@ func (c *Client) FilterContacts(ctx context.Context, phone string) ([]Contact, e
 }
 
 type CreateContactReq struct {
-	InboxID         int    `json:"inbox_id"`
-	Name            string `json:"name,omitempty"`
-	PhoneNumber     string `json:"phone_number,omitempty"`
-	Email           string `json:"email,omitempty"`
+	InboxID              int            `json:"inbox_id"`
+	Name                 string         `json:"name,omitempty"`
+	PhoneNumber          string         `json:"phone_number,omitempty"`
+	Email                string         `json:"email,omitempty"`
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
 
@@ -135,9 +151,9 @@ func (c *Client) CreateContact(ctx context.Context, req CreateContactReq) (*Cont
 }
 
 type UpdateContactReq struct {
-	Name            string `json:"name,omitempty"`
-	Email           string `json:"email,omitempty"`
-	PhoneNumber     string `json:"phone_number,omitempty"`
+	Name                 string         `json:"name,omitempty"`
+	Email                string         `json:"email,omitempty"`
+	PhoneNumber          string         `json:"phone_number,omitempty"`
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
 
@@ -151,25 +167,28 @@ func (c *Client) UpdateContact(ctx context.Context, id int, req UpdateContactReq
 }
 
 type Conversation struct {
-	ID           int    `json:"id"`
-	ContactID    int    `json:"contact_id"`
-	InboxID      int    `json:"inbox_id"`
-	Status       string `json:"status"`
-	Messages     []Message `json:"messages,omitempty"`
+	ID        int       `json:"id"`
+	ContactID int       `json:"contact_id"`
+	InboxID   int       `json:"inbox_id"`
+	Status    string    `json:"status"`
+	Messages  []Message `json:"messages,omitempty"`
 }
 
 func (c *Client) ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error) {
-	var result []Conversation
+	var result struct {
+		Payload []Conversation `json:"payload"`
+	}
 	path := fmt.Sprintf("/public/api/v1/accounts/%d/contacts/%d/conversations", c.accountID, contactID)
 	if err := c.do(ctx, http.MethodGet, path, nil, &result); err != nil {
 		return nil, err
 	}
-	return result, nil
+	return result.Payload, nil
 }
 
 type CreateConversationReq struct {
-	InboxID  int    `json:"inbox_id"`
-	SourceID string `json:"source_id,omitempty"`
+	InboxID   int    `json:"inbox_id"`
+	SourceID  string `json:"source_id,omitempty"`
+	ContactID int    `json:"contact_id,omitempty"`
 }
 
 func (c *Client) CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error) {
@@ -201,15 +220,16 @@ type MessageReq struct {
 	Private     bool   `json:"private,omitempty"`
 	ContentType string `json:"content_type,omitempty"`
 	SourceID    string `json:"source_id,omitempty"`
+	InReplyTo   int    `json:"in_reply_to,omitempty"`
 }
 
 type Message struct {
-	ID          int    `json:"id"`
-	Content     string `json:"content,omitempty"`
-	MessageType string `json:"message_type"`
-	ContentType string `json:"content_type,omitempty"`
-	SourceID    string `json:"source_id,omitempty"`
-	ConversationID int `json:"conversation_id"`
+	ID             int    `json:"id"`
+	Content        string `json:"content,omitempty"`
+	MessageType    string `json:"message_type"`
+	ContentType    string `json:"content_type,omitempty"`
+	SourceID       string `json:"source_id,omitempty"`
+	ConversationID int    `json:"conversation_id"`
 }
 
 func (c *Client) CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error) {
@@ -296,10 +316,10 @@ func (c *Client) DeleteMessage(ctx context.Context, convID, msgID int) error {
 }
 
 type Inbox struct {
-	ID         int    `json:"id"`
-	Name       string `json:"name"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
 	ChannelType string `json:"channel_type,omitempty"`
-	WebhookURL string `json:"webhook_url,omitempty"`
+	WebhookURL  string `json:"webhook_url,omitempty"`
 }
 
 func (c *Client) ListInboxes(ctx context.Context) ([]Inbox, error) {
@@ -319,7 +339,7 @@ func (c *Client) CreateInbox(ctx context.Context, name, webhookURL string) (*Inb
 	body := map[string]any{
 		"name": name,
 		"channel": map[string]any{
-			"type": "Channel::Api",
+			"type":        "Channel::Api",
 			"webhook_url": webhookURL,
 		},
 	}
@@ -337,7 +357,7 @@ func (c *Client) UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID s
 	path := fmt.Sprintf("/public/api/v1/inboxes/%s/contact_inboxes/conversations/%d/update_last_seen", inboxIdentifier, convID)
 	body := map[string]any{
 		"source_id": sourceID,
-		"last_seen": "2006-01-02T15:04:05.000Z",
+		"last_seen": time.Now().UTC().Format(time.RFC3339),
 	}
 	data, err := json.Marshal(body)
 	if err != nil {

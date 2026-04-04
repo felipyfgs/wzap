@@ -13,13 +13,13 @@ import (
 )
 
 type Handler struct {
-	service     *Service
+	service      *Service
 	chatwootRepo *Repository
 }
 
 func NewHandler(service *Service, chatwootRepo *Repository) *Handler {
 	return &Handler{
-		service:     service,
+		service:      service,
 		chatwootRepo: chatwootRepo,
 	}
 }
@@ -46,16 +46,18 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 	}
 
 	cfg := &ChatwootConfig{
-		SessionID:        sessionID,
-		URL:              req.URL,
-		AccountID:        req.AccountID,
-		Token:            req.Token,
-		InboxName:        req.InboxName,
-		SignMsg:          req.SignMsg != nil && *req.SignMsg,
-		SignDelimiter:    req.SignDelimiter,
-		ReopenConversation: req.ReopenConversation == nil || *req.ReopenConversation,
-		MergeBRContacts:  req.MergeBRContacts == nil || *req.MergeBRContacts,
-		IgnoreGroups:     req.IgnoreGroups != nil && *req.IgnoreGroups,
+		SessionID:           sessionID,
+		URL:                 req.URL,
+		AccountID:           req.AccountID,
+		Token:               req.Token,
+		InboxName:           req.InboxName,
+		SignMsg:             req.SignMsg != nil && *req.SignMsg,
+		SignDelimiter:       req.SignDelimiter,
+		ReopenConversation:  req.ReopenConversation == nil || *req.ReopenConversation,
+		MergeBRContacts:     req.MergeBRContacts == nil || *req.MergeBRContacts,
+		IgnoreGroups:        req.IgnoreGroups != nil && *req.IgnoreGroups,
+		IgnoreJIDs:          req.IgnoreJIDs,
+		ConversationPending: req.ConversationPending != nil && *req.ConversationPending,
 	}
 
 	if err := h.service.Configure(c.Context(), cfg); err != nil {
@@ -66,18 +68,18 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 	webhookURL := fmt.Sprintf("%s/chatwoot/webhook/%s", cfg.URL, sessionID)
 
 	resp := dto.ChatwootConfigResp{
-		SessionID:        cfg.SessionID,
-		URL:              cfg.URL,
-		AccountID:        cfg.AccountID,
-		InboxID:          cfg.InboxID,
-		InboxName:        cfg.InboxName,
-		SignMsg:          cfg.SignMsg,
-		SignDelimiter:    cfg.SignDelimiter,
+		SessionID:          cfg.SessionID,
+		URL:                cfg.URL,
+		AccountID:          cfg.AccountID,
+		InboxID:            cfg.InboxID,
+		InboxName:          cfg.InboxName,
+		SignMsg:            cfg.SignMsg,
+		SignDelimiter:      cfg.SignDelimiter,
 		ReopenConversation: cfg.ReopenConversation,
-		MergeBRContacts:  cfg.MergeBRContacts,
-		IgnoreGroups:     cfg.IgnoreGroups,
-		Enabled:          cfg.Enabled,
-		WebhookURL:       webhookURL,
+		MergeBRContacts:    cfg.MergeBRContacts,
+		IgnoreGroups:       cfg.IgnoreGroups,
+		Enabled:            cfg.Enabled,
+		WebhookURL:         webhookURL,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)
@@ -104,18 +106,20 @@ func (h *Handler) GetConfig(c *fiber.Ctx) error {
 	webhookURL := fmt.Sprintf("%s/chatwoot/webhook/%s", cfg.URL, sessionID)
 
 	resp := dto.ChatwootConfigResp{
-		SessionID:        cfg.SessionID,
-		URL:              cfg.URL,
-		AccountID:        cfg.AccountID,
-		InboxID:          cfg.InboxID,
-		InboxName:        cfg.InboxName,
-		SignMsg:          cfg.SignMsg,
-		SignDelimiter:    cfg.SignDelimiter,
-		ReopenConversation: cfg.ReopenConversation,
-		MergeBRContacts:  cfg.MergeBRContacts,
-		IgnoreGroups:     cfg.IgnoreGroups,
-		Enabled:          cfg.Enabled,
-		WebhookURL:       webhookURL,
+		SessionID:           cfg.SessionID,
+		URL:                 cfg.URL,
+		AccountID:           cfg.AccountID,
+		InboxID:             cfg.InboxID,
+		InboxName:           cfg.InboxName,
+		SignMsg:             cfg.SignMsg,
+		SignDelimiter:       cfg.SignDelimiter,
+		ReopenConversation:  cfg.ReopenConversation,
+		MergeBRContacts:     cfg.MergeBRContacts,
+		IgnoreGroups:        cfg.IgnoreGroups,
+		IgnoreJIDs:          cfg.IgnoreJIDs,
+		ConversationPending: cfg.ConversationPending,
+		Enabled:             cfg.Enabled,
+		WebhookURL:          webhookURL,
 	}
 
 	return c.Status(fiber.StatusOK).JSON(resp)

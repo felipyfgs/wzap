@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/service"
 )
 
@@ -37,7 +38,8 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.Archive(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to archive chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -65,7 +67,8 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.Mute(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to mute chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -93,7 +96,8 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.Pin(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to pin chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -121,7 +125,8 @@ func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.Unpin(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to unpin chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -149,7 +154,8 @@ func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.Unarchive(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to unarchive chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -177,7 +183,8 @@ func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.Unmute(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to unmute chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -205,7 +212,8 @@ func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.DeleteChat(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to delete chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -233,7 +241,8 @@ func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.chatSvc.MarkRead(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to mark chat read")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }

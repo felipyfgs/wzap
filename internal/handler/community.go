@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/service"
 )
 
@@ -38,7 +39,8 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 	}
 	group, err := h.communitySvc.Create(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to create community")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(group))
 }
@@ -67,7 +69,8 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	}
 	participants, err := h.communitySvc.AddParticipant(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to add community participant")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(participants))
 }
@@ -96,7 +99,8 @@ func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 	}
 	participants, err := h.communitySvc.RemoveParticipant(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to remove community participant")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(participants))
 }

@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/service"
 )
 
@@ -32,7 +33,8 @@ func (h *ContactHandler) List(c *fiber.Ctx) error {
 	filter := c.Query("filter", "saved")
 	contacts, err := h.contactSvc.List(c.Context(), id, filter)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to list contacts")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(contacts))
 }
@@ -62,7 +64,8 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 
 	results, err := h.contactSvc.CheckContacts(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Check Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to check contacts")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Check Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(results))
@@ -92,7 +95,8 @@ func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.GetAvatar(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get avatar")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(resp))
 }
@@ -121,7 +125,8 @@ func (h *ContactHandler) Block(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.Block(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to block contact")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(resp))
 }
@@ -150,7 +155,8 @@ func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.Unblock(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to unblock contact")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(resp))
 }
@@ -172,7 +178,8 @@ func (h *ContactHandler) GetBlocklist(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.GetBlocklist(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get blocklist")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(resp))
 }
@@ -201,7 +208,8 @@ func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.GetUserInfo(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get user info")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(resp))
 }
@@ -223,7 +231,8 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.GetPrivacySettings(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get privacy settings")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(resp))
 }
@@ -252,7 +261,8 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.SetProfilePicture(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set profile picture")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(dto.PictureIDResp{PictureID: resp}))
 }
@@ -280,7 +290,8 @@ func (h *ContactHandler) SubscribePresence(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.contactSvc.SubscribePresence(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Presence Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to subscribe presence")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Presence Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -309,7 +320,8 @@ func (h *ContactHandler) SetPrivacy(c *fiber.Ctx) error {
 	}
 	resp, err := h.contactSvc.SetPrivacy(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Privacy Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set privacy")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Privacy Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(resp))
 }
@@ -337,7 +349,8 @@ func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.contactSvc.SetStatusMessage(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Status Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set status message")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Status Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -366,7 +379,8 @@ func (h *ContactHandler) UpdateProfileName(c *fiber.Ctx) error {
 	}
 
 	if err := h.contactSvc.UpdateProfileName(c.Context(), id, req.Name); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Profile Name Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to update profile name")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Profile Name Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }

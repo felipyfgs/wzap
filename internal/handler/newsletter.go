@@ -2,6 +2,7 @@ package handler
 
 import (
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/service"
 
 	"github.com/gofiber/fiber/v2"
@@ -39,7 +40,8 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 	}
 	meta, err := h.newsletterSvc.Create(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to create newsletter")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(meta))
 }
@@ -67,7 +69,8 @@ func (h *NewsletterHandler) Info(c *fiber.Ctx) error {
 	}
 	meta, err := h.newsletterSvc.GetInfo(c.Context(), id, jid)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get newsletter info")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(meta))
 }
@@ -95,7 +98,8 @@ func (h *NewsletterHandler) Invite(c *fiber.Ctx) error {
 	}
 	meta, err := h.newsletterSvc.GetInvite(c.Context(), id, code)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get newsletter invite")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(meta))
 }
@@ -117,7 +121,8 @@ func (h *NewsletterHandler) List(c *fiber.Ctx) error {
 	}
 	newsletters, err := h.newsletterSvc.List(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to list newsletters")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(newsletters))
 }
@@ -146,7 +151,8 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 	}
 	msgs, err := h.newsletterSvc.Messages(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get newsletter messages")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(msgs))
 }
@@ -174,7 +180,8 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.newsletterSvc.Subscribe(c.Context(), id, req.NewsletterJID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to subscribe to newsletter")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -202,7 +209,8 @@ func (h *NewsletterHandler) Unsubscribe(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.newsletterSvc.Unsubscribe(c.Context(), id, req.NewsletterJID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to unsubscribe from newsletter")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -230,7 +238,8 @@ func (h *NewsletterHandler) Mute(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.newsletterSvc.Mute(c.Context(), id, req.NewsletterJID, req.Mute); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to mute newsletter")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -258,7 +267,8 @@ func (h *NewsletterHandler) React(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.newsletterSvc.React(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to react to newsletter")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -286,7 +296,8 @@ func (h *NewsletterHandler) MarkViewed(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.newsletterSvc.MarkViewed(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to mark newsletter viewed")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }

@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/repo"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,12 +32,14 @@ func NewHistoryHandler(messageRepo *repo.MessageRepository) *HistoryHandler {
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/messages [get]
 func (h *HistoryHandler) ListMessages(c *fiber.Ctx) error {
-	sessionID := mustGetSessionID(c)
+	sessionID, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
 	chatJID := c.Query("chat")
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 
-	var err error
 	var msgs interface{}
 
 	if chatJID != "" {
@@ -46,7 +49,8 @@ func (h *HistoryHandler) ListMessages(c *fiber.Ctx) error {
 	}
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("History Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", sessionID).Msg("failed to list messages")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("History Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(msgs))

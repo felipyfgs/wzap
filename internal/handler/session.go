@@ -6,6 +6,7 @@ import (
 
 	"wzap/internal/dto"
 	"wzap/internal/integrations/chatwoot"
+	"wzap/internal/logger"
 	"wzap/internal/metrics"
 	"wzap/internal/repo"
 	"wzap/internal/service"
@@ -79,7 +80,8 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 
 	sessions, err := h.sessionSvc.List(c.Context())
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Msg("failed to list sessions")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(sessions))
@@ -124,7 +126,8 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 	if err := h.sessionSvc.Delete(c.Context(), id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to delete session")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(nil))
@@ -206,7 +209,8 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 		if errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
 			return c.Status(fiber.StatusConflict).JSON(dto.ErrorResp("Conflict", "A QR code connection is already pending for this session"))
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Connection Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to connect session")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Connection Error", "internal server error"))
 	}
 
 	status := "CONNECTED"
@@ -246,7 +250,8 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	}
 
 	if err := h.engine.Disconnect(id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to disconnect session")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", "internal server error"))
 	}
 
 	metrics.SessionsConnected.Dec()
@@ -326,7 +331,8 @@ func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 
 	code, err := h.engine.PairPhone(c.Context(), id, req.Phone)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Pair Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to pair phone")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Pair Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(dto.PairPhoneResp{PairingCode: code}))
@@ -355,7 +361,8 @@ func (h *SessionHandler) Logout(c *fiber.Ctx) error {
 	}
 
 	if err := h.engine.Logout(c.Context(), id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Logout Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to logout session")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Logout Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(nil))
@@ -403,7 +410,8 @@ func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
 	}
 
 	if err := h.engine.Reconnect(c.Context(), id); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Reconnect Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to reconnect session")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Reconnect Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(nil))
@@ -437,7 +445,8 @@ func (h *SessionHandler) Restart(c *fiber.Ctx) error {
 
 	resp, err := h.sessionSvc.Restart(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Restart Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to restart session")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Restart Error", "internal server error"))
 	}
 
 	return c.JSON(dto.SuccessResp(resp))

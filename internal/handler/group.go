@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/service"
 )
 
@@ -34,7 +35,8 @@ func (h *GroupHandler) List(c *fiber.Ctx) error {
 	}
 	groups, err := h.groupSvc.List(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to list groups")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(groups))
 }
@@ -68,7 +70,8 @@ func (h *GroupHandler) Create(c *fiber.Ctx) error {
 
 	group, err := h.groupSvc.CreateGroup(c.Context(), id, req)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Create Group Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to create group")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Create Group Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(group))
 }
@@ -102,7 +105,8 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 
 	group, err := h.groupSvc.GetInfo(c.Context(), id, req.GroupJID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Group Info Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get group info")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Group Info Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(group))
 }
@@ -135,7 +139,8 @@ func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 
 	link, err := h.groupSvc.GetInviteLink(c.Context(), id, jid, reset)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Invite Link Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get invite link")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Invite Link Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(dto.GroupInviteLinkResp{Link: link}))
 }
@@ -169,7 +174,8 @@ func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 
 	group, err := h.groupSvc.GetInfoFromLink(c.Context(), id, req.InviteCode)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Info From Link Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get group info from link")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Info From Link Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(group))
 }
@@ -200,7 +206,8 @@ func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 
 	jid, err := h.groupSvc.JoinWithLink(c.Context(), id, req.InviteCode)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Join Group Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to join group")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Join Group Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(fiber.Map{"jid": jid}))
 }
@@ -231,7 +238,8 @@ func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 
 	err = h.groupSvc.LeaveGroup(c.Context(), id, jid)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Leave Group Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to leave group")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Leave Group Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -263,7 +271,8 @@ func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 
 	res, err := h.groupSvc.UpdateParticipants(c.Context(), id, jid, req.Participants, req.Action)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Participants Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to update participants")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Participants Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(res))
 }
@@ -294,7 +303,8 @@ func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 
 	res, err := h.groupSvc.GetRequestParticipants(c.Context(), id, jid)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Requests Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to get join requests")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Get Requests Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(res))
 }
@@ -326,7 +336,8 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 
 	res, err := h.groupSvc.UpdateRequestParticipants(c.Context(), id, jid, req.Participants, req.Action)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Requests Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to update join requests")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Requests Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(res))
 }
@@ -360,7 +371,8 @@ func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 	}
 
 	if err := h.groupSvc.UpdateName(c.Context(), id, jid, req.Text); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Name Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to update group name")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Name Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -394,7 +406,8 @@ func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 	}
 
 	if err := h.groupSvc.UpdateDescription(c.Context(), id, jid, req.Text); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Description Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to update group description")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Description Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -431,7 +444,8 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 
 	picID, err := h.groupSvc.UpdatePhoto(c.Context(), id, jid, bytes)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Photo Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to update group photo")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Photo Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(dto.PictureIDResp{PictureID: picID}))
 }
@@ -465,7 +479,8 @@ func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 	}
 
 	if err := h.groupSvc.SetAnnounce(c.Context(), id, jid, req.Enabled); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Announce Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set announce")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Announce Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -499,7 +514,8 @@ func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 	}
 
 	if err := h.groupSvc.SetLocked(c.Context(), id, jid, req.Enabled); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Locked Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set locked")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Locked Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -533,7 +549,8 @@ func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 	}
 
 	if err := h.groupSvc.SetJoinApproval(c.Context(), id, jid, req.Enabled); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Join Approval Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set join approval")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Set Join Approval Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -561,7 +578,8 @@ func (h *GroupHandler) RemovePhoto(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.groupSvc.RemovePhoto(c.Context(), id, req.GroupJID); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Remove Photo Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to remove group photo")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Remove Photo Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -590,7 +608,8 @@ func (h *GroupHandler) SetEphemeral(c *fiber.Ctx) error {
 	}
 	duration := time.Duration(req.Duration) * time.Second
 	if err := h.groupSvc.SetEphemeral(c.Context(), id, req.GroupJID, duration); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Ephemeral Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set ephemeral")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Ephemeral Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }

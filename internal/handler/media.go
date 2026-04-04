@@ -27,7 +27,10 @@ func NewMediaHandler(mediaSvc *service.MediaService) *MediaHandler {
 // @Security    Authorization
 // @Router      /sessions/{sessionId}/media/{messageId} [get]
 func (h *MediaHandler) GetMedia(c *fiber.Ctx) error {
-	sessionID := mustGetSessionID(c)
+	sessionID, err := getSessionID(c)
+	if err != nil {
+		return err
+	}
 	messageID := c.Params("messageId")
 
 	url, err := h.mediaSvc.GetPresignedURL(c.Context(), sessionID, messageID)

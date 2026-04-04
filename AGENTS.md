@@ -17,8 +17,6 @@ Guide for agentic coding agents operating in the **wzap** repository (Go 1.25).
 | Start services (Postgres, MinIO, NATS) | `make up` |
 | Generate Swagger docs | `make docs` |
 
-CI (`.github/workflows/ci.yml`) runs lint + test + build on every PR.
-
 ## 2 · Project Structure
 
 ```
@@ -39,7 +37,10 @@ internal/
   wa/                whatsmeow engine integration (Manager, events, JID helpers)
   webhook/           Webhook dispatcher (NATS consumer, WS broadcaster)
   websocket/         WebSocket hub for real-time events
+  provider/          External API clients (e.g. WhatsApp Cloud API)
+  integrations/      Third-party integrations (e.g. chatwoot)
   testutil/          Shared test helpers (NewApp, DoRequest, ParseResp)
+migrations/          SQL migration files
 docs/                Generated Swagger docs
 web/                 Nuxt UI dashboard (Vue 3 + Nuxt UI Pro)
 ```
@@ -52,17 +53,20 @@ Group imports in **three** groups separated by blank lines:
 2. Third-party packages (`"github.com/…"`, `"go.mau.fi/…"`, `"google.golang.org/…"`)
 3. Internal packages (`"wzap/internal/…"`)
 
+Use aliases when needed to avoid collisions: `mw "wzap/internal/middleware"`, `ws "github.com/gofiber/contrib/websocket"`, `cloudWA "wzap/internal/provider/whatsapp"`, `wsHub "wzap/internal/websocket"`.
+
 ### Naming
 - **Exported**: `PascalCase` — `SessionService`, `NewHealthHandler`, `SendText`
-- **Unexported**: `camelCase` — `getSessionID`, `sessionNameRegex`
-- **Acronyms**: keep uppercase — `ID`, `URL`, `JID`, `NATS`, `S3`
-- **Constructors**: `New<Type>(…)` — `NewServer`, `NewSessionService`
+- **Unexported**: `camelCase` — `getSessionID`, `sessionNameRegex`, `sendMedia`
+- **Acronyms**: keep uppercase — `ID`, `URL`, `JID`, `NATS`, `S3`, `API`
+- **Constructors**: `New<Type>(…)` — `NewServer`, `NewSessionService`, `NewSessionRepository`
+- **Interfaces**: prefer small, single-method interfaces defined where they're consumed
 
 ### Types & Structs
 - JSON struct tags use `json:"camelCase"`, add `omitempty` where nil/zero is meaningful.
 - Use `validate:"required"` tags on DTO fields for request validation via `go-playground/validator`.
 - Use `validate:"required,min=1"` on slice fields to reject empty arrays.
-- Prefer concrete types over `interface{}`; use `any` only at API boundaries (e.g. `dto.SuccessResp`).
+- Prefer concrete types; use `interface{}` only at API boundaries (e.g. `dto.SuccessResp(data interface{})`).
 - Define request/response DTOs in `internal/dto/`; domain models in `internal/model/`.
 - Use pointers for optional update fields: `*string`, `*SessionProxy` (nil = not provided).
 - Initialize slices with `make([]T, 0)` to avoid JSON `null` instead of `[]`.
@@ -70,7 +74,9 @@ Group imports in **three** groups separated by blank lines:
 ### Error Handling
 - Wrap errors: `fmt.Errorf("failed to create session: %w", err)`.
 - Return errors up the call stack; handle at handler level.
-- In handlers, respond with `dto.ErrorResp(title, msg)` and appropriate HTTP status. Never expose raw `err.Error()` from service/database layer — log internally instead.
+- In handlers, respond with `dto.ErrorResp(title, msg)` and appropriate HTTP status.
+- **Never expose raw `err.Error()` from service/database layer for 500 errors** — log internally with `logger.Warn().Err(err).Msg(…)` and return a generic message like `"internal server error"`.
+- For 400-level errors where the message is user-facing (validation, not found), `err.Error()` is acceptable.
 - Use `logger.Warn().Err(err).Msg(…)` for non-fatal errors.
 - For fatal startup errors, use `logger.Fatal().Err(err).Msg(…)`.
 
@@ -87,25 +93,37 @@ Group imports in **three** groups separated by blank lines:
 - Parse + validate: `parseAndValidate(c, &req)` — handles BodyParser and struct validation.
 - Success: `c.JSON(dto.SuccessResp(data))` with appropriate status code.
 - Error: `c.Status(code).JSON(dto.ErrorResp(title, msg))`.
-- Get session ID: `mustGetSessionID(c)` (for routes behind `RequiredSession` middleware).
-- Add Swagger godoc above each handler (`@Summary`, `@Router`, `@Tags`, etc.).
+- Session ID: use `mustGetSessionID(c)` behind `RequiredSession` middleware; use `getSessionID(c)` when no middleware guarantee.
+- Add Swagger godoc above each handler (`@Summary`, `@Router`, `@Tags`, `@Param`, `@Success`, `@Failure`, `@Security`).
 
 ### Authentication Flow
 - Auth middleware (`middleware.Auth`) reads `Authorization` header (token only, no Bearer prefix). Uses constant-time comparison.
 - Sets `c.Locals("authRole", "admin"|"session")` and `c.Locals("sessionID", id)`.
 - `middleware.RequiredSession` resolves `:sessionId` param (name or UUID → session.ID).
 
+### Dependency Injection
+- Handlers receive concrete `*service.XxxService` and `*repo.XxxRepository` via constructor injection.
+- Services receive `*repo.XxxRepository` and other dependencies (engine, providers) via constructor.
+- Repos receive `*pgxpool.Pool` via constructor.
+- Constructors return pointers: `NewSessionHandler(…) *SessionHandler`.
+
+### Database (Repo Layer)
+- Use `pgxpool.Pool` directly; write raw SQL with positional parameters (`$1`, `$2`, …).
+- Use `COALESCE` for nullable columns in SELECT queries.
+- Wrap all errors with `fmt.Errorf("failed to <verb> <entity>: %w", err)`.
+- Return `(*model.T, error)` for single-record lookups, `([]model.T, error)` for lists.
+
 ## 4 · Testing Conventions
 
 - Use **external test packages** (`package handler_test`, `package dto_test`) for public API tests.
 - Use **internal test packages** (`package service`, `package wa`) only when testing unexported functions.
-- Use standard `testing.T` — no assertion libraries (no testify).
-- Create Fiber app per test group via helper functions (e.g., `newSessionApp()`, `newMessageApp()`).
+- Use standard `testing.T` — **no assertion libraries** (no testify).
+- Create a Fiber app per test group via helper functions (e.g., `newSessionApp()`, `newMessageApp()`, `newWebhookApp()`).
 - Use `fiber.New(fiber.Config{DisableStartupMessage: true})` in tests.
+- Use `fiber/middleware/recover.New()` in test apps.
 - Use `httptest.NewRequest` + `app.Test(req, -1)` for HTTP testing.
 - Mock dependencies by passing `nil` for services/repos when testing validation/error paths.
-- Simulate middleware in tests by setting `c.Locals("authRole", "admin")` and `c.Locals("sessionID", ...)` inline.
-- Test file `internal/testutil/fiber.go` provides `NewApp()`, `DoRequest()`, `ParseResp()`.
+- Simulate middleware in tests by setting `c.Locals("authRole", "admin")` and `c.Locals("sessionID", c.Params("sessionId"))` inline via middleware closures.
 - Error assertions: check status codes directly, use `t.Errorf`/`t.Fatalf`.
 
 ## 5 · Conventions

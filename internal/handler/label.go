@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
+	"wzap/internal/logger"
 	"wzap/internal/service"
 )
 
@@ -37,7 +38,8 @@ func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.labelSvc.AddToChat(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to add label to chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -65,7 +67,8 @@ func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.labelSvc.RemoveFromChat(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to remove label from chat")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -93,7 +96,8 @@ func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.labelSvc.AddToMessage(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to add label to message")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -121,7 +125,8 @@ func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.labelSvc.RemoveFromMessage(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to remove label from message")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -149,7 +154,8 @@ func (h *LabelHandler) EditLabel(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.labelSvc.EditLabel(c.Context(), id, req); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", err.Error()))
+		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to edit label")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }

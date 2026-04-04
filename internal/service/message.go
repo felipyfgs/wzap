@@ -1081,11 +1081,11 @@ func downloadURL(url string) ([]byte, error) {
 }
 
 func parseJID(target string) (types.JID, error) {
+	if !strings.Contains(target, "@") {
+		return types.NewJID(target, types.DefaultUserServer), nil
+	}
 	jid, err := types.ParseJID(target)
 	if err != nil {
-		if !strings.Contains(target, "@") {
-			return types.NewJID(target, types.DefaultUserServer), nil
-		}
 		return types.JID{}, fmt.Errorf("invalid JID: %w", err)
 	}
 	return jid, nil

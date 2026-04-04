@@ -67,3 +67,9 @@ ssl/
 # Coverage
 coverage.out
 *.coverprofile
+
+# OpenCode
+.opencode/
+
+# OpenSpec
+openspec/

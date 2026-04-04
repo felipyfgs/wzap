@@ -22,9 +22,20 @@ const protocolOptions = [
   { label: 'SOCKS5', value: 'socks5' }
 ]
 
+const engineOptions = [
+  { label: 'WhatsApp Web (whatsmeow)', value: 'whatsmeow' },
+  { label: 'Cloud API', value: 'cloud_api' }
+]
+
 const schema = z.object({
   name: z.string().min(1, 'Required').max(64, 'Too long').regex(/^[a-zA-Z0-9_-]+$/, 'Only letters, numbers, _ and -'),
   apiKey: z.string().optional(),
+  engine: z.string().optional(),
+  phoneNumberId: z.string().optional(),
+  accessToken: z.string().optional(),
+  businessAccountId: z.string().optional(),
+  appSecret: z.string().optional(),
+  webhookVerifyToken: z.string().optional(),
   settings: z.object({
     alwaysOnline: z.boolean(),
     rejectCall: z.boolean(),
@@ -46,9 +57,17 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
+const isCloudApi = computed(() => state.engine === 'cloud_api')
+
 const state = reactive<Schema>({
   name: '',
   apiKey: '',
+  engine: 'whatsmeow',
+  phoneNumberId: '',
+  accessToken: '',
+  businessAccountId: '',
+  appSecret: '',
+  webhookVerifyToken: '',
   settings: {
     alwaysOnline: false,
     rejectCall: false,
@@ -71,6 +90,12 @@ function generateApiKey() {
 function resetState() {
   state.name = ''
   state.apiKey = ''
+  state.engine = 'whatsmeow'
+  state.phoneNumberId = ''
+  state.accessToken = ''
+  state.businessAccountId = ''
+  state.appSecret = ''
+  state.webhookVerifyToken = ''
   state.settings = { alwaysOnline: false, rejectCall: false, msgRejectCall: '', readMessages: false, ignoreGroups: false, ignoreStatus: false }
   state.proxy = { host: '', port: 0, protocol: '', username: '', password: '' }
   state.webhookURL = ''
@@ -83,6 +108,15 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true
   try {
     const body: any = { name: event.data.name }
+
+    if (event.data.engine === 'cloud_api') {
+      body.engine = 'cloud_api'
+      if (event.data.phoneNumberId) body.phoneNumberId = event.data.phoneNumberId
+      if (event.data.accessToken) body.accessToken = event.data.accessToken
+      if (event.data.businessAccountId) body.businessAccountId = event.data.businessAccountId
+      if (event.data.appSecret) body.appSecret = event.data.appSecret
+      if (event.data.webhookVerifyToken) body.webhookVerifyToken = event.data.webhookVerifyToken
+    }
 
     if (event.data.apiKey) body.apiKey = event.data.apiKey
 
@@ -116,8 +150,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     <UButton label="New Session" icon="i-lucide-plus" color="primary" />
 
     <template #body>
-      <UForm :schema="schema" :state="state" class="space-y-5" @submit="onSubmit" @error="(e) => toast.add({ title: 'Validation error', description: e.errors[0]?.message, color: 'error' })">
-
+      <UForm
+        :schema="schema"
+        :state="state"
+        class="space-y-5"
+        @submit="onSubmit"
+        @error="(e) => toast.add({ title: 'Validation error', description: e.errors[0]?.message, color: 'error' })"
+      >
         <!-- Basic -->
         <div class="space-y-3">
           <UFormField label="Name" name="name" required>
@@ -139,13 +178,62 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               </template>
             </UInput>
           </UFormField>
+          <UFormField label="Engine" name="engine">
+            <USelect
+              v-model="state.engine"
+              :items="engineOptions"
+              value-key="value"
+              class="w-full"
+            />
+          </UFormField>
         </div>
+
+        <!-- Cloud API Fields -->
+        <template v-if="isCloudApi">
+          <USeparator />
+          <div class="space-y-3">
+            <p class="text-sm font-medium text-highlighted">
+              Cloud API Configuration
+            </p>
+            <div class="grid grid-cols-2 gap-3">
+              <UFormField label="Phone Number ID" name="phoneNumberId" required>
+                <UInput v-model="state.phoneNumberId" placeholder="123456789" class="w-full" />
+              </UFormField>
+              <UFormField label="Business Account ID" name="businessAccountId">
+                <UInput v-model="state.businessAccountId" placeholder="987654321" class="w-full" />
+              </UFormField>
+            </div>
+            <UFormField label="Access Token" name="accessToken" required>
+              <UInput
+                v-model="state.accessToken"
+                type="password"
+                placeholder="EAAx..."
+                class="w-full"
+              />
+            </UFormField>
+            <div class="grid grid-cols-2 gap-3">
+              <UFormField label="App Secret" name="appSecret">
+                <UInput
+                  v-model="state.appSecret"
+                  type="password"
+                  placeholder="App secret"
+                  class="w-full"
+                />
+              </UFormField>
+              <UFormField label="Webhook Verify Token" name="webhookVerifyToken">
+                <UInput v-model="state.webhookVerifyToken" placeholder="verify-token" class="w-full" />
+              </UFormField>
+            </div>
+          </div>
+        </template>
 
         <USeparator />
 
         <!-- Settings -->
         <div class="space-y-2">
-          <p class="text-sm font-medium text-highlighted">Settings</p>
+          <p class="text-sm font-medium text-highlighted">
+            Settings
+          </p>
           <div class="grid grid-cols-2 gap-x-6 gap-y-2">
             <UFormField label="Always Online" name="settings.alwaysOnline">
               <USwitch v-model="state.settings.alwaysOnline" />
@@ -182,18 +270,33 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 <UInput v-model="state.proxy.host" placeholder="proxy.example.com" class="w-full" />
               </UFormField>
               <UFormField label="Port" name="proxy.port">
-                <UInput v-model="state.proxy.port" type="number" placeholder="8080" class="w-full" />
+                <UInput
+                  v-model="state.proxy.port"
+                  type="number"
+                  placeholder="8080"
+                  class="w-full"
+                />
               </UFormField>
             </div>
             <div class="grid grid-cols-3 gap-3">
               <UFormField label="Protocol" name="proxy.protocol">
-                <USelect v-model="state.proxy.protocol" :items="protocolOptions" placeholder="Protocol" class="w-full" />
+                <USelect
+                  v-model="state.proxy.protocol"
+                  :items="protocolOptions"
+                  placeholder="Protocol"
+                  class="w-full"
+                />
               </UFormField>
               <UFormField label="Username" name="proxy.username">
                 <UInput v-model="state.proxy.username" placeholder="user" class="w-full" />
               </UFormField>
               <UFormField label="Password" name="proxy.password">
-                <UInput v-model="state.proxy.password" type="password" placeholder="••••" class="w-full" />
+                <UInput
+                  v-model="state.proxy.password"
+                  type="password"
+                  placeholder="••••"
+                  class="w-full"
+                />
               </UFormField>
             </div>
           </div>
@@ -212,16 +315,32 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
               <UInput v-model="state.webhookURL" placeholder="https://example.com/hook" class="w-full" />
             </UFormField>
             <UFormField label="Events" name="webhookEvents">
-              <USelectMenu v-model="state.webhookEvents" :items="eventOptions" value-key="value" multiple placeholder="Select events" class="w-full" />
+              <USelectMenu
+                v-model="state.webhookEvents"
+                :items="eventOptions"
+                value-key="value"
+                multiple
+                placeholder="Select events"
+                class="w-full"
+              />
             </UFormField>
           </div>
         </div>
 
         <div class="flex justify-end gap-2 pt-1">
-          <UButton label="Cancel" color="neutral" variant="subtle" @click="open = false" />
-          <UButton label="Create" color="primary" type="submit" :loading="loading" />
+          <UButton
+            label="Cancel"
+            color="neutral"
+            variant="subtle"
+            @click="open = false"
+          />
+          <UButton
+            label="Create"
+            color="primary"
+            type="submit"
+            :loading="loading"
+          />
         </div>
-
       </UForm>
     </template>
   </UModal>

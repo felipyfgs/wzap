@@ -46,8 +46,12 @@ function isEnabled(key: string): boolean {
       </div>
 
       <div v-if="session.settings.rejectCall && session.settings.msgRejectCall" class="pt-1">
-        <p class="text-xs text-muted mb-1">Reject call message</p>
-        <p class="text-xs text-highlighted italic">{{ session.settings.msgRejectCall }}</p>
+        <p class="text-xs text-muted mb-1">
+          Reject call message
+        </p>
+        <p class="text-xs text-highlighted italic">
+          {{ session.settings.msgRejectCall }}
+        </p>
       </div>
     </div>
 

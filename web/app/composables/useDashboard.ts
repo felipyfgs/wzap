@@ -1,9 +1,7 @@
 import { createSharedComposable } from '@vueuse/core'
 
 const _useDashboard = () => {
-  const route = useRoute()
   const router = useRouter()
-  const isNotificationsSlideoverOpen = ref(false)
 
   defineShortcuts({
     'g-h': () => router.push('/'),
@@ -11,13 +9,7 @@ const _useDashboard = () => {
     'g-w': () => router.push('/webhooks')
   })
 
-  watch(() => route.fullPath, () => {
-    isNotificationsSlideoverOpen.value = false
-  })
-
-  return {
-    isNotificationsSlideoverOpen
-  }
+  return {}
 }
 
 export const useDashboard = createSharedComposable(_useDashboard)

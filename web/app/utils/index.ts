@@ -17,7 +17,7 @@ export function sessionStatusColor(status: string): 'success' | 'warning' | 'err
   return map[status?.toLowerCase()] ?? 'neutral'
 }
 
-export function parseJID(jid: string): { phone: string | null; device: number } {
+export function parseJID(jid: string): { phone: string | null, device: number } {
   if (!jid) return { phone: null, device: 0 }
   const withoutServer = jid.replace(/@.*$/, '')
   const colonIdx = withoutServer.indexOf(':')

@@ -14,7 +14,9 @@ async function copy(value: string, label: string) {
 <template>
   <UCard>
     <template #header>
-      <p class="font-semibold text-highlighted">Connection</p>
+      <p class="font-semibold text-highlighted">
+        Connection
+      </p>
     </template>
 
     <div class="space-y-3 text-sm">
@@ -22,7 +24,13 @@ async function copy(value: string, label: string) {
         <span class="text-muted shrink-0">Session ID</span>
         <div class="flex items-center gap-1 min-w-0">
           <span class="font-mono text-xs truncate text-highlighted">{{ session.id }}</span>
-          <UButton icon="i-lucide-copy" size="xs" color="neutral" variant="ghost" @click="copy(session.id, 'Session ID')" />
+          <UButton
+            icon="i-lucide-copy"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            @click="copy(session.id, 'Session ID')"
+          />
         </div>
       </div>
 
@@ -32,7 +40,14 @@ async function copy(value: string, label: string) {
         <span class="text-muted shrink-0">JID</span>
         <div class="flex items-center gap-1 min-w-0">
           <span class="font-mono text-xs text-highlighted">{{ session.jid || 'Not paired' }}</span>
-          <UButton v-if="session.jid" icon="i-lucide-copy" size="xs" color="neutral" variant="ghost" @click="copy(session.jid!, 'JID')" />
+          <UButton
+            v-if="session.jid"
+            icon="i-lucide-copy"
+            size="xs"
+            color="neutral"
+            variant="ghost"
+            @click="copy(session.jid!, 'JID')"
+          />
         </div>
       </div>
 
@@ -42,7 +57,13 @@ async function copy(value: string, label: string) {
           <span class="text-muted shrink-0">API Key</span>
           <div class="flex items-center gap-1">
             <span class="font-mono text-xs text-highlighted">{{ session.apiKey.slice(0, 8) }}••••••••</span>
-            <UButton icon="i-lucide-copy" size="xs" color="neutral" variant="ghost" @click="copy(session.apiKey!, 'API Key')" />
+            <UButton
+              icon="i-lucide-copy"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              @click="copy(session.apiKey!, 'API Key')"
+            />
           </div>
         </div>
       </template>

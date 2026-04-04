@@ -99,7 +99,7 @@ function dropdownItems(session: Session) {
 }
 
 const filteredSessions = computed(() =>
-  sessions.value.filter(s => {
+  sessions.value.filter((s) => {
     const matchesName = !nameFilter.value || s.name.toLowerCase().includes(nameFilter.value.toLowerCase())
     const matchesStatus = statusFilter.value === 'all' || s.status === statusFilter.value
     return matchesName && matchesStatus
@@ -161,7 +161,9 @@ onMounted(() => {
         class="flex flex-col items-center justify-center py-24 gap-3 text-muted"
       >
         <UIcon name="i-lucide-smartphone" class="size-10" />
-        <p class="text-sm">No sessions found. Create one to get started.</p>
+        <p class="text-sm">
+          No sessions found. Create one to get started.
+        </p>
       </div>
 
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -191,13 +193,42 @@ onMounted(() => {
               <div class="flex items-center justify-between gap-1">
                 <span class="font-semibold text-sm text-highlighted truncate">{{ session.name }}</span>
                 <UDropdownMenu :items="[dropdownItems(session)]" :content="{ align: 'end' }">
-                  <UButton icon="i-lucide-ellipsis-vertical" color="neutral" variant="ghost" size="xs" class="shrink-0 -mr-1" />
+                  <UButton
+                    icon="i-lucide-ellipsis-vertical"
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    class="shrink-0 -mr-1"
+                  />
                 </UDropdownMenu>
               </div>
               <div class="flex items-center gap-1.5 text-xs text-muted mt-0.5">
                 <span v-if="session.businessName || session.pushName" class="truncate">{{ session.businessName || session.pushName }}</span>
                 <span v-if="session.businessName || session.pushName" class="text-dimmed">·</span>
-                <UBadge :color="sessionStatusColor(session.status)" variant="subtle" size="xs" class="capitalize">{{ session.status }}</UBadge>
+                <UBadge
+                  :color="sessionStatusColor(session.status)"
+                  variant="subtle"
+                  size="xs"
+                  class="capitalize"
+                >
+                  {{ session.status }}
+                </UBadge>
+                <UBadge
+                  v-if="session.engine === 'cloud_api'"
+                  color="info"
+                  variant="subtle"
+                  size="xs"
+                >
+                  Cloud API
+                </UBadge>
+                <UBadge
+                  v-if="session.chatwootEnabled"
+                  color="warning"
+                  variant="subtle"
+                  size="xs"
+                >
+                  Chatwoot
+                </UBadge>
               </div>
             </div>
           </div>

@@ -48,16 +48,38 @@ async function removeSubgroup(jid: string) {
 <template>
   <div class="space-y-3 pt-4">
     <div v-if="group.isAdmin" class="flex gap-2">
-      <UInput v-model="addSubgroupJid" placeholder="120363...@g.us" size="sm" class="flex-1" />
-      <UButton icon="i-lucide-plus" size="sm" color="neutral" :loading="addingSubgroup" @click="addSubgroup" />
+      <UInput
+        v-model="addSubgroupJid"
+        placeholder="120363...@g.us"
+        size="sm"
+        class="flex-1"
+      />
+      <UButton
+        icon="i-lucide-plus"
+        size="sm"
+        color="neutral"
+        :loading="addingSubgroup"
+        @click="addSubgroup"
+      />
     </div>
 
     <div v-for="sg in subgroups" :key="sg.jid" class="flex items-center justify-between gap-2 py-2 border-b border-default last:border-b-0">
       <div class="min-w-0">
-        <p class="text-sm font-medium text-highlighted truncate">{{ sg.name || 'Unnamed' }}</p>
-        <p class="text-xs text-muted font-mono truncate">{{ sg.jid }}</p>
+        <p class="text-sm font-medium text-highlighted truncate">
+          {{ sg.name || 'Unnamed' }}
+        </p>
+        <p class="text-xs text-muted font-mono truncate">
+          {{ sg.jid }}
+        </p>
       </div>
-      <UButton v-if="group.isAdmin" icon="i-lucide-x" size="xs" color="error" variant="ghost" @click="removeSubgroup(sg.jid)" />
+      <UButton
+        v-if="group.isAdmin"
+        icon="i-lucide-x"
+        size="xs"
+        color="error"
+        variant="ghost"
+        @click="removeSubgroup(sg.jid)"
+      />
     </div>
 
     <div v-if="!subgroups.length" class="text-sm text-muted py-4 text-center">

@@ -18,7 +18,7 @@ const state = reactive<Schema>({
 })
 
 const testing = ref(false)
-const healthResult = ref<{ status: string; services: Record<string, boolean> } | null>(null)
+const healthResult = ref<{ status: string, services: Record<string, boolean> } | null>(null)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   setApiBase(event.data.apiBase)
@@ -42,7 +42,12 @@ async function testConnection() {
 </script>
 
 <template>
-  <UForm id="settings-general" :schema="schema" :state="state" @submit="onSubmit">
+  <UForm
+    id="settings-general"
+    :schema="schema"
+    :state="state"
+    @submit="onSubmit"
+  >
     <UPageCard
       title="API Connection"
       description="Configure the wzap API endpoint and authentication token."
@@ -79,15 +84,25 @@ async function testConnection() {
         required
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
-        <UInput v-model="state.token" type="password" placeholder="your-admin-token" autocomplete="off" class="w-full max-w-xs" />
+        <UInput
+          v-model="state.token"
+          type="password"
+          placeholder="your-admin-token"
+          autocomplete="off"
+          class="w-full max-w-xs"
+        />
       </UFormField>
 
       <USeparator />
 
       <div class="flex max-sm:flex-col justify-between sm:items-center gap-4">
         <div>
-          <p class="text-sm font-medium">Connection Status</p>
-          <p class="text-sm text-muted">Test the connection to your wzap API.</p>
+          <p class="text-sm font-medium">
+            Connection Status
+          </p>
+          <p class="text-sm text-muted">
+            Test the connection to your wzap API.
+          </p>
         </div>
         <div class="flex items-center gap-3">
           <template v-if="healthResult">

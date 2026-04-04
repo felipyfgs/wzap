@@ -108,7 +108,13 @@ const settingsTab = useTemplateRef('settingsTab') as Ref<{ copyInviteLink: () =>
       </div>
 
       <div v-else-if="group">
-        <UTabs :items="tabItems" default-value="info" variant="link" size="sm" class="w-full">
+        <UTabs
+          :items="tabItems"
+          default-value="info"
+          variant="link"
+          size="sm"
+          class="w-full"
+        >
           <template #info>
             <SessionsGroupInfoTab :session-id="sessionId" :group="group" @updated="fetchDetail" />
           </template>

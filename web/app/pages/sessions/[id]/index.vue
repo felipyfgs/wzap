@@ -9,6 +9,7 @@ const toast = useToast()
 const sessionId = computed(() => route.params.id as string)
 const loading = ref(true)
 const qrModal = useTemplateRef('qrModal')
+const pairModal = useTemplateRef('pairModal')
 
 async function fetchSession() {
   loading.value = true
@@ -54,6 +55,17 @@ async function reconnect() {
     await refreshSessions()
   } catch {
     toast.add({ title: 'Failed to reconnect', color: 'error' })
+  }
+}
+
+async function restart() {
+  try {
+    await api(`/sessions/${sessionId.value}/restart`, { method: 'POST' })
+    toast.add({ title: 'Restarting session…', color: 'info' })
+    await fetchSession()
+    await refreshSessions()
+  } catch {
+    toast.add({ title: 'Failed to restart', color: 'error' })
   }
 }
 
@@ -103,6 +115,10 @@ const navbarActions = computed<DropdownMenuItem[][]>(() => [
     label: 'Reconnect',
     icon: 'i-lucide-rotate-ccw',
     onSelect: reconnect
+  }, {
+    label: 'Restart',
+    icon: 'i-lucide-power',
+    onSelect: restart
   }],
   [{
     label: 'Logout device',
@@ -138,6 +154,15 @@ watch(sessionId, fetchSession, { immediate: true })
             color="info"
             variant="soft"
             @click="qrModal?.show()"
+          />
+          <UButton
+            v-if="session && !isConnected"
+            icon="i-lucide-phone"
+            label="Pair by Phone"
+            size="sm"
+            color="neutral"
+            variant="soft"
+            @click="pairModal?.show()"
           />
           <UButton
             v-if="session && !isConnected"
@@ -191,14 +216,40 @@ watch(sessionId, fetchSession, { immediate: true })
       <!-- Not found -->
       <div v-else-if="!session" class="flex flex-col items-center justify-center py-24 gap-3 text-muted">
         <UIcon name="i-lucide-smartphone" class="size-10" />
-        <p class="text-sm">Session not found.</p>
-        <UButton label="Back to Sessions" icon="i-lucide-arrow-left" variant="soft" to="/sessions" />
+        <p class="text-sm">
+          Session not found.
+        </p>
+        <UButton
+          label="Back to Sessions"
+          icon="i-lucide-arrow-left"
+          variant="soft"
+          to="/sessions"
+        />
       </div>
 
       <!-- Content -->
       <div v-else class="space-y-6">
-
         <SessionsStatsRow :session="session" :profile="profile" />
+
+        <!-- Engine / Integration badges -->
+        <div v-if="session.engine === 'cloud_api' || session.chatwootEnabled" class="flex items-center gap-2">
+          <UBadge
+            v-if="session.engine === 'cloud_api'"
+            color="info"
+            variant="subtle"
+            icon="i-lucide-cloud"
+          >
+            Cloud API
+          </UBadge>
+          <UBadge
+            v-if="session.chatwootEnabled"
+            color="warning"
+            variant="subtle"
+            icon="i-lucide-message-circle"
+          >
+            Chatwoot
+          </UBadge>
+        </div>
 
         <!-- Bloco B: cards individuais -->
         <div class="grid lg:grid-cols-2 gap-4">
@@ -208,7 +259,9 @@ watch(sessionId, fetchSession, { immediate: true })
 
         <UCard v-if="session.proxy?.host">
           <template #header>
-            <p class="font-semibold text-highlighted">Proxy</p>
+            <p class="font-semibold text-highlighted">
+              Proxy
+            </p>
           </template>
           <p class="text-sm font-mono text-highlighted">
             {{ session.proxy.protocol || 'http' }}://{{ session.proxy.host }}:{{ session.proxy.port }}
@@ -220,15 +273,21 @@ watch(sessionId, fetchSession, { immediate: true })
           <template #header>
             <div class="flex items-center gap-2">
               <UIcon name="i-lucide-triangle-alert" class="size-4 text-error" />
-              <p class="font-semibold text-error">Danger Zone</p>
+              <p class="font-semibold text-error">
+                Danger Zone
+              </p>
             </div>
           </template>
 
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium">Reconnect session</p>
-                <p class="text-xs text-muted">Force disconnect and reconnect to WhatsApp.</p>
+                <p class="text-sm font-medium">
+                  Reconnect session
+                </p>
+                <p class="text-xs text-muted">
+                  Force disconnect and reconnect to WhatsApp.
+                </p>
               </div>
               <UButton
                 label="Reconnect"
@@ -244,8 +303,33 @@ watch(sessionId, fetchSession, { immediate: true })
 
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium">Logout device</p>
-                <p class="text-xs text-muted">Unpair this device from WhatsApp. A new QR scan will be required.</p>
+                <p class="text-sm font-medium">
+                  Restart session
+                </p>
+                <p class="text-xs text-muted">
+                  Stop and restart the WhatsApp engine for this session.
+                </p>
+              </div>
+              <UButton
+                label="Restart"
+                icon="i-lucide-power"
+                size="sm"
+                color="warning"
+                variant="soft"
+                @click="restart"
+              />
+            </div>
+
+            <USeparator />
+
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium">
+                  Logout device
+                </p>
+                <p class="text-xs text-muted">
+                  Unpair this device from WhatsApp. A new QR scan will be required.
+                </p>
               </div>
               <UButton
                 label="Logout"
@@ -261,8 +345,12 @@ watch(sessionId, fetchSession, { immediate: true })
 
             <div class="flex items-center justify-between">
               <div>
-                <p class="text-sm font-medium">Delete session</p>
-                <p class="text-xs text-muted">Permanently remove this session and all its data.</p>
+                <p class="text-sm font-medium">
+                  Delete session
+                </p>
+                <p class="text-xs text-muted">
+                  Permanently remove this session and all its data.
+                </p>
               </div>
               <UButton
                 label="Delete"
@@ -284,6 +372,14 @@ watch(sessionId, fetchSession, { immediate: true })
         :session-id="session.id"
         :session-name="session.name"
         @connected="fetchSession"
+      />
+
+      <!-- Pair by Phone Modal -->
+      <SessionsPairPhoneModal
+        v-if="session"
+        ref="pairModal"
+        :session-id="session.id"
+        @paired="fetchSession"
       />
     </template>
   </UDashboardPanel>

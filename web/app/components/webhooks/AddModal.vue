@@ -18,24 +18,26 @@ const eventOptions = [
 const schema = z.object({
   url: z.string().url('Invalid URL'),
   events: z.array(z.string()).min(1, 'Select at least one event'),
-  secret: z.string().optional()
+  secret: z.string().optional(),
+  natsEnabled: z.boolean()
 })
 
 type Schema = z.output<typeof schema>
 
-const state = reactive<Partial<Schema>>({ url: '', events: [], secret: '' })
+const state = reactive<Partial<Schema>>({ url: '', events: [], secret: '', natsEnabled: false })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true
   try {
     await api(`/sessions/${props.sessionId}/webhooks`, {
       method: 'POST',
-      body: { url: event.data.url, events: event.data.events, secret: event.data.secret || undefined }
+      body: { url: event.data.url, events: event.data.events, secret: event.data.secret || undefined, natsEnabled: event.data.natsEnabled }
     })
     toast.add({ title: 'Webhook created', color: 'success' })
     state.url = ''
     state.events = []
     state.secret = ''
+    state.natsEnabled = false
     open.value = false
     emit('created')
   } catch {
@@ -50,7 +52,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
     <UButton label="New Webhook" icon="i-lucide-plus" color="primary" />
 
     <template #body>
-      <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+      <UForm
+        :schema="schema"
+        :state="state"
+        class="space-y-4"
+        @submit="onSubmit"
+      >
         <UFormField label="URL" name="url">
           <UInput v-model="state.url" placeholder="https://example.com/hook" class="w-full" />
         </UFormField>
@@ -67,9 +74,22 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <UFormField label="Secret (optional)" name="secret">
           <UInput v-model="state.secret" placeholder="webhook-secret" class="w-full" />
         </UFormField>
+        <UFormField label="NATS Streaming" name="natsEnabled">
+          <USwitch v-model="state.natsEnabled" />
+        </UFormField>
         <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="subtle" @click="open = false" />
-          <UButton label="Create" color="primary" type="submit" :loading="loading" />
+          <UButton
+            label="Cancel"
+            color="neutral"
+            variant="subtle"
+            @click="open = false"
+          />
+          <UButton
+            label="Create"
+            color="primary"
+            type="submit"
+            :loading="loading"
+          />
         </div>
       </UForm>
     </template>

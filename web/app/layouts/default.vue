@@ -35,6 +35,10 @@ const sessionNavLinks = computed(() => {
     icon: 'i-lucide-users-2',
     to: `/sessions/${id}/groups`
   }, {
+    label: 'Newsletters',
+    icon: 'i-lucide-newspaper',
+    to: `/sessions/${id}/newsletters`
+  }, {
     label: 'Webhooks',
     icon: 'i-lucide-webhook',
     to: `/sessions/${id}/webhooks`
@@ -214,7 +218,5 @@ onMounted(async () => {
     <UDashboardSearch :groups="groups" />
 
     <slot />
-
-    <NotificationsSlideover />
   </UDashboardGroup>
 </template>

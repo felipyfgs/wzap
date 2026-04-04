@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { GroupDetail } from './types'
 
-const props = defineProps<{ sessionId: string; group: GroupDetail }>()
+const props = defineProps<{ sessionId: string, group: GroupDetail }>()
 const emit = defineEmits<{ updated: [] }>()
 
 const { api } = useWzap()
@@ -98,8 +98,19 @@ async function removePhoto() {
 <template>
   <div class="space-y-4 pt-4">
     <div class="flex items-center gap-2">
-      <UBadge :label="group.isAdmin ? 'Admin' : 'Member'" :color="group.isAdmin ? 'success' : 'neutral'" variant="subtle" size="sm" />
-      <UBadge v-if="group.isParent" label="Community" color="info" variant="subtle" size="sm" />
+      <UBadge
+        :label="group.isAdmin ? 'Admin' : 'Member'"
+        :color="group.isAdmin ? 'success' : 'neutral'"
+        variant="subtle"
+        size="sm"
+      />
+      <UBadge
+        v-if="group.isParent"
+        label="Community"
+        color="info"
+        variant="subtle"
+        size="sm"
+      />
       <span class="text-xs font-mono text-muted truncate">{{ group.jid }}</span>
     </div>
 
@@ -108,29 +119,72 @@ async function removePhoto() {
     </div>
 
     <div v-if="group.isAdmin" class="flex items-center gap-3">
-      <input ref="photoInputRef" type="file" accept="image/*" class="hidden" @change="uploadPhoto">
-      <UButton icon="i-lucide-camera" label="Change photo" size="xs" color="neutral" variant="outline" :loading="uploadingPhoto" @click="photoInputRef?.click()" />
-      <UButton icon="i-lucide-trash-2" label="Remove" size="xs" color="error" variant="ghost" :loading="removingPhoto" @click="removePhoto" />
+      <input
+        ref="photoInputRef"
+        type="file"
+        accept="image/*"
+        class="hidden"
+        @change="uploadPhoto"
+      >
+      <UButton
+        icon="i-lucide-camera"
+        label="Change photo"
+        size="xs"
+        color="neutral"
+        variant="outline"
+        :loading="uploadingPhoto"
+        @click="photoInputRef?.click()"
+      />
+      <UButton
+        icon="i-lucide-trash-2"
+        label="Remove"
+        size="xs"
+        color="error"
+        variant="ghost"
+        :loading="removingPhoto"
+        @click="removePhoto"
+      />
     </div>
 
     <USeparator />
 
     <div class="space-y-1.5">
-      <p class="text-sm font-medium">Name</p>
+      <p class="text-sm font-medium">
+        Name
+      </p>
       <div v-if="group.isAdmin" class="flex gap-2">
         <UInput v-model="editName" class="flex-1" size="sm" />
-        <UButton icon="i-lucide-check" size="sm" color="neutral" :loading="savingName" @click="saveName" />
+        <UButton
+          icon="i-lucide-check"
+          size="sm"
+          color="neutral"
+          :loading="savingName"
+          @click="saveName"
+        />
       </div>
-      <p v-else class="text-sm text-muted">{{ group.name }}</p>
+      <p v-else class="text-sm text-muted">
+        {{ group.name }}
+      </p>
     </div>
 
     <div class="space-y-1.5">
-      <p class="text-sm font-medium">Description</p>
+      <p class="text-sm font-medium">
+        Description
+      </p>
       <div v-if="group.isAdmin" class="space-y-2">
         <UTextarea v-model="editTopic" :rows="3" size="sm" />
-        <UButton icon="i-lucide-check" label="Save" size="xs" color="neutral" :loading="savingTopic" @click="saveTopic" />
+        <UButton
+          icon="i-lucide-check"
+          label="Save"
+          size="xs"
+          color="neutral"
+          :loading="savingTopic"
+          @click="saveTopic"
+        />
       </div>
-      <p v-else class="text-sm text-muted">{{ group.topic || 'No description' }}</p>
+      <p v-else class="text-sm text-muted">
+        {{ group.topic || 'No description' }}
+      </p>
     </div>
   </div>
 </template>

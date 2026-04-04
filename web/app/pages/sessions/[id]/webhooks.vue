@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
-import { getPaginationRowModel } from '@tanstack/table-core'
-import type { Row } from '@tanstack/table-core'
+import { getPaginationRowModel } from '@tanstack/vue-table'
+import type { Row } from '@tanstack/vue-table'
 import type { Webhook } from '~/types'
 
 const UButton = resolveComponent('UButton')
@@ -52,12 +52,29 @@ async function deleteWebhook(id: string) {
   }
 }
 
+async function toggleNats(wh: Webhook) {
+  try {
+    await api(`/sessions/${sessionId.value}/webhooks/${wh.id}`, {
+      method: 'PUT',
+      body: { natsEnabled: !wh.natsEnabled }
+    })
+    await fetchWebhooks()
+  } catch {
+    toast.add({ title: 'Failed to update webhook', color: 'error' })
+  }
+}
+
 function getRowItems(row: Row<Webhook>) {
   return [
     {
       label: row.original.enabled ? 'Disable' : 'Enable',
       icon: row.original.enabled ? 'i-lucide-pause' : 'i-lucide-play',
       onSelect() { toggleWebhook(row.original) }
+    },
+    {
+      label: row.original.natsEnabled ? 'Disable NATS' : 'Enable NATS',
+      icon: 'i-lucide-radio',
+      onSelect() { toggleNats(row.original) }
     },
     { type: 'separator' as const },
     {
@@ -91,8 +108,13 @@ const columns: TableColumn<Webhook>[] = [
     accessorKey: 'enabled',
     header: 'Status',
     cell: ({ row }) => {
+      const badges = []
       const color = row.original.enabled ? 'success' as const : 'neutral' as const
-      return h(UBadge, { variant: 'subtle', color }, () => row.original.enabled ? 'Active' : 'Disabled')
+      badges.push(h(UBadge, { variant: 'subtle', color }, () => row.original.enabled ? 'Active' : 'Disabled'))
+      if (row.original.natsEnabled) {
+        badges.push(h(UBadge, { variant: 'subtle', color: 'info' }, () => 'NATS'))
+      }
+      return h('div', { class: 'flex items-center gap-1.5' }, badges)
     }
   },
   {
@@ -144,14 +166,17 @@ watch(sessionId, fetchWebhooks, { immediate: true })
         <template #empty>
           <div class="flex flex-col items-center justify-center py-16 gap-3 text-muted">
             <UIcon name="i-lucide-webhook" class="size-8" />
-            <p class="text-sm">No webhooks configured for this session.</p>
+            <p class="text-sm">
+              No webhooks configured for this session.
+            </p>
           </div>
         </template>
       </UTable>
 
-      <div class="flex items-center justify-end gap-3 border-t border-default pt-4 mt-auto">
+      <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
+        <span class="text-sm text-muted">{{ webhooks.length }} item(s)</span>
         <UPagination
-          :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
+          :page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
           :items-per-page="table?.tableApi?.getState().pagination.pageSize"
           :total="table?.tableApi?.getFilteredRowModel().rows.length"
           @update:page="(p: number) => table?.tableApi?.setPageIndex(p - 1)"

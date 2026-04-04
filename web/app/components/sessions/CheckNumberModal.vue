@@ -52,17 +52,38 @@ watch(open, (val) => {
 
 <template>
   <UModal v-model:open="open" title="Check Number" description="Verify if a phone number is on WhatsApp">
-    <UButton label="Check Number" icon="i-lucide-search" color="neutral" variant="outline" />
+    <UButton
+      label="Check Number"
+      icon="i-lucide-search"
+      color="neutral"
+      variant="outline"
+    />
 
     <template #body>
-      <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+      <UForm
+        :schema="schema"
+        :state="state"
+        class="space-y-4"
+        @submit="onSubmit"
+      >
         <UFormField label="Phone number" name="phone" description="Digits only, with country code. E.g. 5511999999999">
           <UInput v-model="state.phone" placeholder="5511999999999" class="w-full" />
         </UFormField>
 
         <div class="flex justify-end gap-2">
-          <UButton label="Cancel" color="neutral" variant="subtle" @click="open = false" />
-          <UButton label="Check" color="primary" type="submit" :loading="loading" icon="i-lucide-search" />
+          <UButton
+            label="Cancel"
+            color="neutral"
+            variant="subtle"
+            @click="open = false"
+          />
+          <UButton
+            label="Check"
+            color="primary"
+            type="submit"
+            :loading="loading"
+            icon="i-lucide-search"
+          />
         </div>
 
         <div v-if="result" class="rounded-lg border border-default p-4 space-y-2 text-sm">

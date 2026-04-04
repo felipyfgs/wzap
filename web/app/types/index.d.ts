@@ -1,14 +1,26 @@
-import type { AvatarProps } from '@nuxt/ui'
-
-export type UserStatus = 'subscribed' | 'unsubscribed' | 'bounced'
-export type SaleStatus = 'paid' | 'failed' | 'refunded'
-
 export interface SessionProfile {
   pushName?: string
   businessName?: string
   platform?: string
   pictureUrl?: string
   status?: string
+}
+
+export interface SessionProxy {
+  host?: string
+  port?: number
+  protocol?: string
+  username?: string
+  password?: string
+}
+
+export interface SessionSettings {
+  alwaysOnline: boolean
+  rejectCall: boolean
+  msgRejectCall?: string
+  readMessages: boolean
+  ignoreGroups: boolean
+  ignoreStatus: boolean
 }
 
 export interface Session {
@@ -19,24 +31,22 @@ export interface Session {
   qrCode?: string
   connected: number
   status: string
+  engine?: string
+  phoneNumberId?: string
+  businessAccountId?: string
   pushName?: string
   businessName?: string
   platform?: string
-  proxy?: {
-    host?: string
-    port?: number
-    protocol?: string
-  }
-  settings?: {
-    alwaysOnline: boolean
-    rejectCall: boolean
-    msgRejectCall?: string
-    readMessages: boolean
-    ignoreGroups: boolean
-    ignoreStatus: boolean
-  }
+  chatwootEnabled?: boolean
+  proxy?: SessionProxy
+  settings?: SessionSettings
   createdAt?: string
   updatedAt?: string
+}
+
+export interface SessionCreated extends Omit<Session, 'pushName' | 'businessName' | 'platform' | 'chatwootEnabled'> {
+  token: string
+  webhook?: Webhook
 }
 
 export interface Webhook {
@@ -48,60 +58,4 @@ export interface Webhook {
   enabled: boolean
   natsEnabled: boolean
   createdAt?: string
-}
-
-export interface User {
-  id: number
-  name: string
-  email: string
-  avatar?: AvatarProps
-  status: UserStatus
-  location: string
-}
-
-export interface Mail {
-  id: number
-  unread?: boolean
-  from: User
-  subject: string
-  body: string
-  date: string
-}
-
-export interface Member {
-  name: string
-  username: string
-  role: 'member' | 'owner'
-  avatar: AvatarProps
-}
-
-export interface Stat {
-  title: string
-  icon: string
-  value: number | string
-  variation: number
-  formatter?: (value: number) => string
-}
-
-export interface Sale {
-  id: string
-  date: string
-  status: SaleStatus
-  email: string
-  amount: number
-}
-
-export interface Notification {
-  id: number
-  unread?: boolean
-  sender: User
-  body: string
-  date: string
-}
-
-export type Period = 'daily' | 'weekly' | 'monthly'
-
-export interface Range {
-  start: Date
-  end: Date
 }

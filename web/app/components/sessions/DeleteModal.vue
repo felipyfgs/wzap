@@ -26,8 +26,18 @@ async function onConfirm() {
 
     <template #body>
       <div class="flex justify-end gap-2">
-        <UButton label="Cancel" color="neutral" variant="subtle" @click="open = false" />
-        <UButton label="Delete" color="error" :loading="loading" @click="onConfirm" />
+        <UButton
+          label="Cancel"
+          color="neutral"
+          variant="subtle"
+          @click="open = false"
+        />
+        <UButton
+          label="Delete"
+          color="error"
+          :loading="loading"
+          @click="onConfirm"
+        />
       </div>
     </template>
   </UModal>

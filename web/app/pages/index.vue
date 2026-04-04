@@ -6,7 +6,7 @@ import { sessionStatusColor } from '~/utils'
 const { api } = useWzap()
 
 const sessions = ref<Session[]>([])
-const health = ref<{ status: string; services: Record<string, boolean> } | null>(null)
+const health = ref<{ status: string, services: Record<string, boolean> } | null>(null)
 const loading = ref(true)
 
 async function fetchData() {
@@ -78,8 +78,21 @@ onMounted(fetchData)
           <UDashboardSidebarCollapse />
         </template>
         <template #right>
-          <UButton icon="i-lucide-refresh-cw" color="neutral" variant="ghost" size="sm" :loading="loading" @click="fetchData" />
-          <UButton label="New Session" icon="i-lucide-plus" size="sm" color="primary" to="/sessions" />
+          <UButton
+            icon="i-lucide-refresh-cw"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            :loading="loading"
+            @click="fetchData"
+          />
+          <UButton
+            label="New Session"
+            icon="i-lucide-plus"
+            size="sm"
+            color="primary"
+            to="/sessions"
+          />
         </template>
       </UDashboardNavbar>
     </template>
@@ -92,23 +105,43 @@ onMounted(fetchData)
       <div v-else class="space-y-6">
         <!-- Stats row -->
         <UPageGrid class="lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-px">
-          <UPageCard icon="i-lucide-smartphone" title="Sessions" variant="subtle" :ui="cardUi"
-            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg">
+          <UPageCard
+            icon="i-lucide-smartphone"
+            title="Sessions"
+            variant="subtle"
+            :ui="cardUi"
+            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg"
+          >
             <span class="text-2xl font-semibold text-highlighted">{{ stats.total }}</span>
           </UPageCard>
 
-          <UPageCard icon="i-lucide-wifi" title="Connected" variant="subtle" :ui="cardUi"
-            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg">
+          <UPageCard
+            icon="i-lucide-wifi"
+            title="Connected"
+            variant="subtle"
+            :ui="cardUi"
+            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg"
+          >
             <span class="text-2xl font-semibold text-success">{{ stats.connected }}</span>
           </UPageCard>
 
-          <UPageCard icon="i-lucide-wifi-off" title="Offline" variant="subtle" :ui="cardUi"
-            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg">
+          <UPageCard
+            icon="i-lucide-wifi-off"
+            title="Offline"
+            variant="subtle"
+            :ui="cardUi"
+            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg"
+          >
             <span class="text-2xl font-semibold text-highlighted">{{ stats.disconnected }}</span>
           </UPageCard>
 
-          <UPageCard icon="i-lucide-activity" title="API Status" variant="subtle" :ui="cardUi"
-            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg">
+          <UPageCard
+            icon="i-lucide-activity"
+            title="API Status"
+            variant="subtle"
+            :ui="cardUi"
+            class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg"
+          >
             <UBadge
               v-if="health"
               :color="health.status === 'UP' ? 'success' : 'warning'"
@@ -125,8 +158,17 @@ onMounted(fetchData)
         <UCard>
           <template #header>
             <div class="flex items-center justify-between">
-              <p class="font-semibold text-highlighted">Sessions</p>
-              <UButton label="View all" icon="i-lucide-arrow-right" size="xs" color="neutral" variant="ghost" to="/sessions" />
+              <p class="font-semibold text-highlighted">
+                Sessions
+              </p>
+              <UButton
+                label="View all"
+                icon="i-lucide-arrow-right"
+                size="xs"
+                color="neutral"
+                variant="ghost"
+                to="/sessions"
+              />
             </div>
           </template>
 
@@ -152,8 +194,16 @@ onMounted(fetchData)
             <template #empty>
               <div class="flex flex-col items-center justify-center py-12 gap-3 text-muted">
                 <UIcon name="i-lucide-smartphone" class="size-8" />
-                <p class="text-sm">No sessions yet.</p>
-                <UButton label="Create Session" icon="i-lucide-plus" size="sm" color="primary" to="/sessions" />
+                <p class="text-sm">
+                  No sessions yet.
+                </p>
+                <UButton
+                  label="Create Session"
+                  icon="i-lucide-plus"
+                  size="sm"
+                  color="primary"
+                  to="/sessions"
+                />
               </div>
             </template>
           </UTable>

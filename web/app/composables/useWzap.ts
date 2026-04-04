@@ -34,7 +34,7 @@ export function useWzap() {
     return await $fetch<T>(`${apiBase.value}${path}`, {
       ...options,
       headers: {
-        Authorization: token.value,
+        'Authorization': token.value,
         'Content-Type': 'application/json',
         ...options.headers
       }

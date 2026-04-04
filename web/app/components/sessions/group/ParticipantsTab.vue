@@ -65,7 +65,7 @@ function formatPhone(jid: string): string {
   return '+' + jid.split('@')[0]
 }
 
-function getDisplayInfo(p: GroupParticipant): { name: string; description?: string; initials: string } {
+function getDisplayInfo(p: GroupParticipant): { name: string, description?: string, initials: string } {
   const phone = p.phoneNumber ? formatPhone(p.phoneNumber) : formatPhone(p.jid)
   const name = p.displayName || phone
   const description = p.displayName ? phone : undefined
@@ -191,7 +191,7 @@ const participantColumns = computed<TableColumn<GroupParticipant>[]>(() => {
 
   cols.push({
     id: 'participant',
-    accessorFn: (row) => getDisplayInfo(row).name,
+    accessorFn: row => getDisplayInfo(row).name,
     header: ({ column }) => {
       const isSorted = column.getIsSorted()
       return h(UButton, {
@@ -247,13 +247,36 @@ const participantColumns = computed<TableColumn<GroupParticipant>[]>(() => {
 <template>
   <div class="space-y-3 pt-4">
     <div v-if="group.isAdmin" class="flex gap-2">
-      <UInput v-model="addPhone" placeholder="5511999999999" size="sm" class="flex-1" />
-      <UButton icon="i-lucide-user-plus" size="sm" color="neutral" :loading="addingParticipant" @click="addParticipant" />
+      <UInput
+        v-model="addPhone"
+        placeholder="5511999999999"
+        size="sm"
+        class="flex-1"
+      />
+      <UButton
+        icon="i-lucide-user-plus"
+        size="sm"
+        color="neutral"
+        :loading="addingParticipant"
+        @click="addParticipant"
+      />
     </div>
 
     <div class="flex gap-2">
-      <UInput v-model="participantSearch" icon="i-lucide-search" placeholder="Search…" size="sm" class="flex-1" />
-      <USelect v-model="roleFilter" :items="roleFilterOptions" value-key="value" size="sm" class="w-28" />
+      <UInput
+        v-model="participantSearch"
+        icon="i-lucide-search"
+        placeholder="Search…"
+        size="sm"
+        class="flex-1"
+      />
+      <USelect
+        v-model="roleFilter"
+        :items="roleFilterOptions"
+        value-key="value"
+        size="sm"
+        class="w-28"
+      />
     </div>
 
     <p class="text-xs text-muted">
@@ -262,11 +285,38 @@ const participantColumns = computed<TableColumn<GroupParticipant>[]>(() => {
 
     <div v-if="selectedCount > 0" class="flex items-center gap-2 rounded-lg bg-elevated px-3 py-2">
       <span class="text-xs text-muted">{{ selectedCount }} of {{ filteredParticipants.length }} selected</span>
-      <UButton icon="i-lucide-x" size="xs" color="neutral" variant="ghost" @click="rowSelection = {}" />
+      <UButton
+        icon="i-lucide-x"
+        size="xs"
+        color="neutral"
+        variant="ghost"
+        @click="rowSelection = {}"
+      />
       <USeparator orientation="vertical" class="h-4" />
-      <UButton label="Promote" icon="i-lucide-arrow-up" size="xs" color="neutral" variant="outline" @click="bulkAction('promote')" />
-      <UButton label="Demote" icon="i-lucide-arrow-down" size="xs" color="neutral" variant="outline" @click="bulkAction('demote')" />
-      <UButton label="Remove" icon="i-lucide-user-x" size="xs" color="error" variant="soft" @click="bulkAction('remove')" />
+      <UButton
+        label="Promote"
+        icon="i-lucide-arrow-up"
+        size="xs"
+        color="neutral"
+        variant="outline"
+        @click="bulkAction('promote')"
+      />
+      <UButton
+        label="Demote"
+        icon="i-lucide-arrow-down"
+        size="xs"
+        color="neutral"
+        variant="outline"
+        @click="bulkAction('demote')"
+      />
+      <UButton
+        label="Remove"
+        icon="i-lucide-user-x"
+        size="xs"
+        color="error"
+        variant="soft"
+        @click="bulkAction('remove')"
+      />
     </div>
 
     <UTable
@@ -295,12 +345,26 @@ const participantColumns = computed<TableColumn<GroupParticipant>[]>(() => {
 
     <template v-if="group.isAdmin && joinRequests.length">
       <USeparator />
-      <p class="text-sm font-medium text-highlighted">Join Requests ({{ joinRequests.length }})</p>
+      <p class="text-sm font-medium text-highlighted">
+        Join Requests ({{ joinRequests.length }})
+      </p>
       <div v-for="req in joinRequests" :key="req.jid" class="flex items-center justify-between py-1">
         <span class="text-sm font-mono truncate">{{ req.jid }}</span>
         <div class="flex gap-1">
-          <UButton icon="i-lucide-check" size="xs" color="success" variant="soft" @click="handleJoinRequest(req.jid, 'approve')" />
-          <UButton icon="i-lucide-x" size="xs" color="error" variant="soft" @click="handleJoinRequest(req.jid, 'reject')" />
+          <UButton
+            icon="i-lucide-check"
+            size="xs"
+            color="success"
+            variant="soft"
+            @click="handleJoinRequest(req.jid, 'approve')"
+          />
+          <UButton
+            icon="i-lucide-x"
+            size="xs"
+            color="error"
+            variant="soft"
+            @click="handleJoinRequest(req.jid, 'reject')"
+          />
         </div>
       </div>
     </template>

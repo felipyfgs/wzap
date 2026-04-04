@@ -85,7 +85,9 @@ onUnmounted(() => disconnect())
     <template #body>
       <div v-if="events.length === 0" class="flex flex-col items-center justify-center py-24 gap-3 text-muted">
         <UIcon name="i-lucide-radio" class="size-10" />
-        <p class="text-sm">No events yet. Click <strong>Connect</strong> to start receiving live events.</p>
+        <p class="text-sm">
+          No events yet. Click <strong>Connect</strong> to start receiving live events.
+        </p>
       </div>
 
       <div v-else class="space-y-2">
@@ -97,7 +99,9 @@ onUnmounted(() => disconnect())
         >
           <div class="flex items-center justify-between mb-2">
             <div class="flex items-center gap-2">
-              <UBadge color="primary" variant="subtle">{{ evt.event || 'unknown' }}</UBadge>
+              <UBadge color="primary" variant="subtle">
+                {{ evt.event || 'unknown' }}
+              </UBadge>
               <span v-if="evt.sessionId" class="text-xs text-muted">{{ evt.sessionId }}</span>
             </div>
             <span class="text-xs text-muted">{{ evt.timestamp }}</span>

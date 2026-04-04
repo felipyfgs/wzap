@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const props = defineProps<{ sessionId: string; sessionName: string }>()
+const props = defineProps<{ sessionId: string, sessionName: string }>()
 const emit = defineEmits<{ connected: [] }>()
 
 const { api } = useWzap()
@@ -72,7 +72,9 @@ defineExpose({ show })
     <template #body>
       <div v-if="loadingQR || !qrImage" class="flex flex-col items-center gap-3 py-8">
         <UIcon name="i-lucide-loader-2" class="size-8 animate-spin text-muted" />
-        <p class="text-sm text-muted">Waiting for QR code…</p>
+        <p class="text-sm text-muted">
+          Waiting for QR code…
+        </p>
       </div>
 
       <img
@@ -80,13 +82,18 @@ defineExpose({ show })
         :src="qrImage"
         alt="QR Code"
         class="size-64 rounded-lg"
-      />
+      >
 
       <p class="text-xs text-muted text-center max-w-xs">
         The QR code refreshes automatically every 30 seconds. Keep this window open until the session connects.
       </p>
 
-      <UButton label="Close" color="neutral" variant="subtle" @click="close" />
+      <UButton
+        label="Close"
+        color="neutral"
+        variant="subtle"
+        @click="close"
+      />
     </template>
   </UModal>
 </template>

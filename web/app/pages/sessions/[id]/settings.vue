@@ -12,6 +12,7 @@ const sessionId = computed(() => route.params.id as string)
 const loading = ref(true)
 const saving = ref(false)
 const sessionName = ref('')
+const sessionEngine = ref('')
 
 const settingsSchema = z.object({
   alwaysOnline: z.boolean(),
@@ -24,7 +25,12 @@ const settingsSchema = z.object({
   proxyPort: z.number().optional(),
   proxyProtocol: z.string().optional(),
   proxyUsername: z.string().optional(),
-  proxyPassword: z.string().optional()
+  proxyPassword: z.string().optional(),
+  phoneNumberId: z.string().optional(),
+  accessToken: z.string().optional(),
+  businessAccountId: z.string().optional(),
+  appSecret: z.string().optional(),
+  webhookVerifyToken: z.string().optional()
 })
 
 type SettingsSchema = z.output<typeof settingsSchema>
@@ -40,8 +46,15 @@ const state = reactive<Partial<SettingsSchema>>({
   proxyPort: undefined,
   proxyProtocol: 'http',
   proxyUsername: '',
-  proxyPassword: ''
+  proxyPassword: '',
+  phoneNumberId: '',
+  accessToken: '',
+  businessAccountId: '',
+  appSecret: '',
+  webhookVerifyToken: ''
 })
+
+const isCloudApi = computed(() => sessionEngine.value === 'cloud_api')
 
 async function fetchSession() {
   loading.value = true
@@ -49,6 +62,12 @@ async function fetchSession() {
     const res: any = await api(`/sessions/${sessionId.value}`)
     const s = res.data
     sessionName.value = s.name
+    sessionEngine.value = s.engine ?? ''
+    state.phoneNumberId = s.phoneNumberId ?? ''
+    state.businessAccountId = s.businessAccountId ?? ''
+    state.accessToken = ''
+    state.appSecret = ''
+    state.webhookVerifyToken = ''
     state.alwaysOnline = s.settings?.alwaysOnline ?? false
     state.readMessages = s.settings?.readMessages ?? false
     state.rejectCall = s.settings?.rejectCall ?? false
@@ -80,13 +99,24 @@ async function onSubmit(event: FormSubmitEvent<SettingsSchema>) {
           ignoreGroups: event.data.ignoreGroups,
           ignoreStatus: event.data.ignoreStatus
         },
-        proxy: event.data.proxyHost ? {
-          host: event.data.proxyHost,
-          port: event.data.proxyPort,
-          protocol: event.data.proxyProtocol,
-          username: event.data.proxyUsername,
-          password: event.data.proxyPassword
-        } : null
+        proxy: event.data.proxyHost
+          ? {
+              host: event.data.proxyHost,
+              port: event.data.proxyPort,
+              protocol: event.data.proxyProtocol,
+              username: event.data.proxyUsername,
+              password: event.data.proxyPassword
+            }
+          : null,
+        ...(isCloudApi.value
+          ? {
+              phoneNumberId: event.data.phoneNumberId || undefined,
+              accessToken: event.data.accessToken || undefined,
+              businessAccountId: event.data.businessAccountId || undefined,
+              appSecret: event.data.appSecret || undefined,
+              webhookVerifyToken: event.data.webhookVerifyToken || undefined
+            }
+          : {})
       }
     })
     toast.add({ title: 'Settings saved', color: 'success' })
@@ -102,6 +132,58 @@ const protocolOptions = [
   { label: 'HTTPS', value: 'https' },
   { label: 'SOCKS5', value: 'socks5' }
 ]
+
+const profileName = ref('')
+const profileStatus = ref('')
+const profilePictureUrl = ref('')
+const savingName = ref(false)
+const savingStatus = ref(false)
+const savingPicture = ref(false)
+
+async function saveProfileName() {
+  if (!profileName.value.trim()) return
+  savingName.value = true
+  try {
+    await api(`/sessions/${sessionId.value}/profile/name`, {
+      method: 'POST',
+      body: { name: profileName.value.trim() }
+    })
+    toast.add({ title: 'Profile name updated', color: 'success' })
+  } catch {
+    toast.add({ title: 'Failed to update profile name', color: 'error' })
+  }
+  savingName.value = false
+}
+
+async function saveStatus() {
+  if (!profileStatus.value.trim()) return
+  savingStatus.value = true
+  try {
+    await api(`/sessions/${sessionId.value}/contacts/status`, {
+      method: 'POST',
+      body: { status: profileStatus.value.trim() }
+    })
+    toast.add({ title: 'Status updated', color: 'success' })
+  } catch {
+    toast.add({ title: 'Failed to update status', color: 'error' })
+  }
+  savingStatus.value = false
+}
+
+async function saveProfilePicture() {
+  if (!profilePictureUrl.value.trim()) return
+  savingPicture.value = true
+  try {
+    await api(`/sessions/${sessionId.value}/contacts/profile-picture`, {
+      method: 'POST',
+      body: { image: profilePictureUrl.value.trim() }
+    })
+    toast.add({ title: 'Profile picture updated', color: 'success' })
+  } catch {
+    toast.add({ title: 'Failed to update profile picture', color: 'error' })
+  }
+  savingPicture.value = false
+}
 
 watch(sessionId, fetchSession, { immediate: true })
 </script>
@@ -255,7 +337,12 @@ watch(sessionId, fetchSession, { immediate: true })
             label="Protocol"
             class="flex max-sm:flex-col justify-between items-start gap-4"
           >
-            <USelect v-model="state.proxyProtocol" :items="protocolOptions" value-key="value" class="w-full max-w-xs" />
+            <USelect
+              v-model="state.proxyProtocol"
+              :items="protocolOptions"
+              value-key="value"
+              class="w-full max-w-xs"
+            />
           </UFormField>
 
           <USeparator />
@@ -266,7 +353,12 @@ watch(sessionId, fetchSession, { immediate: true })
             description="Optional proxy authentication."
             class="flex max-sm:flex-col justify-between items-start gap-4"
           >
-            <UInput v-model="state.proxyUsername" placeholder="username" autocomplete="off" class="w-full max-w-xs" />
+            <UInput
+              v-model="state.proxyUsername"
+              placeholder="username"
+              autocomplete="off"
+              class="w-full max-w-xs"
+            />
           </UFormField>
 
           <USeparator />
@@ -276,10 +368,164 @@ watch(sessionId, fetchSession, { immediate: true })
             label="Password"
             class="flex max-sm:flex-col justify-between items-start gap-4"
           >
-            <UInput v-model="state.proxyPassword" type="password" placeholder="••••••••" autocomplete="off" class="w-full max-w-xs" />
+            <UInput
+              v-model="state.proxyPassword"
+              type="password"
+              placeholder="••••••••"
+              autocomplete="off"
+              class="w-full max-w-xs"
+            />
           </UFormField>
         </UPageCard>
+
+        <!-- Cloud API (only for cloud_api engine) -->
+        <template v-if="isCloudApi">
+          <UPageCard
+            title="Cloud API"
+            description="Meta Cloud API credentials for this session."
+            variant="naked"
+            orientation="horizontal"
+            class="mt-6 mb-0"
+          />
+
+          <UPageCard variant="subtle">
+            <UFormField
+              name="phoneNumberId"
+              label="Phone Number ID"
+              description="The Phone Number ID from Meta Business dashboard."
+              class="flex max-sm:flex-col justify-between items-start gap-4"
+            >
+              <UInput v-model="state.phoneNumberId" placeholder="123456789" class="w-full max-w-xs" />
+            </UFormField>
+
+            <USeparator />
+
+            <UFormField
+              name="accessToken"
+              label="Access Token"
+              description="Leave blank to keep existing token."
+              class="flex max-sm:flex-col justify-between items-start gap-4"
+            >
+              <UInput
+                v-model="state.accessToken"
+                type="password"
+                placeholder="EAAx..."
+                autocomplete="off"
+                class="w-full max-w-xs"
+              />
+            </UFormField>
+
+            <USeparator />
+
+            <UFormField
+              name="businessAccountId"
+              label="Business Account ID"
+              class="flex max-sm:flex-col justify-between items-start gap-4"
+            >
+              <UInput v-model="state.businessAccountId" placeholder="987654321" class="w-full max-w-xs" />
+            </UFormField>
+
+            <USeparator />
+
+            <UFormField
+              name="appSecret"
+              label="App Secret"
+              description="Leave blank to keep existing secret."
+              class="flex max-sm:flex-col justify-between items-start gap-4"
+            >
+              <UInput
+                v-model="state.appSecret"
+                type="password"
+                placeholder="App secret"
+                autocomplete="off"
+                class="w-full max-w-xs"
+              />
+            </UFormField>
+
+            <USeparator />
+
+            <UFormField
+              name="webhookVerifyToken"
+              label="Webhook Verify Token"
+              description="Token used by Meta to verify your webhook endpoint."
+              class="flex max-sm:flex-col justify-between items-start gap-4"
+            >
+              <UInput v-model="state.webhookVerifyToken" placeholder="verify-token" class="w-full max-w-xs" />
+            </UFormField>
+          </UPageCard>
+        </template>
       </UForm>
+
+      <!-- Chatwoot Integration -->
+      <SessionsChatwootConfigCard :session-id="sessionId" :chatwoot-enabled="false" @updated="fetchSession" />
+
+      <!-- Profile -->
+      <UPageCard
+        title="Profile"
+        description="Update your WhatsApp profile name, status, and picture."
+        variant="naked"
+        orientation="horizontal"
+        class="mt-6 mb-0"
+      />
+
+      <UPageCard variant="subtle">
+        <UFormField
+          label="Profile Name"
+          description="Your display name on WhatsApp."
+          class="flex max-sm:flex-col justify-between items-start gap-4"
+        >
+          <div class="flex gap-2 w-full max-w-xs">
+            <UInput v-model="profileName" placeholder="Your name" class="flex-1" />
+            <UButton
+              label="Save"
+              size="sm"
+              color="primary"
+              :loading="savingName"
+              @click="saveProfileName"
+            />
+          </div>
+        </UFormField>
+
+        <USeparator />
+
+        <UFormField
+          label="Status Message"
+          description="Your status text shown on WhatsApp."
+          class="flex max-sm:flex-col justify-between items-start gap-4"
+        >
+          <div class="flex gap-2 w-full max-w-xs">
+            <UInput v-model="profileStatus" placeholder="Hey there! I am using WhatsApp." class="flex-1" />
+            <UButton
+              label="Save"
+              size="sm"
+              color="primary"
+              :loading="savingStatus"
+              @click="saveStatus"
+            />
+          </div>
+        </UFormField>
+
+        <USeparator />
+
+        <UFormField
+          label="Profile Picture"
+          description="Set your profile picture via URL."
+          class="flex max-sm:flex-col justify-between items-start gap-4"
+        >
+          <div class="flex gap-2 w-full max-w-xs">
+            <UInput v-model="profilePictureUrl" placeholder="https://example.com/photo.jpg" class="flex-1" />
+            <UButton
+              label="Update"
+              size="sm"
+              color="primary"
+              :loading="savingPicture"
+              @click="saveProfilePicture"
+            />
+          </div>
+        </UFormField>
+      </UPageCard>
+
+      <SessionsPrivacyCard :session-id="sessionId" />
     </template>
   </UDashboardPanel>
 </template>

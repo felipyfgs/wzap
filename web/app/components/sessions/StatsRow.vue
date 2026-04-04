@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Session, SessionProfile } from '~/types'
 
-const props = defineProps<{ session: Session; profile?: SessionProfile | null }>()
+const props = defineProps<{ session: Session, profile?: SessionProfile | null }>()
 
 const phone = computed(() => {
   if (!props.session.jid) return 'Not paired'
@@ -61,16 +61,33 @@ const cardUi = {
       <!-- Info -->
       <div class="flex-1 min-w-0 space-y-1">
         <div class="flex items-center gap-2 flex-wrap">
-          <p class="text-lg font-semibold text-highlighted leading-none">{{ profile.pushName || session.name }}</p>
-          <UBadge v-if="profile.businessName" size="xs" color="info" variant="subtle" icon="i-lucide-briefcase">
+          <p class="text-lg font-semibold text-highlighted leading-none">
+            {{ profile.pushName || session.name }}
+          </p>
+          <UBadge
+            v-if="profile.businessName"
+            size="xs"
+            color="info"
+            variant="subtle"
+            icon="i-lucide-briefcase"
+          >
             {{ profile.businessName }}
           </UBadge>
-          <UBadge v-if="profile.platform" size="xs" color="neutral" variant="subtle">
+          <UBadge
+            v-if="profile.platform"
+            size="xs"
+            color="neutral"
+            variant="subtle"
+          >
             {{ profile.platform }}
           </UBadge>
         </div>
-        <p class="text-sm text-muted font-mono">{{ phone }}</p>
-        <p v-if="profile.status" class="text-sm text-muted italic">{{ profile.status }}</p>
+        <p class="text-sm text-muted font-mono">
+          {{ phone }}
+        </p>
+        <p v-if="profile.status" class="text-sm text-muted italic">
+          {{ profile.status }}
+        </p>
       </div>
 
       <!-- Meta -->
@@ -93,7 +110,12 @@ const cardUi = {
       :ui="cardUi"
       class="lg:rounded-none first:rounded-l-lg last:rounded-r-lg"
     >
-      <UBadge :color="sessionStatusColor(session.status)" variant="subtle" size="lg" class="capitalize">
+      <UBadge
+        :color="sessionStatusColor(session.status)"
+        variant="subtle"
+        size="lg"
+        class="capitalize"
+      >
         {{ session.status }}
       </UBadge>
     </UPageCard>

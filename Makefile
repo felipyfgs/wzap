@@ -1,6 +1,6 @@
 # wzap Makefile
 
-.PHONY: help dev build run tidy up down clean install-tools docs web-install web-dev web-build dev-all
+.PHONY: help dev build run tidy up down down-clean clean install-tools docs web-install web-dev web-build dev-all prod logs chatwoot-up chatwoot-down chatwoot-logs
 
 # Variables
 APP_NAME=wzap
@@ -25,13 +25,13 @@ build: ## Build the application
 run: build ## Build and run the application
 	./$(BUILD_DIR)/$(APP_NAME)
 
-up: ## Start all services via docker-compose
-	docker compose up -d
+up: ## Start dev stack (hot reload + bind mount)
+	docker compose up -d --build
 
-down: ## Stop all services
+down: ## Stop dev stack
 	docker compose down
 
-down-clean: ## Stop all services and remove volumes (DESTRUCTIVE)
+down-clean: ## Stop dev stack and remove volumes (DESTRUCTIVE)
 	docker compose down -v
 
 clean: ## Clean build artifacts
@@ -56,3 +56,18 @@ web-build: ## Build the frontend for production
 
 dev-all: ## Run backend and frontend concurrently
 	make dev & make web-dev
+
+prod: ## Start prod stack (compiled image)
+	docker compose -f docker-compose.prod.yml up -d --build
+
+logs: ## Tail wzap container logs
+	docker compose logs -f wzap
+
+chatwoot-up: ## Start Chatwoot stack
+	docker compose -f docker/chatwoot/docker-compose.yml up -d
+
+chatwoot-down: ## Stop Chatwoot stack
+	docker compose -f docker/chatwoot/docker-compose.yml down
+
+chatwoot-logs: ## Tail Chatwoot logs
+	docker compose -f docker/chatwoot/docker-compose.yml logs -f rails

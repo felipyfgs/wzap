@@ -1,0 +1,25 @@
+root = "."
+tmp_dir = "/tmp/air"
+
+[build]
+  entrypoint = "/tmp/air/wzap"
+  cmd = "CGO_ENABLED=0 go build -o /tmp/air/wzap ./cmd/wzap/main.go"
+  delay = 1000
+  exclude_dir = ["docs", "web", "temp", "bin", ".git", "chatwoot-docker", "openspec", "docker"]
+  exclude_regex = ["_test\\.go"]
+  include_ext = ["go"]
+  kill_delay = "500ms"
+  send_interrupt = true
+  stop_on_error = true
+
+[log]
+  time = false
+
+[color]
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[misc]
+  clean_on_exit = true

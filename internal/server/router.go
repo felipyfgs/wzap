@@ -58,8 +58,10 @@ func (s *Server) SetupRoutes() error {
 	newsletterSvc := service.NewNewsletterService(engine)
 	communitySvc := service.NewCommunityService(engine)
 	chatSvc := service.NewChatService(engine)
-	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo)
-	historySvc := service.NewHistoryService(messageRepo)
+	mediaPool := s.async.AddPool("media", 4, 50)
+	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo, mediaPool)
+	historyPool := s.async.AddPool("history", 2, 100)
+	historySvc := service.NewHistoryService(messageRepo, historyPool)
 
 	chatwootRepo := chatwoot.NewRepository(s.db.Pool)
 	chatwootSvc := chatwoot.NewService(chatwootRepo, messageRepo, messageSvc)

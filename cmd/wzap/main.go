@@ -39,6 +39,9 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := db.BootstrapBaseline(ctx); err != nil {
+		logger.Warn().Err(err).Msg("Failed to bootstrap baseline migrations (may be fresh install)")
+	}
 	if err := db.Migrate(ctx); err != nil {
 		logger.Fatal().Err(err).Msg("Failed to run database migrations")
 	}

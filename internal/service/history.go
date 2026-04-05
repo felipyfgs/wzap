@@ -39,9 +39,3 @@ func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID
 		}
 	})
 }
-
-		if err := s.repo.Save(ctx, msg); err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Failed to persist message")
-		}
-	})
-}

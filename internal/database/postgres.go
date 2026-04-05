@@ -3,13 +3,14 @@ package database
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"wzap/internal/logger"
 	"wzap/migrations"
 )
-
 
 type DB struct {
 	Pool *pgxpool.Pool
@@ -52,28 +53,226 @@ func (db *DB) Health(ctx context.Context) error {
 }
 
 func (db *DB) Migrate(ctx context.Context) error {
+	if err := db.ensureMigrationTable(ctx); err != nil {
+		return fmt.Errorf("failed to ensure migration tracking table: %w", err)
+	}
+
+	applied, err := db.getAppliedMigrations(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get applied migrations: %w", err)
+	}
+
 	entries, err := migrations.FS.ReadDir(".")
 	if err != nil {
 		return fmt.Errorf("failed to read migrations directory: %w", err)
 	}
 
+	var pending []string
 	for _, entry := range entries {
 		name := entry.Name()
 		if entry.IsDir() || len(name) < 7 || name[len(name)-7:] != ".up.sql" {
 			continue
 		}
-
-		sqlBytes, err := migrations.FS.ReadFile(name)
-		if err != nil {
-			return fmt.Errorf("failed to read migration %s: %w", name, err)
+		if !applied[name] {
+			pending = append(pending, name)
 		}
+	}
 
-		if _, err := db.Pool.Exec(ctx, string(sqlBytes)); err != nil {
+	sort.Strings(pending)
+
+	for _, name := range pending {
+		if err := db.applyMigrationWithLock(ctx, name); err != nil {
 			return fmt.Errorf("failed to apply migration %s: %w", name, err)
 		}
-
 		logger.Info().Str("file", name).Msg("Migration applied")
 	}
 
 	return nil
+}
+
+func (db *DB) ensureMigrationTable(ctx context.Context) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS wz_migrations (
+			id SERIAL PRIMARY KEY,
+			file_name VARCHAR(255) NOT NULL UNIQUE,
+			applied_at TIMESTAMP NOT NULL DEFAULT NOW()
+		);
+	`
+	_, err := db.Pool.Exec(ctx, query)
+	return err
+}
+
+func (db *DB) getAppliedMigrations(ctx context.Context) (map[string]bool, error) {
+	rows, err := db.Pool.Query(ctx, "SELECT file_name FROM wz_migrations")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	applied := make(map[string]bool)
+	for rows.Next() {
+		var fileName string
+		if err := rows.Scan(&fileName); err != nil {
+			return nil, err
+		}
+		applied[fileName] = true
+	}
+	return applied, rows.Err()
+}
+
+func (db *DB) applyMigrationWithLock(ctx context.Context, fileName string) error {
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	if _, err := tx.Exec(ctx, "SELECT pg_advisory_xact_lock(1)"); err != nil {
+		return fmt.Errorf("failed to acquire advisory lock: %w", err)
+	}
+
+	var exists bool
+	if err := tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM wz_migrations WHERE file_name = $1)", fileName).Scan(&exists); err != nil {
+		return fmt.Errorf("failed to check migration status: %w", err)
+	}
+	if exists {
+		logger.Info().Str("file", fileName).Msg("Migration already applied, skipping")
+		return nil
+	}
+
+	sqlBytes, err := migrations.FS.ReadFile(fileName)
+	if err != nil {
+		return fmt.Errorf("failed to read migration %s: %w", fileName, err)
+	}
+
+	if _, err := tx.Exec(ctx, string(sqlBytes)); err != nil {
+		return fmt.Errorf("failed to execute migration %s: %w", fileName, err)
+	}
+
+	if _, err := tx.Exec(ctx, "INSERT INTO wz_migrations (file_name) VALUES ($1)", fileName); err != nil {
+		return fmt.Errorf("failed to record migration %s: %w", fileName, err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("failed to commit migration %s: %w", fileName, err)
+	}
+
+	return nil
+}
+
+func (db *DB) BootstrapBaseline(ctx context.Context) error {
+	if err := db.ensureMigrationTable(ctx); err != nil {
+		return fmt.Errorf("failed to ensure migration tracking table: %w", err)
+	}
+
+	existingTables, err := db.getExistingTables(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get existing tables: %w", err)
+	}
+
+	baselineMigrations := []string{}
+
+	if contains(existingTables, "wz_sessions") {
+		baselineMigrations = append(baselineMigrations, "001_schema.up.sql")
+	}
+	if contains(existingTables, "wz_messages") {
+		baselineMigrations = append(baselineMigrations, "002_messages.up.sql")
+	}
+	if contains(existingTables, "wz_chatwoot") {
+		baselineMigrations = append(baselineMigrations, "003_chatwoot.up.sql")
+
+		hasIgnoreJIDs, err := db.columnExists(ctx, "wz_chatwoot", "ignore_jids")
+		if err != nil {
+			return fmt.Errorf("failed to check ignore_jids column: %w", err)
+		}
+		if hasIgnoreJIDs {
+			baselineMigrations = append(baselineMigrations, "004_chatwoot_ignore_jids.up.sql")
+		}
+	}
+
+	if contains(existingTables, "wz_messages") {
+		hasCWIndexes, err := db.indexExists(ctx, "idx_wz_messages_cw_conversation")
+		if err != nil {
+			return fmt.Errorf("failed to check chatwoot indexes: %w", err)
+		}
+		if hasCWIndexes {
+			baselineMigrations = append(baselineMigrations, "005_chatwoot_indexes.up.sql")
+		}
+	}
+
+	for _, migration := range baselineMigrations {
+		if err := db.recordMigrationIfNotExists(ctx, migration); err != nil {
+			return fmt.Errorf("failed to record baseline migration %s: %w", migration, err)
+		}
+		logger.Info().Str("file", migration).Msg("Baseline migration recorded")
+	}
+
+	return nil
+}
+
+func (db *DB) columnExists(ctx context.Context, table, column string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM information_schema.columns
+			WHERE table_schema = 'public' AND table_name = $1 AND column_name = $2
+		)
+	`
+	var exists bool
+	err := db.Pool.QueryRow(ctx, query, table, column).Scan(&exists)
+	return exists, err
+}
+
+func (db *DB) indexExists(ctx context.Context, indexName string) (bool, error) {
+	query := `
+		SELECT EXISTS (
+			SELECT 1 FROM pg_indexes
+			WHERE schemaname = 'public' AND indexname = $1
+		)
+	`
+	var exists bool
+	err := db.Pool.QueryRow(ctx, query, indexName).Scan(&exists)
+	return exists, err
+}
+
+func (db *DB) getExistingTables(ctx context.Context) ([]string, error) {
+	query := `
+		SELECT table_name FROM information_schema.tables 
+		WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+	`
+	rows, err := db.Pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tables []string
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			return nil, err
+		}
+		tables = append(tables, tableName)
+	}
+	return tables, rows.Err()
+}
+
+func (db *DB) recordMigrationIfNotExists(ctx context.Context, fileName string) error {
+	var exists bool
+	if err := db.Pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM wz_migrations WHERE file_name = $1)", fileName).Scan(&exists); err != nil {
+		return err
+	}
+	if !exists {
+		_, err := db.Pool.Exec(ctx, "INSERT INTO wz_migrations (file_name) VALUES ($1)", fileName)
+		return err
+	}
+	return nil
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if strings.EqualFold(s, item) {
+			return true
+		}
+	}
+	return false
 }

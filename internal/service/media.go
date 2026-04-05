@@ -8,25 +8,27 @@ import (
 	"strings"
 	"time"
 
-	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/proto/waE2E"
-
+	"wzap/internal/async"
 	"wzap/internal/logger"
 	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/storage"
 	"wzap/internal/wa"
+
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waE2E"
 )
 
 type MediaService struct {
-	engine    *wa.Manager
-	minio     *storage.Minio
-	provider  *cloudWA.Client
-	sessRepo  *repo.SessionRepository
+	engine   *wa.Manager
+	minio    *storage.Minio
+	provider *cloudWA.Client
+	sessRepo *repo.SessionRepository
+	pool     *async.Pool
 }
 
-func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository) *MediaService {
-	return &MediaService{engine: engine, minio: minio, provider: provider, sessRepo: sessRepo}
+func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository, pool *async.Pool) *MediaService {
+	return &MediaService{engine: engine, minio: minio, provider: provider, sessRepo: sessRepo, pool: pool}
 }
 
 func (s *MediaService) DownloadAndStore(ctx context.Context, sessionID string, msg whatsmeow.DownloadableMessage, mimeType, messageID string) (string, error) {
@@ -104,10 +106,7 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, mimeType string, do
 		return
 	}
 
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-		defer cancel()
-
+	_ = s.pool.Submit(func(ctx context.Context) {
 		client, err := s.engine.GetClient(sessionID)
 		if err != nil {
 			logger.Warn().Err(err).Str("session", sessionID).Msg("Auto-upload: failed to get client")
@@ -127,7 +126,7 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, mimeType string, do
 		}
 
 		logger.Debug().Str("session", sessionID).Str("mid", messageID).Msg("Auto-upload: media stored in S3")
-	}()
+	})
 }
 
 func convertToOGG(input []byte) ([]byte, error) {

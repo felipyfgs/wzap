@@ -6,6 +6,7 @@ import (
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
+	"go.mau.fi/whatsmeow/types"
 	waLog "go.mau.fi/whatsmeow/util/log"
 
 	"wzap/internal/broker"
@@ -67,6 +68,24 @@ func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {
 
 func (m *Manager) SetMessagePersist(fn MessagePersistFunc) {
 	m.OnMessageReceived = fn
+}
+
+func (m *Manager) GetPNForLID(ctx context.Context, sessionID, lidJID string) string {
+	m.mu.RLock()
+	client, exists := m.clients[sessionID]
+	m.mu.RUnlock()
+	if !exists || client.Store == nil {
+		return ""
+	}
+	lid, err := types.ParseJID(lidJID)
+	if err != nil {
+		return ""
+	}
+	pn, err := client.Store.LIDs.GetPNForLID(ctx, lid)
+	if err != nil || pn.IsEmpty() {
+		return ""
+	}
+	return pn.User
 }
 
 func (m *Manager) UpdateSessionName(sessionID, name string) {

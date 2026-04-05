@@ -18,49 +18,22 @@ import (
 	"wzap/internal/repo"
 )
 
-// ── Typed event payload structs matching wa/events.go envelope ──
+// ── Typed event payload structs matching the canonical envelope ──
 
-// eventEnvelope is the outer wrapper for all events from wa/events.go
-type eventEnvelope struct {
-	Event     string          `json:"event"`
-	EventID   string          `json:"eventId"`
-	Session   sessionInfo     `json:"session"`
-	Timestamp string          `json:"timestamp"`
-	Data      json.RawMessage `json:"data"`
-}
-
-// sessionInfo contains session metadata
-type sessionInfo struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-}
-
-// waMessageInfo corresponds to events.Message.Info (serialized as JSON)
 type waMessageInfo struct {
-	Chat       string `json:"Chat"`
-	Sender     string `json:"Sender"`
-	IsFromMe   bool   `json:"IsFromMe"`
-	IsGroup    bool   `json:"IsGroup"`
-	ID         string `json:"ID"`
-	PushName   string `json:"PushName"`
-	Timestamp  int64  `json:"Timestamp"`
-	Category   string `json:"Category,omitempty"`
-	MediaType  string `json:"MediaType,omitempty"`
-	Multicast  bool   `json:"Multicast,omitempty"`
-	Edit       int    `json:"Edit,omitempty"`
-	Broadcast  bool   `json:"Broadcast,omitempty"`
-	Newsletter bool   `json:"Newsletter,omitempty"`
-	SourceType string `json:"SourceType,omitempty"`
-	DeviceSent bool   `json:"DeviceSent,omitempty"`
+	Chat     string `json:"Chat"`
+	Sender   string `json:"Sender"`
+	IsFromMe bool   `json:"IsFromMe"`
+	IsGroup  bool   `json:"IsGroup"`
+	ID       string `json:"ID"`
+	PushName string `json:"PushName"`
 }
 
-// waMessagePayload is the data field for EventMessage
 type waMessagePayload struct {
 	Info    waMessageInfo          `json:"Info"`
 	Message map[string]interface{} `json:"Message"`
 }
 
-// waReceiptPayload is the data field for EventReceipt
 type waReceiptPayload struct {
 	Type       string   `json:"Type"`
 	MessageIDs []string `json:"MessageIDs"`
@@ -69,7 +42,6 @@ type waReceiptPayload struct {
 	Timestamp  int64    `json:"Timestamp"`
 }
 
-// waDeletePayload is the data field for EventDeleteForMe
 type waDeletePayload struct {
 	Chat      string `json:"Chat"`
 	Sender    string `json:"Sender"`
@@ -77,48 +49,38 @@ type waDeletePayload struct {
 	Timestamp int64  `json:"Timestamp"`
 }
 
-// parseMessagePayload unmarshals the nested envelope and extracts typed message data
+func parseEnvelopeData(payload []byte, target interface{}) error {
+	envelope, err := model.ParseEventEnvelope(payload)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal event envelope: %w", err)
+	}
+	if err := json.Unmarshal(envelope.Data, target); err != nil {
+		return fmt.Errorf("failed to unmarshal envelope data: %w", err)
+	}
+	return nil
+}
+
 func parseMessagePayload(payload []byte) (*waMessagePayload, error) {
-	var envelope eventEnvelope
-	if err := json.Unmarshal(payload, &envelope); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal event envelope: %w", err)
-	}
-
 	var data waMessagePayload
-	if err := json.Unmarshal(envelope.Data, &data); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal message data: %w", err)
+	if err := parseEnvelopeData(payload, &data); err != nil {
+		return nil, err
 	}
-
 	return &data, nil
 }
 
-// parseReceiptPayload unmarshals the nested envelope and extracts typed receipt data
 func parseReceiptPayload(payload []byte) (*waReceiptPayload, error) {
-	var envelope eventEnvelope
-	if err := json.Unmarshal(payload, &envelope); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal event envelope: %w", err)
-	}
-
 	var data waReceiptPayload
-	if err := json.Unmarshal(envelope.Data, &data); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal receipt data: %w", err)
+	if err := parseEnvelopeData(payload, &data); err != nil {
+		return nil, err
 	}
-
 	return &data, nil
 }
 
-// parseDeletePayload unmarshals the nested envelope and extracts typed delete data
 func parseDeletePayload(payload []byte) (*waDeletePayload, error) {
-	var envelope eventEnvelope
-	if err := json.Unmarshal(payload, &envelope); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal event envelope: %w", err)
-	}
-
 	var data waDeletePayload
-	if err := json.Unmarshal(envelope.Data, &data); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal delete data: %w", err)
+	if err := parseEnvelopeData(payload, &data); err != nil {
+		return nil, err
 	}
-
 	return &data, nil
 }
 
@@ -131,15 +93,22 @@ type MessageService interface {
 	DeleteMessage(ctx context.Context, sessionID string, req dto.DeleteMessageReq) (string, error)
 }
 
-type Service struct {
-	repo       Repo
-	msgRepo    repo.MessageRepo
-	clientFn   func(cfg *ChatwootConfig) CWClient
-	messageSvc MessageService
-	convCache  sync.Map
+type JIDResolver interface {
+	GetPNForLID(ctx context.Context, sessionID, lidJID string) string
 }
 
-func NewService(repo *Repository, msgRepo *repo.MessageRepository, messageSvc MessageService) *Service {
+type Service struct {
+	repo        Repo
+	msgRepo     repo.MessageRepo
+	clientFn    func(cfg *ChatwootConfig) CWClient
+	messageSvc  MessageService
+	convCache   sync.Map
+	jidResolver JIDResolver
+	serverURL   string
+	httpClient  *http.Client
+}
+
+func NewService(repo Repo, msgRepo repo.MessageRepo, messageSvc MessageService) *Service {
 	return &Service{
 		repo:    repo,
 		msgRepo: msgRepo,
@@ -147,18 +116,31 @@ func NewService(repo *Repository, msgRepo *repo.MessageRepository, messageSvc Me
 			return NewClient(cfg.URL, cfg.AccountID, cfg.Token, &http.Client{Timeout: 30 * time.Second})
 		},
 		messageSvc: messageSvc,
+		httpClient: &http.Client{Timeout: 30 * time.Second},
 	}
+}
+
+func (s *Service) SetJIDResolver(r JIDResolver) {
+	s.jidResolver = r
+}
+
+func (s *Service) SetServerURL(url string) {
+	s.serverURL = url
 }
 
 func (s *Service) OnEvent(sessionID string, event model.EventType, payload []byte) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
+	logger.Debug().Str("session", sessionID).Str("event", string(event)).Msg("[CW] OnEvent received")
+
 	cfg, err := s.repo.FindBySessionID(ctx, sessionID)
 	if err != nil {
+		logger.Debug().Str("session", sessionID).Err(err).Msg("[CW] config not found, skipping")
 		return
 	}
 	if !cfg.Enabled {
+		logger.Debug().Str("session", sessionID).Msg("[CW] integration disabled, skipping")
 		return
 	}
 
@@ -187,16 +169,27 @@ func (s *Service) OnEvent(sessionID string, event model.EventType, payload []byt
 func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
 	data, err := parseMessagePayload(payload)
 	if err != nil {
-		logger.Warn().Err(err).Msg("Failed to parse message payload for Chatwoot")
+		logger.Warn().Err(err).Msg("[CW] Failed to parse message payload")
 		return
 	}
+
+	logger.Debug().Str("chat", data.Info.Chat).Str("id", data.Info.ID).Bool("fromMe", data.Info.IsFromMe).Msg("[CW] handleMessage")
 
 	chatJID := data.Info.Chat
 	if chatJID == "" {
+		logger.Warn().Msg("[CW] chatJID empty, skipping")
 		return
 	}
 
+	if strings.HasSuffix(chatJID, "@lid") && s.jidResolver != nil {
+		if pn := s.jidResolver.GetPNForLID(ctx, cfg.SessionID, chatJID); pn != "" {
+			logger.Debug().Str("lid", chatJID).Str("pn", pn).Msg("[CW] resolved LID to PN")
+			chatJID = pn + "@s.whatsapp.net"
+		}
+	}
+
 	if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
+		logger.Debug().Str("chat", chatJID).Msg("[CW] JID ignored, skipping")
 		return
 	}
 
@@ -219,6 +212,7 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 	}
 
 	text := extractTextFromMessage(data.Message)
+	logger.Debug().Str("text", text).Interface("msg", data.Message).Msg("[CW] extracted text")
 	text = convertWAToCWMarkdown(text)
 
 	if !fromMe && data.Info.IsGroup && cfg.SignMsg && pushName != "" {
@@ -417,18 +411,22 @@ func shouldIgnoreJID(chatJID string, ignoreGroups bool, ignoreJIDs []string) boo
 	return false
 }
 
+func jidsContainGroup(ignoreJIDs []string) bool {
+	for _, jid := range ignoreJIDs {
+		if jid == "@g.us" {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Service) findOrCreateConversation(ctx context.Context, cfg *ChatwootConfig, chatJID, pushName string) (int, error) {
 	cacheKey := cfg.SessionID + "+" + chatJID
 
-	val, loading := s.convCache.LoadOrStore(cacheKey, &sync.Mutex{})
+	val, _ := s.convCache.LoadOrStore(cacheKey, &sync.Mutex{})
 	mu := val.(*sync.Mutex)
-	if loading {
-		mu.Lock()
-		defer mu.Unlock()
-	} else {
-		mu.Lock()
-		defer mu.Unlock()
-	}
+	mu.Lock()
+	defer mu.Unlock()
 
 	client := s.clientFn(cfg)
 	phone := extractPhone(chatJID)
@@ -461,9 +459,11 @@ func (s *Service) findOrCreateConversation(ctx context.Context, cfg *ChatwootCon
 		if err != nil {
 			return 0, fmt.Errorf("failed to create contact: %w", err)
 		}
+		logger.Debug().Int("contactID", contact.ID).Str("phone", phone).Msg("[CW] contact created")
 		contactID = contact.ID
 	} else {
 		contactID = contacts[0].ID
+		logger.Debug().Int("contactID", contactID).Str("phone", phone).Msg("[CW] contact found")
 		if pushName != "" && contacts[0].Name != pushName {
 			_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Name: pushName})
 		}
@@ -556,43 +556,6 @@ func (s *Service) handleDelete(ctx context.Context, cfg *ChatwootConfig, payload
 	}
 }
 
-func extractText(msgType string, raw map[string]any) string {
-	switch msgType {
-	case "conversation", "extendedTextMessage":
-		if text, ok := raw["body"].(string); ok {
-			return text
-		}
-	case "imageMessage", "videoMessage", "documentMessage":
-		if caption, ok := raw["body"].(string); ok {
-			return caption
-		}
-	case "audioMessage":
-		if text, ok := raw["body"].(string); ok && text != "" {
-			return text
-		}
-	case "locationMessage":
-		lat, _ := raw["degreesLatitude"].(float64)
-		lng, _ := raw["degreesLongitude"].(float64)
-		name, _ := raw["name"].(string)
-		if name != "" {
-			return fmt.Sprintf("📍 %s\nhttps://www.google.com/maps?q=%f,%f", name, lat, lng)
-		}
-		return fmt.Sprintf("📍 Location\nhttps://www.google.com/maps?q=%f,%f", lat, lng)
-	case "contactMessage":
-		if vcard, ok := raw["vcard"].(string); ok {
-			return vcard
-		}
-		if displayName, ok := raw["displayName"].(string); ok {
-			return displayName
-		}
-	}
-
-	if body, ok := raw["body"].(string); ok {
-		return body
-	}
-	return ""
-}
-
 func formatGroupContent(phone, pushName, body string, fromMe bool) string {
 	if fromMe {
 		return body
@@ -630,7 +593,7 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 		return
 	}
 
-	resp, err := http.Get(mediaURL)
+	resp, err := s.httpClient.Get(mediaURL)
 	if err != nil {
 		logger.Warn().Err(err).Str("url", mediaURL).Msg("Failed to download media for Chatwoot")
 		return
@@ -663,7 +626,7 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 }
 
 func (s *Service) sendAttachmentToWhatsApp(ctx context.Context, cfg *ChatwootConfig, chatJID, attachmentURL, caption, mimeType string, replyTo *dto.ReplyContext) error {
-	resp, err := http.Get(attachmentURL)
+	resp, err := s.httpClient.Get(attachmentURL)
 	if err != nil {
 		return fmt.Errorf("download attachment: %w", err)
 	}
@@ -709,7 +672,7 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 		return nil
 	}
 
-	if body.Message != nil && body.Message.MessageType == "outgoing" {
+	if body.Message != nil && body.Message.MessageType == 1 {
 		return s.handleOutgoingMessage(ctx, cfg, body)
 	}
 
@@ -840,15 +803,10 @@ func (s *Service) handleDisconnected(ctx context.Context, cfg *ChatwootConfig, p
 }
 
 func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
-	var envelope eventEnvelope
-	if err := json.Unmarshal(payload, &envelope); err != nil {
-		return
-	}
-
 	var data struct {
 		Codes []string `json:"Codes"`
 	}
-	if err := json.Unmarshal(envelope.Data, &data); err != nil {
+	if err := parseEnvelopeData(payload, &data); err != nil {
 		return
 	}
 
@@ -865,7 +823,7 @@ func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []b
 	}
 
 	client := s.clientFn(cfg)
-	qrPNG, err := generateQRCode(qrContent)
+	qrPNG, err := generateQRCodePNG(qrContent)
 	if err != nil {
 		logger.Warn().Err(err).Msg("Failed to generate QR code")
 		return
@@ -875,17 +833,12 @@ func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []b
 }
 
 func (s *Service) handleContact(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
-	var envelope eventEnvelope
-	if err := json.Unmarshal(payload, &envelope); err != nil {
-		return
-	}
-
 	var data struct {
 		JID       string `json:"JID"`
 		FirstName string `json:"FirstName"`
 		FullName  string `json:"FullName"`
 	}
-	if err := json.Unmarshal(envelope.Data, &data); err != nil {
+	if err := parseEnvelopeData(payload, &data); err != nil {
 		return
 	}
 
@@ -912,16 +865,11 @@ func (s *Service) handleContact(ctx context.Context, cfg *ChatwootConfig, payloa
 }
 
 func (s *Service) handlePushName(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
-	var envelope eventEnvelope
-	if err := json.Unmarshal(payload, &envelope); err != nil {
-		return
-	}
-
 	var data struct {
 		JID      string `json:"JID"`
 		PushName string `json:"PushName"`
 	}
-	if err := json.Unmarshal(envelope.Data, &data); err != nil {
+	if err := parseEnvelopeData(payload, &data); err != nil {
 		return
 	}
 
@@ -941,18 +889,13 @@ func (s *Service) handlePushName(ctx context.Context, cfg *ChatwootConfig, paylo
 }
 
 func (s *Service) handlePicture(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
-	var envelope eventEnvelope
-	if err := json.Unmarshal(payload, &envelope); err != nil {
-		return
-	}
-
 	var data struct {
 		JID       string `json:"JID"`
 		PictureID string `json:"ID"`
 		URL       string `json:"URL"`
 		IsGroup   bool   `json:"IsGroup"`
 	}
-	if err := json.Unmarshal(envelope.Data, &data); err != nil {
+	if err := parseEnvelopeData(payload, &data); err != nil {
 		return
 	}
 
@@ -1018,8 +961,12 @@ func (s *Service) findOrCreateBotConversation(ctx context.Context, cfg *Chatwoot
 	return conv.ID, nil
 }
 
-func generateQRCode(content string) ([]byte, error) {
-	return generateQRCodePNG(content)
+func (s *Service) webhookURL(sessionID string) string {
+	base := s.serverURL
+	if base == "" {
+		base = "http://localhost:8080"
+	}
+	return fmt.Sprintf("%s/chatwoot/webhook/%s", base, sessionID)
 }
 
 func (s *Service) Configure(ctx context.Context, cfg *ChatwootConfig) error {
@@ -1028,7 +975,7 @@ func (s *Service) Configure(ctx context.Context, cfg *ChatwootConfig) error {
 	}
 
 	client := s.clientFn(cfg)
-	webhookURL := fmt.Sprintf("%s/chatwoot/webhook/%s", cfg.URL, cfg.SessionID)
+	whURL := s.webhookURL(cfg.SessionID)
 
 	inboxes, err := client.ListInboxes(ctx)
 	if err != nil {
@@ -1039,12 +986,13 @@ func (s *Service) Configure(ctx context.Context, cfg *ChatwootConfig) error {
 	for _, inbox := range inboxes {
 		if inbox.ID == cfg.InboxID {
 			found = true
+			_ = client.UpdateInboxWebhook(ctx, cfg.InboxID, whURL)
 			break
 		}
 	}
 
 	if !found && cfg.InboxID == 0 {
-		inbox, err := client.CreateInbox(ctx, cfg.InboxName, webhookURL)
+		inbox, err := client.CreateInbox(ctx, cfg.InboxName, whURL)
 		if err != nil {
 			return fmt.Errorf("failed to auto-create inbox: %w", err)
 		}

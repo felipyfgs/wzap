@@ -2,9 +2,7 @@ package wa
 
 import (
 	"encoding/json"
-	"time"
 
-	"github.com/google/uuid"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
 
@@ -381,15 +379,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		}
 	}
 
-	payload := map[string]interface{}{
-		"event":     eventType,
-		"eventId":   uuid.NewString(),
-		"session":   map[string]interface{}{"id": sessionID, "name": m.getSessionName(sessionID)},
-		"timestamp": time.Now().Format(time.RFC3339),
-		"data":      data,
-	}
-
-	bytes, err := json.Marshal(payload)
+	bytes, err := model.BuildEventEnvelope(sessionID, m.getSessionName(sessionID), eventType, data)
 	if err != nil {
 		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to marshal event payload")
 		return

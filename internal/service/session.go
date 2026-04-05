@@ -79,6 +79,8 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 
 	metrics.SessionsTotal.Inc()
 
+	proxy := req.Proxy
+	proxy.Password = ""
 	resp := &dto.SessionCreatedResp{
 		ID:                session.ID,
 		Name:              session.Name,
@@ -88,7 +90,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		Engine:            session.Engine,
 		PhoneNumberID:     session.PhoneNumberID,
 		BusinessAccountID: session.BusinessAccountID,
-		Proxy:             req.Proxy,
+		Proxy:             proxy,
 		Settings:          req.Settings,
 		CreatedAt:         session.CreatedAt,
 		UpdatedAt:         session.UpdatedAt,

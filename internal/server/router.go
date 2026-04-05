@@ -10,9 +10,9 @@ import (
 	"wzap/internal/handler"
 	"wzap/internal/integrations/chatwoot"
 	"wzap/internal/middleware"
+	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/service"
-	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/wa"
 	"wzap/internal/webhook"
 	wsHub "wzap/internal/websocket"
@@ -61,6 +61,8 @@ func (s *Server) SetupRoutes() error {
 
 	chatwootRepo := chatwoot.NewRepository(s.db.Pool)
 	chatwootSvc := chatwoot.NewService(chatwootRepo, messageRepo, messageSvc)
+	chatwootSvc.SetJIDResolver(engine)
+	chatwootSvc.SetServerURL(s.Config.ServerURL)
 	chatwootHandler := chatwoot.NewHandler(chatwootSvc, chatwootRepo)
 	disp.AddListener(chatwootSvc)
 

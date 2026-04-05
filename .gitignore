@@ -60,6 +60,8 @@ ssl/
 
 # Kilo config (local)
 .kilo/
+.kilocode/
+.kilocode/
 
 # Agents MCP config (may contain credentials)
 .agents/mcp.json

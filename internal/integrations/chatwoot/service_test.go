@@ -3,18 +3,21 @@ package chatwoot
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
 	"sync"
 	"testing"
+	"time"
 
 	"wzap/internal/model"
 )
 
 func TestParseMessagePayload(t *testing.T) {
-	envelope := eventEnvelope{
+	envelope := model.EventEnvelope{
 		Event:     "Message",
 		EventID:   "test-event-id",
 		Timestamp: "2024-01-01T00:00:00Z",
-		Session:   sessionInfo{ID: "test-session", Name: "Test Session"},
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
 
 	info := waMessageInfo{
@@ -54,11 +57,11 @@ func TestParseMessagePayload(t *testing.T) {
 }
 
 func TestParseMessagePayload_GroupMessage(t *testing.T) {
-	envelope := eventEnvelope{
+	envelope := model.EventEnvelope{
 		Event:     "Message",
 		EventID:   "test-event-id",
 		Timestamp: "2024-01-01T00:00:00Z",
-		Session:   sessionInfo{ID: "test-session", Name: "Test Session"},
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
 
 	info := waMessageInfo{
@@ -92,11 +95,11 @@ func TestParseMessagePayload_GroupMessage(t *testing.T) {
 }
 
 func TestParseReceiptPayload(t *testing.T) {
-	envelope := eventEnvelope{
+	envelope := model.EventEnvelope{
 		Event:     "Receipt",
 		EventID:   "test-event-id",
 		Timestamp: "2024-01-01T00:00:00Z",
-		Session:   sessionInfo{ID: "test-session", Name: "Test Session"},
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
 
 	receiptData := waReceiptPayload{
@@ -121,11 +124,11 @@ func TestParseReceiptPayload(t *testing.T) {
 }
 
 func TestParseDeletePayload(t *testing.T) {
-	envelope := eventEnvelope{
+	envelope := model.EventEnvelope{
 		Event:     "DeleteForMe",
 		EventID:   "test-event-id",
 		Timestamp: "2024-01-01T00:00:00Z",
-		Session:   sessionInfo{ID: "test-session", Name: "Test Session"},
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
 
 	deleteData := waDeletePayload{
@@ -361,8 +364,13 @@ func (m *mockCWClient) CreateInbox(ctx context.Context, name, webhookURL string)
 	return &Inbox{ID: 1}, nil
 }
 
+func (m *mockCWClient) UpdateInboxWebhook(ctx context.Context, inboxID int, webhookURL string) error {
+	return nil
+}
+
 type mockRepo struct {
-	cfg *ChatwootConfig
+	cfg      *ChatwootConfig
+	notFound bool
 }
 
 func (m *mockRepo) Upsert(ctx context.Context, cfg *ChatwootConfig) error {
@@ -371,6 +379,9 @@ func (m *mockRepo) Upsert(ctx context.Context, cfg *ChatwootConfig) error {
 }
 
 func (m *mockRepo) FindBySessionID(ctx context.Context, sessionID string) (*ChatwootConfig, error) {
+	if m.notFound {
+		return nil, fmt.Errorf("not found")
+	}
 	if m.cfg == nil {
 		return &ChatwootConfig{SessionID: sessionID, Enabled: true, InboxID: 1}, nil
 	}
@@ -409,11 +420,11 @@ func TestOnEvent_IncomingMessage(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	envelope := eventEnvelope{
+	envelope := model.EventEnvelope{
 		Event:     "Message",
 		EventID:   "test-event-id",
 		Timestamp: "2024-01-01T00:00:00Z",
-		Session:   sessionInfo{ID: "test-session", Name: "Test Session"},
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
 
 	info := waMessageInfo{
@@ -434,10 +445,11 @@ func TestOnEvent_IncomingMessage(t *testing.T) {
 	payload, _ := json.Marshal(envelope)
 
 	svc := &Service{
-		repo:      &mockRepo{cfg: &ChatwootConfig{SessionID: "test-session", Enabled: true, InboxID: 1}},
-		msgRepo:   &mockMsgRepo{},
-		clientFn:  func(cfg *ChatwootConfig) CWClient { return mockClient },
-		convCache: sync.Map{},
+		repo:       &mockRepo{cfg: &ChatwootConfig{SessionID: "test-session", Enabled: true, InboxID: 1}},
+		msgRepo:    &mockMsgRepo{},
+		clientFn:   func(cfg *ChatwootConfig) CWClient { return mockClient },
+		convCache:  sync.Map{},
+		httpClient: &http.Client{Timeout: 30 * time.Second},
 	}
 
 	svc.OnEvent("test-session", "Message", payload)
@@ -456,11 +468,11 @@ func TestOnEvent_OutgoingMessage(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	envelope := eventEnvelope{
+	envelope := model.EventEnvelope{
 		Event:     "Message",
 		EventID:   "test-event-id",
 		Timestamp: "2024-01-01T00:00:00Z",
-		Session:   sessionInfo{ID: "test-session", Name: "Test Session"},
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
 
 	info := waMessageInfo{
@@ -481,10 +493,11 @@ func TestOnEvent_OutgoingMessage(t *testing.T) {
 	payload, _ := json.Marshal(envelope)
 
 	svc := &Service{
-		repo:      &mockRepo{cfg: &ChatwootConfig{SessionID: "test-session", Enabled: true, InboxID: 1}},
-		msgRepo:   &mockMsgRepo{},
-		clientFn:  func(cfg *ChatwootConfig) CWClient { return mockClient },
-		convCache: sync.Map{},
+		repo:       &mockRepo{cfg: &ChatwootConfig{SessionID: "test-session", Enabled: true, InboxID: 1}},
+		msgRepo:    &mockMsgRepo{},
+		clientFn:   func(cfg *ChatwootConfig) CWClient { return mockClient },
+		convCache:  sync.Map{},
+		httpClient: &http.Client{Timeout: 30 * time.Second},
 	}
 
 	svc.OnEvent("test-session", "Message", payload)

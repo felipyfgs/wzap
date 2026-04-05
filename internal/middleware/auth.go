@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"crypto/subtle"
+
 	"wzap/internal/config"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
@@ -23,7 +25,7 @@ func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler
 			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing Authorization header"))
 		}
 
-		if token == cfg.AdminToken {
+		if subtle.ConstantTimeCompare([]byte(token), []byte(cfg.AdminToken)) == 1 {
 			c.Locals("authRole", "admin")
 			return c.Next()
 		}

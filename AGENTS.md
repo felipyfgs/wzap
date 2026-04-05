@@ -34,6 +34,7 @@ internal/
   handler/           HTTP controllers (Fiber)
   middleware/        Auth, Logger, Recovery, CORS, RateLimit, Validate
   server/            Fiber app bootstrap + routes
+  metrics/           Prometheus metrics (counters, histograms, collectors)
   wa/                whatsmeow engine integration (Manager, events, JID helpers)
   webhook/           Webhook dispatcher (NATS consumer, WS broadcaster)
   websocket/         WebSocket hub for real-time events
@@ -126,7 +127,25 @@ Use aliases when needed to avoid collisions: `mw "wzap/internal/middleware"`, `w
 - Simulate middleware in tests by setting `c.Locals("authRole", "admin")` and `c.Locals("sessionID", c.Params("sessionId"))` inline via middleware closures.
 - Error assertions: check status codes directly, use `t.Errorf`/`t.Fatalf`.
 
-## 5 · Conventions
+## 5 · Commit & Pull Request Conventions
+
+### Commit Messages
+Follow **Conventional Commits** format:
+- `feat:` / `feat(scope):` — new feature (`feat(chatwoot): add message sync`)
+- `fix:` / `fix(scope):` — bug fix (`fix: improve error handling in handlers`)
+- `chore:` — maintenance tasks (`chore: add .agent/ to .gitignore`)
+- `refactor:` — code restructuring without behavior change
+- `docs:` — documentation updates
+- `test:` — adding or updating tests
+
+Keep the subject line concise (≤72 chars), imperative mood, lowercase.
+
+### Pull Requests
+- Reference related issues when applicable.
+- Keep PRs focused on a single concern; avoid mixing refactors with features.
+- Ensure `golangci-lint run ./…` and `go test ./…` pass before opening a PR.
+
+## 6 · Conventions
 
 - **No comments** unless explicitly requested (godoc on handlers is acceptable).
 - Follow existing patterns; check neighboring files before introducing new libraries.
@@ -135,7 +154,7 @@ Use aliases when needed to avoid collisions: `mw "wzap/internal/middleware"`, `w
 - Always run `golangci-lint run ./…` and `go test ./…` before considering a task done.
 - Swagger docs are auto-generated; run `make docs` after changing handler annotations.
 
-## 6 · Agent Configuration
+## 7 · Agent Configuration
 
 - Always respond in Brazilian Portuguese (pt-BR), regardless of the input language.
 - Read this file before starting any task.

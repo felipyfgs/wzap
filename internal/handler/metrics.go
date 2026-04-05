@@ -43,5 +43,5 @@ func (h *MetricsHandler) Serve(c *fiber.Ctx) error {
 }
 
 func (h *MetricsHandler) ErrorHandler(c *fiber.Ctx, err error) error {
-	return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Metrics Error", err.Error()))
+	return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Metrics Error", "failed to collect metrics"))
 }

@@ -2,22 +2,21 @@ package handler
 
 import (
 	"context"
-	"encoding/json"
 
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/model"
-	"wzap/internal/repo"
 	cloudWA "wzap/internal/provider/whatsapp"
+	"wzap/internal/repo"
 	"wzap/internal/webhook"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 type CloudWebhookHandler struct {
-	sessRepo    *repo.SessionRepository
-	provider    *cloudWA.Client
-	dispatcher  *webhook.Dispatcher
+	sessRepo   *repo.SessionRepository
+	provider   *cloudWA.Client
+	dispatcher *webhook.Dispatcher
 }
 
 func NewCloudWebhookHandler(sessRepo *repo.SessionRepository, provider *cloudWA.Client, dispatcher *webhook.Dispatcher) *CloudWebhookHandler {
@@ -126,7 +125,7 @@ func (h *CloudWebhookHandler) Handle(c *fiber.Ctx) error {
 }
 
 func (h *CloudWebhookHandler) dispatchMessage(ctx context.Context, sessionID string, msg *cloudWA.Message, metadata *cloudWA.Metadata) {
-	payload := map[string]any{
+	data := map[string]any{
 		"from":        msg.From,
 		"id":          msg.ID,
 		"type":        msg.Type,
@@ -137,70 +136,74 @@ func (h *CloudWebhookHandler) dispatchMessage(ctx context.Context, sessionID str
 	switch msg.Type {
 	case "text":
 		if msg.Text != nil {
-			payload["body"] = msg.Text.Body
+			data["body"] = msg.Text.Body
 		}
 	case "image":
 		if msg.Image != nil {
-			payload["mediaId"] = msg.Image.ID
-			payload["mimeType"] = msg.Image.MimeType
-			payload["caption"] = msg.Image.Caption
+			data["mediaId"] = msg.Image.ID
+			data["mimeType"] = msg.Image.MimeType
+			data["caption"] = msg.Image.Caption
 		}
 	case "video":
 		if msg.Video != nil {
-			payload["mediaId"] = msg.Video.ID
-			payload["mimeType"] = msg.Video.MimeType
-			payload["caption"] = msg.Video.Caption
+			data["mediaId"] = msg.Video.ID
+			data["mimeType"] = msg.Video.MimeType
+			data["caption"] = msg.Video.Caption
 		}
 	case "audio":
 		if msg.Audio != nil {
-			payload["mediaId"] = msg.Audio.ID
-			payload["mimeType"] = msg.Audio.MimeType
+			data["mediaId"] = msg.Audio.ID
+			data["mimeType"] = msg.Audio.MimeType
 		}
 	case "document":
 		if msg.Document != nil {
-			payload["mediaId"] = msg.Document.ID
-			payload["mimeType"] = msg.Document.MimeType
-			payload["caption"] = msg.Document.Caption
-			payload["filename"] = msg.Document.Filename
+			data["mediaId"] = msg.Document.ID
+			data["mimeType"] = msg.Document.MimeType
+			data["caption"] = msg.Document.Caption
+			data["filename"] = msg.Document.Filename
 		}
 	case "sticker":
 		if msg.Sticker != nil {
-			payload["mediaId"] = msg.Sticker.ID
-			payload["mimeType"] = msg.Sticker.MimeType
+			data["mediaId"] = msg.Sticker.ID
+			data["mimeType"] = msg.Sticker.MimeType
 		}
 	case "location":
 		if msg.Location != nil {
-			payload["latitude"] = msg.Location.Latitude
-			payload["longitude"] = msg.Location.Longitude
-			payload["name"] = msg.Location.Name
-			payload["address"] = msg.Location.Address
+			data["latitude"] = msg.Location.Latitude
+			data["longitude"] = msg.Location.Longitude
+			data["name"] = msg.Location.Name
+			data["address"] = msg.Location.Address
 		}
 	case "contacts":
-		payload["contacts"] = msg.Contacts
+		data["contacts"] = msg.Contacts
 	case "reaction":
 		if msg.Reaction != nil {
-			payload["messageId"] = msg.Reaction.MessageID
-			payload["emoji"] = msg.Reaction.Emoji
+			data["messageId"] = msg.Reaction.MessageID
+			data["emoji"] = msg.Reaction.Emoji
 		}
 	case "interactive":
 		if msg.Interactive != nil {
-			payload["interactive"] = msg.Interactive
+			data["interactive"] = msg.Interactive
 		}
 	case "button":
 		if msg.Button != nil {
-			payload["buttonPayload"] = msg.Button
+			data["buttonPayload"] = msg.Button
 		}
 	}
 
-	data, _ := json.Marshal(payload)
+	bytes, err := model.BuildEventEnvelope(sessionID, "", model.EventMessage, data)
+	if err != nil {
+		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to build cloud message envelope")
+		return
+	}
 
 	if h.dispatcher != nil {
-		h.dispatcher.Dispatch(sessionID, model.EventMessage, data)
+		h.dispatcher.Dispatch(sessionID, model.EventMessage, bytes)
 	}
 }
 
 func (h *CloudWebhookHandler) dispatchStatus(ctx context.Context, sessionID string, status *cloudWA.Status) {
-	payload := map[string]any{
+	data := map[string]any{
 		"messageId":   status.ID,
 		"recipientId": status.RecipientID,
 		"status":      status.Status,
@@ -208,16 +211,20 @@ func (h *CloudWebhookHandler) dispatchStatus(ctx context.Context, sessionID stri
 	}
 
 	if status.Conversation != nil {
-		payload["conversationId"] = status.Conversation.ID
+		data["conversationId"] = status.Conversation.ID
 	}
 	if status.Pricing != nil {
-		payload["pricingCategory"] = status.Pricing.Category
-		payload["billable"] = status.Pricing.Billable
+		data["pricingCategory"] = status.Pricing.Category
+		data["billable"] = status.Pricing.Billable
 	}
 
-	data, _ := json.Marshal(payload)
+	bytes, err := model.BuildEventEnvelope(sessionID, "", model.EventReceipt, data)
+	if err != nil {
+		logger.Error().Err(err).Str("session", sessionID).Msg("Failed to build cloud status envelope")
+		return
+	}
 
 	if h.dispatcher != nil {
-		h.dispatcher.Dispatch(sessionID, model.EventReceipt, data)
+		h.dispatcher.Dispatch(sessionID, model.EventReceipt, bytes)
 	}
 }

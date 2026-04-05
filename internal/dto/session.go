@@ -132,6 +132,8 @@ type UpdateProfileNameReq struct {
 }
 
 func SessionToResp(s model.Session, pushName, businessName, platform string) SessionResp {
+	proxy := SessionProxy(s.Proxy)
+	proxy.Password = ""
 	return SessionResp{
 		ID:                s.ID,
 		Name:              s.Name,
@@ -141,7 +143,7 @@ func SessionToResp(s model.Session, pushName, businessName, platform string) Ses
 		Engine:            s.Engine,
 		PhoneNumberID:     s.PhoneNumberID,
 		BusinessAccountID: s.BusinessAccountID,
-		Proxy:             SessionProxy(s.Proxy),
+		Proxy:             proxy,
 		Settings:          SessionSettings(s.Settings),
 		PushName:          pushName,
 		BusinessName:      businessName,

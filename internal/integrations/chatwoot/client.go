@@ -9,7 +9,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/textproto"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -27,6 +26,7 @@ type CWClient interface {
 	UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error
 	ListInboxes(ctx context.Context) ([]Inbox, error)
 	CreateInbox(ctx context.Context, name, webhookURL string) (*Inbox, error)
+	UpdateInboxWebhook(ctx context.Context, inboxID int, webhookURL string) error
 }
 
 type Client struct {
@@ -46,22 +46,24 @@ func NewClient(baseURL string, accountID int, token string, httpClient *http.Cli
 	}
 }
 
-func (c *Client) do(ctx context.Context, method, path string, body any, result any) error {
+func (c *Client) do(ctx context.Context, method, path string, body any, result any, contentType string) error {
 	var reqBody io.Reader
-	var contentType string
+	var ct string
 
 	if body != nil {
 		if buf, ok := body.(io.Reader); ok {
 			reqBody = buf
+			ct = contentType
 		} else if data, ok := body.([]byte); ok {
 			reqBody = bytes.NewReader(data)
+			ct = "application/json"
 		} else {
 			data, err := json.Marshal(body)
 			if err != nil {
 				return fmt.Errorf("marshal request body: %w", err)
 			}
 			reqBody = bytes.NewReader(data)
-			contentType = "application/json"
+			ct = "application/json"
 		}
 	}
 
@@ -71,8 +73,8 @@ func (c *Client) do(ctx context.Context, method, path string, body any, result a
 		return fmt.Errorf("create request: %w", err)
 	}
 
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
+	if ct != "" {
+		req.Header.Set("Content-Type", ct)
 	}
 	req.Header.Set("api_access_token", c.token)
 
@@ -107,26 +109,15 @@ type Contact struct {
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
 
-type ContactFilterReq struct {
-	Q string `json:"q"`
-}
-
 func (c *Client) FilterContacts(ctx context.Context, phone string) ([]Contact, error) {
 	var result struct {
-		Payload struct {
-			Contacts []Contact `json:"contacts"`
-		} `json:"payload"`
+		Payload []Contact `json:"payload"`
 	}
-	reqBody := ContactFilterReq{Q: phone}
-	data, err := json.Marshal(reqBody)
-	if err != nil {
+	path := fmt.Sprintf("/api/v1/accounts/%d/contacts/search?q=%s&include_contacts=true", c.accountID, phone)
+	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
 		return nil, err
 	}
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/contacts/filter", c.accountID)
-	if err := c.do(ctx, http.MethodPost, path, data, &result); err != nil {
-		return nil, err
-	}
-	return result.Payload.Contacts, nil
+	return result.Payload, nil
 }
 
 type CreateContactReq struct {
@@ -138,16 +129,20 @@ type CreateContactReq struct {
 }
 
 func (c *Client) CreateContact(ctx context.Context, req CreateContactReq) (*Contact, error) {
-	var result Contact
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/contacts", c.accountID)
+	var result struct {
+		Payload struct {
+			Contact Contact `json:"contact"`
+		} `json:"payload"`
+	}
+	path := fmt.Sprintf("/api/v1/accounts/%d/contacts", c.accountID)
 	data, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	if err := c.do(ctx, http.MethodPost, path, data, &result); err != nil {
+	if err := c.do(ctx, http.MethodPost, path, data, &result, ""); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &result.Payload.Contact, nil
 }
 
 type UpdateContactReq struct {
@@ -158,12 +153,12 @@ type UpdateContactReq struct {
 }
 
 func (c *Client) UpdateContact(ctx context.Context, id int, req UpdateContactReq) error {
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/contacts/%d", c.accountID, id)
+	path := fmt.Sprintf("/api/v1/accounts/%d/contacts/%d", c.accountID, id)
 	data, err := json.Marshal(req)
 	if err != nil {
 		return err
 	}
-	return c.do(ctx, http.MethodPatch, path, data, nil)
+	return c.do(ctx, http.MethodPatch, path, data, nil, "")
 }
 
 type Conversation struct {
@@ -178,8 +173,8 @@ func (c *Client) ListContactConversations(ctx context.Context, contactID int) ([
 	var result struct {
 		Payload []Conversation `json:"payload"`
 	}
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/contacts/%d/conversations", c.accountID, contactID)
-	if err := c.do(ctx, http.MethodGet, path, nil, &result); err != nil {
+	path := fmt.Sprintf("/api/v1/accounts/%d/contacts/%d/conversations", c.accountID, contactID)
+	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
 		return nil, err
 	}
 	return result.Payload, nil
@@ -193,25 +188,25 @@ type CreateConversationReq struct {
 
 func (c *Client) CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error) {
 	var result Conversation
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/conversations", c.accountID)
+	path := fmt.Sprintf("/api/v1/accounts/%d/conversations", c.accountID)
 	data, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	if err := c.do(ctx, http.MethodPost, path, data, &result); err != nil {
+	if err := c.do(ctx, http.MethodPost, path, data, &result, ""); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
 func (c *Client) UpdateConversationStatus(ctx context.Context, convID int, status string) error {
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/conversations/%d/toggle_status", c.accountID, convID)
+	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/toggle_status", c.accountID, convID)
 	body := map[string]string{"status": status}
 	data, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
-	return c.do(ctx, http.MethodPost, path, data, nil)
+	return c.do(ctx, http.MethodPost, path, data, nil, "")
 }
 
 type MessageReq struct {
@@ -226,7 +221,7 @@ type MessageReq struct {
 type Message struct {
 	ID             int    `json:"id"`
 	Content        string `json:"content,omitempty"`
-	MessageType    string `json:"message_type"`
+	MessageType    int    `json:"message_type"`
 	ContentType    string `json:"content_type,omitempty"`
 	SourceID       string `json:"source_id,omitempty"`
 	ConversationID int    `json:"conversation_id"`
@@ -234,12 +229,12 @@ type Message struct {
 
 func (c *Client) CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error) {
 	var result Message
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
+	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
 	data, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	if err := c.do(ctx, http.MethodPost, path, data, &result); err != nil {
+	if err := c.do(ctx, http.MethodPost, path, data, &result, ""); err != nil {
 		return nil, err
 	}
 	return &result, nil
@@ -247,7 +242,7 @@ func (c *Client) CreateMessage(ctx context.Context, convID int, req MessageReq) 
 
 func (c *Client) CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string) (*Message, error) {
 	var result Message
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
+	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
 
 	var buf bytes.Buffer
 	writer := multipart.NewWriter(&buf)
@@ -272,47 +267,12 @@ func (c *Client) CreateMessageWithAttachment(ctx context.Context, convID int, co
 		return nil, fmt.Errorf("close multipart: %w", err)
 	}
 
-	return &result, c.doWithContentType(ctx, http.MethodPost, path, &buf, &result, writer.FormDataContentType())
-}
-
-func (c *Client) doWithContentType(ctx context.Context, method, path string, body io.Reader, result any, contentType string) error {
-	url := fmt.Sprintf("%s%s", c.baseURL, path)
-	req, err := http.NewRequestWithContext(ctx, method, url, body)
-	if err != nil {
-		return fmt.Errorf("create request: %w", err)
-	}
-
-	if contentType != "" {
-		req.Header.Set("Content-Type", contentType)
-	}
-	req.Header.Set("api_access_token", c.token)
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("do request: %w", err)
-	}
-	defer func() {
-		_, _ = io.Copy(io.Discard, resp.Body)
-		_ = resp.Body.Close()
-	}()
-
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("chatwoot API error: status=%d, body=%s", resp.StatusCode, string(bodyBytes))
-	}
-
-	if result != nil && resp.StatusCode != http.StatusNoContent {
-		if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-			return fmt.Errorf("decode response: %w", err)
-		}
-	}
-
-	return nil
+	return &result, c.do(ctx, http.MethodPost, path, &buf, &result, writer.FormDataContentType())
 }
 
 func (c *Client) DeleteMessage(ctx context.Context, convID, msgID int) error {
-	path := fmt.Sprintf("/public/api/v1/accounts/%d/conversations/%d/messages/%d", c.accountID, convID, msgID)
-	return c.do(ctx, http.MethodDelete, path, nil, nil)
+	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages/%d", c.accountID, convID, msgID)
+	return c.do(ctx, http.MethodDelete, path, nil, nil, "")
 }
 
 type Inbox struct {
@@ -326,8 +286,8 @@ func (c *Client) ListInboxes(ctx context.Context) ([]Inbox, error) {
 	var result struct {
 		Payload []Inbox `json:"payload"`
 	}
-	path := fmt.Sprintf("/platform/api/v1/accounts/%d/inboxes", c.accountID)
-	if err := c.do(ctx, http.MethodGet, path, nil, &result); err != nil {
+	path := fmt.Sprintf("/api/v1/accounts/%d/inboxes", c.accountID)
+	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
 		return nil, err
 	}
 	return result.Payload, nil
@@ -335,11 +295,11 @@ func (c *Client) ListInboxes(ctx context.Context) ([]Inbox, error) {
 
 func (c *Client) CreateInbox(ctx context.Context, name, webhookURL string) (*Inbox, error) {
 	var result Inbox
-	path := fmt.Sprintf("/platform/api/v1/accounts/%d/inboxes", c.accountID)
+	path := fmt.Sprintf("/api/v1/accounts/%d/inboxes", c.accountID)
 	body := map[string]any{
 		"name": name,
 		"channel": map[string]any{
-			"type":        "Channel::Api",
+			"type":        "api",
 			"webhook_url": webhookURL,
 		},
 	}
@@ -347,10 +307,24 @@ func (c *Client) CreateInbox(ctx context.Context, name, webhookURL string) (*Inb
 	if err != nil {
 		return nil, err
 	}
-	if err := c.do(ctx, http.MethodPost, path, data, &result); err != nil {
+	if err := c.do(ctx, http.MethodPost, path, data, &result, ""); err != nil {
 		return nil, err
 	}
 	return &result, nil
+}
+
+func (c *Client) UpdateInboxWebhook(ctx context.Context, inboxID int, webhookURL string) error {
+	path := fmt.Sprintf("/api/v1/accounts/%d/inboxes/%d", c.accountID, inboxID)
+	body := map[string]any{
+		"channel": map[string]any{
+			"webhook_url": webhookURL,
+		},
+	}
+	data, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+	return c.do(ctx, http.MethodPatch, path, data, nil, "")
 }
 
 func (c *Client) UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error {
@@ -363,66 +337,5 @@ func (c *Client) UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID s
 	if err != nil {
 		return err
 	}
-	return c.do(ctx, http.MethodPost, path, data, nil)
-}
-
-func GetMIMETypeAndExt(url string, data []byte) (mimeType, ext string) {
-	if url != "" {
-		if e := filepath.Ext(url); e != "" {
-			ext = e
-			switch strings.ToLower(e) {
-			case ".jpg", ".jpeg":
-				mimeType = "image/jpeg"
-			case ".png":
-				mimeType = "image/png"
-			case ".gif":
-				mimeType = "image/gif"
-			case ".webp":
-				mimeType = "image/webp"
-			case ".mp4":
-				mimeType = "video/mp4"
-			case ".ogg":
-				mimeType = "audio/ogg"
-			case ".mp3":
-				mimeType = "audio/mpeg"
-			case ".pdf":
-				mimeType = "application/pdf"
-			case ".doc", ".docx":
-				mimeType = "application/msword"
-			default:
-				mimeType = "application/octet-stream"
-			}
-			return
-		}
-	}
-
-	if len(data) >= 4 {
-		if data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
-			mimeType = "image/jpeg"
-			ext = ".jpg"
-			return
-		}
-		if data[0] == 0x89 && string(data[1:4]) == "PNG" {
-			mimeType = "image/png"
-			ext = ".png"
-			return
-		}
-		if string(data[:4]) == "RIFF" {
-			mimeType = "audio/wav"
-			ext = ".wav"
-			return
-		}
-	}
-
-	if len(data) >= 2 {
-		if data[0] == 0x4F && data[1] == 0x67 {
-			mimeType = "audio/ogg"
-			ext = ".ogg"
-			return
-		}
-	}
-
-	mimeType = "application/octet-stream"
-	ext = ""
-	return
+	return c.do(ctx, http.MethodPost, path, data, nil, "")
 }

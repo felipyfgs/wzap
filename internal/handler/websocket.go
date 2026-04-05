@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/subtle"
+
 	"wzap/internal/config"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
@@ -22,11 +24,19 @@ func NewWebSocketHandler(hub *wsHub.Hub, cfg *config.Config) *WebSocketHandler {
 func (h *WebSocketHandler) Upgrade() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if ws.IsWebSocketUpgrade(c) {
-			token := c.Query("token")
-			if token == "" {
+			var token string
+			switch h.cfg.WSAuthMode {
+			case "header":
 				token = c.Get("Authorization")
+			case "subprotocol":
+				token = c.Get("Sec-WebSocket-Protocol")
+			default:
+				token = c.Query("token")
+				if token == "" {
+					token = c.Get("Authorization")
+				}
 			}
-			if token == "" || token != h.cfg.AdminToken {
+			if token == "" || subtle.ConstantTimeCompare([]byte(token), []byte(h.cfg.AdminToken)) != 1 {
 				return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Invalid or missing token"))
 			}
 			c.Locals("allowed", true)

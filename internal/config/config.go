@@ -27,8 +27,11 @@ type Config struct {
 
 	WALogLevel       string
 	GlobalWebhookURL string
+	ServerURL        string
 
 	HTTPTimeout time.Duration
+
+	WSAuthMode string
 }
 
 func Load() *Config {
@@ -53,8 +56,11 @@ func Load() *Config {
 
 		WALogLevel:       getEnv("WA_LOG_LEVEL", "INFO"),
 		GlobalWebhookURL: getEnv("GLOBAL_WEBHOOK_URL", ""),
+		ServerURL:        getEnv("SERVER_URL", "http://localhost:8080"),
 
 		HTTPTimeout: getEnvAsDuration("HTTP_TIMEOUT", 30*time.Second),
+
+		WSAuthMode: getEnv("WS_AUTH_MODE", "token"),
 	}
 }
 

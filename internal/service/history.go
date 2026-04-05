@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"wzap/internal/async"
 	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/repo"
@@ -11,17 +12,15 @@ import (
 
 type HistoryService struct {
 	repo *repo.MessageRepository
+	pool *async.Pool
 }
 
-func NewHistoryService(repo *repo.MessageRepository) *HistoryService {
-	return &HistoryService{repo: repo}
+func NewHistoryService(repo *repo.MessageRepository, pool *async.Pool) *HistoryService {
+	return &HistoryService{repo: repo, pool: pool}
 }
 
 func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{}) {
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
+	_ = s.pool.Submit(func(ctx context.Context) {
 		msg := &model.Message{
 			ID:        messageID,
 			SessionID: sessionID,
@@ -38,5 +37,11 @@ func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID
 		if err := s.repo.Save(ctx, msg); err != nil {
 			logger.Warn().Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Failed to persist message")
 		}
-	}()
+	})
+}
+
+		if err := s.repo.Save(ctx, msg); err != nil {
+			logger.Warn().Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Failed to persist message")
+		}
+	})
 }

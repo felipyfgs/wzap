@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/swagger"
 
 	_ "wzap/docs"
+	"wzap/internal/async"
 	"wzap/internal/handler"
 	"wzap/internal/integrations/chatwoot"
 	"wzap/internal/middleware"
@@ -26,7 +27,8 @@ func (s *Server) SetupRoutes() error {
 	// Initialize Dispatcher
 	hub := wsHub.NewHub()
 
-	disp := webhook.New(webhookRepo, s.nats, s.Config.GlobalWebhookURL)
+	webhookPool := async.NewPool("webhook", 4, 100)
+	disp := webhook.New(webhookRepo, s.nats, s.Config.GlobalWebhookURL, webhookPool)
 	disp.SetWSBroadcaster(hub)
 	go disp.StartConsumer(s.ctx)
 

@@ -14,6 +14,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"wzap/internal/async"
 	"wzap/internal/broker"
 	"wzap/internal/logger"
 	"wzap/internal/metrics"
@@ -67,14 +68,16 @@ type Dispatcher struct {
 	globalLastAttempt atomic.Int64
 	ws                WSBroadcaster
 	listeners         []EventListener
+	pool              *async.Pool
 }
 
-func New(webhookRepo *repo.WebhookRepository, nats *broker.NATS, globalWebhookURL string) *Dispatcher {
+func New(webhookRepo *repo.WebhookRepository, nats *broker.NATS, globalWebhookURL string, pool *async.Pool) *Dispatcher {
 	return &Dispatcher{
 		webhookRepo:      webhookRepo,
 		nats:             nats,
 		httpClient:       &http.Client{Timeout: httpTimeout},
 		globalWebhookURL: globalWebhookURL,
+		pool:             pool,
 	}
 }
 
@@ -112,15 +115,21 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	for _, wh := range webhooks {
 		wh := wh
 		if wh.NATSEnabled && d.nats != nil {
-			go d.publishToNATS(wh, payload)
+			_ = d.pool.Submit(func(ctx context.Context) {
+				d.publishToNATS(wh, payload)
+			})
 		} else {
-			go d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
+			_ = d.pool.Submit(func(ctx context.Context) {
+				d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
+			})
 		}
 	}
 
 	if d.globalWebhookURL != "" && d.shouldAttemptGlobal() {
 		logger.Debug().Str("url", d.globalWebhookURL).Msg("Sending to global webhook")
-		go d.deliverGlobalWebhook(payload)
+		_ = d.pool.Submit(func(ctx context.Context) {
+			d.deliverGlobalWebhook(payload)
+		})
 	}
 
 	if d.ws != nil {
@@ -128,7 +137,9 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	}
 
 	for _, listener := range d.listeners {
-		go listener.OnEvent(sessionID, eventType, payload)
+		_ = d.pool.Submit(func(ctx context.Context) {
+			listener.OnEvent(sessionID, eventType, payload)
+		})
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 
+	"wzap/internal/async"
 	"wzap/internal/broker"
 	"wzap/internal/config"
 	"wzap/internal/database"
@@ -26,6 +27,7 @@ type Server struct {
 	minio  *storage.Minio
 	ctx    context.Context
 	cancel context.CancelFunc
+	async  *async.Runtime
 }
 
 func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) *Server {
@@ -61,6 +63,7 @@ func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) 
 		minio:  m,
 		ctx:    ctx,
 		cancel: cancel,
+		async:  async.NewRuntime(),
 	}
 }
 
@@ -73,6 +76,10 @@ func (s *Server) Start() error {
 func (s *Server) Shutdown(ctx context.Context) error {
 	logger.Info().Msg("Shutting down API server")
 	s.cancel()
+
+	if s.async != nil {
+		s.async.Shutdown(ctx)
+	}
 
 	// Fiber shutdown might block, we wrap it in a channel with context timeout
 	done := make(chan error, 1)

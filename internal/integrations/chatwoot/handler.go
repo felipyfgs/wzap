@@ -127,6 +127,7 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 		URL:                 req.URL,
 		AccountID:           req.AccountID,
 		Token:               req.Token,
+		WebhookToken:        req.WebhookToken,
 		InboxID:             req.InboxID,
 		InboxName:           req.InboxName,
 		SignMsg:             req.SignMsg != nil && *req.SignMsg,
@@ -229,12 +230,12 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 	}
 
 	hmacHeader := c.Get("X-Chatwoot-Hmac-Sha256")
-	if cfg.Token != "" {
+	if cfg.WebhookToken != "" {
 		if hmacHeader == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Missing HMAC signature"))
 		}
 		body := c.Body()
-		mac := hmac.New(sha256.New, []byte(cfg.Token))
+		mac := hmac.New(sha256.New, []byte(cfg.WebhookToken))
 		mac.Write(body)
 		expected := hex.EncodeToString(mac.Sum(nil))
 

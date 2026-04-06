@@ -4,6 +4,7 @@ type ChatwootConfigReq struct {
 	URL                  string   `json:"url" validate:"required,url"`
 	AccountID            int      `json:"accountId" validate:"required,gt=0"`
 	Token                string   `json:"token" validate:"required"`
+	WebhookToken         string   `json:"webhookToken,omitempty"`
 	InboxID              int      `json:"inboxId,omitempty"`
 	InboxName            string   `json:"inboxName,omitempty"`
 	SignMsg              *bool    `json:"signMsg,omitempty"`

@@ -118,28 +118,12 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 }
 
 func (s *Service) findOrCreateBotConversation(ctx context.Context, cfg *ChatwootConfig) (int, error) {
-	client := s.clientFn(cfg)
-
-	contacts, err := client.FilterContacts(ctx, cfg.SessionID)
+	contactID, err := s.ensureBotContact(ctx, cfg)
 	if err != nil {
 		return 0, err
 	}
 
-	var contactID int
-	if len(contacts) == 0 {
-		contact, err := client.CreateContact(ctx, CreateContactReq{
-			InboxID:    cfg.InboxID,
-			Name:       cfg.SessionID,
-			Identifier: cfg.SessionID,
-		})
-		if err != nil {
-			return 0, fmt.Errorf("failed to create bot contact: %w", err)
-		}
-		contactID = contact.ID
-	} else {
-		contactID = contacts[0].ID
-	}
-
+	client := s.clientFn(cfg)
 	conversations, err := client.ListContactConversations(ctx, contactID)
 	if err != nil {
 		return 0, err
@@ -160,6 +144,60 @@ func (s *Service) findOrCreateBotConversation(ctx context.Context, cfg *Chatwoot
 	}
 
 	return conv.ID, nil
+}
+
+func (s *Service) findOpenBotConversation(ctx context.Context, cfg *ChatwootConfig) (int, bool) {
+	contactID, err := s.ensureBotContact(ctx, cfg)
+	if err != nil {
+		return 0, false
+	}
+
+	client := s.clientFn(cfg)
+	conversations, err := client.ListContactConversations(ctx, contactID)
+	if err != nil {
+		return 0, false
+	}
+
+	for _, conv := range conversations {
+		if conv.InboxID == cfg.InboxID && conv.Status != "resolved" {
+			return conv.ID, true
+		}
+	}
+
+	return 0, false
+}
+
+func (s *Service) ensureBotContact(ctx context.Context, cfg *ChatwootConfig) (int, error) {
+	client := s.clientFn(cfg)
+
+	botName := cfg.InboxName
+	if botName == "" {
+		botName = "wzap"
+	}
+	botIdentifier := "bot@" + cfg.SessionID
+
+	contacts, err := client.FilterContacts(ctx, botIdentifier)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(contacts) == 0 {
+		contact, err := client.CreateContact(ctx, CreateContactReq{
+			InboxID:    cfg.InboxID,
+			Name:       botName,
+			Identifier: botIdentifier,
+		})
+		if err != nil {
+			return 0, fmt.Errorf("failed to create bot contact: %w", err)
+		}
+		return contact.ID, nil
+	}
+
+	contactID := contacts[0].ID
+	if contacts[0].Name != botName {
+		_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Name: botName})
+	}
+	return contactID, nil
 }
 
 func (s *Service) webhookURL(sessionID string) string {
@@ -201,5 +239,9 @@ func (s *Service) Configure(ctx context.Context, cfg *ChatwootConfig) error {
 	}
 
 	cfg.Enabled = true
-	return s.repo.Upsert(ctx, cfg)
+	if err := s.repo.Upsert(ctx, cfg); err != nil {
+		return err
+	}
+	s.InvalidateNoConfigCache(cfg.SessionID)
+	return nil
 }

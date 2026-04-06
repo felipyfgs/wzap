@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -33,6 +34,16 @@ type JIDResolver interface {
 type MediaDownloader interface {
 	DownloadMediaByPath(ctx context.Context, sessionID, directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int, mediaType string) ([]byte, error)
 }
+type SessionConnector interface {
+	Connect(ctx context.Context, sessionID string) error
+	Disconnect(sessionID string) error
+	Logout(ctx context.Context, sessionID string) error
+	IsConnected(sessionID string) bool
+}
+
+type noConfigEntry struct {
+	expiresAt time.Time
+}
 
 type Service struct {
 	repo            Repo
@@ -42,11 +53,14 @@ type Service struct {
 	cache           Cache
 	jidResolver     JIDResolver
 	mediaDownloader MediaDownloader
+	connector       SessionConnector
 	serverURL       string
+	lastBotNotify   sync.Map
 	httpClient      *http.Client
 	js              jetstream.JetStream
 	cb              *circuitBreakerManager
 	convFlight      singleflight.Group
+	noConfigCache   sync.Map
 }
 
 func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messageSvc MessageService) *Service {
@@ -63,15 +77,17 @@ func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messag
 	}
 }
 
-func (s *Service) SetJIDResolver(r JIDResolver)         { s.jidResolver = r }
-func (s *Service) SetMediaDownloader(d MediaDownloader) { s.mediaDownloader = d }
-func (s *Service) SetServerURL(url string)              { s.serverURL = url }
-func (s *Service) SetJetStream(js jetstream.JetStream)  { s.js = js }
-func (s *Service) SetCache(c Cache)                     { s.cache = c }
+func (s *Service) SetJIDResolver(r JIDResolver)           { s.jidResolver = r }
+func (s *Service) SetMediaDownloader(d MediaDownloader)   { s.mediaDownloader = d }
+func (s *Service) SetSessionConnector(c SessionConnector) { s.connector = c }
+func (s *Service) SetServerURL(url string)                { s.serverURL = url }
+func (s *Service) SetJetStream(js jetstream.JetStream)    { s.js = js }
+func (s *Service) SetCache(c Cache)                       { s.cache = c }
+func (s *Service) InvalidateNoConfigCache(sessionID string) {
+	s.noConfigCache.Delete(sessionID)
+}
 
 func (s *Service) OnEvent(sessionID string, event model.EventType, payload []byte) {
-	logger.Debug().Str("session", sessionID).Str("event", string(event)).Msg("[CW] OnEvent received")
-
 	if s.js != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
@@ -92,9 +108,16 @@ func (s *Service) processInboundSync(sessionID string, event model.EventType, pa
 }
 
 func (s *Service) processInboundEvent(ctx context.Context, sessionID string, event model.EventType, payload []byte) error {
+	if v, ok := s.noConfigCache.Load(sessionID); ok {
+		if entry, valid := v.(noConfigEntry); valid && time.Now().Before(entry.expiresAt) {
+			return nil
+		}
+		s.noConfigCache.Delete(sessionID)
+	}
+
 	cfg, err := s.repo.FindBySessionID(ctx, sessionID)
 	if err != nil {
-		logger.Debug().Str("session", sessionID).Err(err).Msg("[CW] config not found, skipping")
+		s.noConfigCache.Store(sessionID, noConfigEntry{expiresAt: time.Now().Add(5 * time.Minute)})
 		return nil
 	}
 	if !cfg.Enabled {

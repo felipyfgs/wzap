@@ -102,6 +102,10 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *ChatwootConfig
 		return nil
 	}
 
+	if strings.HasPrefix(chatJID, "bot@") {
+		return s.handleBotCommand(ctx, cfg, msg.Content)
+	}
+
 	if !isValidWhatsAppJID(chatJID) {
 		logger.Debug().Str("chatJID", chatJID).Msg("[CW] skipping outgoing message: invalid WhatsApp JID (bot conversation)")
 		return nil

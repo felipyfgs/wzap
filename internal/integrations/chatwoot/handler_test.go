@@ -422,9 +422,10 @@ func TestImportHistory_Returns501(t *testing.T) {
 func TestIncomingWebhook_MissingHMAC_WithToken(t *testing.T) {
 	app, repo, _ := newChatwootApp()
 	repo.cfg = &ChatwootConfig{
-		SessionID: "test-session",
-		Enabled:   true,
-		Token:     "test-token",
+		SessionID:    "test-session",
+		Enabled:      true,
+		Token:        "test-token",
+		WebhookToken: "webhook-secret",
 	}
 
 	req := httptest.NewRequest("POST", "/chatwoot/webhook/test-session", bytes.NewReader([]byte(`{}`)))
@@ -442,13 +443,14 @@ func TestIncomingWebhook_MissingHMAC_WithToken(t *testing.T) {
 func TestIncomingWebhook_ValidHMAC(t *testing.T) {
 	app, repo, _ := newChatwootApp()
 	repo.cfg = &ChatwootConfig{
-		SessionID: "test-session",
-		Enabled:   true,
-		Token:     "test-token",
+		SessionID:    "test-session",
+		Enabled:      true,
+		Token:        "test-token",
+		WebhookToken: "webhook-secret",
 	}
 
 	body := []byte(`{}`)
-	mac := hmac.New(sha256.New, []byte(repo.cfg.Token))
+	mac := hmac.New(sha256.New, []byte(repo.cfg.WebhookToken))
 	mac.Write(body)
 	signature := hex.EncodeToString(mac.Sum(nil))
 

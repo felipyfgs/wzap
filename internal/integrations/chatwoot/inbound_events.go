@@ -67,16 +67,23 @@ func (s *Service) handleDelete(ctx context.Context, cfg *ChatwootConfig, payload
 }
 
 func (s *Service) handleConnected(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
-	convID, err := s.findOrCreateBotConversation(ctx, cfg)
-	if err != nil {
-		logger.Warn().Err(err).Str("session", cfg.SessionID).Msg("Failed to find or create bot conversation for connected event")
+	now := time.Now()
+	if v, ok := s.lastBotNotify.Load(cfg.SessionID); ok {
+		if lastTime, valid := v.(time.Time); valid && now.Sub(lastTime) < 30*time.Second {
+			return
+		}
+	}
+	s.lastBotNotify.Store(cfg.SessionID, now)
+
+	convID, ok := s.findOpenBotConversation(ctx, cfg)
+	if !ok {
 		return
 	}
 
 	client := s.clientFn(cfg)
 	_, _ = client.CreateMessage(ctx, convID, MessageReq{
-		Content:     "✅ Session connected",
-		MessageType: "outgoing",
+		Content:     "✅ WhatsApp conectado com sucesso!",
+		MessageType: "incoming",
 	})
 
 	if cfg.ImportOnConnect {
@@ -93,22 +100,22 @@ func (s *Service) handleConnected(ctx context.Context, cfg *ChatwootConfig, payl
 }
 
 func (s *Service) handleDisconnected(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
-	convID, err := s.findOrCreateBotConversation(ctx, cfg)
-	if err != nil {
-		logger.Warn().Err(err).Str("session", cfg.SessionID).Msg("Failed to find or create bot conversation for disconnected event")
+	convID, ok := s.findOpenBotConversation(ctx, cfg)
+	if !ok {
 		return
 	}
 
 	client := s.clientFn(cfg)
 	_, _ = client.CreateMessage(ctx, convID, MessageReq{
-		Content:     "⚠️ Session disconnected",
-		MessageType: "outgoing",
+		Content:     "⚠️ Sessão desconectada do WhatsApp.",
+		MessageType: "incoming",
 	})
 }
 
 func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
 	var data struct {
-		Codes []string `json:"Codes"`
+		Codes       []string `json:"Codes"`
+		PairingCode string   `json:"PairingCode"`
 	}
 	if err := parseEnvelopeData(payload, &data); err != nil {
 		return
@@ -133,7 +140,12 @@ func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []b
 		return
 	}
 
-	_, _ = client.CreateMessageWithAttachment(ctx, convID, "Scan QR code to connect", "qrcode.png", qrPNG, "image/png", "outgoing", "")
+	caption := "⚡️ QR Code gerado com sucesso!\n\nEscaneie o QR Code abaixo no WhatsApp para conectar."
+	if data.PairingCode != "" {
+		caption += fmt.Sprintf("\n\n*Código de pareamento:* %s-%s", data.PairingCode[:4], data.PairingCode[4:])
+	}
+
+	_, _ = client.CreateMessageWithAttachment(ctx, convID, caption, "qrcode.png", qrPNG, "image/png", "incoming", "")
 }
 
 func (s *Service) handleContact(ctx context.Context, cfg *ChatwootConfig, payload []byte) {

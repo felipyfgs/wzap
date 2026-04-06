@@ -37,6 +37,13 @@ func GetMIMETypeAndExt(url string, data []byte) (mimeType, ext string) {
 		}
 	}
 
+	detected := http.DetectContentType(data)
+	if detected != "" && detected != "application/octet-stream" {
+		mimeType = detected
+		ext = mimeTypeToExt(mimeType)
+		return
+	}
+
 	if len(data) >= 4 {
 		if data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
 			mimeType = "image/jpeg"

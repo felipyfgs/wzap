@@ -68,6 +68,7 @@ func (s *Server) SetupRoutes() error {
 	chatwootSvc := chatwoot.NewService(s.ctx, chatwootRepo, messageRepo, messageSvc)
 	chatwootSvc.SetJIDResolver(engine)
 	chatwootSvc.SetMediaDownloader(engine)
+	chatwootSvc.SetSessionConnector(chatwoot.NewSessionConnector(engine))
 	chatwootSvc.SetServerURL(s.Config.ServerURL)
 	chatwootSvc.SetCache(chatwoot.NewCache(s.Config.RedisURL))
 	if s.nats != nil {

@@ -11,6 +11,7 @@ type ChatwootConfig struct {
 	URL                 string    `json:"url"`
 	AccountID           int       `json:"accountId"`
 	Token               string    `json:"token"`
+	WebhookToken        string    `json:"webhookToken"`
 	InboxID             int       `json:"inboxId"`
 	InboxName           string    `json:"inboxName"`
 	SignMsg             bool      `json:"signMsg"`

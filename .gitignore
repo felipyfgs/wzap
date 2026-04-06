@@ -85,3 +85,9 @@ openspec/changes/archive/
 
 # Temp
 temp/
+
+# DevContainer
+.devcontainer/
+
+# Ona
+.ona/

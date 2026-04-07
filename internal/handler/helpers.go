@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,8 @@ import (
 
 	"wzap/internal/dto"
 	mw "wzap/internal/middleware"
+	"wzap/internal/model"
+	"wzap/internal/service"
 )
 
 // Ensure Validate is initialized at package load
@@ -46,4 +49,39 @@ func parseAndValidate(c *fiber.Ctx, req interface{}) error {
 		return fiber.ErrBadRequest
 	}
 	return nil
+}
+
+func handleCapabilityError(c *fiber.Ctx, err error) bool {
+	var capabilityErr *service.CapabilityError
+	if !errors.As(err, &capabilityErr) {
+		return false
+	}
+
+	title := "Not Supported"
+	if capabilityErr.Support == model.CapabilitySupportPartial {
+		title = "Partial Support"
+	}
+
+	_ = c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp(title, capabilityErr.Error()))
+	return true
+}
+
+func handleLifecycleError(c *fiber.Ctx, err error) bool {
+	if handleCapabilityError(c, err) {
+		return true
+	}
+
+	var conflictErr *service.LifecycleConflictError
+	if errors.As(err, &conflictErr) {
+		_ = c.Status(fiber.StatusConflict).JSON(dto.ErrorResp("Conflict", conflictErr.Error()))
+		return true
+	}
+
+	var notFoundErr *service.LifecycleNotFoundError
+	if errors.As(err, &notFoundErr) {
+		_ = c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", notFoundErr.Error()))
+		return true
+	}
+
+	return false
 }

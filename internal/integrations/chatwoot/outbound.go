@@ -280,7 +280,7 @@ func (s *Service) handleMessageUpdated(ctx context.Context, cfg *ChatwootConfig,
 		MessageID: storedMsg.ID,
 	})
 
-	if body.Conversation != nil && body.Conversation.Status == "resolved" && !cfg.ReopenConversation {
+	if body.Conversation != nil && body.Conversation.Status == "resolved" {
 		sourceID := body.Conversation.ContactInbox.SourceID
 		if sourceID != "" {
 			s.cache.DeleteConv(ctx, cfg.SessionID, sourceID)
@@ -295,7 +295,7 @@ func (s *Service) handleConversationStatusChanged(ctx context.Context, cfg *Chat
 		return nil
 	}
 
-	if body.Conversation.Status == "resolved" && !cfg.ReopenConversation {
+	if body.Conversation.Status == "resolved" {
 		sourceID := body.Conversation.ContactInbox.SourceID
 		if sourceID != "" {
 			s.cache.DeleteConv(ctx, cfg.SessionID, sourceID)

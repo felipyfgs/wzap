@@ -27,14 +27,19 @@ type SessionService struct {
 	webhookRepo *repo.WebhookRepository
 	engine      *wa.Manager
 	provider    *cloudWA.Client
+	runtimeResolver *SessionRuntimeResolver
 }
 
-func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager, provider *cloudWA.Client) *SessionService {
+func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager, provider *cloudWA.Client, runtimeResolver *SessionRuntimeResolver) *SessionService {
+	if runtimeResolver == nil {
+		runtimeResolver = NewSessionRuntimeResolver(r, engine, provider)
+	}
 	return &SessionService{
 		repo:        r,
 		webhookRepo: webhookRepo,
 		engine:      engine,
 		provider:    provider,
+		runtimeResolver: runtimeResolver,
 	}
 }
 
@@ -220,16 +225,17 @@ func (s *SessionService) Update(ctx context.Context, id string, req dto.SessionU
 }
 
 func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionStatusResp, error) {
-	session, err := s.repo.FindByID(ctx, id)
+	runtime, err := s.runtimeResolver.ResolveStatus(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
 	var loggedIn, connected bool
+	session := runtime.Session()
 
-	if session.Engine == "cloud_api" {
-		if s.provider != nil && session.PhoneNumberID != "" {
-			pn, err := s.provider.GetPhoneNumber(ctx, id, session.PhoneNumberID)
+	if runtime.Support() == model.CapabilitySupportPartial {
+		if runtime.Provider() != nil && session.PhoneNumberID != "" {
+			pn, err := runtime.Provider().GetPhoneNumber(ctx, session.ID, session.PhoneNumberID)
 			if err == nil && pn != nil {
 				connected = true
 				loggedIn = pn.Status == "connected"
@@ -238,11 +244,9 @@ func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionSta
 	} else {
 		loggedIn = session.JID != ""
 		connected = session.Connected == 1
-		if s.engine != nil {
-			if client, cErr := s.engine.GetClient(id); cErr == nil {
+		if client, cErr := runtime.Client(); cErr == nil {
 				connected = client.IsConnected()
 				loggedIn = client.Store.ID != nil
-			}
 		}
 	}
 
@@ -261,14 +265,15 @@ func (s *SessionService) SetStatus(ctx context.Context, id string, status string
 }
 
 func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionProfileResp, error) {
-	session, err := s.repo.FindByID(ctx, id)
+	runtime, err := s.runtimeResolver.ResolveProfile(ctx, id)
 	if err != nil {
 		return nil, err
 	}
+	session := runtime.Session()
 
-	if session.Engine == "cloud_api" {
-		if s.provider != nil && session.PhoneNumberID != "" {
-			pn, err := s.provider.GetPhoneNumber(ctx, id, session.PhoneNumberID)
+	if runtime.Support() == model.CapabilitySupportPartial {
+		if runtime.Provider() != nil && session.PhoneNumberID != "" {
+			pn, err := runtime.Provider().GetPhoneNumber(ctx, session.ID, session.PhoneNumberID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get phone number: %w", err)
 			}
@@ -281,7 +286,7 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 		return &dto.SessionProfileResp{}, nil
 	}
 
-	client, err := s.engine.GetClient(id)
+	client, err := runtime.Client()
 	if err != nil {
 		return nil, fmt.Errorf("session not connected: %w", err)
 	}
@@ -297,13 +302,14 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 	}
 
 	selfJID := client.Store.ID.ToNonAD()
-	if pic, picErr := client.GetProfilePictureInfo(ctx, selfJID, &whatsmeow.GetProfilePictureParams{}); picErr != nil {
-		logger.Warn().Err(picErr).Str("session", id).Msg("failed to get profile picture")
+	runtimeCtx := runtime.WithContext(ctx)
+	if pic, picErr := client.GetProfilePictureInfo(runtimeCtx, selfJID, &whatsmeow.GetProfilePictureParams{}); picErr != nil {
+		logger.Warn().Err(picErr).Str("session", session.ID).Msg("failed to get profile picture")
 	} else if pic != nil {
 		resp.PictureURL = pic.URL
 	}
 
-	if info, infoErr := client.GetUserInfo(ctx, []types.JID{*client.Store.ID}); infoErr == nil {
+	if info, infoErr := client.GetUserInfo(runtimeCtx, []types.JID{*client.Store.ID}); infoErr == nil {
 		for _, v := range info {
 			resp.Status = v.Status
 			break
@@ -314,6 +320,18 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 }
 
 func (s *SessionService) Restart(ctx context.Context, id string) (*dto.SessionResp, error) {
+	runtime, err := s.runtimeResolver.Resolve(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	support, err := runtime.RequireCapability(model.CapabilitySessionRestart)
+	if err != nil {
+		return nil, err
+	}
+	if support == model.CapabilitySupportPartial {
+		return s.Get(ctx, id)
+	}
+
 	_ = s.engine.Disconnect(id)
 	time.Sleep(1 * time.Second)
 	if _, _, err := s.engine.Connect(ctx, id); err != nil {

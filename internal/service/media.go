@@ -10,6 +10,7 @@ import (
 
 	"wzap/internal/async"
 	"wzap/internal/logger"
+	"wzap/internal/model"
 	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/storage"
@@ -20,43 +21,46 @@ import (
 )
 
 type MediaService struct {
-	engine   *wa.Manager
-	minio    *storage.Minio
-	provider *cloudWA.Client
-	sessRepo *repo.SessionRepository
-	pool     *async.Pool
+	minio           *storage.Minio
+	pool            *async.Pool
+	runtimeResolver *SessionRuntimeResolver
 }
 
-func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository, pool *async.Pool) *MediaService {
-	return &MediaService{engine: engine, minio: minio, provider: provider, sessRepo: sessRepo, pool: pool}
+func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository, pool *async.Pool, runtimeResolver *SessionRuntimeResolver) *MediaService {
+	if runtimeResolver == nil {
+		runtimeResolver = NewSessionRuntimeResolver(sessRepo, engine, provider)
+	}
+	return &MediaService{minio: minio, pool: pool, runtimeResolver: runtimeResolver}
 }
 
 func (s *MediaService) DownloadAndStore(ctx context.Context, sessionID string, msg whatsmeow.DownloadableMessage, mimeType, messageID string) (string, error) {
-	client, err := s.engine.GetClient(sessionID)
+	runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
 	if err != nil {
 		return "", err
 	}
 
-	data, err := client.Download(ctx, msg)
-	if err != nil {
-		return "", fmt.Errorf("failed to download media: %w", err)
-	}
+	return runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+		data, err := client.Download(ctx, msg)
+		if err != nil {
+			return "", fmt.Errorf("failed to download media: %w", err)
+		}
 
-	key := fmt.Sprintf("%s/%s", sessionID, messageID)
-	if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
-		return "", fmt.Errorf("failed to upload media to S3: %w", err)
-	}
+		key := fmt.Sprintf("%s/%s", session.ID, messageID)
+		if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
+			return "", fmt.Errorf("failed to upload media to S3: %w", err)
+		}
 
-	url, err := s.minio.PresignedURL(ctx, key, 24*time.Hour)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate presigned URL: %w", err)
-	}
+		url, err := s.minio.PresignedURL(ctx, key, 24*time.Hour)
+		if err != nil {
+			return "", fmt.Errorf("failed to generate presigned URL: %w", err)
+		}
 
-	return url, nil
+		return url, nil
+	})
 }
 
 func (s *MediaService) DownloadMediaMessage(ctx context.Context, sessionID string, msgProto *waE2E.Message) ([]byte, string, error) {
-	client, err := s.engine.GetClient(sessionID)
+	runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
 	if err != nil {
 		return nil, "", err
 	}
@@ -84,12 +88,24 @@ func (s *MediaService) DownloadMediaMessage(ctx context.Context, sessionID strin
 		return nil, "", fmt.Errorf("message does not contain downloadable media")
 	}
 
-	data, err := client.Download(ctx, downloadable)
-	if err != nil {
-		return nil, "", fmt.Errorf("failed to download media: %w", err)
+	type mediaDownloadResult struct {
+		data     []byte
+		mimeType string
 	}
 
-	return data, mimeType, nil
+	result, err := runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (mediaDownloadResult, error) {
+		data, err := client.Download(ctx, downloadable)
+		if err != nil {
+			return mediaDownloadResult{}, fmt.Errorf("failed to download media: %w", err)
+		}
+
+		return mediaDownloadResult{data: data, mimeType: mimeType}, nil
+	})
+	if err != nil {
+		return nil, "", err
+	}
+
+	return result.data, result.mimeType, nil
 }
 
 func (s *MediaService) GetPresignedURL(ctx context.Context, sessionID, messageID string) (string, error) {
@@ -107,25 +123,31 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, mimeType string, do
 	}
 
 	_ = s.pool.Submit(func(ctx context.Context) {
-		client, err := s.engine.GetClient(sessionID)
+		runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
+		if err != nil {
+			logger.Warn().Err(err).Str("session", sessionID).Msg("Auto-upload: media download not supported for engine")
+			return
+		}
+
+		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
+			data, err := client.Download(ctx, downloadable)
+			if err != nil {
+				logger.Warn().Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to download media")
+				return struct{}{}, nil
+			}
+
+			key := fmt.Sprintf("%s/%s", session.ID, messageID)
+			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
+				logger.Warn().Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to upload to S3")
+				return struct{}{}, nil
+			}
+
+			logger.Debug().Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: media stored in S3")
+			return struct{}{}, nil
+		})
 		if err != nil {
 			logger.Warn().Err(err).Str("session", sessionID).Msg("Auto-upload: failed to get client")
-			return
 		}
-
-		data, err := client.Download(ctx, downloadable)
-		if err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Auto-upload: failed to download media")
-			return
-		}
-
-		key := fmt.Sprintf("%s/%s", sessionID, messageID)
-		if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Auto-upload: failed to upload to S3")
-			return
-		}
-
-		logger.Debug().Str("session", sessionID).Str("mid", messageID).Msg("Auto-upload: media stored in S3")
 	})
 }
 

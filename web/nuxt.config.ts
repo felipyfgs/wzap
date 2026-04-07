@@ -15,8 +15,6 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
-    apiHost: process.env.NUXT_API_HOST || 'localhost',
-    apiPort: process.env.NUXT_API_PORT || '8080',
     public: {
       apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080'
     }

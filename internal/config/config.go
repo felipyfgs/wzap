@@ -17,11 +17,11 @@ type Config struct {
 
 	DatabaseURL string
 
-	MinioEndpoint  string
-	MinioAccessKey string
-	MinioSecretKey string
-	MinioBucket    string
-	MinioUseSSL    bool
+	MinioEndpoint   string
+	MinioAccessKey  string
+	MinioSecretKey  string
+	MinioBucket     string
+	MinioUseSSL     bool
 
 	NATSURL  string
 	RedisURL string
@@ -47,11 +47,11 @@ func Load() *Config {
 
 		DatabaseURL: getEnv("DATABASE_URL", ""),
 
-		MinioEndpoint:  getEnv("MINIO_ENDPOINT", "localhost:9010"),
-		MinioAccessKey: getEnv("MINIO_ACCESS_KEY", ""),
-		MinioSecretKey: getEnv("MINIO_SECRET_KEY", ""),
-		MinioBucket:    getEnv("MINIO_BUCKET", "wzap-media"),
-		MinioUseSSL:    getEnvAsBool("MINIO_USE_SSL", false),
+		MinioEndpoint:   getEnv("MINIO_ENDPOINT", "localhost:9010"),
+		MinioAccessKey:  getEnv("MINIO_ACCESS_KEY", ""),
+		MinioSecretKey:  getEnv("MINIO_SECRET_KEY", ""),
+		MinioBucket:     getEnv("MINIO_BUCKET", "wzap-media"),
+		MinioUseSSL:     getEnvAsBool("MINIO_USE_SSL", false),
 
 		NATSURL:  getEnv("NATS_URL", "nats://localhost:4222"),
 		RedisURL: getEnv("REDIS_URL", ""),

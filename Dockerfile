@@ -11,7 +11,7 @@ CMD ["air", "-c", ".air.toml"]
 
 # ── builder: generate docs + compile binary ───────────────────────────────────
 FROM base AS builder
-RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
@@ -21,11 +21,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o /app/wzap cmd/wzap/mai
 
 # ── prod: minimal runtime image ───────────────────────────────────────────────
 FROM alpine:3.21 AS prod
-RUN apk add --no-cache ca-certificates tzdata curl ffmpeg
-RUN addgroup -S wzap && adduser -S wzap -G wzap -h /app
+RUN apk add --no-cache ca-certificates tzdata wget ffmpeg \
+    && addgroup -S wzap && adduser -S wzap -G wzap -h /app
 WORKDIR /app
-COPY --from=builder /app/wzap /app/wzap
-RUN chown -R wzap:wzap /app
+COPY --chown=wzap:wzap --from=builder /app/wzap /app/wzap
 USER wzap
 ENV PORT=8080 \
     SERVER_HOST=0.0.0.0 \
@@ -33,5 +32,5 @@ ENV PORT=8080 \
     ENVIRONMENT=production
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+    CMD wget -qO- http://localhost:${PORT}/health || exit 1
 ENTRYPOINT ["/app/wzap"]

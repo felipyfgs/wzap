@@ -1,0 +1,244 @@
+version: "3.7"
+
+services:
+  # ===========================================================================
+  # PostgreSQL
+  # ===========================================================================
+  wzap_postgres:
+    image: postgres:16-alpine
+    volumes:
+      - wzap_postgres_data:/var/lib/postgresql/data
+    networks:
+      - Gacont
+    environment:
+      - POSTGRES_DB=wzap
+      - POSTGRES_USER=wzap
+      - POSTGRES_PASSWORD=wzap123
+      - TZ=America/Sao_Paulo
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wzap -d wzap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ===========================================================================
+  # NATS JetStream
+  # ===========================================================================
+  wzap_nats:
+    image: nats:2-alpine
+    command:
+      - "--http_port=8222"
+      - "--js"
+      - "--store_dir=/data"
+    volumes:
+      - wzap_nats_data:/data
+    networks:
+      - Gacont
+    environment:
+      - TZ=America/Sao_Paulo
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ===========================================================================
+  # MinIO S3 Storage
+  # ===========================================================================
+  wzap_minio:
+    image: quay.io/minio/minio:RELEASE.2024-01-13T07-53-03Z-cpuv1
+    command: server /data --console-address ":9001"
+    volumes:
+      - wzap_minio_data:/data
+    networks:
+      - Gacont
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=wzap@2024!Secure
+      - MINIO_BROWSER_REDIRECT_URL=https://minio.wzap.gacont.com.br
+      - MINIO_SERVER_URL=https://s3.wzap.gacont.com.br
+      - TZ=America/Sao_Paulo
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=Gacont
+
+        # Minio public API (S3)
+        - traefik.http.routers.wzap_minio_public.rule=Host(`s3.wzap.gacont.com.br`)
+        - traefik.http.routers.wzap_minio_public.entrypoints=websecure
+        - traefik.http.routers.wzap_minio_public.tls.certresolver=letsencryptresolver
+        - traefik.http.services.wzap_minio_public.loadbalancer.server.port=9000
+        - traefik.http.services.wzap_minio_public.loadbalancer.passHostHeader=true
+        - traefik.http.routers.wzap_minio_public.service=wzap_minio_public
+
+        # Minio console
+        - traefik.http.routers.wzap_minio_console.rule=Host(`minio.wzap.gacont.com.br`)
+        - traefik.http.routers.wzap_minio_console.entrypoints=websecure
+        - traefik.http.routers.wzap_minio_console.tls.certresolver=letsencryptresolver
+        - traefik.http.services.wzap_minio_console.loadbalancer.server.port=9001
+        - traefik.http.services.wzap_minio_console.loadbalancer.passHostHeader=true
+        - traefik.http.routers.wzap_minio_console.service=wzap_minio_console
+
+  # ===========================================================================
+  # wzap API (Backend Go)
+  # ===========================================================================
+  wzap_api:
+    image: felipyfgs17/wzap:api-latest
+    networks:
+      - Gacont
+    environment:
+      # Database
+      - DATABASE_URL=postgres://wzap:wzap123@wzap_postgres:5432/wzap?sslmode=disable
+
+      # Server
+      - PORT=8080
+      - SERVER_HOST=0.0.0.0
+      - ADMIN_TOKEN=wzap_admin_token_change_me
+      - SERVER_URL=https://api.wzap.gacont.com.br
+
+      # Logging
+      - LOG_LEVEL=info
+      - ENVIRONMENT=production
+
+      # MinIO
+      - MINIO_ENDPOINT=s3.wzap.gacont.com.br
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=wzap@2024!Secure
+      - MINIO_BUCKET=wzap-media
+      - MINIO_USE_SSL=true
+      - MINIO_PUBLIC_URL=https://s3.wzap.gacont.com.br
+      - NATS_URL=nats://wzap_nats:4222
+
+      # Timezone
+      - TZ=America/Sao_Paulo
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=Gacont
+
+        - traefik.http.routers.wzap_api.rule=Host(`api.wzap.gacont.com.br`)
+        - traefik.http.routers.wzap_api.entrypoints=websecure
+        - traefik.http.routers.wzap_api.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.wzap_api.priority=1
+        - traefik.http.routers.wzap_api.service=wzap_api
+        - traefik.http.services.wzap_api.loadbalancer.server.port=8080
+        - traefik.http.services.wzap_api.loadbalancer.passhostheader=true
+
+        - traefik.http.middlewares.wzap_sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
+        - traefik.http.routers.wzap_api.middlewares=wzap_sslheader@docker
+
+  # ===========================================================================
+  # wzap Web (Frontend Nuxt)
+  # ===========================================================================
+  wzap_web:
+    image: felipyfgs17/wzap:web-latest
+    networks:
+      - Gacont
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      - NUXT_PUBLIC_API_URL=https://api.wzap.gacont.com.br
+      - TZ=America/Sao_Paulo
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=Gacont
+
+        - traefik.http.routers.wzap_web.rule=Host(`app.wzap.gacont.com.br`)
+        - traefik.http.routers.wzap_web.entrypoints=websecure
+        - traefik.http.routers.wzap_web.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.wzap_web.priority=1
+        - traefik.http.routers.wzap_web.service=wzap_web
+        - traefik.http.services.wzap_web.loadbalancer.server.port=3000
+        - traefik.http.services.wzap_web.loadbalancer.passhostheader=true
+
+        - traefik.http.middlewares.wzap_web_sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
+        - traefik.http.routers.wzap_web.middlewares=wzap_web_sslheader@docker
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  wzap_postgres_data:
+    driver: local
+  wzap_nats_data:
+    driver: local
+  wzap_minio_data:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  Gacont:
+    external: true
+    name: Gacont

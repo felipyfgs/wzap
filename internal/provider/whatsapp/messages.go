@@ -47,7 +47,7 @@ func (c *Client) SendText(ctx context.Context, sessionID, recipient, text string
 		p.Text.PreviewURL = so.PreviewURL
 	}
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send text message: %w", err)
 	}
@@ -59,7 +59,7 @@ func (c *Client) SendImage(ctx context.Context, sessionID, recipient string, med
 	p := c.buildMessagePayload(sessionID, recipient, "image", opts)
 	p.Image = media
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send image message: %w", err)
 	}
@@ -71,7 +71,7 @@ func (c *Client) SendVideo(ctx context.Context, sessionID, recipient string, med
 	p := c.buildMessagePayload(sessionID, recipient, "video", opts)
 	p.Video = media
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send video message: %w", err)
 	}
@@ -83,7 +83,7 @@ func (c *Client) SendAudio(ctx context.Context, sessionID, recipient string, med
 	p := c.buildMessagePayload(sessionID, recipient, "audio", opts)
 	p.Audio = media
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send audio message: %w", err)
 	}
@@ -95,7 +95,7 @@ func (c *Client) SendDocument(ctx context.Context, sessionID, recipient string, 
 	p := c.buildMessagePayload(sessionID, recipient, "document", opts)
 	p.Document = media
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send document message: %w", err)
 	}
@@ -107,7 +107,7 @@ func (c *Client) SendSticker(ctx context.Context, sessionID, recipient string, m
 	p := c.buildMessagePayload(sessionID, recipient, "sticker", opts)
 	p.Sticker = media
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send sticker message: %w", err)
 	}
@@ -124,7 +124,7 @@ func (c *Client) SendLocation(ctx context.Context, sessionID, recipient string, 
 		Address:   address,
 	}
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send location message: %w", err)
 	}
@@ -136,7 +136,7 @@ func (c *Client) SendContacts(ctx context.Context, sessionID, recipient string, 
 	p := c.buildMessagePayload(sessionID, recipient, "contacts", opts)
 	p.Contacts = contacts
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send contacts: %w", err)
 	}
@@ -151,7 +151,7 @@ func (c *Client) SendReaction(ctx context.Context, sessionID, recipient, message
 		Emoji:     emoji,
 	}
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send reaction: %w", err)
 	}
@@ -166,7 +166,7 @@ func (c *Client) MarkRead(ctx context.Context, sessionID, messageID string) erro
 		"message_id":        messageID,
 	}
 
-	_, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), payload)
+	_, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), payload)
 	if err != nil {
 		return fmt.Errorf("failed to mark as read: %w", err)
 	}
@@ -177,7 +177,7 @@ func (c *Client) SendTemplate(ctx context.Context, sessionID, recipient string, 
 	p := c.buildMessagePayload(sessionID, recipient, "template", opts)
 	p.Template = template
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send template message: %w", err)
 	}
@@ -189,7 +189,7 @@ func (c *Client) SendInteractive(ctx context.Context, sessionID, recipient strin
 	p := c.buildMessagePayload(sessionID, recipient, "interactive", opts)
 	p.Interactive = interactive
 
-	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), p)
+	resp, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), p)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send interactive message: %w", err)
 	}
@@ -206,15 +206,15 @@ func (c *Client) SendTypingIndicator(ctx context.Context, sessionID, recipient s
 		},
 	}
 
-	_, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(sessionID), payload)
+	_, err := c.doRequest(ctx, sessionID, "POST", c.messagesEndpoint(ctx, sessionID), payload)
 	if err != nil {
 		return fmt.Errorf("failed to send typing indicator: %w", err)
 	}
 	return nil
 }
 
-func (c *Client) messagesEndpoint(sessionID string) string {
-	cfg, _ := c.configReader.ReadConfig(context.Background(), sessionID)
+func (c *Client) messagesEndpoint(ctx context.Context, sessionID string) string {
+	cfg, _ := c.configReader.ReadConfig(ctx, sessionID)
 	if cfg == nil {
 		return "messages"
 	}

@@ -51,7 +51,7 @@ func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) 
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
 	}))
-	app.Use(middleware.RateLimit(120, time.Minute))
+	app.Use(middleware.RateLimit(300, time.Minute))
 
 	ctx, cancel := context.WithCancel(context.Background())
 

@@ -20,7 +20,7 @@ var _ = middleware.Validate
 func newMessageApp() *fiber.App {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 	app.Use(recover.New())
-	h := handler.NewMessageHandler(service.NewMessageService(nil, nil, nil))
+	h := handler.NewMessageHandler(service.NewMessageService(nil, nil, nil, nil))
 	sess := app.Group("/sessions/:sessionId/messages")
 	sess.Use(func(c *fiber.Ctx) error {
 		c.Locals("sessionID", c.Params("sessionId"))

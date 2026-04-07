@@ -86,9 +86,14 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 		}
 	}
 
+	contactPushName := pushName
+	if fromMe {
+		contactPushName = ""
+	}
+
 	_, convSpan := startSpan(ctx, "chatwoot.find_or_create_conversation",
 		spanAttrs(cfg.SessionID, "message", "inbound")...)
-	convID, err := s.findOrCreateConversation(ctx, cfg, chatJID, pushName)
+	convID, err := s.findOrCreateConversation(ctx, cfg, chatJID, contactPushName)
 	convSpan.End()
 	if err != nil {
 		logger.Warn().Err(err).Str("session", cfg.SessionID).Str("chatJID", chatJID).Msg("Failed to find or create Chatwoot conversation")

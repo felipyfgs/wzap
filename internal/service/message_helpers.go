@@ -85,5 +85,3 @@ func downloadURL(url string) ([]byte, error) {
 	}
 	return data, nil
 }
-
-var errCloudAPINotSupported = fmt.Errorf("operation not supported for cloud_api engine")

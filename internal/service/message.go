@@ -16,20 +16,22 @@ import (
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/metrics"
+	"wzap/internal/model"
 	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/wa"
 )
 
 type MessageService struct {
-	engine    *wa.Manager
-	provider  *cloudWA.Client
-	sessRepo  *repo.SessionRepository
-	persistFn wa.MessagePersistFunc
+	runtimeResolver *SessionRuntimeResolver
+	persistFn       wa.MessagePersistFunc
 }
 
-func NewMessageService(engine *wa.Manager, provider *cloudWA.Client, sessRepo *repo.SessionRepository) *MessageService {
-	return &MessageService{engine: engine, provider: provider, sessRepo: sessRepo}
+func NewMessageService(engine *wa.Manager, provider *cloudWA.Client, sessRepo *repo.SessionRepository, runtimeResolver *SessionRuntimeResolver) *MessageService {
+	if runtimeResolver == nil {
+		runtimeResolver = NewSessionRuntimeResolver(sessRepo, engine, provider)
+	}
+	return &MessageService{runtimeResolver: runtimeResolver}
 }
 
 func (s *MessageService) SetMessagePersist(fn wa.MessagePersistFunc) {
@@ -57,48 +59,41 @@ func (s *MessageService) persistSentCloud(sessionID, messageID, phone, msgType, 
 }
 
 func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto.SendTextReq) (string, error) {
-	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageText)
 	if err != nil {
 		return "", err
 	}
-	if session.Engine == "cloud_api" {
+
+	return runConnectedSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
 		opts := buildSendOptsCloud(req.CustomID, req.ReplyTo)
-		resp, err := s.provider.SendText(ctx, sessionID, req.Phone, req.Body, opts...)
+		resp, err := provider.SendText(ctx, session.ID, req.Phone, req.Body, opts...)
 		if err != nil {
 			return "", fmt.Errorf("failed to send text message via cloud api: %w", err)
 		}
 		return resp.MessageID, nil
-	}
+	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+		jid, err := parseJID(req.Phone)
+		if err != nil {
+			return "", err
+		}
 
-	client, err := s.engine.GetClient(sessionID)
-	if err != nil {
-		return "", err
-	}
-	if !client.IsConnected() {
-		return "", fmt.Errorf("client not connected")
-	}
+		msg := &waE2E.Message{
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+				Text:        proto.String(req.Body),
+				ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
+			},
+		}
 
-	jid, err := parseJID(req.Phone)
-	if err != nil {
-		return "", err
-	}
+		opts := buildSendOpts(req.CustomID)
+		resp, err := client.SendMessage(ctx, jid, msg, opts...)
+		if err != nil {
+			return "", fmt.Errorf("failed to send text message: %w", err)
+		}
 
-	msg := &waE2E.Message{
-		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-			Text:        proto.String(req.Body),
-			ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
-		},
-	}
+		s.persistSent(session.ID, resp.ID, jid.String(), "text", req.Body, "", client)
 
-	opts := buildSendOpts(req.CustomID)
-	resp, err := client.SendMessage(ctx, jid, msg, opts...)
-	if err != nil {
-		return "", fmt.Errorf("failed to send text message: %w", err)
-	}
-
-	s.persistSent(sessionID, resp.ID, jid.String(), "text", req.Body, "", client)
-
-	return resp.ID, nil
+		return resp.ID, nil
+	})
 }
 
 func (s *MessageService) SendImage(ctx context.Context, sessionID string, req dto.SendMediaReq) (string, error) {
@@ -118,147 +113,140 @@ func (s *MessageService) SendAudio(ctx context.Context, sessionID string, req dt
 }
 
 func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dto.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
-	session, err := s.sessRepo.FindByID(ctx, sessionID)
-	if err != nil {
-		return "", err
-	}
-	if session.Engine == "cloud_api" {
-		return s.sendMediaCloud(ctx, sessionID, req, mediaType)
-	}
-
-	client, err := s.engine.GetClient(sessionID)
-	if err != nil {
-		return "", err
-	}
-	if !client.IsConnected() {
-		return "", fmt.Errorf("client not connected")
-	}
-
-	jid, err := parseJID(req.Phone)
+	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageMedia)
 	if err != nil {
 		return "", err
 	}
 
-	var data []byte
-	if req.URL != "" {
-		data, err = downloadURL(req.URL)
+	return runConnectedSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
+		return s.sendMediaCloud(ctx, session.ID, provider, req, mediaType)
+	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
 		}
-	} else {
-		data, err = base64.StdEncoding.DecodeString(req.Base64)
-		if err != nil {
-			return "", fmt.Errorf("invalid base64: %w", err)
-		}
-	}
 
-	if mediaType == whatsmeow.MediaAudio && !isOGGOpus(req.MimeType) {
-		if checkFFmpegAvailable() {
-			convertedData, convErr := convertToOGG(data)
-			if convErr != nil {
-				logger.Warn().Err(convErr).Str("session", sessionID).Msg("Failed to convert audio to OGG, sending original")
-			} else {
-				data = convertedData
-				req.MimeType = "audio/ogg"
-				logger.Debug().Str("session", sessionID).Msg("Audio converted to OGG Opus format")
+		var data []byte
+		if req.URL != "" {
+			data, err = downloadURL(req.URL)
+			if err != nil {
+				return "", err
 			}
 		} else {
-			logger.Warn().Str("session", sessionID).Msg("ffmpeg not available, sending audio without conversion")
-		}
-	}
-
-	uploaded, err := client.Upload(ctx, data, mediaType)
-	if err != nil {
-		return "", fmt.Errorf("failed to upload media: %w", err)
-	}
-
-	var msg waE2E.Message
-
-	ci := buildContextInfo(req.ReplyTo, req.MentionedJIDs)
-
-	switch mediaType {
-	case whatsmeow.MediaImage:
-		msg.ImageMessage = &waE2E.ImageMessage{
-			Caption:       proto.String(req.Caption),
-			Mimetype:      proto.String(req.MimeType),
-			URL:           proto.String(uploaded.URL),
-			DirectPath:    proto.String(uploaded.DirectPath),
-			MediaKey:      uploaded.MediaKey,
-			FileEncSHA256: uploaded.FileEncSHA256,
-			FileSHA256:    uploaded.FileSHA256,
-			FileLength:    proto.Uint64(uint64(len(data))),
-			ContextInfo:   ci,
-		}
-	case whatsmeow.MediaVideo:
-		msg.VideoMessage = &waE2E.VideoMessage{
-			Caption:       proto.String(req.Caption),
-			Mimetype:      proto.String(req.MimeType),
-			URL:           proto.String(uploaded.URL),
-			DirectPath:    proto.String(uploaded.DirectPath),
-			MediaKey:      uploaded.MediaKey,
-			FileEncSHA256: uploaded.FileEncSHA256,
-			FileSHA256:    uploaded.FileSHA256,
-			FileLength:    proto.Uint64(uint64(len(data))),
-			ContextInfo:   ci,
-		}
-	case whatsmeow.MediaDocument:
-		if req.FileName == "" {
-			req.FileName = "document-" + uuid.NewString()
-			ext, _ := mime.ExtensionsByType(req.MimeType)
-			if len(ext) > 0 {
-				req.FileName += ext[0]
+			data, err = base64.StdEncoding.DecodeString(req.Base64)
+			if err != nil {
+				return "", fmt.Errorf("invalid base64: %w", err)
 			}
 		}
-		msg.DocumentMessage = &waE2E.DocumentMessage{
-			Title:         proto.String(req.FileName),
-			FileName:      proto.String(filepath.Base(req.FileName)),
-			Mimetype:      proto.String(req.MimeType),
-			URL:           proto.String(uploaded.URL),
-			DirectPath:    proto.String(uploaded.DirectPath),
-			MediaKey:      uploaded.MediaKey,
-			FileEncSHA256: uploaded.FileEncSHA256,
-			FileSHA256:    uploaded.FileSHA256,
-			FileLength:    proto.Uint64(uint64(len(data))),
-			ContextInfo:   ci,
+
+		if mediaType == whatsmeow.MediaAudio && !isOGGOpus(req.MimeType) {
+			if checkFFmpegAvailable() {
+				convertedData, convErr := convertToOGG(data)
+				if convErr != nil {
+					logger.Warn().Err(convErr).Str("session", session.ID).Msg("Failed to convert audio to OGG, sending original")
+				} else {
+					data = convertedData
+					req.MimeType = "audio/ogg"
+					logger.Debug().Str("session", session.ID).Msg("Audio converted to OGG Opus format")
+				}
+			} else {
+				logger.Warn().Str("session", session.ID).Msg("ffmpeg not available, sending audio without conversion")
+			}
 		}
-	case whatsmeow.MediaAudio:
-		msg.AudioMessage = &waE2E.AudioMessage{
-			Mimetype:      proto.String(req.MimeType),
-			PTT:           proto.Bool(true),
-			URL:           proto.String(uploaded.URL),
-			DirectPath:    proto.String(uploaded.DirectPath),
-			MediaKey:      uploaded.MediaKey,
-			FileEncSHA256: uploaded.FileEncSHA256,
-			FileSHA256:    uploaded.FileSHA256,
-			FileLength:    proto.Uint64(uint64(len(data))),
-			ContextInfo:   ci,
+
+		uploaded, err := client.Upload(ctx, data, mediaType)
+		if err != nil {
+			return "", fmt.Errorf("failed to upload media: %w", err)
 		}
-	}
 
-	var msgType string
-	switch mediaType {
-	case whatsmeow.MediaImage:
-		msgType = "image"
-	case whatsmeow.MediaVideo:
-		msgType = "video"
-	case whatsmeow.MediaDocument:
-		msgType = "document"
-	case whatsmeow.MediaAudio:
-		msgType = "audio"
-	}
+		var msg waE2E.Message
 
-	opts := buildSendOpts(req.CustomID)
-	resp, err := client.SendMessage(ctx, jid, &msg, opts...)
-	if err != nil {
-		return "", fmt.Errorf("failed to send media message: %w", err)
-	}
+		ci := buildContextInfo(req.ReplyTo, req.MentionedJIDs)
 
-	s.persistSent(sessionID, resp.ID, jid.String(), msgType, req.Caption, req.MimeType, client)
+		switch mediaType {
+		case whatsmeow.MediaImage:
+			msg.ImageMessage = &waE2E.ImageMessage{
+				Caption:       proto.String(req.Caption),
+				Mimetype:      proto.String(req.MimeType),
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(data))),
+				ContextInfo:   ci,
+			}
+		case whatsmeow.MediaVideo:
+			msg.VideoMessage = &waE2E.VideoMessage{
+				Caption:       proto.String(req.Caption),
+				Mimetype:      proto.String(req.MimeType),
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(data))),
+				ContextInfo:   ci,
+			}
+		case whatsmeow.MediaDocument:
+			if req.FileName == "" {
+				req.FileName = "document-" + uuid.NewString()
+				ext, _ := mime.ExtensionsByType(req.MimeType)
+				if len(ext) > 0 {
+					req.FileName += ext[0]
+				}
+			}
+			msg.DocumentMessage = &waE2E.DocumentMessage{
+				Title:         proto.String(req.FileName),
+				FileName:      proto.String(filepath.Base(req.FileName)),
+				Mimetype:      proto.String(req.MimeType),
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(data))),
+				ContextInfo:   ci,
+			}
+		case whatsmeow.MediaAudio:
+			msg.AudioMessage = &waE2E.AudioMessage{
+				Mimetype:      proto.String(req.MimeType),
+				PTT:           proto.Bool(true),
+				URL:           proto.String(uploaded.URL),
+				DirectPath:    proto.String(uploaded.DirectPath),
+				MediaKey:      uploaded.MediaKey,
+				FileEncSHA256: uploaded.FileEncSHA256,
+				FileSHA256:    uploaded.FileSHA256,
+				FileLength:    proto.Uint64(uint64(len(data))),
+				ContextInfo:   ci,
+			}
+		}
 
-	return resp.ID, nil
+		var msgType string
+		switch mediaType {
+		case whatsmeow.MediaImage:
+			msgType = "image"
+		case whatsmeow.MediaVideo:
+			msgType = "video"
+		case whatsmeow.MediaDocument:
+			msgType = "document"
+		case whatsmeow.MediaAudio:
+			msgType = "audio"
+		}
+
+		opts := buildSendOpts(req.CustomID)
+		resp, err := client.SendMessage(ctx, jid, &msg, opts...)
+		if err != nil {
+			return "", fmt.Errorf("failed to send media message: %w", err)
+		}
+
+		s.persistSent(session.ID, resp.ID, jid.String(), msgType, req.Caption, req.MimeType, client)
+
+		return resp.ID, nil
+	})
 }
 
-func (s *MessageService) sendMediaCloud(ctx context.Context, sessionID string, req dto.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
+func (s *MessageService) sendMediaCloud(ctx context.Context, sessionID string, provider *cloudWA.Client, req dto.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
 	var data []byte
 	var err error
 	if req.URL != "" {
@@ -281,7 +269,7 @@ func (s *MessageService) sendMediaCloud(ctx context.Context, sessionID string, r
 		}
 	}
 
-	uploadResp, err := s.provider.UploadMedia(ctx, sessionID, req.FileName, req.MimeType, data)
+	uploadResp, err := provider.UploadMedia(ctx, sessionID, req.FileName, req.MimeType, data)
 	if err != nil {
 		return "", fmt.Errorf("failed to upload media to cloud api: %w", err)
 	}
@@ -297,13 +285,13 @@ func (s *MessageService) sendMediaCloud(ctx context.Context, sessionID string, r
 	var resp *cloudWA.MessageResponse
 	switch mediaType {
 	case whatsmeow.MediaImage:
-		resp, err = s.provider.SendImage(ctx, sessionID, req.Phone, media, opts...)
+		resp, err = provider.SendImage(ctx, sessionID, req.Phone, media, opts...)
 	case whatsmeow.MediaVideo:
-		resp, err = s.provider.SendVideo(ctx, sessionID, req.Phone, media, opts...)
+		resp, err = provider.SendVideo(ctx, sessionID, req.Phone, media, opts...)
 	case whatsmeow.MediaDocument:
-		resp, err = s.provider.SendDocument(ctx, sessionID, req.Phone, media, opts...)
+		resp, err = provider.SendDocument(ctx, sessionID, req.Phone, media, opts...)
 	case whatsmeow.MediaAudio:
-		resp, err = s.provider.SendAudio(ctx, sessionID, req.Phone, media, opts...)
+		resp, err = provider.SendAudio(ctx, sessionID, req.Phone, media, opts...)
 	default:
 		return "", fmt.Errorf("unsupported media type for cloud api: %s", mediaType)
 	}
@@ -329,121 +317,107 @@ func (s *MessageService) sendMediaCloud(ctx context.Context, sessionID string, r
 }
 
 func (s *MessageService) SendContact(ctx context.Context, sessionID string, req dto.SendContactReq) (string, error) {
-	session, err := s.sessRepo.FindByID(ctx, sessionID)
-	if err != nil {
-		return "", err
-	}
-	if session.Engine == "cloud_api" {
-		return "", errCloudAPINotSupported
-	}
-
-	client, err := s.engine.GetClient(sessionID)
+	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageContact)
 	if err != nil {
 		return "", err
 	}
 
-	jid, err := parseJID(req.Phone)
-	if err != nil {
-		return "", err
-	}
+	return runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+		jid, err := parseJID(req.Phone)
+		if err != nil {
+			return "", err
+		}
 
-	msg := &waE2E.Message{
-		ContactMessage: &waE2E.ContactMessage{
-			DisplayName: proto.String(req.Name),
-			Vcard:       proto.String(req.Vcard),
-		},
-	}
+		msg := &waE2E.Message{
+			ContactMessage: &waE2E.ContactMessage{
+				DisplayName: proto.String(req.Name),
+				Vcard:       proto.String(req.Vcard),
+			},
+		}
 
-	resp, err := client.SendMessage(ctx, jid, msg)
-	if err != nil {
-		return "", fmt.Errorf("failed to send contact message: %w", err)
-	}
+		resp, err := client.SendMessage(ctx, jid, msg)
+		if err != nil {
+			return "", fmt.Errorf("failed to send contact message: %w", err)
+		}
 
-	s.persistSent(sessionID, resp.ID, jid.String(), "contact", req.Name, "", client)
+		s.persistSent(session.ID, resp.ID, jid.String(), "contact", req.Name, "", client)
 
-	return resp.ID, nil
+		return resp.ID, nil
+	})
 }
 
 func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req dto.SendLocationReq) (string, error) {
-	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageLocation)
 	if err != nil {
 		return "", err
 	}
-	if session.Engine == "cloud_api" {
-		resp, err := s.provider.SendLocation(ctx, sessionID, req.Phone, req.Latitude, req.Longitude, req.Name, req.Address)
+
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
+		resp, err := provider.SendLocation(ctx, session.ID, req.Phone, req.Latitude, req.Longitude, req.Name, req.Address)
 		if err != nil {
 			return "", fmt.Errorf("failed to send location via cloud api: %w", err)
 		}
 		return resp.MessageID, nil
-	}
+	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+		jid, err := parseJID(req.Phone)
+		if err != nil {
+			return "", err
+		}
 
-	client, err := s.engine.GetClient(sessionID)
-	if err != nil {
-		return "", err
-	}
+		msg := &waE2E.Message{
+			LocationMessage: &waE2E.LocationMessage{
+				DegreesLatitude:  proto.Float64(req.Latitude),
+				DegreesLongitude: proto.Float64(req.Longitude),
+				Name:             proto.String(req.Name),
+				Address:          proto.String(req.Address),
+			},
+		}
 
-	jid, err := parseJID(req.Phone)
-	if err != nil {
-		return "", err
-	}
+		resp, err := client.SendMessage(ctx, jid, msg)
+		if err != nil {
+			return "", fmt.Errorf("failed to send location message: %w", err)
+		}
 
-	msg := &waE2E.Message{
-		LocationMessage: &waE2E.LocationMessage{
-			DegreesLatitude:  proto.Float64(req.Latitude),
-			DegreesLongitude: proto.Float64(req.Longitude),
-			Name:             proto.String(req.Name),
-			Address:          proto.String(req.Address),
-		},
-	}
+		s.persistSent(session.ID, resp.ID, jid.String(), "location", req.Name, "", client)
 
-	resp, err := client.SendMessage(ctx, jid, msg)
-	if err != nil {
-		return "", fmt.Errorf("failed to send location message: %w", err)
-	}
-
-	s.persistSent(sessionID, resp.ID, jid.String(), "location", req.Name, "", client)
-
-	return resp.ID, nil
+		return resp.ID, nil
+	})
 }
 
 func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto.SendLinkReq) (string, error) {
-	session, err := s.sessRepo.FindByID(ctx, sessionID)
+	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageLink)
 	if err != nil {
 		return "", err
 	}
-	if session.Engine == "cloud_api" {
+
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
 		opts := []cloudWA.SendOption{cloudWA.WithPreviewURL(true)}
-		resp, err := s.provider.SendText(ctx, sessionID, req.Phone, req.URL, opts...)
+		resp, err := provider.SendText(ctx, session.ID, req.Phone, req.URL, opts...)
 		if err != nil {
 			return "", fmt.Errorf("failed to send link via cloud api: %w", err)
 		}
 		return resp.MessageID, nil
-	}
+	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+		jid, err := parseJID(req.Phone)
+		if err != nil {
+			return "", err
+		}
 
-	client, err := s.engine.GetClient(sessionID)
-	if err != nil {
-		return "", err
-	}
+		msg := &waE2E.Message{
+			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
+				Text:        proto.String(req.URL),
+				Title:       proto.String(req.Title),
+				Description: proto.String(req.Description),
+			},
+		}
 
-	jid, err := parseJID(req.Phone)
-	if err != nil {
-		return "", err
-	}
+		resp, err := client.SendMessage(ctx, jid, msg)
+		if err != nil {
+			return "", fmt.Errorf("failed to send link message: %w", err)
+		}
 
-	msg := &waE2E.Message{
-		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-			Text:        proto.String(req.URL),
-			Title:       proto.String(req.Title),
-			Description: proto.String(req.Description),
-		},
-	}
+		s.persistSent(session.ID, resp.ID, jid.String(), "text", req.URL, "", client)
 
-	resp, err := client.SendMessage(ctx, jid, msg)
-	if err != nil {
-		return "", fmt.Errorf("failed to send link message: %w", err)
-	}
-
-	s.persistSent(sessionID, resp.ID, jid.String(), "text", req.URL, "", client)
-
-	return resp.ID, nil
+		return resp.ID, nil
+	})
 }

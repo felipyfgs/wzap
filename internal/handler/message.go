@@ -18,6 +18,15 @@ func NewMessageHandler(msgSvc *service.MessageService) *MessageHandler {
 	return &MessageHandler{msgSvc: msgSvc}
 }
 
+func (h *MessageHandler) respondMessageError(c *fiber.Ctx, err error, sessionID, logMsg string) error {
+	if handleCapabilityError(c, err) {
+		return nil
+	}
+
+	logger.Warn().Err(err).Str("sessionID", sessionID).Msg(logMsg)
+	return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+}
+
 // SendText godoc
 // @Summary     Send a text message
 // @Description Sends a plain text message to a WhatsApp JID (user or group)
@@ -43,8 +52,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 
 	msgID, err := h.msgSvc.SendText(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Str("phone", req.Phone).Msg("failed to send text message")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send text message")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
@@ -134,8 +142,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 
 	msgID, err := sendFunc(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send media")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send media")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
@@ -165,8 +172,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.SendContact(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send contact")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send contact")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -195,8 +201,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.SendLocation(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send location")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send location")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -225,8 +230,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.SendPoll(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send poll")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send poll")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -255,8 +259,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.SendSticker(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send sticker")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send sticker")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -285,8 +288,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.SendLink(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send link")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send link")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -315,8 +317,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.EditMessage(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to edit message")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to edit message")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -345,8 +346,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.DeleteMessage(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to delete message")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to delete message")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -375,8 +375,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 	}
 	msgID, err := h.msgSvc.ReactMessage(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to react to message")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to react to message")
 	}
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
 }
@@ -404,8 +403,7 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.msgSvc.MarkRead(c.Context(), id, req); err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to mark read")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to mark read")
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -433,8 +431,7 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 		return err
 	}
 	if err := h.msgSvc.SetPresence(c.Context(), id, req); err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to set presence")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to set presence")
 	}
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -464,8 +461,7 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 
 	msgID, err := h.msgSvc.SendButton(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send button")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send button")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
@@ -496,8 +492,7 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 
 	msgID, err := h.msgSvc.SendList(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send list")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send list")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
@@ -528,8 +523,7 @@ func (h *MessageHandler) SendStatusText(c *fiber.Ctx) error {
 
 	msgID, err := h.msgSvc.SendStatusText(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send status text")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send status text")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
@@ -590,8 +584,7 @@ func (h *MessageHandler) sendStatusMedia(c *fiber.Ctx, mediaType string) error {
 	}
 
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to send status media")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to send status media")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
@@ -622,8 +615,7 @@ func (h *MessageHandler) ForwardMessage(c *fiber.Ctx) error {
 
 	msgID, err := h.msgSvc.ForwardMessage(c.Context(), id, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to forward message")
-		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
+		return h.respondMessageError(c, err, id, "failed to forward message")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))

@@ -46,12 +46,15 @@ func (s *Server) SetupRoutes() error {
 	messageRepo := repo.NewMessageRepository(s.db.Pool)
 
 	// Initialize Cloud API Provider
-	configReader := service.NewSessionConfigReader(sessionRepo)
+	runtimeResolver := service.NewSessionRuntimeResolver(sessionRepo, engine, nil)
+	configReader := service.NewSessionConfigReader(runtimeResolver)
 	cloudProvider := cloudWA.NewClient(&http.Client{Timeout: s.Config.HTTPTimeout}, configReader)
+	runtimeResolver.SetProvider(cloudProvider)
 
 	// Initialize Services
-	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, cloudProvider)
-	messageSvc := service.NewMessageService(engine, cloudProvider, sessionRepo)
+	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, cloudProvider, runtimeResolver)
+	lifecycleSvc := service.NewSessionLifecycleOrchestrator(runtimeResolver, engine, sessionSvc)
+	messageSvc := service.NewMessageService(engine, cloudProvider, sessionRepo, runtimeResolver)
 	contactSvc := service.NewContactService(engine)
 	groupSvc := service.NewGroupService(engine)
 	webhookSvc := service.NewWebhookService(webhookRepo)
@@ -60,7 +63,7 @@ func (s *Server) SetupRoutes() error {
 	communitySvc := service.NewCommunityService(engine)
 	chatSvc := service.NewChatService(engine)
 	mediaPool := s.async.AddPool("media", 4, 50)
-	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo, mediaPool)
+	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo, mediaPool, runtimeResolver)
 	historyPool := s.async.AddPool("history", 2, 100)
 	historySvc := service.NewHistoryService(messageRepo, historyPool)
 
@@ -91,7 +94,7 @@ func (s *Server) SetupRoutes() error {
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)
-	sessionHandler := handler.NewSessionHandler(sessionSvc, engine, sessionRepo, chatwootRepo)
+	sessionHandler := handler.NewSessionHandler(sessionSvc, lifecycleSvc, chatwootRepo)
 	messageHandler := handler.NewMessageHandler(messageSvc)
 	contactHandler := handler.NewContactHandler(contactSvc)
 	groupHandler := handler.NewGroupHandler(groupSvc)

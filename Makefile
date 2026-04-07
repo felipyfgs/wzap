@@ -1,6 +1,6 @@
 # wzap Makefile
 
-.PHONY: help dev build run tidy up down down-clean clean install-tools docs web-install web-dev web-build dev-all prod logs chatwoot-up chatwoot-down chatwoot-logs
+.PHONY: help dev build run tidy up down down-clean clean install-tools docs web-install web-dev web-build dev-all prod logs chatwoot-up chatwoot-down chatwoot-logs build-api build-web build-all deploy deploy-pull deploy-status
 
 # Variables
 APP_NAME=wzap
@@ -71,3 +71,21 @@ chatwoot-down: ## Stop Chatwoot stack
 
 chatwoot-logs: ## Tail Chatwoot logs
 	docker compose -f docker/chatwoot/docker-compose.yml logs -f rails
+
+build-api: ## Build and push API image only
+	./scripts/build.sh api
+
+build-web: ## Build and push Web image only
+	./scripts/build.sh web
+
+build-all: ## Build and push API + Web images
+	./scripts/build.sh all
+
+deploy: ## Deploy stack to Docker Swarm
+	./scripts/deploy.sh
+
+deploy-pull: ## Pull latest images then deploy to Docker Swarm
+	./scripts/deploy.sh --pull
+
+deploy-status: ## Show current Swarm stack status
+	./scripts/deploy.sh --status

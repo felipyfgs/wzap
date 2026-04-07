@@ -69,7 +69,8 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 	} else {
 		contactID = contacts[0].ID
 		logger.Debug().Int("contactID", contactID).Str("phone", phone).Msg("[CW] contact found")
-		if pushName != "" && contacts[0].Name != pushName {
+		existingName := contacts[0].Name
+		if pushName != "" && (existingName == "" || existingName == phone) {
 			_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Name: pushName})
 		}
 	}

@@ -1,0 +1,258 @@
+# =============================================================================
+# Docker Swarm Stack - wzap Production Deployment
+# =============================================================================
+# Usage:
+#   docker swarm init
+#   docker stack deploy -c docker-compose.swarm.yml wzap
+#
+# Images: felipyfgs17/wzap:api-latest & felipyfgs17/wzap:web-latest
+# =============================================================================
+
+version: "3.8"
+
+services:
+  # ===========================================================================
+  # wzap API (Backend Go)
+  # ===========================================================================
+  api:
+    image: felipyfgs17/wzap:api-latest
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.wzap-api.rule=Host(`api.wzap.local`) || PathPrefix(`/api`)"
+        - "traefik.http.services.wzap-api.loadbalancer.server.port=8080"
+    environment:
+      - DATABASE_URL=postgres://wzap:${POSTGRES_PASSWORD}@postgres:5432/wzap?sslmode=disable
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=${MINIO_BUCKET:-wzap-media}
+      - NATS_URL=nats://nats:4222
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - SERVER_URL=${SERVER_URL:-http://localhost:8080}
+      - LOG_LEVEL=info
+      - ENVIRONMENT=production
+      - PORT=8080
+      - SERVER_HOST=0.0.0.0
+    networks:
+      - wzap_network
+      - traefik_public
+    depends_on:
+      - postgres
+      - minio
+      - nats
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  # ===========================================================================
+  # wzap Web (Frontend Nuxt.js)
+  # ===========================================================================
+  web:
+    image: felipyfgs17/wzap:web-latest
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.wzap-web.rule=Host(`wzap.local`) || Host(`app.wzap.local`)"
+        - "traefik.http.services.wzap-web.loadbalancer.server.port=3000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+    networks:
+      - wzap_network
+      - traefik_public
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  # ===========================================================================
+  # PostgreSQL (Primary)
+  # ===========================================================================
+  postgres:
+    image: postgres:16-alpine
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    environment:
+      - POSTGRES_DB=wzap
+      - POSTGRES_USER=wzap
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - wzap_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wzap -d wzap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # MinIO (Object Storage)
+  # ===========================================================================
+  minio:
+    image: quay.io/minio/minio:RELEASE.2024-01-13T07-53-03Z-cpuv1
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - wzap_network
+      - traefik_public
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/9000' 2>/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.wzap-minio.rule=Host(`minio.wzap.local`)"
+      - "traefik.http.services.wzap-minio.loadbalancer.server.port=9000"
+      - "traefik.http.routers.wzap-minio-console.rule=Host(`minio-console.wzap.local`)"
+      - "traefik.http.services.wzap-minio-console.loadbalancer.server.port=9001"
+
+  # ===========================================================================
+  # NATS JetStream (Message Queue)
+  # ===========================================================================
+  nats:
+    image: nats:2-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+    command: "-js -m 8222"
+    networks:
+      - wzap_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # Redis (Cache - Opcional)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 128M
+    networks:
+      - wzap_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  wzap_network:
+    driver: overlay
+    attachable: true
+    ipam:
+      config:
+        - subnet: 10.0.10.0/24
+  traefik_public:
+    external: true
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres_data:
+    driver: local
+  minio_data:
+    driver: local

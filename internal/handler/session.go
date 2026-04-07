@@ -2,33 +2,37 @@ package handler
 
 import (
 	"encoding/base64"
-	"errors"
+	"context"
 
 	"wzap/internal/dto"
 	"wzap/internal/integrations/chatwoot"
 	"wzap/internal/logger"
-	"wzap/internal/metrics"
-	"wzap/internal/repo"
 	"wzap/internal/service"
-	"wzap/internal/wa"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/skip2/go-qrcode"
-	"go.mau.fi/whatsmeow"
 )
+
+type sessionLifecycleService interface {
+	Connect(ctx context.Context, sessionID string) (*service.SessionConnectResult, error)
+	Disconnect(ctx context.Context, sessionID string) (*service.SessionDisconnectResult, error)
+	QR(ctx context.Context, sessionID string) (*service.SessionQRResult, error)
+	Pair(ctx context.Context, sessionID, phone string) (*service.SessionPairResult, error)
+	Logout(ctx context.Context, sessionID string) (*service.SessionLogoutResult, error)
+	Reconnect(ctx context.Context, sessionID string) (*service.SessionReconnectResult, error)
+	Restart(ctx context.Context, sessionID string) (*service.SessionRestartResult, error)
+}
 
 type SessionHandler struct {
 	sessionSvc   *service.SessionService
-	engine       *wa.Manager
-	sessRepo     *repo.SessionRepository
+	lifecycleSvc sessionLifecycleService
 	chatwootRepo *chatwoot.Repository
 }
 
-func NewSessionHandler(sessionSvc *service.SessionService, engine *wa.Manager, sessRepo *repo.SessionRepository, chatwootRepo *chatwoot.Repository) *SessionHandler {
+func NewSessionHandler(sessionSvc *service.SessionService, lifecycleSvc sessionLifecycleService, chatwootRepo *chatwoot.Repository) *SessionHandler {
 	return &SessionHandler{
 		sessionSvc:   sessionSvc,
-		engine:       engine,
-		sessRepo:     sessRepo,
+		lifecycleSvc: lifecycleSvc,
 		chatwootRepo: chatwootRepo,
 	}
 }
@@ -175,6 +179,9 @@ func (h *SessionHandler) Status(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 	status, err := h.sessionSvc.Status(c.Context(), id)
 	if err != nil {
+		if handleCapabilityError(c, err) {
+			return nil
+		}
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}
 
@@ -195,36 +202,16 @@ func (h *SessionHandler) Status(c *fiber.Ctx) error {
 func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 
-	session, err := h.sessRepo.FindByID(c.Context(), id)
+	result, err := h.lifecycleSvc.Connect(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
-	}
-
-	if session.Engine == "cloud_api" {
-		return c.JSON(dto.SuccessResp(dto.ConnectResp{Status: "CONNECTED"}))
-	}
-
-	client, qrChan, err := h.engine.Connect(c.Context(), id)
-	if err != nil {
-		if errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
-			return c.Status(fiber.StatusConflict).JSON(dto.ErrorResp("Conflict", "A QR code connection is already pending for this session"))
+		if handleLifecycleError(c, err) {
+			return nil
 		}
 		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to connect session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Connection Error", "internal server error"))
 	}
 
-	status := "CONNECTED"
-	if qrChan != nil {
-		status = "PAIRING"
-	} else if client != nil && !client.IsConnected() {
-		status = "CONNECTING"
-	}
-
-	if status == "CONNECTED" {
-		metrics.SessionsConnected.Inc()
-	}
-
-	return c.JSON(dto.SuccessResp(dto.ConnectResp{Status: status}))
+	return c.JSON(dto.SuccessResp(dto.ConnectResp{Status: result.Status}))
 }
 
 // Disconnect godoc
@@ -240,21 +227,14 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 
-	session, err := h.sessRepo.FindByID(c.Context(), id)
+	_, err := h.lifecycleSvc.Disconnect(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
-	}
-
-	if session.Engine == "cloud_api" {
-		return c.JSON(dto.SuccessResp(nil))
-	}
-
-	if err := h.engine.Disconnect(id); err != nil {
+		if handleLifecycleError(c, err) {
+			return nil
+		}
 		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to disconnect session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", "internal server error"))
 	}
-
-	metrics.SessionsConnected.Dec()
 
 	return c.JSON(dto.SuccessResp(nil))
 }
@@ -272,31 +252,21 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 func (h *SessionHandler) QR(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 
-	session, err := h.sessRepo.FindByID(c.Context(), id)
+	result, err := h.lifecycleSvc.QR(c.Context(), id)
 	if err != nil {
+		if handleLifecycleError(c, err) {
+			return nil
+		}
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}
 
-	if session.Engine == "cloud_api" {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Not Supported", "QR not supported for cloud_api engine"))
-	}
-
-	qrCode, err := h.engine.GetQRCode(c.Context(), id)
-	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
-	}
-
-	if qrCode == "" {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "No QR code available. Call connect first, then poll this endpoint."))
-	}
-
-	imageBytes, imgErr := qrcode.Encode(qrCode, qrcode.Medium, 256)
+	imageBytes, imgErr := qrcode.Encode(result.QRCode, qrcode.Medium, 256)
 	qrBase64 := ""
 	if imgErr == nil {
 		qrBase64 = "data:image/png;base64," + base64.StdEncoding.EncodeToString(imageBytes)
 	}
 
-	return c.JSON(dto.SuccessResp(dto.QRResp{QRCode: qrCode, Image: qrBase64}))
+	return c.JSON(dto.SuccessResp(dto.QRResp{QRCode: result.QRCode, Image: qrBase64}))
 }
 
 // Pair godoc
@@ -320,22 +290,16 @@ func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 		return err
 	}
 
-	session, err := h.sessRepo.FindByID(c.Context(), id)
+	result, err := h.lifecycleSvc.Pair(c.Context(), id, req.Phone)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
-	}
-
-	if session.Engine == "cloud_api" {
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Not Supported", "Pairing not supported for cloud_api engine"))
-	}
-
-	code, err := h.engine.PairPhone(c.Context(), id, req.Phone)
-	if err != nil {
+		if handleLifecycleError(c, err) {
+			return nil
+		}
 		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to pair phone")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Pair Error", "internal server error"))
 	}
 
-	return c.JSON(dto.SuccessResp(dto.PairPhoneResp{PairingCode: code}))
+	return c.JSON(dto.SuccessResp(dto.PairPhoneResp{PairingCode: result.PairingCode}))
 }
 
 // Logout godoc
@@ -351,16 +315,11 @@ func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 func (h *SessionHandler) Logout(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 
-	session, err := h.sessRepo.FindByID(c.Context(), id)
+	_, err := h.lifecycleSvc.Logout(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
-	}
-
-	if session.Engine == "cloud_api" {
-		return c.JSON(dto.SuccessResp(nil))
-	}
-
-	if err := h.engine.Logout(c.Context(), id); err != nil {
+		if handleLifecycleError(c, err) {
+			return nil
+		}
 		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to logout session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Logout Error", "internal server error"))
 	}
@@ -382,6 +341,9 @@ func (h *SessionHandler) Profile(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 	profile, err := h.sessionSvc.Profile(c.Context(), id)
 	if err != nil {
+		if handleCapabilityError(c, err) {
+			return nil
+		}
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}
 	return c.JSON(dto.SuccessResp(profile))
@@ -400,16 +362,11 @@ func (h *SessionHandler) Profile(c *fiber.Ctx) error {
 func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 
-	session, err := h.sessRepo.FindByID(c.Context(), id)
+	_, err := h.lifecycleSvc.Reconnect(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
-	}
-
-	if session.Engine == "cloud_api" {
-		return c.JSON(dto.SuccessResp(nil))
-	}
-
-	if err := h.engine.Reconnect(c.Context(), id); err != nil {
+		if handleLifecycleError(c, err) {
+			return nil
+		}
 		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to reconnect session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Reconnect Error", "internal server error"))
 	}
@@ -430,24 +387,14 @@ func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
 func (h *SessionHandler) Restart(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 
-	session, err := h.sessRepo.FindByID(c.Context(), id)
+	result, err := h.lifecycleSvc.Restart(c.Context(), id)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
-	}
-
-	if session.Engine == "cloud_api" {
-		resp, err := h.sessionSvc.Get(c.Context(), id)
-		if err != nil {
-			return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
+		if handleLifecycleError(c, err) {
+			return nil
 		}
-		return c.JSON(dto.SuccessResp(resp))
-	}
-
-	resp, err := h.sessionSvc.Restart(c.Context(), id)
-	if err != nil {
 		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to restart session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Restart Error", "internal server error"))
 	}
 
-	return c.JSON(dto.SuccessResp(resp))
+	return c.JSON(dto.SuccessResp(result.Session))
 }

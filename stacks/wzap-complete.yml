@@ -117,7 +117,7 @@ services:
       # Database
       - DATABASE_URL=postgres://wzap:wzap123@wzap_postgres:5432/wzap?sslmode=disable
 
-      # Server (Go API on port 8080)
+      # Server
       - PORT=8080
       - SERVER_HOST=0.0.0.0
       - ADMIN_TOKEN=wzap_admin_token_change_me
@@ -134,11 +134,6 @@ services:
       - MINIO_BUCKET=wzap-media
       - MINIO_USE_SSL=true
       - NATS_URL=nats://wzap_nats:4222
-
-      # Web (Nuxt on port 3000, proxies /api to Go internally)
-      - HOST=0.0.0.0
-      - NUXT_PORT=3000
-      - NUXT_API_URL=http://localhost:8080
 
       # Timezone
       - TZ=America/Sao_Paulo
@@ -168,26 +163,18 @@ services:
         - traefik.enable=true
         - traefik.docker.network=Gacont
 
-        # API router (api.wzap.gacont.com.br → port 8080)
-        - traefik.http.routers.wzap_api.rule=Host(`api.wzap.gacont.com.br`)
-        - traefik.http.routers.wzap_api.entrypoints=websecure
-        - traefik.http.routers.wzap_api.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.wzap_api.service=wzap_api
-        - traefik.http.services.wzap_api.loadbalancer.server.port=8080
-        - traefik.http.services.wzap_api.loadbalancer.passhostheader=true
-
-        # Web router (app.wzap.gacont.com.br → port 3000)
-        - traefik.http.routers.wzap_web.rule=Host(`app.wzap.gacont.com.br`)
-        - traefik.http.routers.wzap_web.entrypoints=websecure
-        - traefik.http.routers.wzap_web.tls.certresolver=letsencryptresolver
-        - traefik.http.routers.wzap_web.service=wzap_web
-        - traefik.http.services.wzap_web.loadbalancer.server.port=3000
-        - traefik.http.services.wzap_web.loadbalancer.passhostheader=true
+        # Single router (api.wzap.gacont.com.br → port 8080)
+        # API lives at /, Admin SPA at /admin
+        - traefik.http.routers.wzap.rule=Host(`api.wzap.gacont.com.br`)
+        - traefik.http.routers.wzap.entrypoints=websecure
+        - traefik.http.routers.wzap.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.wzap.service=wzap
+        - traefik.http.services.wzap.loadbalancer.server.port=8080
+        - traefik.http.services.wzap.loadbalancer.passhostheader=true
 
         # SSL headers
         - traefik.http.middlewares.wzap_sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
-        - traefik.http.routers.wzap_api.middlewares=wzap_sslheader@docker
-        - traefik.http.routers.wzap_web.middlewares=wzap_sslheader@docker
+        - traefik.http.routers.wzap.middlewares=wzap_sslheader@docker
 
 # =============================================================================
 # Volumes

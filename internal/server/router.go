@@ -270,9 +270,7 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/integrations/chatwoot/import", chatwootHandler.ImportHistory)
 
 	// 13. Admin SPA (static files from Nuxt build)
-	if dir := s.Config.WebDir; dir != "" {
-		s.mountSPA("/admin", dir)
-	}
+	s.mountSPA("/admin", "/app/web")
 
 	return nil
 }

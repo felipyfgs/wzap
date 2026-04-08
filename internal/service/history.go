@@ -2,21 +2,42 @@ package service
 
 import (
 	"context"
+	"math"
+	"strings"
 	"time"
+
+	waE2E "go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/proto/waHistorySync"
+	"go.mau.fi/whatsmeow/proto/waWeb"
+	"go.mau.fi/whatsmeow/types/events"
 
 	"wzap/internal/async"
 	"wzap/internal/logger"
 	"wzap/internal/model"
-	"wzap/internal/repo"
 )
 
-type HistoryService struct {
-	repo *repo.MessageRepository
-	pool *async.Pool
+type messageHistoryRepository interface {
+	Save(ctx context.Context, msg *model.Message) error
 }
 
-func NewHistoryService(repo *repo.MessageRepository, pool *async.Pool) *HistoryService {
-	return &HistoryService{repo: repo, pool: pool}
+type chatHistoryRepository interface {
+	Upsert(ctx context.Context, chat *model.ChatUpsert) error
+}
+
+type jidAliasMaps struct {
+	pnToLID       map[string]string
+	lidToPN       map[string]string
+	pushnameByJID map[string]string
+}
+
+type HistoryService struct {
+	messageRepo messageHistoryRepository
+	chatRepo    chatHistoryRepository
+	pool        *async.Pool
+}
+
+func NewHistoryService(messageRepo messageHistoryRepository, chatRepo chatHistoryRepository, pool *async.Pool) *HistoryService {
+	return &HistoryService{messageRepo: messageRepo, chatRepo: chatRepo, pool: pool}
 }
 
 func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{}) {
@@ -30,12 +51,385 @@ func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID
 			MsgType:   msgType,
 			Body:      body,
 			MediaType: mediaType,
+			Source:    "live",
 			Raw:       raw,
 			Timestamp: time.Unix(timestamp, 0),
 		}
 
-		if err := s.repo.Save(ctx, msg); err != nil {
+		if err := s.messageRepo.Save(ctx, msg); err != nil {
 			logger.Warn().Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Failed to persist message")
 		}
+
+		if s.chatRepo == nil || chatJID == "" {
+			return
+		}
+
+		chat := buildLiveChatUpsert(sessionID, chatJID, messageID, timestamp)
+		if err := s.chatRepo.Upsert(ctx, chat); err != nil {
+			logger.Warn().Err(err).Str("session", sessionID).Str("chat", chatJID).Msg("Failed to persist canonical chat from live message")
+		}
 	})
+}
+
+func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.HistorySync) {
+	if syncEvent == nil || syncEvent.Data == nil {
+		return
+	}
+
+	_ = s.pool.Submit(func(ctx context.Context) {
+		aliases := buildJIDAliasMaps(syncEvent.Data)
+		syncType := syncEvent.Data.GetSyncType().String()
+		chunkOrder := int(syncEvent.Data.GetChunkOrder())
+
+		for _, conversation := range syncEvent.Data.GetConversations() {
+			chat := buildHistoryChatUpsert(sessionID, conversation, aliases, syncType, chunkOrder)
+			if chat != nil && s.chatRepo != nil {
+				if err := s.chatRepo.Upsert(ctx, chat); err != nil {
+					logger.Warn().Err(err).Str("session", sessionID).Str("chat", chat.ChatJID).Msg("Failed to persist canonical chat from history sync")
+				}
+			}
+
+			if s.messageRepo == nil {
+				continue
+			}
+
+			for _, historyMessage := range conversation.GetMessages() {
+				msg := buildHistoryMessage(sessionID, conversation, historyMessage, aliases, syncType, chunkOrder)
+				if msg == nil {
+					continue
+				}
+				if err := s.messageRepo.Save(ctx, msg); err != nil {
+					logger.Warn().Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("Failed to persist history sync message")
+				}
+			}
+		}
+	})
+}
+
+func buildLiveChatUpsert(sessionID, chatJID, lastMessageID string, timestamp int64) *model.ChatUpsert {
+	chatType := inferChatType(chatJID)
+	lastMessageAt := time.Unix(timestamp, 0)
+
+	return &model.ChatUpsert{
+		SessionID:     sessionID,
+		ChatJID:       chatJID,
+		ChatType:      &chatType,
+		LastMessageID: stringPtr(lastMessageID),
+		LastMessageAt: &lastMessageAt,
+		Source:        "live",
+	}
+}
+
+func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conversation, aliases jidAliasMaps, syncType string, chunkOrder int) *model.ChatUpsert {
+	if conversation == nil {
+		return nil
+	}
+
+	chatJID := resolveConversationChatJID(conversation, aliases)
+	if chatJID == "" {
+		return nil
+	}
+
+	name := firstNonEmpty(conversation.GetName(), aliases.pushnameByJID[chatJID], aliases.pushnameByJID[conversation.GetPnJID()], aliases.pushnameByJID[conversation.GetLidJID()])
+	displayName := firstNonEmpty(conversation.GetDisplayName(), name)
+	chatType := inferChatType(chatJID)
+	archived := conversation.GetArchived()
+	pinned := int(conversation.GetPinned())
+	readOnly := conversation.GetReadOnly()
+	markedAsUnread := conversation.GetMarkedAsUnread()
+	unreadCount := int(conversation.GetUnreadCount())
+	unreadMentionCount := int(conversation.GetUnreadMentionCount())
+	pnJID, lidJID := resolveConversationAliases(conversation, aliases)
+	username := conversation.GetUsername()
+	accountLID := conversation.GetAccountLid()
+	lastMessageID := conversationLastMessageID(conversation)
+	lastMessageAt := unixTimePtr(uint64ToInt64(conversation.GetLastMsgTimestamp()))
+	conversationTimestamp := unixTimePtr(uint64ToInt64(conversation.GetConversationTimestamp()))
+	raw := map[string]interface{}{
+		"id":                   conversation.GetID(),
+		"newJID":               conversation.GetNewJID(),
+		"oldJID":               conversation.GetOldJID(),
+		"muteEndTime":          conversation.GetMuteEndTime(),
+		"createdAt":            conversation.GetCreatedAt(),
+		"createdBy":            conversation.GetCreatedBy(),
+		"endOfHistoryTransfer": conversation.GetEndOfHistoryTransfer(),
+		"ephemeralExpiration":  conversation.GetEphemeralExpiration(),
+	}
+
+	return &model.ChatUpsert{
+		SessionID:             sessionID,
+		ChatJID:               chatJID,
+		Name:                  stringPtr(name),
+		DisplayName:           stringPtr(displayName),
+		ChatType:              &chatType,
+		Archived:              &archived,
+		Pinned:                &pinned,
+		ReadOnly:              &readOnly,
+		MarkedAsUnread:        &markedAsUnread,
+		UnreadCount:           &unreadCount,
+		UnreadMentionCount:    &unreadMentionCount,
+		LastMessageID:         stringPtr(lastMessageID),
+		LastMessageAt:         lastMessageAt,
+		ConversationTimestamp: conversationTimestamp,
+		PnJID:                 stringPtr(pnJID),
+		LidJID:                stringPtr(lidJID),
+		Username:              stringPtr(username),
+		AccountLID:            stringPtr(accountLID),
+		Source:                "history_sync",
+		SourceSyncType:        stringPtr(syncType),
+		HistoryChunkOrder:     intPtr(chunkOrder),
+		Raw:                   raw,
+	}
+}
+
+func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversation, historyMessage *waHistorySync.HistorySyncMsg, aliases jidAliasMaps, syncType string, chunkOrder int) *model.Message {
+	if historyMessage == nil {
+		return nil
+	}
+
+	info := historyMessage.GetMessage()
+	if info == nil || info.GetKey() == nil {
+		return nil
+	}
+
+	key := info.GetKey()
+	messageID := key.GetID()
+	if messageID == "" {
+		return nil
+	}
+
+	chatJID := firstNonEmpty(resolveMessageChatJID(info, conversation, aliases), resolveConversationChatJID(conversation, aliases))
+	if chatJID == "" {
+		return nil
+	}
+
+	senderJID := resolveMessageSenderJID(info, chatJID)
+	msgType, body, mediaType := extractMessageContent(info.GetMessage())
+	timestamp := int64(info.GetMessageTimestamp())
+	if timestamp == 0 {
+		if conversation != nil {
+			timestamp = uint64ToInt64(conversation.GetConversationTimestamp())
+		}
+		if timestamp == 0 {
+			timestamp = time.Now().Unix()
+		}
+	}
+
+	var messageOrder *int64
+	if order := int64(historyMessage.GetMsgOrderID()); order > 0 {
+		messageOrder = &order
+	}
+
+	return &model.Message{
+		ID:                  messageID,
+		SessionID:           sessionID,
+		ChatJID:             chatJID,
+		SenderJID:           senderJID,
+		FromMe:              key.GetFromMe(),
+		MsgType:             msgType,
+		Body:                body,
+		MediaType:           mediaType,
+		Source:              "history_sync",
+		SourceSyncType:      syncType,
+		HistoryChunkOrder:   intPtr(chunkOrder),
+		HistoryMessageOrder: messageOrder,
+		Raw:                 info,
+		Timestamp:           time.Unix(timestamp, 0),
+	}
+}
+
+func buildJIDAliasMaps(history *waHistorySync.HistorySync) jidAliasMaps {
+	aliases := jidAliasMaps{
+		pnToLID:       make(map[string]string),
+		lidToPN:       make(map[string]string),
+		pushnameByJID: make(map[string]string),
+	}
+
+	if history == nil {
+		return aliases
+	}
+
+	for _, mapping := range history.GetPhoneNumberToLidMappings() {
+		pn := mapping.GetPnJID()
+		lid := mapping.GetLidJID()
+		if pn != "" && lid != "" {
+			aliases.pnToLID[pn] = lid
+			aliases.lidToPN[lid] = pn
+		}
+	}
+
+	for _, pushname := range history.GetPushnames() {
+		id := pushname.GetID()
+		name := pushname.GetPushname()
+		if id != "" && name != "" {
+			aliases.pushnameByJID[id] = name
+		}
+	}
+
+	return aliases
+}
+
+func resolveConversationChatJID(conversation *waHistorySync.Conversation, aliases jidAliasMaps) string {
+	if conversation == nil {
+		return ""
+	}
+
+	chatJID := firstNonEmpty(conversation.GetNewJID(), conversation.GetID(), conversation.GetPnJID(), conversation.GetLidJID())
+	if chatJID == "" {
+		return ""
+	}
+	if resolved, ok := aliases.lidToPN[chatJID]; ok {
+		return firstNonEmpty(conversation.GetPnJID(), resolved, chatJID)
+	}
+	return chatJID
+}
+
+func resolveConversationAliases(conversation *waHistorySync.Conversation, aliases jidAliasMaps) (string, string) {
+	if conversation == nil {
+		return "", ""
+	}
+
+	pnJID := conversation.GetPnJID()
+	lidJID := conversation.GetLidJID()
+
+	if pnJID == "" && lidJID != "" {
+		pnJID = aliases.lidToPN[lidJID]
+	}
+	if lidJID == "" && pnJID != "" {
+		lidJID = aliases.pnToLID[pnJID]
+	}
+
+	return pnJID, lidJID
+}
+
+func resolveMessageChatJID(info *waWeb.WebMessageInfo, conversation *waHistorySync.Conversation, aliases jidAliasMaps) string {
+	if info == nil || info.GetKey() == nil {
+		return resolveConversationChatJID(conversation, aliases)
+	}
+
+	chatJID := info.GetKey().GetRemoteJID()
+	if chatJID == "" {
+		return resolveConversationChatJID(conversation, aliases)
+	}
+	if resolved, ok := aliases.lidToPN[chatJID]; ok {
+		return resolved
+	}
+	return chatJID
+}
+
+func resolveMessageSenderJID(info *waWeb.WebMessageInfo, chatJID string) string {
+	if info == nil || info.GetKey() == nil {
+		return ""
+	}
+
+	senderJID := info.GetKey().GetParticipant()
+	if senderJID != "" {
+		return senderJID
+	}
+	if info.GetKey().GetFromMe() {
+		return ""
+	}
+	return chatJID
+}
+
+func conversationLastMessageID(conversation *waHistorySync.Conversation) string {
+	if conversation == nil {
+		return ""
+	}
+	for i := len(conversation.GetMessages()) - 1; i >= 0; i-- {
+		message := conversation.GetMessages()[i]
+		if message == nil || message.GetMessage() == nil || message.GetMessage().GetKey() == nil {
+			continue
+		}
+		if messageID := message.GetMessage().GetKey().GetID(); messageID != "" {
+			return messageID
+		}
+	}
+	return ""
+}
+
+func inferChatType(chatJID string) string {
+	switch {
+	case strings.HasPrefix(chatJID, "status@"):
+		return "status"
+	case strings.HasSuffix(chatJID, "@g.us"):
+		return "group"
+	case strings.HasSuffix(chatJID, "@broadcast"):
+		return "broadcast"
+	case strings.Contains(chatJID, "@newsletter"):
+		return "newsletter"
+	case chatJID == "":
+		return "unknown"
+	default:
+		return "direct"
+	}
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
+func stringPtr(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
+}
+
+func intPtr(value int) *int {
+	return &value
+}
+
+func unixTimePtr(timestamp int64) *time.Time {
+	if timestamp <= 0 {
+		return nil
+	}
+	t := time.Unix(timestamp, 0)
+	return &t
+}
+
+func uint64ToInt64(value uint64) int64 {
+	if value > uint64(math.MaxInt64) {
+		return 0
+	}
+	return int64(value)
+}
+
+func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string) {
+	if msg == nil {
+		return "unknown", "", ""
+	}
+	switch {
+	case msg.GetConversation() != "":
+		return "text", msg.GetConversation(), ""
+	case msg.GetExtendedTextMessage() != nil:
+		return "text", msg.GetExtendedTextMessage().GetText(), ""
+	case msg.GetImageMessage() != nil:
+		return "image", msg.GetImageMessage().GetCaption(), msg.GetImageMessage().GetMimetype()
+	case msg.GetVideoMessage() != nil:
+		return "video", msg.GetVideoMessage().GetCaption(), msg.GetVideoMessage().GetMimetype()
+	case msg.GetAudioMessage() != nil:
+		return "audio", "", msg.GetAudioMessage().GetMimetype()
+	case msg.GetDocumentMessage() != nil:
+		return "document", msg.GetDocumentMessage().GetFileName(), msg.GetDocumentMessage().GetMimetype()
+	case msg.GetStickerMessage() != nil:
+		return "sticker", "", msg.GetStickerMessage().GetMimetype()
+	case msg.GetContactMessage() != nil:
+		return "contact", msg.GetContactMessage().GetDisplayName(), ""
+	case msg.GetLocationMessage() != nil:
+		return "location", msg.GetLocationMessage().GetName(), ""
+	case msg.GetListMessage() != nil:
+		return "list", msg.GetListMessage().GetTitle(), ""
+	case msg.GetButtonsMessage() != nil:
+		return "buttons", msg.GetButtonsMessage().GetContentText(), ""
+	case msg.GetPollCreationMessage() != nil:
+		return "poll", msg.GetPollCreationMessage().GetName(), ""
+	default:
+		return "unknown", "", ""
+	}
 }

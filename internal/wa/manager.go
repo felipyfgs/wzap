@@ -8,6 +8,7 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
 	"go.mau.fi/whatsmeow/types"
+	"go.mau.fi/whatsmeow/types/events"
 	waLog "go.mau.fi/whatsmeow/util/log"
 
 	"wzap/internal/broker"
@@ -18,6 +19,7 @@ import (
 
 type MediaAutoUploadFunc func(sessionID, messageID, mimeType string, downloadable whatsmeow.DownloadableMessage)
 type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{})
+type HistorySyncPersistFunc func(sessionID string, sync *events.HistorySync)
 
 type ClientInfo struct {
 	PushName     string
@@ -52,15 +54,16 @@ type Manager struct {
 	sessionNames map[string]string // cache de sessionID -> name
 	mu           sync.RWMutex
 
-	ctx               context.Context
-	sessionRepo       *repo.SessionRepository
-	container         *sqlstore.Container
-	nats              *broker.NATS
-	dispatcher        *webhook.Dispatcher
-	cfg               *config.Config
-	waLog             waLog.Logger
-	OnMediaReceived   MediaAutoUploadFunc
-	OnMessageReceived MessagePersistFunc
+	ctx                   context.Context
+	sessionRepo           *repo.SessionRepository
+	container             *sqlstore.Container
+	nats                  *broker.NATS
+	dispatcher            *webhook.Dispatcher
+	cfg                   *config.Config
+	waLog                 waLog.Logger
+	OnMediaReceived       MediaAutoUploadFunc
+	OnMessageReceived     MessagePersistFunc
+	OnHistorySyncReceived HistorySyncPersistFunc
 }
 
 func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {
@@ -69,6 +72,10 @@ func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {
 
 func (m *Manager) SetMessagePersist(fn MessagePersistFunc) {
 	m.OnMessageReceived = fn
+}
+
+func (m *Manager) SetHistorySyncPersist(fn HistorySyncPersistFunc) {
+	m.OnHistorySyncReceived = fn
 }
 
 func (m *Manager) GetPNForLID(ctx context.Context, sessionID, lidJID string) string {
@@ -138,4 +145,25 @@ func (m *Manager) DownloadMediaByPath(ctx context.Context, sessionID, directPath
 	}
 
 	return client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, fileLength, wmMediaType, "")
+}
+
+func (m *Manager) GetProfilePicture(ctx context.Context, sessionID, jid string) (string, error) {
+	client, err := m.GetClient(sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	parsedJID, err := types.ParseJID(jid)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse JID: %w", err)
+	}
+
+	pic, err := client.GetProfilePictureInfo(ctx, parsedJID, &whatsmeow.GetProfilePictureParams{Preview: false})
+	if err != nil {
+		return "", fmt.Errorf("failed to get profile picture: %w", err)
+	}
+	if pic == nil {
+		return "", nil
+	}
+	return pic.URL, nil
 }

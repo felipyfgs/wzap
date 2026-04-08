@@ -44,6 +44,7 @@ func (s *Server) SetupRoutes() error {
 	}
 
 	messageRepo := repo.NewMessageRepository(s.db.Pool)
+	chatRepo := repo.NewChatRepository(s.db.Pool)
 
 	// Initialize Cloud API Provider
 	runtimeResolver := service.NewSessionRuntimeResolver(sessionRepo, engine, nil)
@@ -65,13 +66,14 @@ func (s *Server) SetupRoutes() error {
 	mediaPool := s.async.AddPool("media", 4, 50)
 	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo, mediaPool, runtimeResolver)
 	historyPool := s.async.AddPool("history", 2, 100)
-	historySvc := service.NewHistoryService(messageRepo, historyPool)
+	historySvc := service.NewHistoryService(messageRepo, chatRepo, historyPool)
 
 	chatwootRepo := chatwoot.NewRepository(s.db.Pool)
 	chatwootSvc := chatwoot.NewService(s.ctx, chatwootRepo, messageRepo, messageSvc)
 	chatwootSvc.SetJIDResolver(engine)
 	chatwootSvc.SetMediaDownloader(engine)
 	chatwootSvc.SetSessionConnector(chatwoot.NewSessionConnector(engine))
+	chatwootSvc.SetProfilePictureGetter(engine)
 	chatwootSvc.SetServerURL(s.Config.ServerURL)
 	chatwootSvc.SetCache(chatwoot.NewCache(s.Config.RedisURL))
 	if s.nats != nil {
@@ -90,6 +92,7 @@ func (s *Server) SetupRoutes() error {
 
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
 	engine.SetMessagePersist(historySvc.PersistMessage)
+	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)
 	messageSvc.SetMessagePersist(historySvc.PersistMessage)
 
 	// Initialize Handlers

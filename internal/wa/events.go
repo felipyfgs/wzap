@@ -281,6 +281,9 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	case *events.HistorySync:
 		eventType = model.EventHistorySync
 		logger.Info().Str("session", sessionID).Msg("History sync received")
+		if m.OnHistorySyncReceived != nil {
+			m.OnHistorySyncReceived(sessionID, v)
+		}
 
 	case *events.AppState:
 		eventType = model.EventAppState
@@ -428,6 +431,8 @@ func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string)
 		return "buttons", msg.GetButtonsMessage().GetContentText(), ""
 	case msg.GetPollCreationMessage() != nil:
 		return "poll", msg.GetPollCreationMessage().GetName(), ""
+	case msg.GetReactionMessage() != nil:
+		return "reaction", msg.GetReactionMessage().GetText(), ""
 	default:
 		return "unknown", "", ""
 	}

@@ -167,3 +167,26 @@ func (m *Manager) GetProfilePicture(ctx context.Context, sessionID, jid string) 
 	}
 	return pic.URL, nil
 }
+
+func (m *Manager) IsOnWhatsApp(ctx context.Context, sessionID string, phones []string) (map[string]string, error) {
+	client, err := m.GetClient(sessionID)
+	if err != nil {
+		return nil, err
+	}
+	if !client.IsConnected() {
+		return nil, fmt.Errorf("client not connected")
+	}
+
+	resp, err := client.IsOnWhatsApp(ctx, phones)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check numbers on WhatsApp: %w", err)
+	}
+
+	result := make(map[string]string, len(resp))
+	for _, r := range resp {
+		if r.IsIn {
+			result[r.Query] = r.JID.User + "@s.whatsapp.net"
+		}
+	}
+	return result, nil
+}

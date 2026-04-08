@@ -44,6 +44,9 @@ type SessionConnector interface {
 type ProfilePictureGetter interface {
 	GetProfilePicture(ctx context.Context, sessionID, jid string) (string, error)
 }
+type NumberChecker interface {
+	IsOnWhatsApp(ctx context.Context, sessionID string, phones []string) (map[string]string, error)
+}
 
 type noConfigEntry struct {
 	expiresAt time.Time
@@ -59,6 +62,7 @@ type Service struct {
 	mediaDownloader  MediaDownloader
 	connector        SessionConnector
 	profilePicGetter ProfilePictureGetter
+	numberChecker    NumberChecker
 	serverURL        string
 	lastBotNotify    sync.Map
 	httpClient       *http.Client
@@ -86,6 +90,7 @@ func (s *Service) SetJIDResolver(r JIDResolver)                   { s.jidResolve
 func (s *Service) SetMediaDownloader(d MediaDownloader)           { s.mediaDownloader = d }
 func (s *Service) SetSessionConnector(c SessionConnector)         { s.connector = c }
 func (s *Service) SetProfilePictureGetter(p ProfilePictureGetter) { s.profilePicGetter = p }
+func (s *Service) SetNumberChecker(n NumberChecker)               { s.numberChecker = n }
 func (s *Service) SetServerURL(url string)                        { s.serverURL = url }
 func (s *Service) SetJetStream(js jetstream.JetStream)            { s.js = js }
 func (s *Service) SetCache(c Cache)                               { s.cache = c }

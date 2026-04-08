@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"wzap/internal/logger"
 )
 
 func shouldIgnoreJID(chatJID string, ignoreGroups bool, ignoreJIDs []string) bool {
@@ -85,4 +87,30 @@ func (s *Service) resolveJID(ctx context.Context, sessionID, jid string) string 
 		return pn + "@s.whatsapp.net"
 	}
 	return jid
+}
+
+func (s *Service) resolvePhoneToJID(ctx context.Context, sessionID, phone string) string {
+	if s.numberChecker == nil {
+		return phone + "@s.whatsapp.net"
+	}
+
+	variant := addOrRemoveBR9thDigit(phone)
+	phones := []string{"+" + phone}
+	if variant != phone {
+		phones = append(phones, "+"+variant)
+	}
+
+	resolved, err := s.numberChecker.IsOnWhatsApp(ctx, sessionID, phones)
+	if err != nil {
+		logger.Warn().Err(err).Str("phone", phone).Msg("[CW] IsOnWhatsApp check failed, using phone as-is")
+		return phone + "@s.whatsapp.net"
+	}
+
+	for _, p := range phones {
+		if jid, ok := resolved[p]; ok {
+			return jid
+		}
+	}
+
+	return phone + "@s.whatsapp.net"
 }

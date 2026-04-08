@@ -66,8 +66,8 @@ func TestFindOrCreateConversation_ConcurrentCalls(t *testing.T) {
 		}
 	}
 
-	if calls := client.FilterContactsCallCount(); calls != 1 {
-		t.Fatalf("expected 1 FilterContacts call, got %d", calls)
+	if calls := client.FilterContactsCallCount(); calls != 2 {
+		t.Fatalf("expected 2 FilterContacts calls (phone + BR variant), got %d", calls)
 	}
 	if calls := client.CreateConversationCallCount(); calls != 1 {
 		t.Fatalf("expected 1 CreateConversation call, got %d", calls)

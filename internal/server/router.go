@@ -74,6 +74,7 @@ func (s *Server) SetupRoutes() error {
 	chatwootSvc.SetMediaDownloader(engine)
 	chatwootSvc.SetSessionConnector(chatwoot.NewSessionConnector(engine))
 	chatwootSvc.SetProfilePictureGetter(engine)
+	chatwootSvc.SetNumberChecker(engine)
 	chatwootSvc.SetServerURL(s.Config.ServerURL)
 	chatwootSvc.SetCache(chatwoot.NewCache(s.Config.RedisURL))
 	if s.nats != nil {

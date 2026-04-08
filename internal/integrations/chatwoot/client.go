@@ -113,6 +113,7 @@ type Contact struct {
 	ID                   int            `json:"id"`
 	Name                 string         `json:"name"`
 	PhoneNumber          string         `json:"phone_number"`
+	Identifier           string         `json:"identifier,omitempty"`
 	Email                string         `json:"email,omitempty"`
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
@@ -157,6 +158,7 @@ func (c *Client) CreateContact(ctx context.Context, req CreateContactReq) (*Cont
 
 type UpdateContactReq struct {
 	Name                 string         `json:"name,omitempty"`
+	Identifier           string         `json:"identifier,omitempty"`
 	Email                string         `json:"email,omitempty"`
 	PhoneNumber          string         `json:"phone_number,omitempty"`
 	AvatarURL            string         `json:"avatar_url,omitempty"`

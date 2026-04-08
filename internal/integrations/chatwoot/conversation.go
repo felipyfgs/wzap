@@ -35,17 +35,13 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 	client := s.clientFn(cfg)
 	phone := extractPhone(chatJID)
 
-	var contacts []Contact
-	if cfg.MergeBRContacts && strings.HasPrefix(phone, "55") {
-		contacts1, _ := client.FilterContacts(ctx, phone)
+	contacts, _ := client.FilterContacts(ctx, phone)
+
+	if strings.HasPrefix(phone, "55") {
 		phoneVariant := addOrRemoveBR9thDigit(phone)
-		contacts2, _ := client.FilterContacts(ctx, phoneVariant)
-		contacts = append(contacts1, contacts2...)
-	} else {
-		var err error
-		contacts, err = client.FilterContacts(ctx, phone)
-		if err != nil {
-			contacts = nil
+		if phoneVariant != phone {
+			contacts2, _ := client.FilterContacts(ctx, phoneVariant)
+			contacts = deduplicateContacts(append(contacts, contacts2...))
 		}
 	}
 
@@ -103,6 +99,10 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 		existingName := contacts[0].Name
 		if pushName != "" && (existingName == "" || existingName == phone) {
 			_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Name: pushName})
+		}
+		if contacts[0].Identifier == "" {
+			_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Identifier: chatJID})
+			logger.Debug().Int("contactID", contactID).Str("identifier", chatJID).Msg("[CW] updated contact identifier")
 		}
 	}
 
@@ -276,4 +276,17 @@ func (s *Service) Configure(ctx context.Context, cfg *ChatwootConfig) error {
 	}
 	s.InvalidateNoConfigCache(cfg.SessionID)
 	return nil
+}
+
+func deduplicateContacts(contacts []Contact) []Contact {
+	seen := make(map[int]struct{}, len(contacts))
+	result := make([]Contact, 0, len(contacts))
+	for _, c := range contacts {
+		if _, ok := seen[c.ID]; ok {
+			continue
+		}
+		seen[c.ID] = struct{}{}
+		result = append(result, c)
+	}
+	return result
 }

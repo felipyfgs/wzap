@@ -90,12 +90,12 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *ChatwootConfig
 
 	conv := body.Conversation
 	chatJID := conv.ContactInbox.SourceID
-	if chatJID == "" && conv.Meta.Sender.Identifier != "" {
+	if !isValidWhatsAppJID(chatJID) && conv.Meta.Sender.Identifier != "" {
 		chatJID = conv.Meta.Sender.Identifier
 	}
-	if chatJID == "" && conv.Meta.Sender.PhoneNumber != "" {
+	if !isValidWhatsAppJID(chatJID) && conv.Meta.Sender.PhoneNumber != "" {
 		phone := strings.TrimPrefix(conv.Meta.Sender.PhoneNumber, "+")
-		chatJID = phone + "@s.whatsapp.net"
+		chatJID = s.resolvePhoneToJID(ctx, cfg.SessionID, phone)
 	}
 	if chatJID == "" {
 		logger.Warn().Int("convID", conv.ID).Msg("[CW] no chat JID found for outgoing message")

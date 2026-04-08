@@ -13,7 +13,8 @@ set -euo pipefail
 DOCKER_USERNAME="felipyfgs17"
 IMAGE_NAME="wzap"
 STACK_NAME="wzap"
-STACK_FILE="stacks/wzap-complete.yml"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+STACK_FILE="${SCRIPT_DIR}/../stacks/wzap-complete.yml"
 
 print_step() { echo -e "\n\033[1;34m▶ $*\033[0m"; }
 print_ok()   { echo -e "\033[1;32m✔ $*\033[0m"; }
@@ -45,9 +46,9 @@ deploy() {
         docker swarm init --advertise-addr "$(hostname -i | awk '{print $1}')"
     fi
 
-    if ! docker network ls --format '{{.Name}}' | grep -q "^traefik_public$"; then
-        print_step "Criando rede traefik_public..."
-        docker network create --driver=overlay --attachable traefik_public
+    if ! docker network ls --format '{{.Name}}' | grep -q "^Gacont$"; then
+        print_step "Criando rede Gacont..."
+        docker network create --driver=overlay --attachable Gacont
         print_ok "Rede criada."
     fi
 
@@ -72,10 +73,12 @@ deploy() {
     print_info "  API    → https://api.wzap.gacont.com.br"
     print_info "  Web    → https://app.wzap.gacont.com.br"
     print_info "  MinIO  → https://s3.wzap.gacont.com.br"
+    print_info "  MinIO Console → https://minio.wzap.gacont.com.br"
     echo ""
     print_info "Comandos úteis:"
     print_info "  Logs API:   docker service logs -f ${STACK_NAME}_wzap_api"
     print_info "  Logs Web:   docker service logs -f ${STACK_NAME}_wzap_web"
+    print_info "  Status:     ./scripts/deploy.sh --status"
     print_info "  Remover:    docker stack rm ${STACK_NAME}"
 }
 

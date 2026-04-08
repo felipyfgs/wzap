@@ -2,7 +2,7 @@ import { defineEventHandler, getRequestHeader, setResponseHeaders, proxyRequest 
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
-  const target = config.public.apiUrl
+  const target = config.apiUrl
 
   const path = event.path.replace(/^\/api/, '')
 

@@ -25,6 +25,9 @@ services:
       - "host.docker.internal:host-gateway"
     entrypoint: docker/entrypoints/rails.sh
     command: ['sh', '-c', 'bundle exec rails db:chatwoot_prepare && bundle exec rails s -p 3000 -b 0.0.0.0']
+    networks:
+      - default
+      - wzap_chatwoot
 
   sidekiq:
     <<: *base
@@ -41,6 +44,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    networks:
+      - default
+      - wzap_chatwoot
 
   postgres:
     image: pgvector/pgvector:pg16
@@ -79,3 +85,8 @@ volumes:
   storage_data:
   postgres_data:
   redis_data:
+
+networks:
+  wzap_chatwoot:
+    external: true
+    name: wzap_chatwoot

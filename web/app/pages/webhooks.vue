@@ -8,7 +8,7 @@ const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 
-const { api, isAuthenticated } = useWzap()
+const { api } = useWzap()
 const toast = useToast()
 const table = useTemplateRef('table')
 
@@ -152,10 +152,6 @@ const sessionItems = computed(() =>
 watch(selectedSessionId, () => fetchWebhooks())
 
 onMounted(async () => {
-  if (!isAuthenticated.value) {
-    navigateTo('/login')
-    return
-  }
   await fetchSessions()
   await fetchWebhooks()
 })

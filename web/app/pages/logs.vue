@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const { token, apiBase, isAuthenticated } = useWzap()
+const { token } = useWzap()
 
 const events = ref<any[]>([])
 const connected = ref(false)
@@ -8,7 +8,8 @@ let ws: WebSocket | null = null
 
 function connect() {
   if (ws) ws.close()
-  const wsUrl = apiBase.value.replace(/^http/, 'ws') + '/ws?token=' + token.value
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const wsUrl = `${proto}//${window.location.host}/ws?token=${token.value}`
   ws = new WebSocket(wsUrl)
   ws.onopen = () => { connected.value = true }
   ws.onmessage = (e) => {
@@ -32,10 +33,7 @@ function clearEvents() {
 }
 
 onMounted(() => {
-  if (!isAuthenticated.value) {
-    navigateTo('/login')
-    return
-  }
+  connect()
 })
 
 onUnmounted(() => disconnect())

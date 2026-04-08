@@ -6,7 +6,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt'
   ],
 
-  ssr: true,
+  ssr: false,
 
   devtools: {
     enabled: true
@@ -15,8 +15,14 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
-    public: {
-      apiUrl: process.env.NUXT_PUBLIC_API_URL || 'http://localhost:8080'
+    // URL interna usada pelo proxy server-side (nunca exposta ao browser)
+    // Override em runtime via env: NUXT_API_URL=http://service-name:8080
+    apiUrl: 'http://localhost:8080'
+  },
+
+  nitro: {
+    experimental: {
+      websocket: true
     }
   },
 

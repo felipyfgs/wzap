@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Session } from '~/types'
 
-const { api, isAuthenticated } = useWzap()
+const { api } = useWzap()
 const { sessions, loadingSessions, refreshSessions } = useSession()
 const toast = useToast()
 
@@ -107,10 +107,6 @@ const filteredSessions = computed(() =>
 )
 
 onMounted(() => {
-  if (!isAuthenticated.value) {
-    navigateTo('/login')
-    return
-  }
   refreshSessions()
 })
 </script>

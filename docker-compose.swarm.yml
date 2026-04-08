@@ -101,6 +101,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=3000
+      - NUXT_API_URL=http://api:8080
     networks:
       - wzap_network
       - traefik_public

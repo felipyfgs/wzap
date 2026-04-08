@@ -1,8 +1,6 @@
 const TOKEN_KEY = 'wzap_token'
 
 export function useWzap() {
-  const config = useRuntimeConfig()
-
   const token = useState<string>(TOKEN_KEY, () => {
     if (import.meta.client) {
       return localStorage.getItem(TOKEN_KEY) || ''
@@ -37,11 +35,5 @@ export function useWzap() {
     }
   }
 
-  const apiBase = computed(() => config.public.apiUrl)
-
-  const setApiBase = (_url: string) => {
-    // No-op: API base is now handled by server proxy
-  }
-
-  return { api, token, setToken, isAuthenticated, logout, apiBase, setApiBase }
+  return { api, token, setToken, isAuthenticated, logout }
 }

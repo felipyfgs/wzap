@@ -5,14 +5,16 @@ defineProps<{ collapsed?: boolean }>()
 
 const colorMode = useColorMode()
 const appConfig = useAppConfig()
-const { logout, apiBase } = useWzap()
+const { logout } = useWzap()
+
+const apiOrigin = computed(() => import.meta.client ? window.location.origin : 'wzap')
 
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
 const items = computed<DropdownMenuItem[][]>(() => [[{
   type: 'label',
-  label: apiBase.value || 'wzap',
+  label: apiOrigin.value,
   icon: 'i-lucide-server'
 }], [{
   label: 'Settings',

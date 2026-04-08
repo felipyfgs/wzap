@@ -13,7 +13,7 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-wzap-media}
       NATS_URL: nats://nats:4222
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
-      SERVER_URL: ${SERVER_URL:-http://localhost:8080}
+      SERVER_URL: ${SERVER_URL:-http://wzap_app:8080}
     ports:
       - "${PORT:-8080}:8080"
     depends_on:
@@ -29,6 +29,9 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 3
+    networks:
+      - default
+      - wzap_chatwoot
     restart: unless-stopped
 
   web:
@@ -38,6 +41,8 @@ services:
       dockerfile: Dockerfile
       target: web-prod
     container_name: wzap_web
+    environment:
+      NUXT_API_URL: http://wzap:8080
     ports:
       - "${WEB_PORT:-3001}:3000"
     restart: unless-stopped
@@ -96,3 +101,8 @@ services:
 volumes:
   postgres_data:
   minio_data:
+
+networks:
+  wzap_chatwoot:
+    external: true
+    name: wzap_chatwoot

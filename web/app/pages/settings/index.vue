@@ -2,7 +2,9 @@
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
 
-const { api, apiBase, token, setToken } = useWzap()
+const { api, token, setToken } = useWzap()
+
+const apiOrigin = computed(() => import.meta.client ? window.location.origin : '')
 const toast = useToast()
 
 const schema = z.object({
@@ -63,10 +65,10 @@ async function testConnection() {
     <UPageCard variant="subtle">
       <UFormField
         label="API Base URL"
-        description="Configured via NUXT_PUBLIC_API_URL environment variable."
+        description="All requests are proxied through the Nuxt server to the Go API."
         class="flex max-sm:flex-col justify-between items-start gap-4"
       >
-        <UInput :model-value="apiBase" disabled class="w-full max-w-xs" />
+        <UInput :model-value="apiOrigin" disabled class="w-full max-w-xs" />
       </UFormField>
 
       <USeparator />

@@ -29,6 +29,7 @@ const (
 const (
 	EventMessage              EventType = "Message"
 	EventMessageRevoke        EventType = "MessageRevoke"
+	EventMessageEdit          EventType = "MessageEdit"
 	EventUndecryptableMessage EventType = "UndecryptableMessage"
 	EventMediaRetry           EventType = "MediaRetry"
 	EventReceipt              EventType = "Receipt"
@@ -157,7 +158,7 @@ var ValidEventTypes = func() map[EventType]bool {
 	types := []EventType{
 		EventAll,
 		// Messages
-		EventMessage, EventUndecryptableMessage, EventMediaRetry, EventReceipt, EventDeleteForMe,
+		EventMessage, EventMessageRevoke, EventMessageEdit, EventUndecryptableMessage, EventMediaRetry, EventReceipt, EventDeleteForMe,
 		// Connection
 		EventConnected, EventDisconnected, EventManualLoginReconnect,
 		// Pairing
@@ -207,7 +208,7 @@ func CategoryFor(e EventType) EventCategory {
 	switch e {
 	case EventAll:
 		return CategorySpecial
-	case EventMessage, EventUndecryptableMessage, EventMediaRetry, EventReceipt, EventDeleteForMe:
+	case EventMessage, EventMessageRevoke, EventMessageEdit, EventUndecryptableMessage, EventMediaRetry, EventReceipt, EventDeleteForMe:
 		return CategoryMessages
 	case EventConnected, EventDisconnected, EventManualLoginReconnect:
 		return CategoryConnection

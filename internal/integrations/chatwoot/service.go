@@ -149,6 +149,10 @@ func (s *Service) processInboundEvent(ctx context.Context, sessionID string, eve
 		s.handleReceipt(ctx, cfg, payload)
 	case model.EventDeleteForMe:
 		s.handleDelete(ctx, cfg, payload)
+	case model.EventMessageRevoke:
+		s.handleRevoke(ctx, cfg, payload)
+	case model.EventMessageEdit:
+		s.handleEdit(ctx, cfg, payload)
 	case model.EventConnected:
 		s.handleConnected(ctx, cfg, payload)
 	case model.EventDisconnected:

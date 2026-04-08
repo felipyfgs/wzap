@@ -17,33 +17,56 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 
 	// ── Messages ──────────────────────────────────────────────
 	case *events.Message:
-		eventType = model.EventMessage
-		logger.Info().
-			Str("session", sessionID).
-			Str("from", v.Info.Sender.String()).
-			Str("chat", v.Info.Chat.String()).
-			Str("mid", v.Info.ID).
-			Bool("fromMe", v.Info.IsFromMe).
-			Msg("Message received")
+		if proto := v.Message.GetProtocolMessage(); proto != nil &&
+			proto.GetType() == waE2E.ProtocolMessage_REVOKE &&
+			proto.GetKey() != nil && proto.GetKey().GetID() != "" {
+			eventType = model.EventMessageRevoke
+			logger.Debug().
+				Str("session", sessionID).
+				Str("revokedMsgID", proto.GetKey().GetID()).
+				Str("chat", v.Info.Chat.String()).
+				Bool("fromMe", v.Info.IsFromMe).
+				Msg("Message revoked (delete for everyone)")
+		} else if proto := v.Message.GetProtocolMessage(); proto != nil &&
+			proto.GetType() == waE2E.ProtocolMessage_MESSAGE_EDIT &&
+			proto.GetKey() != nil && proto.GetKey().GetID() != "" &&
+			proto.GetEditedMessage() != nil {
+			eventType = model.EventMessageEdit
+			logger.Debug().
+				Str("session", sessionID).
+				Str("editedMsgID", proto.GetKey().GetID()).
+				Str("chat", v.Info.Chat.String()).
+				Bool("fromMe", v.Info.IsFromMe).
+				Msg("Message edited")
+		} else {
+			eventType = model.EventMessage
+			logger.Info().
+				Str("session", sessionID).
+				Str("from", v.Info.Sender.String()).
+				Str("chat", v.Info.Chat.String()).
+				Str("mid", v.Info.ID).
+				Bool("fromMe", v.Info.IsFromMe).
+				Msg("Message received")
 
-		if m.OnMediaReceived != nil && v.Message != nil {
-			switch {
-			case v.Message.GetImageMessage() != nil:
-				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetImageMessage().GetMimetype(), v.Message.GetImageMessage())
-			case v.Message.GetVideoMessage() != nil:
-				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetVideoMessage().GetMimetype(), v.Message.GetVideoMessage())
-			case v.Message.GetAudioMessage() != nil:
-				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetAudioMessage().GetMimetype(), v.Message.GetAudioMessage())
-			case v.Message.GetDocumentMessage() != nil:
-				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetDocumentMessage().GetMimetype(), v.Message.GetDocumentMessage())
-			case v.Message.GetStickerMessage() != nil:
-				m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetStickerMessage().GetMimetype(), v.Message.GetStickerMessage())
+			if m.OnMediaReceived != nil && v.Message != nil {
+				switch {
+				case v.Message.GetImageMessage() != nil:
+					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetImageMessage().GetMimetype(), v.Message.GetImageMessage())
+				case v.Message.GetVideoMessage() != nil:
+					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetVideoMessage().GetMimetype(), v.Message.GetVideoMessage())
+				case v.Message.GetAudioMessage() != nil:
+					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetAudioMessage().GetMimetype(), v.Message.GetAudioMessage())
+				case v.Message.GetDocumentMessage() != nil:
+					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetDocumentMessage().GetMimetype(), v.Message.GetDocumentMessage())
+				case v.Message.GetStickerMessage() != nil:
+					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetStickerMessage().GetMimetype(), v.Message.GetStickerMessage())
+				}
 			}
-		}
 
-		if m.OnMessageReceived != nil {
-			msgType, body, mediaType := extractMessageContent(v.Message)
-			m.OnMessageReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
+			if m.OnMessageReceived != nil {
+				msgType, body, mediaType := extractMessageContent(v.Message)
+				m.OnMessageReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
+			}
 		}
 
 	case *events.UndecryptableMessage:

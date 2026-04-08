@@ -66,6 +66,88 @@ func (s *Service) handleDelete(ctx context.Context, cfg *ChatwootConfig, payload
 	}
 }
 
+func (s *Service) handleRevoke(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+	data, err := parseMessagePayload(payload)
+	if err != nil {
+		return
+	}
+
+	protocolMsg := getMapField(data.Message, "protocolMessage")
+	if protocolMsg == nil {
+		return
+	}
+	key := getMapField(protocolMsg, "key")
+	if key == nil {
+		return
+	}
+	revokedMsgID := getStringField(key, "ID")
+	if revokedMsgID == "" {
+		return
+	}
+
+	logger.Debug().Str("session", cfg.SessionID).Str("revokedMsgID", revokedMsgID).Msg("[CW] handling message revoke")
+
+	msg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, revokedMsgID)
+	if err != nil {
+		return
+	}
+
+	if msg.CWMessageID == nil || msg.CWConversationID == nil {
+		return
+	}
+
+	client := s.clientFn(cfg)
+	if err := client.DeleteMessage(ctx, *msg.CWConversationID, *msg.CWMessageID); err != nil {
+		logger.Warn().Err(err).Str("revokedMsgID", revokedMsgID).Msg("[CW] failed to delete Chatwoot message on revoke")
+	}
+}
+
+func (s *Service) handleEdit(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+	data, err := parseMessagePayload(payload)
+	if err != nil {
+		return
+	}
+
+	protocolMsg := getMapField(data.Message, "protocolMessage")
+	if protocolMsg == nil {
+		return
+	}
+	key := getMapField(protocolMsg, "key")
+	if key == nil {
+		return
+	}
+	editedMsgID := getStringField(key, "ID")
+	if editedMsgID == "" {
+		return
+	}
+
+	editedMessage := getMapField(protocolMsg, "editedMessage")
+	if editedMessage == nil {
+		return
+	}
+
+	newText := extractTextFromMessage(editedMessage)
+	if newText == "" {
+		return
+	}
+
+	logger.Debug().Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Str("newText", newText).Msg("[CW] handling message edit")
+
+	msg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, editedMsgID)
+	if err != nil {
+		return
+	}
+
+	if msg.CWMessageID == nil || msg.CWConversationID == nil {
+		return
+	}
+
+	client := s.clientFn(cfg)
+	if err := client.UpdateMessage(ctx, *msg.CWConversationID, *msg.CWMessageID, newText); err != nil {
+		logger.Warn().Err(err).Str("editedMsgID", editedMsgID).Msg("[CW] failed to update Chatwoot message on edit")
+	}
+}
+
 func (s *Service) handleConnected(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
 	now := time.Now()
 	if v, ok := s.lastBotNotify.Load(cfg.SessionID); ok {

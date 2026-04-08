@@ -38,6 +38,22 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 
 	msg := body.GetMessage()
 
+	eventType := body.EventType
+	if eventType == "" {
+		eventType = body.Event
+	}
+
+	if eventType == "message_updated" && msg != nil {
+		if deleted, _ := msg.ContentAttributes["deleted"].(bool); deleted {
+			return s.handleMessageUpdated(ctx, cfg, body)
+		}
+		return s.handleMessageEdited(ctx, cfg, body)
+	}
+
+	if eventType == "conversation_status_changed" && body.Conversation != nil {
+		return s.handleConversationStatusChanged(ctx, cfg, body)
+	}
+
 	if msg != nil && msg.IsOutgoing() {
 		sourceID := msg.SourceID
 		if sourceID != "" {
@@ -57,22 +73,6 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 			s.cache.SetIdempotent(ctx, sessionID, cwIdemKey)
 		}
 		return s.handleOutgoingMessage(ctx, cfg, body)
-	}
-
-	eventType := body.EventType
-	if eventType == "" {
-		eventType = body.Event
-	}
-
-	if eventType == "message_updated" && msg != nil {
-		if deleted, _ := msg.ContentAttributes["deleted"].(bool); deleted {
-			return s.handleMessageUpdated(ctx, cfg, body)
-		}
-		return s.handleMessageEdited(ctx, cfg, body)
-	}
-
-	if eventType == "conversation_status_changed" && body.Conversation != nil {
-		return s.handleConversationStatusChanged(ctx, cfg, body)
 	}
 
 	return nil

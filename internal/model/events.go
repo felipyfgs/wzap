@@ -28,6 +28,7 @@ const (
 // Messages
 const (
 	EventMessage              EventType = "Message"
+	EventMessageRevoke        EventType = "MessageRevoke"
 	EventUndecryptableMessage EventType = "UndecryptableMessage"
 	EventMediaRetry           EventType = "MediaRetry"
 	EventReceipt              EventType = "Receipt"

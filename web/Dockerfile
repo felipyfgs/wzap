@@ -24,5 +24,5 @@ USER wzap
 ENV HOST=0.0.0.0 PORT=3000
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD wget -qO- http://localhost:${PORT}/ 2>/dev/null || exit 1
+    CMD wget -qO- http://localhost:${PORT}/health 2>/dev/null || exit 1
 CMD ["node", "server/index.mjs"]

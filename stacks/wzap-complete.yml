@@ -185,7 +185,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=3000
-      - NUXT_PUBLIC_API_URL=https://api.wzap.gacont.com.br
+      - NUXT_API_URL=http://wzap_api:8080
       - TZ=America/Sao_Paulo
     deploy:
       mode: replicated

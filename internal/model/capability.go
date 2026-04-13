@@ -5,9 +5,9 @@ type CapabilitySupport string
 type EngineCapability string
 
 const (
-	CapabilitySupportComplete    CapabilitySupport = "complete"
-	CapabilitySupportPartial     CapabilitySupport = "partial"
-	CapabilitySupportUnavailable CapabilitySupport = "unavailable"
+	SupportComplete    CapabilitySupport = "complete"
+	SupportPartial     CapabilitySupport = "partial"
+	SupportUnavailable CapabilitySupport = "unavailable"
 )
 
 const (
@@ -40,87 +40,87 @@ const (
 	CapabilityMediaDownload      EngineCapability = "media.download"
 )
 
-type EngineCapabilityContract struct {
+type CapabilityContract struct {
 	support map[string]map[EngineCapability]CapabilitySupport
 }
 
-var DefaultEngineCapabilityContract = EngineCapabilityContract{
+var DefaultCapabilities = CapabilityContract{
 	support: map[string]map[EngineCapability]CapabilitySupport{
 		"whatsmeow": {
-			CapabilityMessageText:        CapabilitySupportComplete,
-			CapabilityMessageMedia:       CapabilitySupportComplete,
-			CapabilityMessageSticker:     CapabilitySupportComplete,
-			CapabilityMessageLocation:    CapabilitySupportComplete,
-			CapabilityMessageButton:      CapabilitySupportComplete,
-			CapabilityMessageList:        CapabilitySupportComplete,
-			CapabilityMessageReaction:    CapabilitySupportComplete,
-			CapabilityMessageMarkRead:    CapabilitySupportComplete,
-			CapabilityMessageLink:        CapabilitySupportComplete,
-			CapabilityMessagePoll:        CapabilitySupportComplete,
-			CapabilityMessageContact:     CapabilitySupportComplete,
-			CapabilityMessageEdit:        CapabilitySupportComplete,
-			CapabilityMessageDelete:      CapabilitySupportComplete,
-			CapabilityMessageForward:     CapabilitySupportComplete,
-			CapabilityMessagePresence:    CapabilitySupportComplete,
-			CapabilityMessageStatusText:  CapabilitySupportComplete,
-			CapabilityMessageStatusMedia: CapabilitySupportComplete,
-			CapabilitySessionConnect:     CapabilitySupportComplete,
-			CapabilitySessionDisconnect:  CapabilitySupportComplete,
-			CapabilitySessionQR:          CapabilitySupportComplete,
-			CapabilitySessionPair:        CapabilitySupportComplete,
-			CapabilitySessionLogout:      CapabilitySupportComplete,
-			CapabilitySessionReconnect:   CapabilitySupportComplete,
-			CapabilitySessionRestart:     CapabilitySupportComplete,
-			CapabilitySessionStatus:      CapabilitySupportComplete,
-			CapabilitySessionProfile:     CapabilitySupportComplete,
-			CapabilityMediaDownload:      CapabilitySupportComplete,
+			CapabilityMessageText:        SupportComplete,
+			CapabilityMessageMedia:       SupportComplete,
+			CapabilityMessageSticker:     SupportComplete,
+			CapabilityMessageLocation:    SupportComplete,
+			CapabilityMessageButton:      SupportComplete,
+			CapabilityMessageList:        SupportComplete,
+			CapabilityMessageReaction:    SupportComplete,
+			CapabilityMessageMarkRead:    SupportComplete,
+			CapabilityMessageLink:        SupportComplete,
+			CapabilityMessagePoll:        SupportComplete,
+			CapabilityMessageContact:     SupportComplete,
+			CapabilityMessageEdit:        SupportComplete,
+			CapabilityMessageDelete:      SupportComplete,
+			CapabilityMessageForward:     SupportComplete,
+			CapabilityMessagePresence:    SupportComplete,
+			CapabilityMessageStatusText:  SupportComplete,
+			CapabilityMessageStatusMedia: SupportComplete,
+			CapabilitySessionConnect:     SupportComplete,
+			CapabilitySessionDisconnect:  SupportComplete,
+			CapabilitySessionQR:          SupportComplete,
+			CapabilitySessionPair:        SupportComplete,
+			CapabilitySessionLogout:      SupportComplete,
+			CapabilitySessionReconnect:   SupportComplete,
+			CapabilitySessionRestart:     SupportComplete,
+			CapabilitySessionStatus:      SupportComplete,
+			CapabilitySessionProfile:     SupportComplete,
+			CapabilityMediaDownload:      SupportComplete,
 		},
 		"cloud_api": {
-			CapabilityMessageText:        CapabilitySupportComplete,
-			CapabilityMessageMedia:       CapabilitySupportComplete,
-			CapabilityMessageSticker:     CapabilitySupportComplete,
-			CapabilityMessageLocation:    CapabilitySupportComplete,
-			CapabilityMessageButton:      CapabilitySupportComplete,
-			CapabilityMessageList:        CapabilitySupportComplete,
-			CapabilityMessageReaction:    CapabilitySupportComplete,
-			CapabilityMessageMarkRead:    CapabilitySupportComplete,
-			CapabilityMessageLink:        CapabilitySupportPartial,
-			CapabilityMessagePoll:        CapabilitySupportUnavailable,
-			CapabilityMessageContact:     CapabilitySupportUnavailable,
-			CapabilityMessageEdit:        CapabilitySupportUnavailable,
-			CapabilityMessageDelete:      CapabilitySupportUnavailable,
-			CapabilityMessageForward:     CapabilitySupportUnavailable,
-			CapabilityMessagePresence:    CapabilitySupportUnavailable,
-			CapabilityMessageStatusText:  CapabilitySupportUnavailable,
-			CapabilityMessageStatusMedia: CapabilitySupportUnavailable,
-			CapabilitySessionConnect:     CapabilitySupportPartial,
-			CapabilitySessionDisconnect:  CapabilitySupportPartial,
-			CapabilitySessionQR:          CapabilitySupportUnavailable,
-			CapabilitySessionPair:        CapabilitySupportUnavailable,
-			CapabilitySessionLogout:      CapabilitySupportPartial,
-			CapabilitySessionReconnect:   CapabilitySupportPartial,
-			CapabilitySessionRestart:     CapabilitySupportPartial,
-			CapabilitySessionStatus:      CapabilitySupportPartial,
-			CapabilitySessionProfile:     CapabilitySupportPartial,
-			CapabilityMediaDownload:      CapabilitySupportUnavailable,
+			CapabilityMessageText:        SupportComplete,
+			CapabilityMessageMedia:       SupportComplete,
+			CapabilityMessageSticker:     SupportComplete,
+			CapabilityMessageLocation:    SupportComplete,
+			CapabilityMessageButton:      SupportComplete,
+			CapabilityMessageList:        SupportComplete,
+			CapabilityMessageReaction:    SupportComplete,
+			CapabilityMessageMarkRead:    SupportComplete,
+			CapabilityMessageLink:        SupportPartial,
+			CapabilityMessagePoll:        SupportUnavailable,
+			CapabilityMessageContact:     SupportUnavailable,
+			CapabilityMessageEdit:        SupportUnavailable,
+			CapabilityMessageDelete:      SupportUnavailable,
+			CapabilityMessageForward:     SupportUnavailable,
+			CapabilityMessagePresence:    SupportUnavailable,
+			CapabilityMessageStatusText:  SupportUnavailable,
+			CapabilityMessageStatusMedia: SupportUnavailable,
+			CapabilitySessionConnect:     SupportPartial,
+			CapabilitySessionDisconnect:  SupportPartial,
+			CapabilitySessionQR:          SupportUnavailable,
+			CapabilitySessionPair:        SupportUnavailable,
+			CapabilitySessionLogout:      SupportPartial,
+			CapabilitySessionReconnect:   SupportPartial,
+			CapabilitySessionRestart:     SupportPartial,
+			CapabilitySessionStatus:      SupportPartial,
+			CapabilitySessionProfile:     SupportPartial,
+			CapabilityMediaDownload:      SupportUnavailable,
 		},
 	},
 }
 
-func (c EngineCapabilityContract) Support(engine string, capability EngineCapability) CapabilitySupport {
+func (c CapabilityContract) Support(engine string, capability EngineCapability) CapabilitySupport {
 	engineSupport, ok := c.support[engine]
 	if !ok {
-		return CapabilitySupportUnavailable
+		return SupportUnavailable
 	}
 
 	support, ok := engineSupport[capability]
 	if !ok {
-		return CapabilitySupportUnavailable
+		return SupportUnavailable
 	}
 
 	return support
 }
 
-func (c EngineCapabilityContract) Supports(engine string, capability EngineCapability) bool {
-	return c.Support(engine, capability) != CapabilitySupportUnavailable
+func (c CapabilityContract) Supports(engine string, capability EngineCapability) bool {
+	return c.Support(engine, capability) != SupportUnavailable
 }

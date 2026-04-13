@@ -5,7 +5,7 @@ import (
 )
 
 func TestChatwootConfigNewFields(t *testing.T) {
-	cfg := &ChatwootConfig{
+	cfg := &Config{
 		SessionID:           "sess-1",
 		URL:                 "https://cw.example.com",
 		AccountID:           1,

@@ -12,21 +12,21 @@ import (
 )
 
 var (
-	cwDBPools   = make(map[string]*pgxpool.Pool)
-	cwDBPoolsMu sync.Mutex
+	dbPools   = make(map[string]*pgxpool.Pool)
+	dbPoolsMu sync.Mutex
 )
 
-func getCWPool(ctx context.Context, dbURI string) (*pgxpool.Pool, error) {
-	cwDBPoolsMu.Lock()
-	defer cwDBPoolsMu.Unlock()
-	if pool, ok := cwDBPools[dbURI]; ok {
+func getPool(ctx context.Context, dbURI string) (*pgxpool.Pool, error) {
+	dbPoolsMu.Lock()
+	defer dbPoolsMu.Unlock()
+	if pool, ok := dbPools[dbURI]; ok {
 		return pool, nil
 	}
 	pool, err := pgxpool.New(ctx, dbURI)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create chatwoot db pool: %w", err)
 	}
-	cwDBPools[dbURI] = pool
+	dbPools[dbURI] = pool
 	return pool, nil
 }
 
@@ -40,7 +40,7 @@ func addLabelToContact(ctx context.Context, dbURI, inboxName string, contactID i
 		return nil
 	}
 
-	pool, err := getCWPool(ctx, dbURI)
+	pool, err := getPool(ctx, dbURI)
 	if err != nil {
 		return err
 	}
@@ -72,6 +72,6 @@ func addLabelToContact(ctx context.Context, dbURI, inboxName string, contactID i
 		return fmt.Errorf("failed to insert tagging: %w", err)
 	}
 
-	logger.Debug().Int("contactID", contactID).Str("label", label).Msg("[CW] label added to contact")
+	logger.Debug().Str("component", "chatwoot").Int("contactID", contactID).Str("label", label).Msg("label added to contact")
 	return nil
 }

@@ -5,6 +5,22 @@ const { api } = useWzap()
 const { sessions, loadingSessions, refreshSessions } = useSession()
 const toast = useToast()
 
+const pictures = reactive<Map<string, string | null>>(new Map())
+
+async function loadPictures() {
+  const connected = sessions.value.filter((s) => s.status === 'connected')
+  await Promise.allSettled(
+    connected.map(async (s) => {
+      try {
+        const res: any = await api(`/sessions/${s.id}/profile`)
+        pictures.set(s.id, res.data?.pictureUrl || null)
+      } catch {
+        pictures.set(s.id, null)
+      }
+    })
+  )
+}
+
 const nameFilter = ref('')
 const statusFilter = ref('all')
 const qrModal = useTemplateRef('qrModal')
@@ -106,8 +122,9 @@ const filteredSessions = computed(() =>
   })
 )
 
-onMounted(() => {
-  refreshSessions()
+onMounted(async () => {
+  await refreshSessions()
+  loadPictures()
 })
 </script>
 
@@ -171,7 +188,16 @@ onMounted(() => {
         >
           <div class="flex items-center gap-3 px-4 py-3">
             <div class="relative shrink-0">
-              <span class="flex size-9 items-center justify-center rounded-full bg-elevated text-xs font-bold ring-1 ring-default">
+              <img
+                v-if="pictures.get(session.id)"
+                :src="pictures.get(session.id)!"
+                class="size-9 rounded-full object-cover ring-1 ring-default"
+                @error="pictures.set(session.id, null)"
+              >
+              <span
+                v-else
+                class="flex size-9 items-center justify-center rounded-full bg-elevated text-xs font-bold ring-1 ring-default"
+              >
                 {{ sessionInitials(session.name) }}
               </span>
               <span

@@ -28,6 +28,7 @@ func Logger() fiber.Handler {
 		}
 
 		ev.
+			Str("component", "http").
 			Str("method", c.Method()).
 			Str("path", c.Path()).
 			Int("status", status).

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type ChatwootConfig struct {
+type Config struct {
 	SessionID           string    `json:"sessionId"`
 	URL                 string    `json:"url"`
 	AccountID           int       `json:"accountId"`

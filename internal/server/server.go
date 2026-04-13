@@ -69,12 +69,12 @@ func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) 
 
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%s", s.Config.ServerHost, s.Config.Port)
-	logger.Info().Str("addr", addr).Msg("Starting API server")
+	logger.Info().Str("component", "server").Str("addr", addr).Msg("Starting API server")
 	return s.App.Listen(addr)
 }
 
 func (s *Server) Shutdown(ctx context.Context) error {
-	logger.Info().Msg("Shutting down API server")
+	logger.Info().Str("component", "server").Msg("Shutting down API server")
 	s.cancel()
 
 	if s.async != nil {
@@ -89,10 +89,10 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	select {
 	case <-ctx.Done():
-		logger.Warn().Msg("API server shutdown timed out")
+		logger.Warn().Str("component", "server").Msg("API server shutdown timed out")
 		return ctx.Err()
 	case err := <-done:
-		logger.Info().Msg("API server stopped gracefully")
+		logger.Info().Str("component", "server").Msg("API server stopped gracefully")
 		return err
 	}
 }

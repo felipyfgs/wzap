@@ -8,8 +8,8 @@ import (
 )
 
 type Repo interface {
-	FindBySessionID(ctx context.Context, sessionID string) (*ChatwootConfig, error)
-	Upsert(ctx context.Context, cfg *ChatwootConfig) error
+	FindBySessionID(ctx context.Context, sessionID string) (*Config, error)
+	Upsert(ctx context.Context, cfg *Config) error
 	Delete(ctx context.Context, sessionID string) error
 }
 
@@ -21,7 +21,7 @@ func NewRepository(db *pgxpool.Pool) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) Upsert(ctx context.Context, cfg *ChatwootConfig) error {
+func (r *Repository) Upsert(ctx context.Context, cfg *Config) error {
 	_, err := r.db.Exec(ctx,
 		`INSERT INTO wz_chatwoot (
 			session_id, url, account_id, token, webhook_token, inbox_id, inbox_name, enabled,
@@ -60,8 +60,8 @@ func (r *Repository) Upsert(ctx context.Context, cfg *ChatwootConfig) error {
 	return nil
 }
 
-func (r *Repository) FindBySessionID(ctx context.Context, sessionID string) (*ChatwootConfig, error) {
-	var cfg ChatwootConfig
+func (r *Repository) FindBySessionID(ctx context.Context, sessionID string) (*Config, error) {
+	var cfg Config
 	err := r.db.QueryRow(ctx,
 		`SELECT session_id, url, account_id, token, COALESCE(webhook_token, ''),
 			inbox_id, inbox_name,

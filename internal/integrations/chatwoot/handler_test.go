@@ -16,8 +16,8 @@ import (
 	"wzap/internal/dto"
 )
 
-func newChatwootApp() (*fiber.App, *mockRepo, *mockCWClient) {
-	mockClient := &mockCWClient{
+func newChatwootApp() (*fiber.App, *mockRepo, *mockClient) {
+	mockClient := &mockClient{
 		contacts:      []Contact{},
 		conversations: []Conversation{},
 	}
@@ -26,7 +26,7 @@ func newChatwootApp() (*fiber.App, *mockRepo, *mockCWClient) {
 	svc := &Service{
 		repo:     repository,
 		msgRepo:  &mockMsgRepo{},
-		clientFn: func(cfg *ChatwootConfig) CWClient { return mockClient },
+		clientFn: func(cfg *Config) Client { return mockClient },
 		cache:    newMemoryCache(context.Background()),
 		cb:       newCircuitBreakerManager(),
 	}
@@ -171,7 +171,7 @@ func TestConfigure_SuccessEnvelope(t *testing.T) {
 func TestGetConfig_ResponseShapeParity(t *testing.T) {
 	app, repo, _ := newChatwootApp()
 
-	repo.cfg = &ChatwootConfig{
+	repo.cfg = &Config{
 		SessionID:  "test-session",
 		URL:        "https://app.chatwoot.com",
 		AccountID:  1,
@@ -214,7 +214,7 @@ func TestGetConfig_ResponseShapeParity(t *testing.T) {
 
 func TestGetConfig_MasksRedisURL(t *testing.T) {
 	app, repo, _ := newChatwootApp()
-	repo.cfg = &ChatwootConfig{
+	repo.cfg = &Config{
 		SessionID: "test-session",
 		URL:       "https://app.chatwoot.com",
 		AccountID: 1,
@@ -421,7 +421,7 @@ func TestImportHistory_Returns501(t *testing.T) {
 
 func TestIncomingWebhook_MissingHMAC_WithToken(t *testing.T) {
 	app, repo, _ := newChatwootApp()
-	repo.cfg = &ChatwootConfig{
+	repo.cfg = &Config{
 		SessionID:    "test-session",
 		Enabled:      true,
 		Token:        "test-token",
@@ -442,7 +442,7 @@ func TestIncomingWebhook_MissingHMAC_WithToken(t *testing.T) {
 
 func TestIncomingWebhook_ValidHMAC(t *testing.T) {
 	app, repo, _ := newChatwootApp()
-	repo.cfg = &ChatwootConfig{
+	repo.cfg = &Config{
 		SessionID:    "test-session",
 		Enabled:      true,
 		Token:        "test-token",
@@ -469,7 +469,7 @@ func TestIncomingWebhook_ValidHMAC(t *testing.T) {
 
 func TestIncomingWebhook_EmptyToken_NoHMAC(t *testing.T) {
 	app, repo, _ := newChatwootApp()
-	repo.cfg = &ChatwootConfig{
+	repo.cfg = &Config{
 		SessionID: "test-session",
 		Enabled:   true,
 		Token:     "",

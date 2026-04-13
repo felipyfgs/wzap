@@ -14,7 +14,7 @@ type CapabilityError struct {
 
 func (e *CapabilityError) Error() string {
 	switch e.Support {
-	case model.CapabilitySupportPartial:
+	case model.SupportPartial:
 		return fmt.Sprintf("operation partially supported for %s engine", e.Engine)
 	default:
 		return fmt.Sprintf("operation not supported for %s engine", e.Engine)
@@ -22,12 +22,12 @@ func (e *CapabilityError) Error() string {
 }
 
 func capabilitySupport(engine string, capability model.EngineCapability) model.CapabilitySupport {
-	return model.DefaultEngineCapabilityContract.Support(engine, capability)
+	return model.DefaultCapabilities.Support(engine, capability)
 }
 
 func requireCapability(engine string, capability model.EngineCapability) (model.CapabilitySupport, error) {
 	support := capabilitySupport(engine, capability)
-	if support == model.CapabilitySupportUnavailable {
+	if support == model.SupportUnavailable {
 		return support, &CapabilityError{
 			Engine:     engine,
 			Capability: capability,

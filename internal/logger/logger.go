@@ -2,6 +2,7 @@ package logger
 
 import (
 	"os"
+	"time"
 
 	"github.com/rs/zerolog"
 )
@@ -15,8 +16,14 @@ func Init(level, environment string) {
 	}
 	zerolog.SetGlobalLevel(lvl)
 
+	zerolog.TimeFieldFormat = time.RFC3339
+
 	if environment == "development" {
-		log = zerolog.New(zerolog.ConsoleWriter{Out: os.Stderr}).With().Timestamp().Logger()
+		writer := zerolog.ConsoleWriter{
+			Out:        os.Stderr,
+			TimeFormat: "2006-01-02 15:04:05",
+		}
+		log = zerolog.New(writer).With().Timestamp().Logger()
 	} else {
 		log = zerolog.New(os.Stderr).With().Timestamp().Logger()
 	}

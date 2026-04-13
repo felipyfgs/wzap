@@ -7,16 +7,16 @@ import (
 	"wzap/internal/logger"
 )
 
-func (s *Service) handleBotCommand(ctx context.Context, cfg *ChatwootConfig, content string) error {
+func (s *Service) handleBotCommand(ctx context.Context, cfg *Config, content string) error {
 	command := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(content), "/"))
 	command = strings.ToLower(command)
 
 	parts := strings.SplitN(command, ":", 2)
 	cmd := parts[0]
 
-	convID, err := s.findOrCreateBotConversation(ctx, cfg)
+	convID, err := s.ensureBotConv(ctx, cfg)
 	if err != nil {
-		logger.Warn().Err(err).Str("session", cfg.SessionID).Msg("[CW] failed to get bot conversation for command")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Msg("failed to get bot conversation for command")
 		return err
 	}
 
@@ -55,7 +55,7 @@ func (s *Service) handleBotCommand(ctx context.Context, cfg *ChatwootConfig, con
 			return nil
 		}
 		s.sendBotReply(ctx, client, convID, "⏳ Desconectando do WhatsApp...")
-		if err := s.connector.Disconnect(cfg.SessionID); err != nil {
+		if err := s.connector.Disconnect(ctx, cfg.SessionID); err != nil {
 			s.sendBotReply(ctx, client, convID, "❌ Falha ao desconectar: "+err.Error())
 			return nil
 		}
@@ -75,7 +75,7 @@ func (s *Service) handleBotCommand(ctx context.Context, cfg *ChatwootConfig, con
 
 	case "clearcache", "limparcache":
 		s.cache.DeleteConv(ctx, cfg.SessionID, "")
-		s.noConfigCache.Delete(cfg.SessionID)
+		s.missingConfig.Delete(cfg.SessionID)
 		s.sendBotReply(ctx, client, convID, "🗑️ Cache limpo com sucesso.")
 
 	case "help", "ajuda":
@@ -88,7 +88,7 @@ func (s *Service) handleBotCommand(ctx context.Context, cfg *ChatwootConfig, con
 	return nil
 }
 
-func (s *Service) sendBotReply(ctx context.Context, client CWClient, convID int, content string) {
+func (s *Service) sendBotReply(ctx context.Context, client Client, convID int, content string) {
 	_, _ = client.CreateMessage(ctx, convID, MessageReq{
 		Content:     content,
 		MessageType: "incoming",

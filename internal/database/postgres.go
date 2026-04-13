@@ -36,14 +36,14 @@ func New(ctx context.Context, url string) (*DB, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	logger.Info().Msg("Successfully connected to PostgreSQL")
+	logger.Info().Str("component", "db").Msg("Successfully connected to PostgreSQL")
 
 	return &DB{Pool: pool}, nil
 }
 
 func (db *DB) Close() {
 	if db.Pool != nil {
-		logger.Info().Msg("Closing PostgreSQL connection pool")
+		logger.Info().Str("component", "db").Msg("Closing PostgreSQL connection pool")
 		db.Pool.Close()
 	}
 }
@@ -84,7 +84,7 @@ func (db *DB) Migrate(ctx context.Context) error {
 		if err := db.applyMigrationWithLock(ctx, name); err != nil {
 			return fmt.Errorf("failed to apply migration %s: %w", name, err)
 		}
-		logger.Info().Str("file", name).Msg("Migration applied")
+		logger.Info().Str("component", "db").Str("file", name).Msg("Migration applied")
 	}
 
 	return nil
@@ -136,7 +136,7 @@ func (db *DB) applyMigrationWithLock(ctx context.Context, fileName string) error
 		return fmt.Errorf("failed to check migration status: %w", err)
 	}
 	if exists {
-		logger.Info().Str("file", fileName).Msg("Migration already applied, skipping")
+		logger.Info().Str("component", "db").Str("file", fileName).Msg("Migration already applied, skipping")
 		return nil
 	}
 
@@ -186,7 +186,7 @@ func (db *DB) BootstrapBaseline(ctx context.Context) error {
 		if err := db.recordMigrationIfNotExists(ctx, tm.migration); err != nil {
 			return fmt.Errorf("failed to record baseline migration %s: %w", tm.migration, err)
 		}
-		logger.Info().Str("file", tm.migration).Msg("Baseline migration recorded")
+		logger.Info().Str("component", "db").Str("file", tm.migration).Msg("Baseline migration recorded")
 	}
 
 	return nil

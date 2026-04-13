@@ -2,12 +2,15 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"wzap/internal/model"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+var ErrSessionNotFound = errors.New("session not found")
 
 type SessionRepository struct {
 	db *pgxpool.Pool
@@ -61,7 +64,7 @@ func (r *SessionRepository) FindByID(ctx context.Context, id string) (*model.Ses
 	var s model.Session
 	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Engine, &s.PhoneNumberID, &s.AccessToken, &s.BusinessAccountID, &s.AppSecret, &s.WebhookVerifyToken, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("session not found: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrSessionNotFound, err)
 	}
 	return &s, nil
 }
@@ -76,7 +79,7 @@ func (r *SessionRepository) FindByName(ctx context.Context, name string) (*model
 	var s model.Session
 	err := r.db.QueryRow(ctx, query, name).Scan(&s.ID, &s.Name, &s.Token, &s.JID, &s.QRCode, &s.Connected, &s.Status, &s.Engine, &s.PhoneNumberID, &s.AccessToken, &s.BusinessAccountID, &s.AppSecret, &s.WebhookVerifyToken, &s.Proxy, &s.Settings, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("session not found: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrSessionNotFound, err)
 	}
 	return &s, nil
 }

@@ -23,12 +23,12 @@ import (
 type MediaService struct {
 	minio           *storage.Minio
 	pool            *async.Pool
-	runtimeResolver *SessionRuntimeResolver
+	runtimeResolver *RuntimeResolver
 }
 
-func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository, pool *async.Pool, runtimeResolver *SessionRuntimeResolver) *MediaService {
+func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository, pool *async.Pool, runtimeResolver *RuntimeResolver) *MediaService {
 	if runtimeResolver == nil {
-		runtimeResolver = NewSessionRuntimeResolver(sessRepo, engine, provider)
+		runtimeResolver = NewRuntimeResolver(sessRepo, engine, provider)
 	}
 	return &MediaService{minio: minio, pool: pool, runtimeResolver: runtimeResolver}
 }
@@ -125,28 +125,28 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, mimeType string, do
 	_ = s.pool.Submit(func(ctx context.Context) {
 		runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
 		if err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Msg("Auto-upload: media download not supported for engine")
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Auto-upload: media download not supported for engine")
 			return
 		}
 
 		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
 			data, err := client.Download(ctx, downloadable)
 			if err != nil {
-				logger.Warn().Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to download media")
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to download media")
 				return struct{}{}, nil
 			}
 
 			key := fmt.Sprintf("%s/%s", session.ID, messageID)
 			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
-				logger.Warn().Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to upload to S3")
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to upload to S3")
 				return struct{}{}, nil
 			}
 
-			logger.Debug().Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: media stored in S3")
+			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: media stored in S3")
 			return struct{}{}, nil
 		})
 		if err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Msg("Auto-upload: failed to get client")
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Auto-upload: failed to get client")
 		}
 	})
 }

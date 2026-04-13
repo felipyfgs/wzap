@@ -83,6 +83,8 @@ openspec/changes/archive/
 # Agent
 .agent/
 
+.agents/
+
 # Temp
 temp/
 
@@ -91,3 +93,4 @@ temp/
 
 # Ona
 .ona/
+skills-lock.json

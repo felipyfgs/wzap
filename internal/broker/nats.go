@@ -45,7 +45,7 @@ func New(cfg *config.Config) (*NATS, error) {
 
 	_, err = js.CreateOrUpdateStream(ctx, streamConfig)
 	if err != nil {
-		logger.Warn().Err(err).Msg("Failed to create/update NATS WZAP_EVENTS stream")
+		logger.Warn().Str("component", "nats").Err(err).Msg("Failed to create/update NATS WZAP_EVENTS stream")
 	}
 
 	webhookStreamConfig := jetstream.StreamConfig{
@@ -57,10 +57,10 @@ func New(cfg *config.Config) (*NATS, error) {
 
 	_, err = js.CreateOrUpdateStream(ctx, webhookStreamConfig)
 	if err != nil {
-		logger.Warn().Err(err).Msg("Failed to create/update NATS WZAP_WEBHOOKS stream")
+		logger.Warn().Str("component", "nats").Err(err).Msg("Failed to create/update NATS WZAP_WEBHOOKS stream")
 	}
 
-	logger.Info().Msg("Successfully connected to NATS JetStream")
+	logger.Info().Str("component", "nats").Msg("Successfully connected to NATS JetStream")
 
 	return &NATS{
 		Conn: nc,
@@ -70,9 +70,9 @@ func New(cfg *config.Config) (*NATS, error) {
 
 func (n *NATS) Close() {
 	if n.Conn != nil {
-		logger.Info().Msg("Closing NATS connection")
+		logger.Info().Str("component", "nats").Msg("Closing NATS connection")
 		if err := n.Conn.Drain(); err != nil {
-			logger.Error().Err(err).Msg("Failed to drain NATS connection")
+			logger.Error().Str("component", "nats").Err(err).Msg("Failed to drain NATS connection")
 		}
 		n.Conn.Close()
 	}

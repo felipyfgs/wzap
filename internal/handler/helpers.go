@@ -58,7 +58,7 @@ func handleCapabilityError(c *fiber.Ctx, err error) bool {
 	}
 
 	title := "Not Supported"
-	if capabilityErr.Support == model.CapabilitySupportPartial {
+	if capabilityErr.Support == model.SupportPartial {
 		title = "Partial Support"
 	}
 

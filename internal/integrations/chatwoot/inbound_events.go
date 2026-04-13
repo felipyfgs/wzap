@@ -10,7 +10,7 @@ import (
 	"wzap/internal/model"
 )
 
-func (s *Service) handleReceipt(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleReceipt(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseReceiptPayload(payload)
 	if err != nil {
 		return
@@ -41,7 +41,7 @@ func (s *Service) handleReceipt(ctx context.Context, cfg *ChatwootConfig, payloa
 	}
 }
 
-func (s *Service) handleDelete(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleDelete(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseDeletePayload(payload)
 	if err != nil {
 		return
@@ -63,11 +63,11 @@ func (s *Service) handleDelete(ctx context.Context, cfg *ChatwootConfig, payload
 
 	client := s.clientFn(cfg)
 	if err := client.DeleteMessage(ctx, *msg.CWConversationID, *msg.CWMessageID); err != nil {
-		logger.Warn().Err(err).Msg("Failed to delete Chatwoot message")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to delete Chatwoot message")
 	}
 }
 
-func (s *Service) handleRevoke(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleRevoke(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseMessagePayload(payload)
 	if err != nil {
 		return
@@ -86,28 +86,28 @@ func (s *Service) handleRevoke(ctx context.Context, cfg *ChatwootConfig, payload
 		return
 	}
 
-	logger.Debug().Str("session", cfg.SessionID).Str("revokedMsgID", revokedMsgID).Msg("[CW] handling message revoke")
+	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("revokedMsgID", revokedMsgID).Msg("handling message revoke")
 
 	msg, err := s.waitForCWRef(ctx, cfg.SessionID, revokedMsgID)
 	if err != nil {
-		logger.Warn().Err(err).Str("revokedMsgID", revokedMsgID).Msg("[CW] message not found for revoke")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("revokedMsgID", revokedMsgID).Msg("message not found for revoke")
 		return
 	}
 
 	if msg.CWMessageID == nil || msg.CWConversationID == nil {
-		logger.Warn().Str("revokedMsgID", revokedMsgID).Msg("[CW] revoke: CW refs not available after retry")
+		logger.Warn().Str("component", "chatwoot").Str("revokedMsgID", revokedMsgID).Msg("revoke: CW refs not available after retry")
 		return
 	}
 
 	client := s.clientFn(cfg)
 	if err := client.DeleteMessage(ctx, *msg.CWConversationID, *msg.CWMessageID); err != nil {
-		logger.Warn().Err(err).Str("revokedMsgID", revokedMsgID).Msg("[CW] failed to delete Chatwoot message on revoke")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("revokedMsgID", revokedMsgID).Msg("failed to delete Chatwoot message on revoke")
 	} else {
-		logger.Debug().Str("revokedMsgID", revokedMsgID).Int("cwMsgID", *msg.CWMessageID).Msg("[CW] successfully deleted Chatwoot message on revoke")
+		logger.Debug().Str("component", "chatwoot").Str("revokedMsgID", revokedMsgID).Int("cwMsgID", *msg.CWMessageID).Msg("successfully deleted Chatwoot message on revoke")
 	}
 }
 
-func (s *Service) handleEdit(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleEdit(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseMessagePayload(payload)
 	if err != nil {
 		return
@@ -131,25 +131,25 @@ func (s *Service) handleEdit(ctx context.Context, cfg *ChatwootConfig, payload [
 		return
 	}
 
-	newText := extractTextFromMessage(editedMessage)
+	newText := extractText(editedMessage)
 	if newText == "" {
 		return
 	}
 
-	logger.Debug().Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Str("newText", newText).Msg("[CW] handling message edit")
+	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Str("newText", newText).Msg("handling message edit")
 
 	msg, err := s.waitForCWRef(ctx, cfg.SessionID, editedMsgID)
 	if err != nil {
-		logger.Warn().Err(err).Str("editedMsgID", editedMsgID).Msg("[CW] message not found for edit")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("editedMsgID", editedMsgID).Msg("message not found for edit")
 		return
 	}
 
 	if msg.CWMessageID == nil || msg.CWConversationID == nil {
-		logger.Warn().Str("editedMsgID", editedMsgID).Msg("[CW] edit: CW refs not available after retry")
+		logger.Warn().Str("component", "chatwoot").Str("editedMsgID", editedMsgID).Msg("edit: CW refs not available after retry")
 		return
 	}
 
-	logger.Debug().Str("editedMsgID", editedMsgID).Int("cwMsgID", *msg.CWMessageID).Int("cwConvID", *msg.CWConversationID).Msg("[CW] creating edit notification in Chatwoot")
+	logger.Debug().Str("component", "chatwoot").Str("editedMsgID", editedMsgID).Int("cwMsgID", *msg.CWMessageID).Int("cwConvID", *msg.CWConversationID).Msg("creating edit notification in Chatwoot")
 
 	client := s.clientFn(cfg)
 
@@ -166,11 +166,11 @@ func (s *Service) handleEdit(ctx context.Context, cfg *ChatwootConfig, payload [
 		ContentAttributes: map[string]any{"in_reply_to": *msg.CWMessageID},
 	})
 	if err != nil {
-		logger.Warn().Err(err).Str("editedMsgID", editedMsgID).Msg("[CW] failed to create edit notification in Chatwoot")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("editedMsgID", editedMsgID).Msg("failed to create edit notification in Chatwoot")
 		return
 	}
 
-	logger.Debug().Str("editedMsgID", editedMsgID).Msg("[CW] successfully created edit notification in Chatwoot")
+	logger.Debug().Str("component", "chatwoot").Str("editedMsgID", editedMsgID).Msg("successfully created edit notification in Chatwoot")
 }
 
 func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*model.Message, error) {
@@ -192,7 +192,7 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 		return msg, nil
 	}
 
-	logger.Debug().Str("msgID", msgID).Msg("[CW] CW refs not yet available, starting retry loop")
+	logger.Debug().Str("component", "chatwoot").Str("msgID", msgID).Msg("CW refs not yet available, starting retry loop")
 
 	for i, delay := range delays {
 		select {
@@ -207,7 +207,7 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 		}
 
 		if msg.CWMessageID != nil && msg.CWConversationID != nil {
-			logger.Debug().Str("msgID", msgID).Int("attempt", i+2).Msg("[CW] CW refs available after retry")
+			logger.Debug().Str("component", "chatwoot").Str("msgID", msgID).Int("attempt", i+2).Msg("CW refs available after retry")
 			return msg, nil
 		}
 	}
@@ -215,7 +215,7 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 	return msg, nil
 }
 
-func (s *Service) handleConnected(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleConnected(ctx context.Context, cfg *Config, payload []byte) {
 	now := time.Now()
 	if v, ok := s.lastBotNotify.Load(cfg.SessionID); ok {
 		if lastTime, valid := v.(time.Time); valid && now.Sub(lastTime) < 30*time.Second {
@@ -248,7 +248,7 @@ func (s *Service) handleConnected(ctx context.Context, cfg *ChatwootConfig, payl
 	}
 }
 
-func (s *Service) handleDisconnected(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleDisconnected(ctx context.Context, cfg *Config, payload []byte) {
 	convID, ok := s.findOpenBotConversation(ctx, cfg)
 	if !ok {
 		return
@@ -261,7 +261,7 @@ func (s *Service) handleDisconnected(ctx context.Context, cfg *ChatwootConfig, p
 	})
 }
 
-func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleQR(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		Codes       []string `json:"Codes"`
 		PairingCode string   `json:"PairingCode"`
@@ -276,16 +276,16 @@ func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []b
 
 	qrContent := data.Codes[0]
 
-	convID, err := s.findOrCreateBotConversation(ctx, cfg)
+	convID, err := s.ensureBotConv(ctx, cfg)
 	if err != nil {
-		logger.Warn().Err(err).Str("session", cfg.SessionID).Msg("Failed to find or create bot conversation for QR event")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Msg("Failed to find or create bot conversation for QR event")
 		return
 	}
 
 	client := s.clientFn(cfg)
 	qrPNG, err := generateQRCodePNG(qrContent)
 	if err != nil {
-		logger.Warn().Err(err).Msg("Failed to generate QR code")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to generate QR code")
 		return
 	}
 
@@ -294,10 +294,10 @@ func (s *Service) handleQR(ctx context.Context, cfg *ChatwootConfig, payload []b
 		caption += fmt.Sprintf("\n\n*Código de pareamento:* %s-%s", data.PairingCode[:4], data.PairingCode[4:])
 	}
 
-	_, _ = client.CreateMessageWithAttachment(ctx, convID, caption, "qrcode.png", qrPNG, "image/png", "incoming", "")
+	_, _ = client.CreateMessageWithAttachment(ctx, convID, caption, "qrcode.png", qrPNG, "image/png", "incoming", "", 0, nil)
 }
 
-func (s *Service) handleContact(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handleContact(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		JID    string `json:"JID"`
 		Action struct {
@@ -348,7 +348,7 @@ func (s *Service) handleContact(ctx context.Context, cfg *ChatwootConfig, payloa
 	_ = client.UpdateContact(ctx, contacts[0].ID, UpdateContactReq{Name: name})
 }
 
-func (s *Service) handlePushName(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handlePushName(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		JID         string `json:"JID"`
 		JIDAlt      string `json:"JIDAlt"`
@@ -382,7 +382,7 @@ func (s *Service) handlePushName(ctx context.Context, cfg *ChatwootConfig, paylo
 	_ = client.UpdateContact(ctx, contacts[0].ID, UpdateContactReq{Name: data.NewPushName})
 }
 
-func (s *Service) handlePicture(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
+func (s *Service) handlePicture(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		JID       string `json:"JID"`
 		PictureID string `json:"PictureID"`
@@ -404,8 +404,8 @@ func (s *Service) handlePicture(ctx context.Context, cfg *ChatwootConfig, payloa
 	phone := extractPhone(jid)
 
 	var avatarURL string
-	if s.profilePicGetter != nil {
-		url, err := s.profilePicGetter.GetProfilePicture(ctx, cfg.SessionID, data.JID)
+	if s.picGetter != nil {
+		url, err := s.picGetter.GetProfilePicture(ctx, cfg.SessionID, data.JID)
 		if err != nil || url == "" {
 			return
 		}
@@ -425,7 +425,7 @@ func (s *Service) handlePicture(ctx context.Context, cfg *ChatwootConfig, payloa
 	})
 }
 
-func (s *Service) handleGroupInfo(ctx context.Context, cfg *ChatwootConfig, payload []byte) error {
+func (s *Service) handleGroupInfo(ctx context.Context, cfg *Config, payload []byte) error {
 	var data struct {
 		JID      string  `json:"JID"`
 		Sender   *string `json:"Sender"`
@@ -460,8 +460,7 @@ func (s *Service) handleGroupInfo(ctx context.Context, cfg *ChatwootConfig, payl
 	groupJID := data.JID
 	convID, err := s.findOrCreateConversation(ctx, cfg, groupJID, "")
 	if err != nil {
-		logger.Warn().Err(err).Str("group", groupJID).Msg("[CW] failed to get group conversation for event")
-		return err
+		return fmt.Errorf("find or create group conversation for %s: %w", groupJID, err)
 	}
 
 	client := s.clientFn(cfg)
@@ -550,6 +549,6 @@ func (s *Service) handleGroupInfo(ctx context.Context, cfg *ChatwootConfig, payl
 	return nil
 }
 
-func (s *Service) handleHistorySync(ctx context.Context, cfg *ChatwootConfig, payload []byte) {
-	logger.Debug().Str("session", cfg.SessionID).Msg("[CW] HistorySync received (no-op until import triggered)")
+func (s *Service) handleHistorySync(ctx context.Context, cfg *Config, payload []byte) {
+	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Msg("HistorySync received (no-op until import triggered)")
 }

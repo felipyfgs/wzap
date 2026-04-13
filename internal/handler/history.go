@@ -49,7 +49,7 @@ func (h *HistoryHandler) ListMessages(c *fiber.Ctx) error {
 	}
 
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", sessionID).Msg("failed to list messages")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", sessionID).Msg("failed to list messages")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("History Error", "internal server error"))
 	}
 

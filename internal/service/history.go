@@ -57,7 +57,7 @@ func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID
 		}
 
 		if err := s.messageRepo.Save(ctx, msg); err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Failed to persist message")
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Failed to persist message")
 		}
 
 		if s.chatRepo == nil || chatJID == "" {
@@ -66,7 +66,7 @@ func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID
 
 		chat := buildLiveChatUpsert(sessionID, chatJID, messageID, timestamp)
 		if err := s.chatRepo.Upsert(ctx, chat); err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Str("chat", chatJID).Msg("Failed to persist canonical chat from live message")
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("chat", chatJID).Msg("Failed to persist canonical chat from live message")
 		}
 	})
 }
@@ -85,7 +85,7 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 			chat := buildHistoryChatUpsert(sessionID, conversation, aliases, syncType, chunkOrder)
 			if chat != nil && s.chatRepo != nil {
 				if err := s.chatRepo.Upsert(ctx, chat); err != nil {
-					logger.Warn().Err(err).Str("session", sessionID).Str("chat", chat.ChatJID).Msg("Failed to persist canonical chat from history sync")
+					logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("chat", chat.ChatJID).Msg("Failed to persist canonical chat from history sync")
 				}
 			}
 
@@ -99,7 +99,7 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 					continue
 				}
 				if err := s.messageRepo.Save(ctx, msg); err != nil {
-					logger.Warn().Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("Failed to persist history sync message")
+					logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("Failed to persist history sync message")
 				}
 			}
 		}

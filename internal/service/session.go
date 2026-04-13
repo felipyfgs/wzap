@@ -27,12 +27,12 @@ type SessionService struct {
 	webhookRepo     *repo.WebhookRepository
 	engine          *wa.Manager
 	provider        *cloudWA.Client
-	runtimeResolver *SessionRuntimeResolver
+	runtimeResolver *RuntimeResolver
 }
 
-func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager, provider *cloudWA.Client, runtimeResolver *SessionRuntimeResolver) *SessionService {
+func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager, provider *cloudWA.Client, runtimeResolver *RuntimeResolver) *SessionService {
 	if runtimeResolver == nil {
-		runtimeResolver = NewSessionRuntimeResolver(r, engine, provider)
+		runtimeResolver = NewRuntimeResolver(r, engine, provider)
 	}
 	return &SessionService{
 		repo:            r,
@@ -105,7 +105,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		events := make([]string, 0, len(req.Webhook.Events))
 		for _, e := range req.Webhook.Events {
 			if !model.ValidEventTypes[model.EventType(e)] {
-				logger.Warn().Str("event", e).Str("session", session.ID).Msg("Skipping invalid event type in inline webhook")
+				logger.Warn().Str("component", "service").Str("event", e).Str("session", session.ID).Msg("Skipping invalid event type in inline webhook")
 				continue
 			}
 			events = append(events, e)
@@ -119,7 +119,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 			CreatedAt: now,
 		}
 		if err := s.webhookRepo.Create(ctx, wh); err != nil {
-			logger.Warn().Err(err).Str("session", session.ID).Msg("Failed to create inline webhook")
+			logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Msg("Failed to create inline webhook")
 		} else {
 			resp.Webhook = &dto.WebhookResp{
 				ID:          wh.ID,
@@ -170,7 +170,7 @@ func (s *SessionService) Get(ctx context.Context, id string) (*dto.SessionResp, 
 
 func (s *SessionService) Delete(ctx context.Context, id string) error {
 	if err := s.engine.Logout(ctx, id); err != nil {
-		logger.Warn().Err(err).Str("session", id).Msg("Failed to logout session during delete")
+		logger.Warn().Str("component", "service").Err(err).Str("session", id).Msg("Failed to logout session during delete")
 	}
 	return s.repo.Delete(ctx, id)
 }
@@ -233,7 +233,7 @@ func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionSta
 	var loggedIn, connected bool
 	session := runtime.Session()
 
-	if runtime.Support() == model.CapabilitySupportPartial {
+	if runtime.Support() == model.SupportPartial {
 		if runtime.Provider() != nil && session.PhoneNumberID != "" {
 			pn, err := runtime.Provider().GetPhoneNumber(ctx, session.ID, session.PhoneNumberID)
 			if err == nil && pn != nil {
@@ -271,7 +271,7 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 	}
 	session := runtime.Session()
 
-	if runtime.Support() == model.CapabilitySupportPartial {
+	if runtime.Support() == model.SupportPartial {
 		if runtime.Provider() != nil && session.PhoneNumberID != "" {
 			pn, err := runtime.Provider().GetPhoneNumber(ctx, session.ID, session.PhoneNumberID)
 			if err != nil {
@@ -304,7 +304,7 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 	selfJID := client.Store.ID.ToNonAD()
 	runtimeCtx := runtime.WithContext(ctx)
 	if pic, picErr := client.GetProfilePictureInfo(runtimeCtx, selfJID, &whatsmeow.GetProfilePictureParams{}); picErr != nil {
-		logger.Warn().Err(picErr).Str("session", session.ID).Msg("failed to get profile picture")
+		logger.Warn().Str("component", "service").Err(picErr).Str("session", session.ID).Msg("failed to get profile picture")
 	} else if pic != nil {
 		resp.PictureURL = pic.URL
 	}
@@ -328,11 +328,11 @@ func (s *SessionService) Restart(ctx context.Context, id string) (*dto.SessionRe
 	if err != nil {
 		return nil, err
 	}
-	if support == model.CapabilitySupportPartial {
+	if support == model.SupportPartial {
 		return s.Get(ctx, id)
 	}
 
-	_ = s.engine.Disconnect(id)
+	_ = s.engine.Disconnect(ctx, id)
 	time.Sleep(1 * time.Second)
 	if _, _, err := s.engine.Connect(ctx, id); err != nil {
 		return nil, fmt.Errorf("failed to restart session: %w", err)

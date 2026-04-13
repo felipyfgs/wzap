@@ -3,7 +3,6 @@ package chatwoot
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -307,7 +306,7 @@ func TestShouldIgnoreJID(t *testing.T) {
 }
 
 func TestOnEvent_IncomingMessage(t *testing.T) {
-	mockClient := &mockCWClient{
+	mockClient := &mockClient{
 		contacts:      []Contact{{ID: 1, Name: "Test Contact"}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
@@ -337,15 +336,15 @@ func TestOnEvent_IncomingMessage(t *testing.T) {
 	payload, _ := json.Marshal(envelope)
 
 	svc := &Service{
-		repo:       &mockRepo{cfg: &ChatwootConfig{SessionID: "test-session", Enabled: true, InboxID: 1}},
+		repo:       &mockRepo{cfg: &Config{SessionID: "test-session", Enabled: true, InboxID: 1}},
 		msgRepo:    &mockMsgRepo{},
-		clientFn:   func(cfg *ChatwootConfig) CWClient { return mockClient },
+		clientFn:   func(cfg *Config) Client { return mockClient },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
 		cb:         newCircuitBreakerManager(),
 	}
 
-	svc.OnEvent("test-session", "Message", payload)
+	svc.OnEvent(context.Background(), "test-session", "Message", payload)
 
 	if len(mockClient.messages) == 0 {
 		t.Fatal("expected message to be created")
@@ -356,7 +355,7 @@ func TestOnEvent_IncomingMessage(t *testing.T) {
 }
 
 func TestOnEvent_OutgoingMessage(t *testing.T) {
-	mockClient := &mockCWClient{
+	mockClient := &mockClient{
 		contacts:      []Contact{{ID: 1, Name: "Test Contact"}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
@@ -386,15 +385,15 @@ func TestOnEvent_OutgoingMessage(t *testing.T) {
 	payload, _ := json.Marshal(envelope)
 
 	svc := &Service{
-		repo:       &mockRepo{cfg: &ChatwootConfig{SessionID: "test-session", Enabled: true, InboxID: 1}},
+		repo:       &mockRepo{cfg: &Config{SessionID: "test-session", Enabled: true, InboxID: 1}},
 		msgRepo:    &mockMsgRepo{},
-		clientFn:   func(cfg *ChatwootConfig) CWClient { return mockClient },
+		clientFn:   func(cfg *Config) Client { return mockClient },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
 		cb:         newCircuitBreakerManager(),
 	}
 
-	svc.OnEvent("test-session", "Message", payload)
+	svc.OnEvent(context.Background(), "test-session", "Message", payload)
 
 	if len(mockClient.messages) == 0 {
 		t.Fatal("expected message to be created")
@@ -404,30 +403,30 @@ func TestOnEvent_OutgoingMessage(t *testing.T) {
 	}
 }
 
-type mockCWClientWithErr struct {
-	mockCWClient
+type mockClientWithErr struct {
+	mockClient
 	createMsgErr error
 }
 
-func (m *mockCWClientWithErr) CreateMessage(_ context.Context, _ int, req MessageReq) (*Message, error) {
+func (m *mockClientWithErr) CreateMessage(_ context.Context, _ int, req MessageReq) (*Message, error) {
 	if m.createMsgErr != nil {
 		return nil, m.createMsgErr
 	}
-	return m.mockCWClient.CreateMessage(context.Background(), 0, req)
+	return m.mockClient.CreateMessage(context.Background(), 0, req)
 }
 
 func newTestServiceWithErr(createMsgErr error) *Service {
-	client := &mockCWClientWithErr{
-		mockCWClient: mockCWClient{
+	client := &mockClientWithErr{
+		mockClient: mockClient{
 			contacts:      []Contact{{ID: 1}},
 			conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 		},
 		createMsgErr: createMsgErr,
 	}
 	return &Service{
-		repo:       &mockRepo{cfg: &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}},
+		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
 		msgRepo:    &mockMsgRepoWithDuplicates{existingSourceIDs: map[string]bool{}},
-		clientFn:   func(_ *ChatwootConfig) CWClient { return client },
+		clientFn:   func(_ *Config) Client { return client },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
 		cb:         newCircuitBreakerManager(),
@@ -435,7 +434,7 @@ func newTestServiceWithErr(createMsgErr error) *Service {
 }
 
 func TestProcessInboundEvent_RetryableError_ReturnsError(t *testing.T) {
-	retryableErr := fmt.Errorf("chatwoot API error: status=500, body=internal server error")
+	retryableErr := &APIError{StatusCode: 500, Message: "internal server error"}
 	svc := newTestServiceWithErr(retryableErr)
 
 	payload := buildMsgPayload(t, "msg-retryable")
@@ -446,7 +445,7 @@ func TestProcessInboundEvent_RetryableError_ReturnsError(t *testing.T) {
 }
 
 func TestProcessInboundEvent_PermanentError_ReturnsNil(t *testing.T) {
-	permanentErr := fmt.Errorf("chatwoot API error: status=422, body=unprocessable entity")
+	permanentErr := &APIError{StatusCode: 422, Message: "unprocessable entity"}
 	svc := newTestServiceWithErr(permanentErr)
 
 	payload := buildMsgPayload(t, "msg-permanent")

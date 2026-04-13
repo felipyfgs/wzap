@@ -69,9 +69,10 @@ func buildSendOptsCloud(customID string, reply *dto.ReplyContext) []cloudWA.Send
 	return opts
 }
 
+var defaultHTTPClient = &net_http.Client{Timeout: 60 * time.Second}
+
 func downloadURL(url string) ([]byte, error) {
-	httpClient := &net_http.Client{Timeout: 60 * time.Second}
-	resp, err := httpClient.Get(url)
+	resp, err := defaultHTTPClient.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download from url: %w", err)
 	}

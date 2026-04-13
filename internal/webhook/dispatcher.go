@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -56,7 +57,7 @@ type WSBroadcaster interface {
 }
 
 type EventListener interface {
-	OnEvent(sessionID string, event model.EventType, payload []byte)
+	OnEvent(ctx context.Context, sessionID string, event model.EventType, payload []byte)
 }
 
 type Dispatcher struct {
@@ -69,6 +70,7 @@ type Dispatcher struct {
 	ws                WSBroadcaster
 	listeners         []EventListener
 	pool              *async.Pool
+	wg                sync.WaitGroup
 }
 
 func New(webhookRepo *repo.WebhookRepository, nats *broker.NATS, globalWebhookURL string, pool *async.Pool) *Dispatcher {
@@ -89,23 +91,27 @@ func (d *Dispatcher) AddListener(l EventListener) {
 	d.listeners = append(d.listeners, l)
 }
 
+func (d *Dispatcher) DispatchAsync(sessionID string, eventType model.EventType, payload []byte) {
+	_ = d.pool.Submit(func(_ context.Context) {
+		d.Dispatch(sessionID, eventType, payload)
+	})
+}
+
 // Dispatch looks up active webhooks for the session/event and delivers the payload.
 func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, payload []byte) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	logger.Debug().Str("session", sessionID).Str("event", string(eventType)).Str("globalWebhookURL", d.globalWebhookURL).Msg("Dispatching webhook")
-
 	webhooks, err := d.webhookRepo.FindActiveBySessionAndEvent(ctx, sessionID, string(eventType))
 	if err != nil {
-		logger.Error().Err(err).Str("session", sessionID).Str("event", string(eventType)).Msg("Failed to fetch webhooks for dispatch")
+		logger.Error().Str("component", "webhook").Err(err).Str("session", sessionID).Str("event", string(eventType)).Msg("Failed to fetch webhooks for dispatch")
 		return
 	}
 
-	logger.Debug().Int("webhooks", len(webhooks)).Msg("Active webhooks found")
+	logger.Debug().Str("component", "webhook").Str("session", sessionID).Str("event", string(eventType)).Int("webhooks", len(webhooks)).Str("globalURL", d.globalWebhookURL).Msg("Dispatching webhook")
 
 	if len(payload) > maxWebhookPayload {
-		logger.Debug().Str("session", sessionID).Str("event", string(eventType)).Int("size", len(payload)).Msg("Event payload too large for webhook delivery, skipping")
+		logger.Debug().Str("component", "webhook").Str("session", sessionID).Str("event", string(eventType)).Int("size", len(payload)).Msg("Event payload too large for webhook delivery, skipping")
 		if d.ws != nil {
 			d.ws.Broadcast(sessionID, payload)
 		}
@@ -126,7 +132,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	}
 
 	if d.globalWebhookURL != "" && d.shouldAttemptGlobal() {
-		logger.Debug().Str("url", d.globalWebhookURL).Msg("Sending to global webhook")
+		logger.Debug().Str("component", "webhook").Str("url", d.globalWebhookURL).Msg("Sending to global webhook")
 		_ = d.pool.Submit(func(ctx context.Context) {
 			d.deliverGlobalWebhook(payload)
 		})
@@ -138,7 +144,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 
 	for _, listener := range d.listeners {
 		_ = d.pool.Submit(func(ctx context.Context) {
-			listener.OnEvent(sessionID, eventType, payload)
+			listener.OnEvent(ctx, sessionID, eventType, payload)
 		})
 	}
 }
@@ -152,15 +158,17 @@ func (d *Dispatcher) publishToNATS(wh model.Webhook, payload []byte) {
 	}
 	data, err := json.Marshal(msg)
 	if err != nil {
-		logger.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to marshal NATS webhook delivery message")
+		logger.Error().Str("component", "webhook").Err(err).Str("webhook", wh.ID).Msg("Failed to marshal NATS webhook delivery message")
 		return
 	}
 	subject := natsDeliverSubject + "." + wh.ID
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := d.nats.Publish(ctx, subject, data); err != nil {
-		logger.Error().Err(err).Str("webhook", wh.ID).Msg("Failed to publish webhook delivery to NATS — falling back to direct dispatch")
-		go d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
+		logger.Error().Str("component", "webhook").Err(err).Str("webhook", wh.ID).Msg("Failed to publish webhook delivery to NATS — falling back to direct dispatch")
+		_ = d.pool.Submit(func(_ context.Context) {
+			d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
+		})
 	}
 }
 
@@ -169,16 +177,16 @@ func (d *Dispatcher) deliverHTTPWithRetry(url, secret string, payload []byte) {
 		if err := d.deliverHTTPWithErr(url, secret, payload); err != nil {
 			var permErr *permanentDeliveryError
 			if errors.As(err, &permErr) {
-				logger.Warn().Err(err).Str("url", url).Int("status", permErr.statusCode).Msg("Webhook HTTP delivery failed permanently (4xx, no retry)")
+				logger.Warn().Str("component", "webhook").Err(err).Str("url", url).Int("status", permErr.statusCode).Msg("Webhook HTTP delivery failed permanently (4xx, no retry)")
 				return
 			}
 			if attempt < maxHTTPRetries {
 				delay := httpRetryBaseDelay * time.Duration(1<<uint(attempt))
-				logger.Warn().Err(err).Str("url", url).Int("attempt", attempt+1).Dur("retryIn", delay).Msg("Webhook HTTP delivery failed, retrying")
+				logger.Warn().Str("component", "webhook").Err(err).Str("url", url).Int("attempt", attempt+1).Dur("retryIn", delay).Msg("Webhook HTTP delivery failed, retrying")
 				time.Sleep(delay)
 				continue
 			}
-			logger.Error().Err(err).Str("url", url).Msg("Webhook HTTP delivery failed after all retries")
+			logger.Error().Str("component", "webhook").Err(err).Str("url", url).Msg("Webhook HTTP delivery failed after all retries")
 		}
 		return
 	}
@@ -206,17 +214,17 @@ func (d *Dispatcher) deliverGlobalWebhook(payload []byte) {
 		failures := d.globalFailures.Add(1)
 		var permErr *permanentDeliveryError
 		if errors.As(err, &permErr) {
-			logger.Warn().Err(err).Str("url", d.globalWebhookURL).Int("status", permErr.statusCode).
+			logger.Warn().Str("component", "webhook").Err(err).Str("url", d.globalWebhookURL).Int("status", permErr.statusCode).
 				Uint64("failures", failures).Msg("Global webhook URL returned 4xx, backing off")
 		} else {
-			logger.Warn().Err(err).Str("url", d.globalWebhookURL).
+			logger.Warn().Str("component", "webhook").Err(err).Str("url", d.globalWebhookURL).
 				Uint64("failures", failures).Msg("Global webhook delivery failed, backing off")
 		}
 		return
 	}
 
 	if failures := d.globalFailures.Swap(0); failures > 0 {
-		logger.Info().Str("url", d.globalWebhookURL).Uint64("previousFailures", failures).Msg("Global webhook recovered")
+		logger.Info().Str("component", "webhook").Str("url", d.globalWebhookURL).Uint64("previousFailures", failures).Msg("Global webhook recovered")
 	}
 }
 
@@ -237,19 +245,21 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 
 	cons, err := d.nats.JS.CreateOrUpdateConsumer(ctx, "WZAP_WEBHOOKS", consumerCfg)
 	if err != nil {
-		logger.Warn().Err(err).Msg("Failed to create NATS webhook consumer — NATS-queued webhooks will fall back to direct dispatch")
+		logger.Warn().Str("component", "webhook").Err(err).Msg("Failed to create NATS webhook consumer — NATS-queued webhooks will fall back to direct dispatch")
 		return
 	}
 
 	msgCtx, err := cons.Messages()
 	if err != nil {
-		logger.Warn().Err(err).Msg("Failed to subscribe to NATS webhook consumer")
+		logger.Warn().Str("component", "webhook").Err(err).Msg("Failed to subscribe to NATS webhook consumer")
 		return
 	}
 
-	logger.Info().Msg("NATS webhook consumer started")
+	logger.Info().Str("component", "webhook").Msg("NATS webhook consumer started")
 
+	d.wg.Add(1)
 	go func() {
+		defer d.wg.Done()
 		defer msgCtx.Stop()
 		for {
 			select {
@@ -263,13 +273,13 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 				if ctx.Err() != nil {
 					return
 				}
-				logger.Warn().Err(err).Msg("NATS webhook consumer receive error")
+				logger.Warn().Str("component", "webhook").Err(err).Msg("NATS webhook consumer receive error")
 				continue
 			}
 
 			var dm deliverMsg
 			if err := json.Unmarshal(msg.Data(), &dm); err != nil {
-				logger.Error().Err(err).Msg("Failed to unmarshal NATS webhook delivery message")
+				logger.Error().Str("component", "webhook").Err(err).Msg("Failed to unmarshal NATS webhook delivery message")
 				_ = msg.Term()
 				continue
 			}
@@ -277,10 +287,10 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 			if err := d.deliverHTTPWithErr(dm.URL, dm.Secret, dm.Payload); err != nil {
 				var permErr *permanentDeliveryError
 				if errors.As(err, &permErr) {
-					logger.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Int("status", permErr.statusCode).Msg("NATS webhook delivery failed permanently (4xx), terminating message")
+					logger.Warn().Str("component", "webhook").Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Int("status", permErr.statusCode).Msg("NATS webhook delivery failed permanently (4xx), terminating message")
 					_ = msg.Term()
 				} else {
-					logger.Warn().Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Msg("NATS webhook delivery failed, will retry")
+					logger.Warn().Str("component", "webhook").Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Msg("NATS webhook delivery failed, will retry")
 					_ = msg.Nak()
 				}
 			} else {
@@ -288,6 +298,20 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+func (d *Dispatcher) Shutdown(ctx context.Context) error {
+	done := make(chan struct{})
+	go func() {
+		d.wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) error {
@@ -319,7 +343,7 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			logger.Warn().Err(err).Msg("Failed to close webhook response body")
+			logger.Warn().Str("component", "webhook").Err(err).Msg("Failed to close webhook response body")
 		}
 	}()
 	_, _ = io.Copy(io.Discard, resp.Body)
@@ -334,7 +358,7 @@ func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) erro
 	}
 
 	metrics.WebhooksDelivered.Inc()
-	logger.Info().Str("url", url).Int("status", resp.StatusCode).Msg("Webhook delivered successfully")
+	logger.Info().Str("component", "webhook").Str("url", url).Int("status", resp.StatusCode).Msg("Webhook delivered successfully")
 	return nil
 }
 

@@ -8,10 +8,10 @@ import (
 )
 
 type SessionConfigReader struct {
-	resolver *SessionRuntimeResolver
+	resolver *RuntimeResolver
 }
 
-func NewSessionConfigReader(resolver *SessionRuntimeResolver) *SessionConfigReader {
+func NewSessionConfigReader(resolver *RuntimeResolver) *SessionConfigReader {
 	return &SessionConfigReader{resolver: resolver}
 }
 

@@ -65,7 +65,7 @@ func TestConsumer_BackoffSchedule(t *testing.T) {
 }
 
 func TestConsumer_FallbackSync_NoNATS(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
@@ -76,7 +76,7 @@ func TestConsumer_FallbackSync_NoNATS(t *testing.T) {
 	}
 
 	payload := buildMsgPayload(t, "sync-msg")
-	svc.OnEvent("sess", model.EventMessage, payload)
+	svc.OnEvent(context.Background(), "sess", model.EventMessage, payload)
 
 	if len(client.messages) == 0 {
 		t.Error("expected message created via sync fallback")
@@ -96,7 +96,7 @@ func TestConsumer_DeadLetterSubject(t *testing.T) {
 }
 
 func TestConsumer_ProcessInboundEvent_Unknown(t *testing.T) {
-	svc := newTestService(&mockCWClient{})
+	svc := newTestService(&mockClient{})
 	// Unknown event type should be handled gracefully
 	err := svc.processInboundEvent(context.Background(), "sess", "UnknownEvent", json.RawMessage(`{}`))
 	if err != nil {

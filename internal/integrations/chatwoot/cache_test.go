@@ -69,14 +69,14 @@ func TestMemoryCache_IsolationBetweenSessions(t *testing.T) {
 }
 
 func TestNewCache_FallbackToMemoryOnEmptyURL(t *testing.T) {
-	c := NewCache("")
+	c := NewCache(context.Background(), "")
 	if _, ok := c.(*MemoryCache); !ok {
 		t.Error("expected MemoryCache when redisURL is empty")
 	}
 }
 
 func TestNewCache_FallbackToMemoryOnInvalidURL(t *testing.T) {
-	c := NewCache("not-a-valid-redis-url://!!!")
+	c := NewCache(context.Background(), "not-a-valid-redis-url://!!!")
 	if _, ok := c.(*MemoryCache); !ok {
 		t.Errorf("expected MemoryCache on invalid redis URL, got %T", c)
 	}

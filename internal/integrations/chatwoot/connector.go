@@ -19,8 +19,8 @@ func (c *managerConnector) Connect(ctx context.Context, sessionID string) error 
 	return err
 }
 
-func (c *managerConnector) Disconnect(sessionID string) error {
-	return c.engine.Disconnect(sessionID)
+func (c *managerConnector) Disconnect(ctx context.Context, sessionID string) error {
+	return c.engine.Disconnect(ctx, sessionID)
 }
 
 func (c *managerConnector) Logout(ctx context.Context, sessionID string) error {

@@ -8,7 +8,7 @@ import (
 	"wzap/internal/logger"
 )
 
-func (s *Service) findOrCreateConversation(ctx context.Context, cfg *ChatwootConfig, chatJID, pushName string) (int, error) {
+func (s *Service) findOrCreateConversation(ctx context.Context, cfg *Config, chatJID, pushName string) (int, error) {
 	if convID, _, ok := s.cache.GetConv(ctx, cfg.SessionID, chatJID); ok {
 		return convID, nil
 	}
@@ -18,7 +18,7 @@ func (s *Service) findOrCreateConversation(ctx context.Context, cfg *ChatwootCon
 		if convID, _, ok := s.cache.GetConv(ctx, cfg.SessionID, chatJID); ok {
 			return convID, nil
 		}
-		return s.findOrCreateConversationSlowPath(ctx, cfg, chatJID, pushName)
+		return s.upsertConversation(ctx, cfg, chatJID, pushName)
 	})
 	if err != nil {
 		return 0, err
@@ -31,14 +31,14 @@ func (s *Service) findOrCreateConversation(ctx context.Context, cfg *ChatwootCon
 	return convID, nil
 }
 
-func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *ChatwootConfig, chatJID, pushName string) (int, error) {
+func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, pushName string) (int, error) {
 	client := s.clientFn(cfg)
 	phone := extractPhone(chatJID)
 
 	contacts, _ := client.FilterContacts(ctx, phone)
 
 	if strings.HasPrefix(phone, "55") {
-		phoneVariant := addOrRemoveBR9thDigit(phone)
+		phoneVariant := normalizeBRPhone(phone)
 		if phoneVariant != phone {
 			contacts2, _ := client.FilterContacts(ctx, phoneVariant)
 			contacts = deduplicateContacts(append(contacts, contacts2...))
@@ -58,7 +58,7 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 		}
 		if baseID > 0 && mergeeID > 0 {
 			if err := client.MergeContacts(ctx, baseID, mergeeID); err != nil {
-				logger.Warn().Err(err).Int("baseID", baseID).Int("mergeeID", mergeeID).Msg("[CW] failed to merge BR contacts")
+				logger.Warn().Str("component", "chatwoot").Err(err).Int("baseID", baseID).Int("mergeeID", mergeeID).Msg("failed to merge BR contacts")
 			}
 			contacts = []Contact{{ID: baseID}}
 		}
@@ -71,8 +71,8 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 			name = phone
 		}
 		var avatarURL string
-		if s.profilePicGetter != nil {
-			if picURL, err := s.profilePicGetter.GetProfilePicture(ctx, cfg.SessionID, chatJID); err == nil {
+		if s.picGetter != nil {
+			if picURL, err := s.picGetter.GetProfilePicture(ctx, cfg.SessionID, chatJID); err == nil {
 				avatarURL = picURL
 			}
 		}
@@ -86,23 +86,34 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 		if err != nil {
 			return 0, fmt.Errorf("failed to create contact: %w", err)
 		}
-		logger.Debug().Int("contactID", contact.ID).Str("phone", phone).Msg("[CW] contact created")
+		logger.Debug().Str("component", "chatwoot").Int("contactID", contact.ID).Str("phone", phone).Msg("contact created")
 		contactID = contact.ID
 		if cfg.DatabaseURI != "" {
 			if err := addLabelToContact(ctx, cfg.DatabaseURI, cfg.InboxName, contact.ID); err != nil {
-				logger.Warn().Err(err).Int("contactID", contact.ID).Msg("[CW] failed to add label to contact")
+				logger.Warn().Str("component", "chatwoot").Err(err).Int("contactID", contact.ID).Msg("failed to add label to contact")
 			}
 		}
 	} else {
 		contactID = contacts[0].ID
-		logger.Debug().Int("contactID", contactID).Str("phone", phone).Msg("[CW] contact found")
-		existingName := contacts[0].Name
-		if pushName != "" && (existingName == "" || existingName == phone) {
-			_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Name: pushName})
+		logger.Debug().Str("component", "chatwoot").Int("contactID", contactID).Str("phone", phone).Msg("contact found")
+
+		update := UpdateContactReq{}
+		if pushName != "" && (contacts[0].Name == "" || contacts[0].Name == phone) {
+			update.Name = pushName
 		}
-		if contacts[0].Identifier == "" {
-			_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Identifier: chatJID})
-			logger.Debug().Int("contactID", contactID).Str("identifier", chatJID).Msg("[CW] updated contact identifier")
+		if contacts[0].Identifier == "" || strings.HasSuffix(contacts[0].Identifier, "@lid") {
+			update.Identifier = chatJID
+			logger.Debug().Str("component", "chatwoot").Int("contactID", contactID).Str("identifier", chatJID).Msg("updating contact identifier")
+		}
+		if s.picGetter != nil {
+			if picURL, err := s.picGetter.GetProfilePicture(ctx, cfg.SessionID, chatJID); err == nil && picURL != "" {
+				if urlFilename(picURL) != urlFilename(contacts[0].Thumbnail) {
+					update.AvatarURL = picURL
+				}
+			}
+		}
+		if update.Name != "" || update.Identifier != "" || update.AvatarURL != "" {
+			_ = client.UpdateContact(ctx, contactID, update)
 		}
 	}
 
@@ -119,7 +130,7 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 					reopenStatus = "pending"
 				}
 				if err := client.UpdateConversationStatus(ctx, conv.ID, reopenStatus); err != nil {
-					logger.Warn().Err(err).Int("convID", conv.ID).Msg("Failed to reopen conversation")
+					logger.Warn().Str("component", "chatwoot").Err(err).Int("convID", conv.ID).Msg("Failed to reopen conversation")
 				}
 				s.cache.SetConv(ctx, cfg.SessionID, chatJID, conv.ID, contactID)
 				return conv.ID, nil
@@ -149,7 +160,7 @@ func (s *Service) findOrCreateConversationSlowPath(ctx context.Context, cfg *Cha
 	return conv.ID, nil
 }
 
-func (s *Service) findOrCreateBotConversation(ctx context.Context, cfg *ChatwootConfig) (int, error) {
+func (s *Service) ensureBotConv(ctx context.Context, cfg *Config) (int, error) {
 	contactID, err := s.ensureBotContact(ctx, cfg)
 	if err != nil {
 		return 0, err
@@ -178,7 +189,7 @@ func (s *Service) findOrCreateBotConversation(ctx context.Context, cfg *Chatwoot
 	return conv.ID, nil
 }
 
-func (s *Service) findOpenBotConversation(ctx context.Context, cfg *ChatwootConfig) (int, bool) {
+func (s *Service) findOpenBotConversation(ctx context.Context, cfg *Config) (int, bool) {
 	contactID, err := s.ensureBotContact(ctx, cfg)
 	if err != nil {
 		return 0, false
@@ -199,7 +210,7 @@ func (s *Service) findOpenBotConversation(ctx context.Context, cfg *ChatwootConf
 	return 0, false
 }
 
-func (s *Service) ensureBotContact(ctx context.Context, cfg *ChatwootConfig) (int, error) {
+func (s *Service) ensureBotContact(ctx context.Context, cfg *Config) (int, error) {
 	client := s.clientFn(cfg)
 
 	botName := cfg.InboxName
@@ -240,7 +251,7 @@ func (s *Service) webhookURL(sessionID string) string {
 	return fmt.Sprintf("%s/chatwoot/webhook/%s", base, sessionID)
 }
 
-func (s *Service) Configure(ctx context.Context, cfg *ChatwootConfig) error {
+func (s *Service) Configure(ctx context.Context, cfg *Config) error {
 	if cfg.InboxName == "" {
 		cfg.InboxName = "wzap"
 	}
@@ -274,7 +285,7 @@ func (s *Service) Configure(ctx context.Context, cfg *ChatwootConfig) error {
 	if err := s.repo.Upsert(ctx, cfg); err != nil {
 		return err
 	}
-	s.InvalidateNoConfigCache(cfg.SessionID)
+	s.ClearConfigCache(cfg.SessionID)
 	return nil
 }
 

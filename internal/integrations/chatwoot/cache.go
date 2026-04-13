@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	convCacheTTL        = time.Hour
-	idempotencyCacheTTL = 24 * time.Hour
-	circuitCacheTTL     = 5 * time.Minute
-	cacheCleanupEvery   = 5 * time.Minute
+	convCacheTTL    = time.Hour
+	idempotentTTL   = 24 * time.Hour
+	circuitCacheTTL = 5 * time.Minute
+	cleanupInterval = 5 * time.Minute
 )
 
 type convCacheEntry struct {
@@ -73,7 +73,7 @@ func (r *RedisCache) GetIdempotent(ctx context.Context, sessionID, sourceID stri
 
 func (r *RedisCache) SetIdempotent(ctx context.Context, sessionID, sourceID string) {
 	key := fmt.Sprintf("cw:idempotent:%s:%s", sessionID, sourceID)
-	_ = r.client.Set(ctx, key, "1", idempotencyCacheTTL).Err()
+	_ = r.client.Set(ctx, key, "1", idempotentTTL).Err()
 }
 
 type MemoryCache struct {
@@ -97,7 +97,7 @@ func newMemoryCache(ctx context.Context) *MemoryCache {
 }
 
 func (m *MemoryCache) startCleanup(ctx context.Context) {
-	ticker := time.NewTicker(cacheCleanupEvery)
+	ticker := time.NewTicker(cleanupInterval)
 
 	go func() {
 		defer ticker.Stop()
@@ -186,27 +186,27 @@ func (m *MemoryCache) SetIdempotent(_ context.Context, sessionID, sourceID strin
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.idempotents[sessionID+":"+sourceID] = idempotentEntry{
-		expiresAt: time.Now().Add(idempotencyCacheTTL),
+		expiresAt: time.Now().Add(idempotentTTL),
 	}
 }
 
-func NewCache(redisURL string) Cache {
+func NewCache(ctx context.Context, redisURL string) Cache {
 	if redisURL == "" {
-		return newMemoryCache(context.Background())
+		return newMemoryCache(ctx)
 	}
 	opt, err := redis.ParseURL(redisURL)
 	if err != nil {
-		logger.Warn().Err(err).Str("redisURL", redisURL).Msg("[CW] invalid Redis URL, using in-memory cache")
-		return newMemoryCache(context.Background())
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("redisURL", redisURL).Msg("invalid Redis URL, using in-memory cache")
+		return newMemoryCache(ctx)
 	}
 	client := redis.NewClient(opt)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	pingCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	if err := client.Ping(ctx).Err(); err != nil {
-		logger.Warn().Err(err).Msg("[CW] Redis unavailable, using in-memory cache")
+	if err := client.Ping(pingCtx).Err(); err != nil {
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Redis unavailable, using in-memory cache")
 		_ = client.Close()
-		return newMemoryCache(context.Background())
+		return newMemoryCache(ctx)
 	}
-	logger.Info().Str("addr", opt.Addr).Msg("[CW] Redis cache connected")
+	logger.Info().Str("component", "chatwoot").Str("addr", opt.Addr).Msg("Redis cache connected")
 	return &RedisCache{client: client}
 }

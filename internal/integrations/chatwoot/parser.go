@@ -35,6 +35,7 @@ type waMessageInfo struct {
 	Chat           string        `json:"Chat"`
 	Sender         string        `json:"Sender"`
 	SenderAlt      string        `json:"SenderAlt"`
+	RecipientAlt   string        `json:"RecipientAlt"`
 	AddressingMode string        `json:"AddressingMode"`
 	IsFromMe       bool          `json:"IsFromMe"`
 	IsGroup        bool          `json:"IsGroup"`
@@ -109,20 +110,20 @@ type mediaInfo struct {
 	FileName      string
 }
 
+var mediaTypeMap = map[string]string{
+	"imageMessage":    "image",
+	"videoMessage":    "video",
+	"audioMessage":    "audio",
+	"documentMessage": "document",
+	"stickerMessage":  "sticker",
+}
+
 func extractMediaInfo(msg map[string]interface{}) *mediaInfo {
 	if msg == nil {
 		return nil
 	}
 
-	mediaTypes := map[string]string{
-		"imageMessage":    "image",
-		"videoMessage":    "video",
-		"audioMessage":    "audio",
-		"documentMessage": "document",
-		"stickerMessage":  "sticker",
-	}
-
-	for key, mt := range mediaTypes {
+	for key, mt := range mediaTypeMap {
 		sub := getMapField(msg, key)
 		if sub == nil {
 			continue
@@ -197,7 +198,7 @@ func detectMessageType(msg map[string]interface{}) string {
 	return "text"
 }
 
-func extractTextFromMessage(msg map[string]interface{}) string {
+func extractText(msg map[string]interface{}) string {
 	if msg == nil {
 		return ""
 	}
@@ -265,7 +266,7 @@ func extractTextFromMessage(msg map[string]interface{}) string {
 			}
 		}
 		if len(parts) > 0 {
-			return joinStrings(parts, "\n\n")
+			return strings.Join(parts, "\n\n")
 		}
 	}
 
@@ -373,17 +374,6 @@ func lastIndex(s, sep string) int {
 	return idx
 }
 
-func joinStrings(parts []string, sep string) string {
-	result := ""
-	for i, p := range parts {
-		if i > 0 {
-			result += sep
-		}
-		result += p
-	}
-	return result
-}
-
 func getStringField(m map[string]interface{}, key string) string {
 	if v, ok := m[key]; ok {
 		if s, ok := v.(string); ok {
@@ -454,7 +444,7 @@ func extractStanzaID(msg map[string]interface{}) string {
 	return ""
 }
 
-func extractQuotedMessageText(msg map[string]interface{}) string {
+func extractQuoteText(msg map[string]interface{}) string {
 	if msg == nil {
 		return ""
 	}

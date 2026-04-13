@@ -56,7 +56,7 @@ func (h *WebSocketHandler) Handle() func(*ws.Conn) {
 		for {
 			_, _, err := c.ReadMessage()
 			if err != nil {
-				logger.Debug().Err(err).Str("session", sessionID).Msg("WebSocket read error")
+				logger.Debug().Str("component", "handler").Err(err).Str("session", sessionID).Msg("WebSocket read error")
 				break
 			}
 		}

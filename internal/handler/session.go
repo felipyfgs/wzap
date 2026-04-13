@@ -13,23 +13,23 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-type sessionLifecycleService interface {
-	Connect(ctx context.Context, sessionID string) (*service.SessionConnectResult, error)
-	Disconnect(ctx context.Context, sessionID string) (*service.SessionDisconnectResult, error)
-	QR(ctx context.Context, sessionID string) (*service.SessionQRResult, error)
-	Pair(ctx context.Context, sessionID, phone string) (*service.SessionPairResult, error)
-	Logout(ctx context.Context, sessionID string) (*service.SessionLogoutResult, error)
-	Reconnect(ctx context.Context, sessionID string) (*service.SessionReconnectResult, error)
-	Restart(ctx context.Context, sessionID string) (*service.SessionRestartResult, error)
+type lifecycleService interface {
+	Connect(ctx context.Context, sessionID string) (*service.ConnectResult, error)
+	Disconnect(ctx context.Context, sessionID string) (*service.DisconnectResult, error)
+	QR(ctx context.Context, sessionID string) (*service.QRResult, error)
+	Pair(ctx context.Context, sessionID, phone string) (*service.PairResult, error)
+	Logout(ctx context.Context, sessionID string) (*service.LogoutResult, error)
+	Reconnect(ctx context.Context, sessionID string) (*service.ReconnectResult, error)
+	Restart(ctx context.Context, sessionID string) (*service.RestartResult, error)
 }
 
 type SessionHandler struct {
 	sessionSvc   *service.SessionService
-	lifecycleSvc sessionLifecycleService
+	lifecycleSvc lifecycleService
 	chatwootRepo *chatwoot.Repository
 }
 
-func NewSessionHandler(sessionSvc *service.SessionService, lifecycleSvc sessionLifecycleService, chatwootRepo *chatwoot.Repository) *SessionHandler {
+func NewSessionHandler(sessionSvc *service.SessionService, lifecycleSvc lifecycleService, chatwootRepo *chatwoot.Repository) *SessionHandler {
 	return &SessionHandler{
 		sessionSvc:   sessionSvc,
 		lifecycleSvc: lifecycleSvc,
@@ -84,7 +84,7 @@ func (h *SessionHandler) List(c *fiber.Ctx) error {
 
 	sessions, err := h.sessionSvc.List(c.Context())
 	if err != nil {
-		logger.Warn().Err(err).Msg("failed to list sessions")
+		logger.Warn().Str("component", "handler").Err(err).Msg("failed to list sessions")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 
@@ -130,7 +130,7 @@ func (h *SessionHandler) Get(c *fiber.Ctx) error {
 func (h *SessionHandler) Delete(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 	if err := h.sessionSvc.Delete(c.Context(), id); err != nil {
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to delete session")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to delete session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Internal Server Error", "internal server error"))
 	}
 
@@ -207,7 +207,7 @@ func (h *SessionHandler) Connect(c *fiber.Ctx) error {
 		if handleLifecycleError(c, err) {
 			return nil
 		}
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to connect session")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to connect session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Connection Error", "internal server error"))
 	}
 
@@ -232,7 +232,7 @@ func (h *SessionHandler) Disconnect(c *fiber.Ctx) error {
 		if handleLifecycleError(c, err) {
 			return nil
 		}
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to disconnect session")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to disconnect session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Disconnect Error", "internal server error"))
 	}
 
@@ -295,7 +295,7 @@ func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 		if handleLifecycleError(c, err) {
 			return nil
 		}
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to pair phone")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to pair phone")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Pair Error", "internal server error"))
 	}
 
@@ -320,7 +320,7 @@ func (h *SessionHandler) Logout(c *fiber.Ctx) error {
 		if handleLifecycleError(c, err) {
 			return nil
 		}
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to logout session")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to logout session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Logout Error", "internal server error"))
 	}
 
@@ -367,7 +367,7 @@ func (h *SessionHandler) Reconnect(c *fiber.Ctx) error {
 		if handleLifecycleError(c, err) {
 			return nil
 		}
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to reconnect session")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to reconnect session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Reconnect Error", "internal server error"))
 	}
 
@@ -392,7 +392,7 @@ func (h *SessionHandler) Restart(c *fiber.Ctx) error {
 		if handleLifecycleError(c, err) {
 			return nil
 		}
-		logger.Warn().Err(err).Str("sessionID", id).Msg("failed to restart session")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to restart session")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Restart Error", "internal server error"))
 	}
 

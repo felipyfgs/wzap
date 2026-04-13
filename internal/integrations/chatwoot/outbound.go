@@ -17,10 +17,11 @@ import (
 	"wzap/internal/model"
 )
 
+const maxMediaBytes int64 = 256 * 1024 * 1024
+
 var (
-	googleMapsRegex       = regexp.MustCompile(`[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)`)
-	coordRegex            = regexp.MustCompile(`(-?\d+\.\d+),\s*(-?\d+\.\d+)`)
-	maxMediaBytes   int64 = 256 * 1024 * 1024
+	googleMapsRegex = regexp.MustCompile(`[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)`)
+	coordRegex      = regexp.MustCompile(`(-?\d+\.\d+),\s*(-?\d+\.\d+)`)
 )
 
 func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, body dto.ChatwootWebhookPayload) error {
@@ -51,14 +52,14 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 	}
 
 	if eventType == "conversation_status_changed" && body.Conversation != nil {
-		return s.handleConversationStatusChanged(ctx, cfg, body)
+		return s.handleStatusChanged(ctx, cfg, body)
 	}
 
 	if msg != nil && msg.IsOutgoing() {
 		sourceID := msg.SourceID
 		if sourceID != "" {
 			if exists, err := s.msgRepo.ExistsBySourceID(ctx, sessionID, sourceID); err == nil && exists {
-				logger.Debug().Str("sourceID", sourceID).Msg("[CW] outbound already processed, skipping (idempotency)")
+				logger.Debug().Str("component", "chatwoot").Str("sourceID", sourceID).Msg("outbound already processed, skipping (idempotency)")
 				metrics.CWIdempotentDrops.WithLabelValues(sessionID).Inc()
 				return nil
 			}
@@ -66,7 +67,7 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 		if msg.ID > 0 {
 			cwIdemKey := fmt.Sprintf("cw-out:%d", msg.ID)
 			if s.cache.GetIdempotent(ctx, sessionID, cwIdemKey) {
-				logger.Debug().Int("cwMsgID", msg.ID).Msg("[CW] outbound already processed, skipping (CW msg ID idempotency)")
+				logger.Debug().Str("component", "chatwoot").Int("cwMsgID", msg.ID).Msg("outbound already processed, skipping (CW msg ID idempotency)")
 				metrics.CWIdempotentDrops.WithLabelValues(sessionID).Inc()
 				return nil
 			}
@@ -78,7 +79,7 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 	return nil
 }
 
-func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *ChatwootConfig, body dto.ChatwootWebhookPayload) error {
+func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	msg := body.GetMessage()
 	if msg == nil || body.Conversation == nil {
 		return nil
@@ -98,7 +99,7 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *ChatwootConfig
 		chatJID = s.resolvePhoneToJID(ctx, cfg.SessionID, phone)
 	}
 	if chatJID == "" {
-		logger.Warn().Int("convID", conv.ID).Msg("[CW] no chat JID found for outgoing message")
+		logger.Warn().Str("component", "chatwoot").Int("convID", conv.ID).Msg("no chat JID found for outgoing message")
 		return nil
 	}
 
@@ -107,11 +108,11 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *ChatwootConfig
 	}
 
 	if !isValidWhatsAppJID(chatJID) {
-		logger.Debug().Str("chatJID", chatJID).Msg("[CW] skipping outgoing message: invalid WhatsApp JID (bot conversation)")
+		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Msg("skipping outgoing message: invalid WhatsApp JID (bot conversation)")
 		return nil
 	}
 
-	logger.Debug().Str("chatJID", chatJID).Str("content", msg.Content).Msg("[CW] sending outgoing message to WhatsApp")
+	logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Str("content", msg.Content).Msg("sending outgoing message to WhatsApp")
 
 	replyTo := s.resolveOutboundReply(ctx, cfg.SessionID, msg.ContentAttributes)
 
@@ -153,7 +154,7 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *ChatwootConfig
 			attURL = rewriteAttachmentURL(attURL, cfg.URL)
 			waMsgID, err := s.sendAttachmentToWhatsApp(ctx, cfg, chatJID, attURL, caption, att.FileType, replyTo)
 			if err != nil {
-				logger.Warn().Err(err).Msg("Failed to send attachment from Chatwoot to WhatsApp")
+				logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to send attachment from Chatwoot to WhatsApp")
 				s.sendErrorToAgent(ctx, cfg, cwConvID, err)
 				continue
 			}
@@ -197,7 +198,7 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *ChatwootConfig
 	return nil
 }
 
-func (s *Service) handleMessageEdited(ctx context.Context, cfg *ChatwootConfig, body dto.ChatwootWebhookPayload) error {
+func (s *Service) handleMessageEdited(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	msg := body.GetMessage()
 	if msg == nil || msg.Content == "" {
 		return nil
@@ -205,6 +206,7 @@ func (s *Service) handleMessageEdited(ctx context.Context, cfg *ChatwootConfig, 
 
 	storedMsg, err := s.msgRepo.FindByCWMessageID(ctx, cfg.SessionID, msg.ID)
 	if err != nil {
+		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", msg.ID).Msg("handleMessageEdited: message not found in store")
 		return nil
 	}
 
@@ -238,7 +240,7 @@ func isVCardContent(content string) bool {
 	return strings.HasPrefix(strings.TrimSpace(content), "BEGIN:VCARD")
 }
 
-func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *ChatwootConfig, chatJID, content string, replyTo *dto.ReplyContext) error {
+func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *Config, chatJID, content string, replyTo *dto.ReplyContext) error {
 	vcards := splitVCards(content)
 	for _, vcard := range vcards {
 		name := extractVCardName(vcard)
@@ -250,7 +252,7 @@ func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *ChatwootConfig, 
 			Name:  name,
 			Vcard: vcard,
 		}); err != nil {
-			logger.Warn().Err(err).Msg("[CW] failed to send vCard to WhatsApp")
+			logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to send vCard to WhatsApp")
 		}
 	}
 	return nil
@@ -280,7 +282,7 @@ func extractVCardName(vcard string) string {
 	return ""
 }
 
-func (s *Service) handleMessageUpdated(ctx context.Context, cfg *ChatwootConfig, body dto.ChatwootWebhookPayload) error {
+func (s *Service) handleMessageUpdated(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	webhookMsg := body.GetMessage()
 	if webhookMsg == nil {
 		return nil
@@ -289,6 +291,7 @@ func (s *Service) handleMessageUpdated(ctx context.Context, cfg *ChatwootConfig,
 	cwMsgID := webhookMsg.ID
 	storedMsg, err := s.msgRepo.FindByCWMessageID(ctx, cfg.SessionID, cwMsgID)
 	if err != nil {
+		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", cwMsgID).Msg("handleMessageUpdated: message not found in store")
 		return nil
 	}
 
@@ -307,7 +310,7 @@ func (s *Service) handleMessageUpdated(ctx context.Context, cfg *ChatwootConfig,
 	return nil
 }
 
-func (s *Service) handleConversationStatusChanged(ctx context.Context, cfg *ChatwootConfig, body dto.ChatwootWebhookPayload) error {
+func (s *Service) handleStatusChanged(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	if body.Conversation == nil {
 		return nil
 	}
@@ -361,7 +364,7 @@ func filenameFromURL(rawURL string) string {
 	return ""
 }
 
-func (s *Service) sendAttachmentToWhatsApp(ctx context.Context, cfg *ChatwootConfig, chatJID, attachmentURL, caption, fileType string, replyTo *dto.ReplyContext) (string, error) {
+func (s *Service) sendAttachmentToWhatsApp(ctx context.Context, cfg *Config, chatJID, attachmentURL, caption, fileType string, replyTo *dto.ReplyContext) (string, error) {
 	var timeout time.Duration
 	if fileType == "video" {
 		timeout = time.Duration(cfg.TimeoutLargeSeconds) * time.Second
@@ -401,7 +404,7 @@ func (s *Service) sendAttachmentToWhatsApp(ctx context.Context, cfg *ChatwootCon
 	metrics.CWMediaDownloadBytes.WithLabelValues(cfg.SessionID, fileType).Add(float64(len(data)))
 
 	filename := filenameFromURL(attachmentURL)
-	mimeType, _ := GetMIMETypeAndExt(filename, data)
+	mimeType, _ := DetectMIME(filename, data)
 
 	if strings.HasSuffix(strings.ToLower(filename), ".webp") || mimeType == "image/webp" {
 		waMsgID, err := s.messageSvc.SendDocument(ctx, cfg.SessionID, dto.SendMediaReq{
@@ -416,8 +419,8 @@ func (s *Service) sendAttachmentToWhatsApp(ctx context.Context, cfg *ChatwootCon
 	}
 
 	msgType := fileType
-	if strings.Contains(mimeType, "/") {
-		msgType = strings.Split(mimeType, "/")[0]
+	if idx := strings.Index(mimeType, "/"); idx >= 0 {
+		msgType = mimeType[:idx]
 	}
 
 	mediaReq := dto.SendMediaReq{
@@ -448,10 +451,10 @@ func (s *Service) resolveOutboundReply(ctx context.Context, sessionID string, at
 	if attrs == nil {
 		return nil
 	}
-	if extID, ok := attrs["in_reply_to_external_id"].(string); ok && strings.HasPrefix(extID, "WAID:") {
+	if extID, ok := attrs["reply_source_id"].(string); ok && strings.HasPrefix(extID, "WAID:") {
 		waMsgID := strings.TrimPrefix(extID, "WAID:")
 		if origMsg, err := s.msgRepo.FindByID(ctx, sessionID, waMsgID); err == nil {
-			logger.Debug().Str("replyToMsgID", waMsgID).Str("participant", origMsg.SenderJID).Msg("[CW] found original message for reply via external_id")
+			logger.Debug().Str("component", "chatwoot").Str("replyToMsgID", waMsgID).Str("participant", origMsg.SenderJID).Msg("found original message for reply via reply_source_id")
 			return &dto.ReplyContext{MessageID: origMsg.ID, Participant: origMsg.SenderJID}
 		}
 	}
@@ -467,7 +470,7 @@ func signContent(content, senderName, delimiter string) string {
 	if senderName == "" {
 		return content
 	}
-	prefix := fmt.Sprintf("*%s:*", senderName)
+	prefix := "*" + senderName + ":*"
 	if strings.HasPrefix(content, prefix) {
 		return content
 	}
@@ -475,10 +478,10 @@ func signContent(content, senderName, delimiter string) string {
 		delimiter = "\n"
 	}
 	delimiter = strings.ReplaceAll(delimiter, `\n`, "\n")
-	return fmt.Sprintf("%s%s%s", prefix, delimiter, content)
+	return prefix + delimiter + content
 }
 
-func (s *Service) markReadIfEnabled(ctx context.Context, cfg *ChatwootConfig, chatJID string) {
+func (s *Service) markReadIfEnabled(ctx context.Context, cfg *Config, chatJID string) {
 	if !cfg.MessageRead {
 		return
 	}
@@ -492,7 +495,7 @@ func (s *Service) markReadIfEnabled(ctx context.Context, cfg *ChatwootConfig, ch
 	})
 }
 
-func (s *Service) sendErrorToAgent(ctx context.Context, cfg *ChatwootConfig, convID int, sendErr error) {
+func (s *Service) sendErrorToAgent(ctx context.Context, cfg *Config, convID int, sendErr error) {
 	client := s.clientFn(cfg)
 	errMsg := sendErr.Error()
 	if strings.Contains(errMsg, "connection") || strings.Contains(errMsg, "timeout") || strings.Contains(errMsg, "EOF") {

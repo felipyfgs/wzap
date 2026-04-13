@@ -19,14 +19,14 @@ import (
 )
 
 type Handler struct {
-	service      *Service
-	chatwootRepo Repo
+	service *Service
+	repo    Repo
 }
 
-func NewHandler(service *Service, chatwootRepo Repo) *Handler {
+func NewHandler(service *Service, repo Repo) *Handler {
 	return &Handler{
-		service:      service,
-		chatwootRepo: chatwootRepo,
+		service: service,
+		repo:    repo,
 	}
 }
 
@@ -51,7 +51,7 @@ func validateReq(c *fiber.Ctx, req interface{}) error {
 	return nil
 }
 
-func configToResp(cfg *ChatwootConfig, webhookURL string) dto.ChatwootConfigResp {
+func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 	ignoreGroups := false
 	for _, jid := range cfg.IgnoreJIDs {
 		if jid == "@g.us" {
@@ -124,7 +124,7 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 		importPeriod = req.ImportPeriod
 	}
 
-	cfg := &ChatwootConfig{
+	cfg := &Config{
 		SessionID:           sessionID,
 		URL:                 req.URL,
 		AccountID:           req.AccountID,
@@ -164,7 +164,7 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 	cfg.IgnoreJIDs = ignoreJIDs
 
 	if err := h.service.Configure(c.Context(), cfg); err != nil {
-		logger.Warn().Err(err).Str("session", sessionID).Msg("Failed to configure Chatwoot")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("Failed to configure Chatwoot")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Configuration Error", "Failed to configure Chatwoot integration"))
 	}
 
@@ -184,7 +184,7 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 func (h *Handler) GetConfig(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)
 
-	cfg, err := h.chatwootRepo.FindBySessionID(c.Context(), sessionID)
+	cfg, err := h.repo.FindBySessionID(c.Context(), sessionID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "Chatwoot integration not configured for this session"))
 	}
@@ -204,8 +204,8 @@ func (h *Handler) GetConfig(c *fiber.Ctx) error {
 func (h *Handler) DeleteConfig(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)
 
-	if err := h.chatwootRepo.Delete(c.Context(), sessionID); err != nil {
-		logger.Warn().Err(err).Str("session", sessionID).Msg("Failed to delete Chatwoot config")
+	if err := h.repo.Delete(c.Context(), sessionID); err != nil {
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("Failed to delete Chatwoot config")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Delete Error", "Failed to delete Chatwoot configuration"))
 	}
 
@@ -228,7 +228,7 @@ func (h *Handler) DeleteConfig(c *fiber.Ctx) error {
 func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 	sessionID := c.Params("sessionId")
 
-	cfg, err := h.chatwootRepo.FindBySessionID(c.Context(), sessionID)
+	cfg, err := h.repo.FindBySessionID(c.Context(), sessionID)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(dto.ErrorResp("Unauthorized", "Chatwoot not configured for this session"))
 	}
@@ -251,7 +251,7 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 	var body dto.ChatwootWebhookPayload
 	rawBody := c.Body()
 	if err := json.Unmarshal(rawBody, &body); err != nil {
-		logger.Warn().Err(err).Str("session", sessionID).Str("contentType", c.Get("Content-Type")).Msg("[CW] failed to parse webhook payload")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("contentType", c.Get("Content-Type")).Msg("failed to parse webhook payload")
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "Failed to parse webhook payload"))
 	}
 
@@ -260,11 +260,11 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 			pCtx, pCancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer pCancel()
 			if err := publishOutbound(pCtx, h.service.js, sessionID, rawBody); err != nil {
-				logger.Warn().Err(err).Str("session", sessionID).Msg("[CW] failed to publish outbound webhook, falling back to sync")
+				logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("failed to publish outbound webhook, falling back to sync")
 				sCtx, sCancel := context.WithTimeout(context.Background(), 30*time.Second)
 				defer sCancel()
 				if err := h.service.HandleIncomingWebhook(sCtx, sessionID, body); err != nil {
-					logger.Warn().Err(err).Str("session", sessionID).Msg("Failed to handle Chatwoot webhook")
+					logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("Failed to handle Chatwoot webhook")
 				}
 				return
 			}
@@ -274,7 +274,7 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			if err := h.service.HandleIncomingWebhook(ctx, sessionID, body); err != nil {
-				logger.Warn().Err(err).Str("session", sessionID).Msg("Failed to handle Chatwoot webhook")
+				logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("Failed to handle Chatwoot webhook")
 			}
 		}()
 	}

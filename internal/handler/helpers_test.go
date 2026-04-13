@@ -31,7 +31,7 @@ func TestHandleCapabilityErrorUnavailable(t *testing.T) {
 	app := newHelpersApp(&service.CapabilityError{
 		Engine:     "cloud_api",
 		Capability: model.CapabilityMessagePoll,
-		Support:    model.CapabilitySupportUnavailable,
+		Support:    model.SupportUnavailable,
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -56,7 +56,7 @@ func TestHandleCapabilityErrorPartial(t *testing.T) {
 	app := newHelpersApp(&service.CapabilityError{
 		Engine:     "cloud_api",
 		Capability: model.CapabilityMessageLink,
-		Support:    model.CapabilitySupportPartial,
+		Support:    model.SupportPartial,
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)

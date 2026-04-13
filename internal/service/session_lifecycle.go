@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow"
@@ -12,12 +11,13 @@ import (
 	"wzap/internal/dto"
 	"wzap/internal/metrics"
 	"wzap/internal/model"
+	"wzap/internal/repo"
 	"wzap/internal/wa"
 )
 
-type sessionLifecycleManager interface {
+type lifecycleManager interface {
 	Connect(ctx context.Context, sessionID string) (*whatsmeow.Client, <-chan whatsmeow.QRChannelItem, error)
-	Disconnect(sessionID string) error
+	Disconnect(ctx context.Context, sessionID string) error
 	Logout(ctx context.Context, sessionID string) error
 	Reconnect(ctx context.Context, sessionID string) error
 	GetQRCode(ctx context.Context, sessionID string) (string, error)
@@ -28,40 +28,40 @@ type sessionReader interface {
 	Get(ctx context.Context, id string) (*dto.SessionResp, error)
 }
 
-type SessionLifecycleOrchestrator struct {
-	runtimeResolver *SessionRuntimeResolver
-	manager         sessionLifecycleManager
+type LifecycleOrchestrator struct {
+	runtimeResolver *RuntimeResolver
+	manager         lifecycleManager
 	sessions        sessionReader
 }
 
-type SessionConnectResult struct {
+type ConnectResult struct {
 	Status  string
 	Support model.CapabilitySupport
 }
 
-type SessionDisconnectResult struct {
+type DisconnectResult struct {
 	Support model.CapabilitySupport
 }
 
-type SessionLogoutResult struct {
+type LogoutResult struct {
 	Support model.CapabilitySupport
 }
 
-type SessionReconnectResult struct {
+type ReconnectResult struct {
 	Support model.CapabilitySupport
 }
 
-type SessionRestartResult struct {
+type RestartResult struct {
 	Session *dto.SessionResp
 	Support model.CapabilitySupport
 }
 
-type SessionQRResult struct {
+type QRResult struct {
 	QRCode  string
 	Support model.CapabilitySupport
 }
 
-type SessionPairResult struct {
+type PairResult struct {
 	PairingCode string
 	Support     model.CapabilitySupport
 }
@@ -96,25 +96,25 @@ func (e *LifecycleNotFoundError) Error() string {
 	return e.Message
 }
 
-func NewSessionLifecycleOrchestrator(runtimeResolver *SessionRuntimeResolver, manager *wa.Manager, sessions *SessionService) *SessionLifecycleOrchestrator {
-	return newSessionLifecycleOrchestrator(runtimeResolver, manager, sessions)
+func NewLifecycleOrchestrator(runtimeResolver *RuntimeResolver, manager *wa.Manager, sessions *SessionService) *LifecycleOrchestrator {
+	return newLifecycleOrchestrator(runtimeResolver, manager, sessions)
 }
 
-func newSessionLifecycleOrchestrator(runtimeResolver *SessionRuntimeResolver, manager sessionLifecycleManager, sessions sessionReader) *SessionLifecycleOrchestrator {
-	return &SessionLifecycleOrchestrator{
+func newLifecycleOrchestrator(runtimeResolver *RuntimeResolver, manager lifecycleManager, sessions sessionReader) *LifecycleOrchestrator {
+	return &LifecycleOrchestrator{
 		runtimeResolver: runtimeResolver,
 		manager:         manager,
 		sessions:        sessions,
 	}
 }
 
-func (o *SessionLifecycleOrchestrator) Connect(ctx context.Context, sessionID string) (*SessionConnectResult, error) {
+func (o *LifecycleOrchestrator) Connect(ctx context.Context, sessionID string) (*ConnectResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionConnect)
 	if err != nil {
 		return nil, err
 	}
-	if support == model.CapabilitySupportPartial {
-		return &SessionConnectResult{Status: "CONNECTED", Support: support}, nil
+	if support == model.SupportPartial {
+		return &ConnectResult{Status: "CONNECTED", Support: support}, nil
 	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
@@ -141,34 +141,34 @@ func (o *SessionLifecycleOrchestrator) Connect(ctx context.Context, sessionID st
 		metrics.SessionsConnected.Inc()
 	}
 
-	return &SessionConnectResult{Status: status, Support: support}, nil
+	return &ConnectResult{Status: status, Support: support}, nil
 }
 
-func (o *SessionLifecycleOrchestrator) Disconnect(ctx context.Context, sessionID string) (*SessionDisconnectResult, error) {
+func (o *LifecycleOrchestrator) Disconnect(ctx context.Context, sessionID string) (*DisconnectResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionDisconnect)
 	if err != nil {
 		return nil, err
 	}
-	if support == model.CapabilitySupportPartial {
-		return &SessionDisconnectResult{Support: support}, nil
+	if support == model.SupportPartial {
+		return &DisconnectResult{Support: support}, nil
 	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
 	}
-	if err := o.manager.Disconnect(runtime.Session().ID); err != nil {
+	if err := o.manager.Disconnect(ctx, runtime.Session().ID); err != nil {
 		return nil, err
 	}
 	metrics.SessionsConnected.Dec()
-	return &SessionDisconnectResult{Support: support}, nil
+	return &DisconnectResult{Support: support}, nil
 }
 
-func (o *SessionLifecycleOrchestrator) Logout(ctx context.Context, sessionID string) (*SessionLogoutResult, error) {
+func (o *LifecycleOrchestrator) Logout(ctx context.Context, sessionID string) (*LogoutResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionLogout)
 	if err != nil {
 		return nil, err
 	}
-	if support == model.CapabilitySupportPartial {
-		return &SessionLogoutResult{Support: support}, nil
+	if support == model.SupportPartial {
+		return &LogoutResult{Support: support}, nil
 	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
@@ -176,16 +176,16 @@ func (o *SessionLifecycleOrchestrator) Logout(ctx context.Context, sessionID str
 	if err := o.manager.Logout(runtime.WithContext(ctx), runtime.Session().ID); err != nil {
 		return nil, err
 	}
-	return &SessionLogoutResult{Support: support}, nil
+	return &LogoutResult{Support: support}, nil
 }
 
-func (o *SessionLifecycleOrchestrator) Reconnect(ctx context.Context, sessionID string) (*SessionReconnectResult, error) {
+func (o *LifecycleOrchestrator) Reconnect(ctx context.Context, sessionID string) (*ReconnectResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionReconnect)
 	if err != nil {
 		return nil, err
 	}
-	if support == model.CapabilitySupportPartial {
-		return &SessionReconnectResult{Support: support}, nil
+	if support == model.SupportPartial {
+		return &ReconnectResult{Support: support}, nil
 	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
@@ -193,10 +193,10 @@ func (o *SessionLifecycleOrchestrator) Reconnect(ctx context.Context, sessionID 
 	if err := o.manager.Reconnect(runtime.WithContext(ctx), runtime.Session().ID); err != nil {
 		return nil, err
 	}
-	return &SessionReconnectResult{Support: support}, nil
+	return &ReconnectResult{Support: support}, nil
 }
 
-func (o *SessionLifecycleOrchestrator) Restart(ctx context.Context, sessionID string) (*SessionRestartResult, error) {
+func (o *LifecycleOrchestrator) Restart(ctx context.Context, sessionID string) (*RestartResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionRestart)
 	if err != nil {
 		return nil, err
@@ -204,18 +204,18 @@ func (o *SessionLifecycleOrchestrator) Restart(ctx context.Context, sessionID st
 	if o.sessions == nil {
 		return nil, fmt.Errorf("session reader is nil")
 	}
-	if support == model.CapabilitySupportPartial {
+	if support == model.SupportPartial {
 		session, err := o.sessions.Get(ctx, runtime.Session().ID)
 		if err != nil {
 			return nil, normalizeLifecycleError(err)
 		}
-		return &SessionRestartResult{Session: session, Support: support}, nil
+		return &RestartResult{Session: session, Support: support}, nil
 	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
 	}
 
-	if err := o.manager.Disconnect(runtime.Session().ID); err != nil {
+	if err := o.manager.Disconnect(ctx, runtime.Session().ID); err != nil {
 		return nil, err
 	}
 	time.Sleep(1 * time.Second)
@@ -227,10 +227,10 @@ func (o *SessionLifecycleOrchestrator) Restart(ctx context.Context, sessionID st
 	if err != nil {
 		return nil, normalizeLifecycleError(err)
 	}
-	return &SessionRestartResult{Session: session, Support: support}, nil
+	return &RestartResult{Session: session, Support: support}, nil
 }
 
-func (o *SessionLifecycleOrchestrator) QR(ctx context.Context, sessionID string) (*SessionQRResult, error) {
+func (o *LifecycleOrchestrator) QR(ctx context.Context, sessionID string) (*QRResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionQR)
 	if err != nil {
 		return nil, err
@@ -246,10 +246,10 @@ func (o *SessionLifecycleOrchestrator) QR(ctx context.Context, sessionID string)
 	if qrCode == "" {
 		return nil, &LifecycleNotFoundError{Message: "No QR code available. Call connect first, then poll this endpoint."}
 	}
-	return &SessionQRResult{QRCode: qrCode, Support: support}, nil
+	return &QRResult{QRCode: qrCode, Support: support}, nil
 }
 
-func (o *SessionLifecycleOrchestrator) Pair(ctx context.Context, sessionID, phone string) (*SessionPairResult, error) {
+func (o *LifecycleOrchestrator) Pair(ctx context.Context, sessionID, phone string) (*PairResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionPair)
 	if err != nil {
 		return nil, err
@@ -262,17 +262,17 @@ func (o *SessionLifecycleOrchestrator) Pair(ctx context.Context, sessionID, phon
 	if err != nil {
 		return nil, normalizeLifecycleError(err)
 	}
-	return &SessionPairResult{PairingCode: code, Support: support}, nil
+	return &PairResult{PairingCode: code, Support: support}, nil
 }
 
-func (o *SessionLifecycleOrchestrator) resolveCapability(ctx context.Context, sessionID string, capability model.EngineCapability) (*SessionRuntime, model.CapabilitySupport, error) {
+func (o *LifecycleOrchestrator) resolveCapability(ctx context.Context, sessionID string, capability model.EngineCapability) (*SessionRuntime, model.CapabilitySupport, error) {
 	if o == nil || o.runtimeResolver == nil {
-		return nil, model.CapabilitySupportUnavailable, fmt.Errorf("session lifecycle orchestrator is nil")
+		return nil, model.SupportUnavailable, fmt.Errorf("session lifecycle orchestrator is nil")
 	}
 
 	runtime, err := o.runtimeResolver.Resolve(ctx, sessionID)
 	if err != nil {
-		return nil, model.CapabilitySupportUnavailable, normalizeLifecycleError(err)
+		return nil, model.SupportUnavailable, normalizeLifecycleError(err)
 	}
 	support, err := runtime.RequireCapability(capability)
 	if err != nil {
@@ -297,7 +297,7 @@ func normalizeLifecycleError(err error) error {
 	if errors.As(err, &notFoundErr) {
 		return err
 	}
-	if strings.Contains(err.Error(), "session not found") {
+	if errors.Is(err, repo.ErrSessionNotFound) {
 		return &LifecycleNotFoundError{Message: err.Error()}
 	}
 	return err

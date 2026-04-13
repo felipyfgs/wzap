@@ -1,38 +1,26 @@
 package chatwoot
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
 
-func TestSendAttachmentToWhatsApp_ChunkedBodyTooLarge(t *testing.T) {
-	oldMax := maxMediaBytes
-	maxMediaBytes = 1024
-	defer func() {
-		maxMediaBytes = oldMax
-	}()
-
+func TestSendAttachmentToWhatsApp_ContentLengthTooLarge(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		flusher, _ := w.(http.Flusher)
-		chunk := bytes.Repeat([]byte("a"), 256)
-		for i := 0; i < 10; i++ {
-			_, _ = w.Write(chunk)
-			if flusher != nil {
-				flusher.Flush()
-			}
-		}
+		w.Header().Set("Content-Length", strconv.FormatInt(maxMediaBytes+1, 10))
+		_, _ = w.Write([]byte("x"))
 	}))
 	defer server.Close()
 
 	svc := &Service{
 		httpClient: server.Client(),
 	}
-	cfg := &ChatwootConfig{
+	cfg := &Config{
 		SessionID:           "sess",
 		TimeoutMediaSeconds: 2,
 		TimeoutLargeSeconds: 2,
@@ -48,12 +36,12 @@ func TestSendAttachmentToWhatsApp_ChunkedBodyTooLarge(t *testing.T) {
 }
 
 func TestSendErrorToAgent(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	sendErr := fmt.Errorf("connection refused")
 	svc.sendErrorToAgent(context.Background(), cfg, 1, sendErr)

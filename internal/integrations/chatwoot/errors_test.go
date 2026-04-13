@@ -2,7 +2,7 @@ package chatwoot
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 )
 
@@ -13,14 +13,14 @@ func TestIsRetryableError_Nil(t *testing.T) {
 }
 
 func TestIsRetryableError_Status500(t *testing.T) {
-	err := fmt.Errorf("chatwoot API error: status=500, body=internal server error")
+	err := &APIError{StatusCode: 500, Message: "internal server error"}
 	if !isRetryableError(err) {
 		t.Error("expected true for status=500")
 	}
 }
 
 func TestIsRetryableError_Status429(t *testing.T) {
-	err := fmt.Errorf("chatwoot API error: status=429, body=too many requests")
+	err := &APIError{StatusCode: 429, Message: "too many requests"}
 	if !isRetryableError(err) {
 		t.Error("expected true for status=429")
 	}
@@ -36,21 +36,21 @@ func TestIsRetryableError_ContextTimeout(t *testing.T) {
 }
 
 func TestIsRetryableError_Status404(t *testing.T) {
-	err := fmt.Errorf("chatwoot API error: status=404, body=not found")
+	err := &APIError{StatusCode: 404, Message: "not found"}
 	if isRetryableError(err) {
 		t.Error("expected false for status=404")
 	}
 }
 
 func TestIsRetryableError_Status422(t *testing.T) {
-	err := fmt.Errorf("chatwoot API error: status=422, body=unprocessable entity")
+	err := &APIError{StatusCode: 422, Message: "unprocessable entity"}
 	if isRetryableError(err) {
 		t.Error("expected false for status=422")
 	}
 }
 
 func TestIsRetryableError_NetworkError(t *testing.T) {
-	err := fmt.Errorf("do request: dial tcp: connection refused")
+	err := errors.New("do request: dial tcp: connection refused")
 	if !isRetryableError(err) {
 		t.Error("expected true for network/do request error")
 	}

@@ -18,30 +18,54 @@ import (
 	"wzap/internal/model"
 )
 
-func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payload []byte) error {
+func (s *Service) handleMessage(ctx context.Context, cfg *Config, payload []byte) error {
 	data, err := parseMessagePayload(payload)
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] Failed to parse message payload")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to parse message payload")
 		return nil
 	}
 
-	logger.Debug().Str("chat", data.Info.Chat).Str("id", data.Info.ID).Bool("fromMe", data.Info.IsFromMe).Msg("[CW] handleMessage")
+	logger.Debug().Str("component", "chatwoot").Str("chat", data.Info.Chat).Str("id", data.Info.ID).Bool("fromMe", data.Info.IsFromMe).Msg("handleMessage")
 
 	chatJID := data.Info.Chat
 	if chatJID == "" {
-		logger.Warn().Msg("[CW] chatJID empty, skipping")
+		logger.Warn().Str("component", "chatwoot").Msg("chatJID empty, skipping")
 		return nil
 	}
 
-	if strings.HasSuffix(chatJID, "@lid") && s.jidResolver != nil {
-		if pn := s.jidResolver.GetPNForLID(ctx, cfg.SessionID, chatJID); pn != "" {
-			logger.Debug().Str("lid", chatJID).Str("pn", pn).Msg("[CW] resolved LID to PN")
-			chatJID = pn + "@s.whatsapp.net"
+	if strings.HasSuffix(chatJID, "@lid") {
+		resolved := false
+		if s.jidResolver != nil {
+			if pn := s.jidResolver.GetPNForLID(ctx, cfg.SessionID, chatJID); pn != "" {
+				logger.Debug().Str("component", "chatwoot").Str("lid", chatJID).Str("pn", pn).Msg("resolved LID to PN via store")
+				chatJID = pn + "@s.whatsapp.net"
+				resolved = true
+			}
+		}
+		if !resolved {
+			var altJID string
+			if !data.Info.IsFromMe {
+				altJID = data.Info.SenderAlt
+			} else {
+				altJID = data.Info.RecipientAlt
+			}
+			if altJID != "" && !strings.HasSuffix(altJID, "@lid") {
+				logger.Debug().Str("component", "chatwoot").Str("lid", chatJID).Str("alt", altJID).Msg("resolved LID to PN via message alt JID")
+				chatJID = altJID
+				if !strings.Contains(chatJID, "@") {
+					chatJID += "@s.whatsapp.net"
+				}
+				resolved = true
+			}
+		}
+		if !resolved {
+			logger.Warn().Str("component", "chatwoot").Str("lid", chatJID).Str("session", cfg.SessionID).Msg("unresolvable LID chat, skipping")
+			return nil
 		}
 	}
 
 	if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
-		logger.Debug().Str("chat", chatJID).Msg("[CW] JID ignored, skipping")
+		logger.Debug().Str("component", "chatwoot").Str("chat", chatJID).Msg("JID ignored, skipping")
 		return nil
 	}
 
@@ -62,13 +86,13 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 		}
 		idemSpan.End()
 		if isDup {
-			logger.Debug().Str("sourceID", sourceID).Msg("[CW] inbound duplicate, skipping")
+			logger.Debug().Str("component", "chatwoot").Str("sourceID", sourceID).Msg("inbound duplicate, skipping")
 			metrics.CWIdempotentDrops.WithLabelValues(cfg.SessionID).Inc()
 			return nil
 		}
 		s.cache.SetIdempotent(ctx, cfg.SessionID, sourceID)
 
-		msgBody := extractTextFromMessage(data.Message)
+		msgBody := extractText(data.Message)
 		msgType := detectMessageType(data.Message)
 		msgToSave := &model.Message{
 			ID:        msgID,
@@ -82,7 +106,7 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 			CreatedAt: time.Now(),
 		}
 		if err := s.msgRepo.Save(ctx, msgToSave); err != nil {
-			logger.Warn().Err(err).Str("msgID", msgID).Msg("[CW] failed to save message to DB")
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("msgID", msgID).Msg("failed to save message to DB")
 		}
 	}
 
@@ -96,11 +120,19 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 	convID, err := s.findOrCreateConversation(ctx, cfg, chatJID, contactPushName)
 	convSpan.End()
 	if err != nil {
-		logger.Warn().Err(err).Str("session", cfg.SessionID).Str("chatJID", chatJID).Msg("Failed to find or create Chatwoot conversation")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("chatJID", chatJID).Msg("Failed to find or create Chatwoot conversation")
 		return err
 	}
 
 	msg := data.Message
+
+	// Extract reply context once — reused by all message type handlers
+	stanzaID := extractStanzaID(msg)
+	quotedText := extractQuoteText(msg)
+	var cwReplyID int
+	if stanzaID != "" {
+		cwReplyID = s.resolveInboundReply(ctx, cfg.SessionID, chatJID, stanzaID, quotedText, int64(data.Info.Timestamp))
+	}
 
 	if pollMsg := getMapField(msg, "pollCreationMessage"); pollMsg != nil {
 		s.handlePollCreation(ctx, cfg, convID, msgID, fromMe, pollMsg)
@@ -127,15 +159,15 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 		return nil
 	}
 	if tmplReply := getMapField(msg, "templateButtonReplyMessage"); tmplReply != nil {
-		s.handleTemplateButtonReply(ctx, cfg, convID, msgID, fromMe, msg, tmplReply)
+		s.handleTemplateReply(ctx, cfg, convID, msgID, fromMe, msg, tmplReply)
 		return nil
 	}
 	if vonce := getMapField(msg, "viewOnceMessage"); vonce != nil {
-		s.handleViewOnce(ctx, cfg, convID, msgID, fromMe, vonce, false)
+		s.handleViewOnce(ctx, cfg, convID, msgID, fromMe, vonce, false, stanzaID, cwReplyID)
 		return nil
 	}
 	if vonce := getMapField(msg, "viewOnceMessageV2"); vonce != nil {
-		s.handleViewOnce(ctx, cfg, convID, msgID, fromMe, vonce, true)
+		s.handleViewOnce(ctx, cfg, convID, msgID, fromMe, vonce, true, stanzaID, cwReplyID)
 		return nil
 	}
 	if editMsg := getMapField(msg, "editedMessage"); editMsg != nil {
@@ -150,15 +182,15 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 	mediaInfo := extractMediaInfo(msg)
 	if mediaInfo != nil {
 		if mediaInfo.MediaType == "sticker" {
-			s.handleStickerMessage(ctx, cfg, convID, msgID, fromMe, mediaInfo)
+			s.handleStickerMessage(ctx, cfg, convID, msgID, fromMe, mediaInfo, stanzaID, cwReplyID)
 		} else {
-			s.handleMediaMessage(ctx, cfg, convID, msgID, fromMe, msg)
+			s.handleMediaMessage(ctx, cfg, convID, msgID, fromMe, msg, stanzaID, cwReplyID)
 		}
 		return nil
 	}
 
-	text := extractTextFromMessage(msg)
-	logger.Debug().Str("text", text).Interface("msg", msg).Msg("[CW] extracted text")
+	text := extractText(msg)
+	logger.Debug().Str("component", "chatwoot").Str("text", text).Interface("msg", msg).Msg("extracted text")
 	text = applyMessagePrefixes(msg, convertWAToCWMarkdown(text))
 
 	if !fromMe && data.Info.IsGroup && cfg.SignMsg && pushName != "" {
@@ -189,19 +221,16 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 		SourceID:    sourceID,
 	}
 
-	stanzaID := extractStanzaID(msg)
 	if stanzaID != "" {
-		quotedText := extractQuotedMessageText(msg)
-		cwMsgID := s.resolveInboundReply(ctx, cfg.SessionID, chatJID, stanzaID, quotedText, int64(data.Info.Timestamp))
-		if cwMsgID > 0 {
-			msgReq.SourceReplyID = cwMsgID
+		if cwReplyID > 0 {
+			msgReq.SourceReplyID = cwReplyID
 		}
-		ca := map[string]any{"in_reply_to_external_id": "WAID:" + stanzaID}
-		if cwMsgID > 0 {
-			ca["in_reply_to"] = cwMsgID
+		ca := map[string]any{"reply_source_id": "WAID:" + stanzaID}
+		if cwReplyID > 0 {
+			ca["in_reply_to"] = cwReplyID
 		}
 		msgReq.ContentAttributes = ca
-		logger.Debug().Str("session", cfg.SessionID).Int("sourceReplyID", cwMsgID).Interface("contentAttributes", ca).Msg("[CW] set ContentAttributes for reply")
+		logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Int("sourceReplyID", cwReplyID).Interface("contentAttributes", ca).Msg("set ContentAttributes for reply")
 	}
 
 	client := s.clientFn(cfg)
@@ -209,13 +238,13 @@ func (s *Service) handleMessage(ctx context.Context, cfg *ChatwootConfig, payloa
 	if err != nil {
 		if strings.Contains(err.Error(), "status=404") {
 			s.cache.DeleteConv(ctx, cfg.SessionID, chatJID)
-			convID, err = s.findOrCreateConversationSlowPath(ctx, cfg, chatJID, contactPushName)
+			convID, err = s.upsertConversation(ctx, cfg, chatJID, contactPushName)
 			if err == nil {
 				cwMsg, err = client.CreateMessage(ctx, convID, msgReq)
 			}
 		}
 		if err != nil {
-			logger.Warn().Err(err).Str("session", cfg.SessionID).Msg("Failed to create Chatwoot message")
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Msg("Failed to create Chatwoot message")
 			return err
 		}
 	}
@@ -231,40 +260,40 @@ func hasCWMessageID(msg *model.Message) bool {
 }
 
 func (s *Service) resolveInboundReply(ctx context.Context, sessionID, chatJID, stanzaID, quotedText string, timestamp int64) int {
-	logger.Debug().Str("session", sessionID).Str("stanzaID", stanzaID).Str("quotedText", quotedText).Msg("[CW] stanzaID found")
+	logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Str("quotedText", quotedText).Msg("stanzaID found")
 
 	if msg, err := s.msgRepo.FindByID(ctx, sessionID, stanzaID); err == nil && hasCWMessageID(msg) {
-		logger.Debug().Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("[CW] found CW message ID via FindByID")
+		logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindByID")
 		return *msg.CWMessageID
 	}
 
 	if msg, err := s.msgRepo.FindBySourceID(ctx, sessionID, "WAID:"+stanzaID); err == nil && hasCWMessageID(msg) {
-		logger.Debug().Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("[CW] found CW message ID via FindBySourceID")
+		logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindBySourceID")
 		return *msg.CWMessageID
 	}
 
 	if quotedText != "" {
 		if msg, err := s.msgRepo.FindByBodyAndChat(ctx, sessionID, chatJID, quotedText, true); err == nil && hasCWMessageID(msg) {
-			logger.Debug().Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("[CW] found CW message ID via FindByBodyAndChat")
+			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindByBodyAndChat")
 			return *msg.CWMessageID
 		}
 	}
 
 	if timestamp > 0 {
 		if msg, err := s.msgRepo.FindByTimestampWindow(ctx, sessionID, chatJID, timestamp, 60); err == nil && hasCWMessageID(msg) {
-			logger.Debug().Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("[CW] found CW message ID via FindByTimestampWindow")
+			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindByTimestampWindow")
 			return *msg.CWMessageID
 		}
 	}
 
-	logger.Debug().Str("session", sessionID).Str("stanzaID", stanzaID).Msg("[CW] could not resolve CW message ID for reply")
+	logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Msg("could not resolve CW message ID for reply")
 	return 0
 }
 
-func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, msg map[string]interface{}) {
+func (s *Service) handleMediaMessage(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, stanzaID string, cwReplyID int) {
 	info := extractMediaInfo(msg)
 	if info == nil {
-		logger.Warn().Msg("[CW] no media info found in message")
+		logger.Warn().Str("component", "chatwoot").Msg("no media info found in message")
 		return
 	}
 
@@ -280,7 +309,7 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 	}
 
 	if s.mediaDownloader == nil {
-		logger.Warn().Msg("[CW] media downloader not configured, cannot download WhatsApp media")
+		logger.Warn().Str("component", "chatwoot").Msg("media downloader not configured, cannot download WhatsApp media")
 		return
 	}
 
@@ -299,7 +328,7 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 
 	data, err := s.mediaDownloader.DownloadMediaByPath(mediaCtx, cfg.SessionID, info.DirectPath, info.FileEncSHA256, info.FileSHA256, info.MediaKey, info.FileLength, info.MediaType)
 	if err != nil {
-		logger.Warn().Err(err).Str("mediaType", info.MediaType).Msg("[CW] failed to download WhatsApp media")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("mediaType", info.MediaType).Msg("failed to download WhatsApp media")
 		return
 	}
 
@@ -307,7 +336,7 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 
 	mimeType := info.MimeType
 	if mimeType == "" {
-		mimeType, _ = GetMIMETypeAndExt("", data)
+		mimeType, _ = DetectMIME("", data)
 	}
 
 	filename := info.FileName
@@ -316,7 +345,7 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 		filename = info.MediaType + ext
 	}
 
-	caption := extractTextFromMessage(msg)
+	caption := extractText(msg)
 	client := s.clientFn(cfg)
 	messageType := "incoming"
 	if fromMe {
@@ -331,9 +360,17 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 		caption = "[GIF]"
 	}
 
-	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, caption, filename, data, mimeType, messageType, sourceID)
+	var contentAttrs map[string]any
+	if stanzaID != "" {
+		contentAttrs = map[string]any{"reply_source_id": "WAID:" + stanzaID}
+		if cwReplyID > 0 {
+			contentAttrs["in_reply_to"] = cwReplyID
+		}
+	}
+
+	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, caption, filename, data, mimeType, messageType, sourceID, cwReplyID, contentAttrs)
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to upload media to Chatwoot")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to upload media to Chatwoot")
 		return
 	}
 
@@ -342,14 +379,14 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *ChatwootConfig, c
 	}
 }
 
-func (s *Service) handleStickerMessage(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, info *mediaInfo) {
+func (s *Service) handleStickerMessage(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, info *mediaInfo, stanzaID string, cwReplyID int) {
 	if s.mediaDownloader == nil {
 		return
 	}
 
 	data, err := s.mediaDownloader.DownloadMediaByPath(ctx, cfg.SessionID, info.DirectPath, info.FileEncSHA256, info.FileSHA256, info.MediaKey, info.FileLength, "sticker")
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to download sticker")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to download sticker")
 		return
 	}
 
@@ -365,10 +402,18 @@ func (s *Service) handleStickerMessage(ctx context.Context, cfg *ChatwootConfig,
 		sourceID = "WAID:" + msgID
 	}
 
+	var contentAttrs map[string]any
+	if stanzaID != "" {
+		contentAttrs = map[string]any{"reply_source_id": "WAID:" + stanzaID}
+		if cwReplyID > 0 {
+			contentAttrs["in_reply_to"] = cwReplyID
+		}
+	}
+
 	if len(data) > 0 && len(data) <= 1024*1024 {
 		pngData, err := convertWebPToPNG(data)
 		if err == nil {
-			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.png", pngData, "image/png", messageType, sourceID)
+			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.png", pngData, "image/png", messageType, sourceID, cwReplyID, contentAttrs)
 			if err == nil && msgID != "" {
 				_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 				return
@@ -376,7 +421,7 @@ func (s *Service) handleStickerMessage(ctx context.Context, cfg *ChatwootConfig,
 		}
 		gifData, err := convertWebPToGIF(data)
 		if err == nil {
-			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.gif", gifData, "image/gif", messageType, sourceID)
+			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.gif", gifData, "image/gif", messageType, sourceID, cwReplyID, contentAttrs)
 			if err == nil && msgID != "" {
 				_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 				return
@@ -384,9 +429,9 @@ func (s *Service) handleStickerMessage(ctx context.Context, cfg *ChatwootConfig,
 		}
 	}
 
-	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.webp", data, "image/webp", messageType, sourceID)
+	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.webp", data, "image/webp", messageType, sourceID, cwReplyID, contentAttrs)
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to upload sticker fallback")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to upload sticker fallback")
 		return
 	}
 	if msgID != "" {
@@ -412,7 +457,7 @@ func convertWebPToGIF(data []byte) ([]byte, error) {
 		return nil, err
 	}
 	g := &gif.GIF{
-		Image: []*image.Paletted{imageToParletted(img)},
+		Image: []*image.Paletted{imageToPaletted(img)},
 		Delay: []int{10},
 	}
 	var buf bytes.Buffer
@@ -422,7 +467,7 @@ func convertWebPToGIF(data []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func imageToParletted(img image.Image) *image.Paletted {
+func imageToPaletted(img image.Image) *image.Paletted {
 	bounds := img.Bounds()
 	pm := image.NewPaletted(bounds, buildPalette(img, bounds))
 	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
@@ -436,8 +481,8 @@ func imageToParletted(img image.Image) *image.Paletted {
 type rgbaKey struct{ R, G, B, A uint8 }
 
 func buildPalette(img image.Image, bounds image.Rectangle) gocolor.Palette {
-	seen := make(map[rgbaKey]struct{})
-	var palette gocolor.Palette
+	seen := make(map[rgbaKey]struct{}, 256)
+	palette := make(gocolor.Palette, 0, 256)
 	for y := bounds.Min.Y; y < bounds.Max.Y && len(palette) < 256; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X && len(palette) < 256; x++ {
 			r32, g32, b32, a32 := img.At(x, y).RGBA()
@@ -454,7 +499,7 @@ func buildPalette(img image.Image, bounds image.Rectangle) gocolor.Palette {
 	return palette
 }
 
-func (s *Service) handlePollCreation(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, poll map[string]interface{}) {
+func (s *Service) handlePollCreation(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, poll map[string]interface{}) {
 	name := getStringField(poll, "name")
 	optionsRaw, _ := poll["options"].([]interface{})
 	var sb strings.Builder
@@ -482,7 +527,7 @@ func (s *Service) handlePollCreation(ctx context.Context, cfg *ChatwootConfig, c
 		SourceID:    sourceID,
 	})
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to create poll message")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create poll message")
 		return
 	}
 	if msgID != "" {
@@ -490,7 +535,7 @@ func (s *Service) handlePollCreation(ctx context.Context, cfg *ChatwootConfig, c
 	}
 }
 
-func (s *Service) handlePollUpdate(ctx context.Context, cfg *ChatwootConfig, pollUpdate map[string]interface{}) {
+func (s *Service) handlePollUpdate(ctx context.Context, cfg *Config, pollUpdate map[string]interface{}) {
 	pollCreation := getMapField(pollUpdate, "pollCreationMessageKey")
 	if pollCreation == nil {
 		return
@@ -523,11 +568,11 @@ func (s *Service) handlePollUpdate(ctx context.Context, cfg *ChatwootConfig, pol
 		Content:           sb.String(),
 		MessageType:       "incoming",
 		SourceReplyID:     *origMsg.CWMessageID,
-		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID, "in_reply_to_external_id": "WAID:" + pollMsgID},
+		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID, "reply_source_id": "WAID:" + pollMsgID},
 	})
 }
 
-func (s *Service) handleReaction(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, reactMsg map[string]interface{}) {
+func (s *Service) handleReaction(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, reactMsg map[string]interface{}) {
 	key := getMapField(reactMsg, "key")
 	if key == nil {
 		return
@@ -537,7 +582,7 @@ func (s *Service) handleReaction(ctx context.Context, cfg *ChatwootConfig, convI
 
 	origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, targetMsgID)
 	if err != nil || origMsg.CWMessageID == nil {
-		logger.Warn().Str("session", cfg.SessionID).Str("targetMsgID", targetMsgID).Str("emoji", emoji).Msg("[CW] reaction target message not found in DB, skipping")
+		logger.Warn().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("targetMsgID", targetMsgID).Str("emoji", emoji).Msg("reaction target message not found in DB, skipping")
 		return
 	}
 
@@ -561,10 +606,10 @@ func (s *Service) handleReaction(ctx context.Context, cfg *ChatwootConfig, convI
 		Content:           emoji,
 		MessageType:       messageType,
 		SourceReplyID:     *origMsg.CWMessageID,
-		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID, "in_reply_to_external_id": "WAID:" + targetMsgID},
+		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID, "reply_source_id": "WAID:" + targetMsgID},
 	})
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to create reaction message")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create reaction message")
 		return
 	}
 	if msgID != "" {
@@ -572,7 +617,7 @@ func (s *Service) handleReaction(ctx context.Context, cfg *ChatwootConfig, convI
 	}
 }
 
-func (s *Service) handleButtonResponse(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, msg map[string]interface{}, btnResp map[string]interface{}) {
+func (s *Service) handleButtonResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, btnResp map[string]interface{}) {
 	text := getStringField(btnResp, "selectedDisplayText")
 	if text == "" {
 		text = getStringField(btnResp, "selectedButtonId")
@@ -589,8 +634,8 @@ func (s *Service) handleButtonResponse(ctx context.Context, cfg *ChatwootConfig,
 		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
 			msgReq.SourceReplyID = *origMsg.CWMessageID
 			msgReq.ContentAttributes = map[string]any{
-				"in_reply_to":             *origMsg.CWMessageID,
-				"in_reply_to_external_id": "WAID:" + stanzaID,
+				"in_reply_to":     *origMsg.CWMessageID,
+				"reply_source_id": "WAID:" + stanzaID,
 			}
 		}
 	}
@@ -598,7 +643,7 @@ func (s *Service) handleButtonResponse(ctx context.Context, cfg *ChatwootConfig,
 	client := s.clientFn(cfg)
 	cwMsg, err := client.CreateMessage(ctx, convID, msgReq)
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to create button response message")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create button response message")
 		return
 	}
 	if msgID != "" {
@@ -606,7 +651,7 @@ func (s *Service) handleButtonResponse(ctx context.Context, cfg *ChatwootConfig,
 	}
 }
 
-func (s *Service) handleListResponse(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, msg map[string]interface{}, listResp map[string]interface{}) {
+func (s *Service) handleListResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, listResp map[string]interface{}) {
 	selection := getMapField(listResp, "singleSelectReply")
 	title := ""
 	description := ""
@@ -633,8 +678,8 @@ func (s *Service) handleListResponse(ctx context.Context, cfg *ChatwootConfig, c
 		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
 			msgReq.SourceReplyID = *origMsg.CWMessageID
 			msgReq.ContentAttributes = map[string]any{
-				"in_reply_to":             *origMsg.CWMessageID,
-				"in_reply_to_external_id": "WAID:" + stanzaID,
+				"in_reply_to":     *origMsg.CWMessageID,
+				"reply_source_id": "WAID:" + stanzaID,
 			}
 		}
 	}
@@ -642,7 +687,7 @@ func (s *Service) handleListResponse(ctx context.Context, cfg *ChatwootConfig, c
 	client := s.clientFn(cfg)
 	cwMsg, err := client.CreateMessage(ctx, convID, msgReq)
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to create list response message")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create list response message")
 		return
 	}
 	if msgID != "" {
@@ -650,7 +695,7 @@ func (s *Service) handleListResponse(ctx context.Context, cfg *ChatwootConfig, c
 	}
 }
 
-func (s *Service) handleTemplateButtonReply(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, msg map[string]interface{}, tmpl map[string]interface{}) {
+func (s *Service) handleTemplateReply(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, tmpl map[string]interface{}) {
 	text := getStringField(tmpl, "selectedDisplayText")
 	content := fmt.Sprintf("[Template] %s", text)
 
@@ -664,8 +709,8 @@ func (s *Service) handleTemplateButtonReply(ctx context.Context, cfg *ChatwootCo
 		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
 			msgReq.SourceReplyID = *origMsg.CWMessageID
 			msgReq.ContentAttributes = map[string]any{
-				"in_reply_to":             *origMsg.CWMessageID,
-				"in_reply_to_external_id": "WAID:" + stanzaID,
+				"in_reply_to":     *origMsg.CWMessageID,
+				"reply_source_id": "WAID:" + stanzaID,
 			}
 		}
 	}
@@ -673,7 +718,7 @@ func (s *Service) handleTemplateButtonReply(ctx context.Context, cfg *ChatwootCo
 	client := s.clientFn(cfg)
 	cwMsg, err := client.CreateMessage(ctx, convID, msgReq)
 	if err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to create template reply message")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create template reply message")
 		return
 	}
 	if msgID != "" {
@@ -681,7 +726,7 @@ func (s *Service) handleTemplateButtonReply(ctx context.Context, cfg *ChatwootCo
 	}
 }
 
-func (s *Service) handleViewOnce(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, vonce map[string]interface{}, tryDownload bool) {
+func (s *Service) handleViewOnce(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, vonce map[string]interface{}, tryDownload bool, stanzaID string, cwReplyID int) {
 	client := s.clientFn(cfg)
 	messageType := "incoming"
 	if fromMe {
@@ -707,7 +752,7 @@ func (s *Service) handleViewOnce(ctx context.Context, cfg *ChatwootConfig, convI
 				if err == nil && len(data) > 0 {
 					mimeType := info.MimeType
 					if mimeType == "" {
-						mimeType, _ = GetMIMETypeAndExt("", data)
+						mimeType, _ = DetectMIME("", data)
 					}
 					filename := info.FileName
 					if filename == "" {
@@ -715,16 +760,23 @@ func (s *Service) handleViewOnce(ctx context.Context, cfg *ChatwootConfig, convI
 						filename = info.MediaType + ext
 					}
 
-					cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", filename, data, mimeType, messageType, sourceID)
+					var contentAttrs map[string]any
+					if stanzaID != "" {
+						contentAttrs = map[string]any{"reply_source_id": "WAID:" + stanzaID}
+						if cwReplyID > 0 {
+							contentAttrs["in_reply_to"] = cwReplyID
+						}
+					}
+					cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", filename, data, mimeType, messageType, sourceID, cwReplyID, contentAttrs)
 					if err == nil {
 						if msgID != "" {
 							_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 						}
 						return
 					}
-					logger.Warn().Err(err).Msg("[CW] failed to upload viewOnce media, falling back to text")
+					logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to upload viewOnce media, falling back to text")
 				} else if err != nil {
-					logger.Warn().Err(err).Msg("[CW] failed to download viewOnce media, falling back to text")
+					logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to download viewOnce media, falling back to text")
 				}
 			}
 		}
@@ -743,7 +795,7 @@ func (s *Service) handleViewOnce(ctx context.Context, cfg *ChatwootConfig, convI
 	}
 }
 
-func (s *Service) handleEditedMessage(ctx context.Context, cfg *ChatwootConfig, editMsg map[string]interface{}) {
+func (s *Service) handleEditedMessage(ctx context.Context, cfg *Config, editMsg map[string]interface{}) {
 	key := getMapField(editMsg, "key")
 	if key == nil {
 		return
@@ -760,7 +812,7 @@ func (s *Service) handleEditedMessage(ctx context.Context, cfg *ChatwootConfig, 
 
 	newText := ""
 	if inner := getMapField(editMsg, "message"); inner != nil {
-		newText = extractTextFromMessage(inner)
+		newText = extractText(inner)
 	}
 	if newText == "" {
 		return
@@ -781,7 +833,7 @@ func (s *Service) handleEditedMessage(ctx context.Context, cfg *ChatwootConfig, 
 	})
 }
 
-func (s *Service) handleLiveLocation(ctx context.Context, cfg *ChatwootConfig, convID int, msgID string, fromMe bool, liveMsg map[string]interface{}) {
+func (s *Service) handleLiveLocation(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, liveMsg map[string]interface{}) {
 	text := formatLocation(liveMsg)
 
 	client := s.clientFn(cfg)
@@ -813,7 +865,7 @@ func applyMessagePrefixes(msg map[string]interface{}, text string) string {
 
 	var prefixes []string
 
-	if ci := extractContextInfoFromMsg(msg); ci != nil {
+	if ci := extractContextInfo(msg); ci != nil {
 		if isForwarded, _ := ci["isForwarded"].(bool); isForwarded {
 			score := getFloatField(ci, "forwardingScore")
 			if score >= 5 {
@@ -835,7 +887,7 @@ func applyMessagePrefixes(msg map[string]interface{}, text string) string {
 	return strings.Join(prefixes, " ") + " " + text
 }
 
-func extractContextInfoFromMsg(msg map[string]interface{}) map[string]interface{} {
+func extractContextInfo(msg map[string]interface{}) map[string]interface{} {
 	if ci := getMapField(msg, "contextInfo"); ci != nil {
 		return ci
 	}
@@ -850,7 +902,7 @@ func extractContextInfoFromMsg(msg map[string]interface{}) map[string]interface{
 }
 
 func isEphemeral(msg map[string]interface{}) bool {
-	if ci := extractContextInfoFromMsg(msg); ci != nil {
+	if ci := extractContextInfo(msg); ci != nil {
 		if ts := getFloatField(ci, "ephemeralSettingTimestamp"); ts > 0 {
 			return true
 		}

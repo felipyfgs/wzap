@@ -15,12 +15,12 @@ import (
 // ── Task 6.6: Media streaming / size check ────────────────────────────────────
 
 func TestHandleMessage_FileTooBig(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60, TimeoutLargeSeconds: 300}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60, TimeoutLargeSeconds: 300}
 
 	msg := map[string]interface{}{
 		"imageMessage": map[string]interface{}{
@@ -30,7 +30,7 @@ func TestHandleMessage_FileTooBig(t *testing.T) {
 			"mimetype":   "image/jpeg",
 		},
 	}
-	svc.handleMediaMessage(context.Background(), cfg, 1, "msg1", false, msg)
+	svc.handleMediaMessage(context.Background(), cfg, 1, "msg1", false, msg, "", 0)
 
 	if len(client.messages) == 0 {
 		t.Error("expected warning message created for oversized file")
@@ -81,12 +81,12 @@ func TestConvertWebPToGIF_ValidImage(t *testing.T) {
 // ── Task 8.6: Polls e reactions ───────────────────────────────────────────────
 
 func TestHandlePollCreation(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	poll := map[string]interface{}{
 		"name": "Qual sua cor favorita?",
@@ -111,13 +111,13 @@ func TestHandlePollCreation(t *testing.T) {
 func TestHandleReaction_Add(t *testing.T) {
 	cwID := 99
 	convID := 1
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: convID, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
 	svc.msgRepo = &mockMsgRepoFixed{cwMsgID: &cwID, cwConvID: &convID}
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	reactMsg := map[string]interface{}{
 		"key":  map[string]interface{}{"ID": "target-msg"},
@@ -136,13 +136,13 @@ func TestHandleReaction_Add(t *testing.T) {
 func TestHandleReaction_Remove(t *testing.T) {
 	cwID := 99
 	convID := 1
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: convID, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
 	svc.msgRepo = &mockMsgRepoFixed{cwMsgID: &cwID, cwConvID: &convID}
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	reactMsg := map[string]interface{}{
 		"key":  map[string]interface{}{"ID": "target-msg"},
@@ -268,7 +268,7 @@ func TestIsGIF(t *testing.T) {
 // ── Task 11.6: Eventos de grupo ───────────────────────────────────────────────
 
 func TestHandleGroupInfo_ParticipantAdd(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
@@ -279,7 +279,7 @@ func TestHandleGroupInfo_ParticipantAdd(t *testing.T) {
 		"Join": []string{"5511999999999@s.whatsapp.net"},
 	}
 	payload := buildPayload(t, "sess", model.EventGroupInfo, data)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 	_ = svc.handleGroupInfo(context.Background(), cfg, payload)
 
 	if len(client.messages) == 0 {
@@ -291,7 +291,7 @@ func TestHandleGroupInfo_ParticipantAdd(t *testing.T) {
 }
 
 func TestHandleGroupInfo_SubjectChange(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
@@ -304,7 +304,7 @@ func TestHandleGroupInfo_SubjectChange(t *testing.T) {
 		},
 	}
 	payload := buildPayload(t, "sess", model.EventGroupInfo, data)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 	_ = svc.handleGroupInfo(context.Background(), cfg, payload)
 
 	if len(client.messages) == 0 {
@@ -318,12 +318,12 @@ func TestHandleGroupInfo_SubjectChange(t *testing.T) {
 // ── Task 12.6: Interactive messages ──────────────────────────────────────────
 
 func TestHandleButtonResponse(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	btnResp := map[string]interface{}{
 		"selectedDisplayText": "Confirmar",
@@ -340,12 +340,12 @@ func TestHandleButtonResponse(t *testing.T) {
 }
 
 func TestHandleListResponse(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	listResp := map[string]interface{}{
 		"singleSelectReply": map[string]interface{}{
@@ -364,15 +364,15 @@ func TestHandleListResponse(t *testing.T) {
 }
 
 func TestHandleTemplateButtonReply(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	tmpl := map[string]interface{}{"selectedDisplayText": "Sim, quero"}
-	svc.handleTemplateButtonReply(context.Background(), cfg, 1, "tmpl-msg", false, map[string]interface{}{}, tmpl)
+	svc.handleTemplateReply(context.Background(), cfg, 1, "tmpl-msg", false, map[string]interface{}{}, tmpl)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected template reply message")
@@ -384,13 +384,13 @@ func TestHandleTemplateButtonReply(t *testing.T) {
 
 func TestHandleButtonResponse_WithStanzaID(t *testing.T) {
 	cwID := 55
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
 	svc.msgRepo = &mockMsgRepoFixed{cwMsgID: &cwID}
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	msg := map[string]interface{}{
 		"contextInfo": map[string]interface{}{"stanzaId": "stanza-abc"},
@@ -412,9 +412,9 @@ func TestHandleButtonResponse_WithStanzaID(t *testing.T) {
 	if inReplyTo != cwID {
 		t.Errorf("expected in_reply_to=%d, got %d", cwID, inReplyTo)
 	}
-	inReplyToExtID, _ := ca["in_reply_to_external_id"].(string)
+	inReplyToExtID, _ := ca["reply_source_id"].(string)
 	if inReplyToExtID != "WAID:stanza-abc" {
-		t.Errorf("expected in_reply_to_external_id=WAID:stanza-abc, got %s", inReplyToExtID)
+		t.Errorf("expected reply_source_id=WAID:stanza-abc, got %s", inReplyToExtID)
 	}
 }
 
@@ -430,13 +430,13 @@ func (m *mockMediaDownloader) DownloadMediaByPath(_ context.Context, _, _ string
 }
 
 func TestHandleViewOnce_V2_DownloadSuccess(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
 	svc.mediaDownloader = &mockMediaDownloader{data: []byte("fake-image-data")}
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
 
 	vonce := map[string]interface{}{
 		"message": map[string]interface{}{
@@ -448,7 +448,7 @@ func TestHandleViewOnce_V2_DownloadSuccess(t *testing.T) {
 			},
 		},
 	}
-	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true)
+	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true, "", 0)
 
 	if len(client.attachments) == 0 {
 		t.Error("expected attachment to be uploaded for viewOnce v2 with successful download")
@@ -459,13 +459,13 @@ func TestHandleViewOnce_V2_DownloadSuccess(t *testing.T) {
 }
 
 func TestHandleViewOnce_V2_DownloadFail_FallsBackToText(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
 	svc.mediaDownloader = &mockMediaDownloader{err: fmt.Errorf("download failed")}
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
 
 	vonce := map[string]interface{}{
 		"message": map[string]interface{}{
@@ -477,7 +477,7 @@ func TestHandleViewOnce_V2_DownloadFail_FallsBackToText(t *testing.T) {
 			},
 		},
 	}
-	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true)
+	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true, "", 0)
 
 	if len(client.attachments) > 0 {
 		t.Error("expected no attachment when download fails")
@@ -491,13 +491,13 @@ func TestHandleViewOnce_V2_DownloadFail_FallsBackToText(t *testing.T) {
 }
 
 func TestHandleViewOnce_V1_AlwaysText(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1}},
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
 	svc.mediaDownloader = &mockMediaDownloader{data: []byte("should-not-be-used")}
-	cfg := &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	vonce := map[string]interface{}{
 		"message": map[string]interface{}{
@@ -508,7 +508,7 @@ func TestHandleViewOnce_V1_AlwaysText(t *testing.T) {
 			},
 		},
 	}
-	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, false)
+	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, false, "", 0)
 
 	if len(client.attachments) > 0 {
 		t.Error("expected no attachment for viewOnce v1")

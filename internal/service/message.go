@@ -23,13 +23,13 @@ import (
 )
 
 type MessageService struct {
-	runtimeResolver *SessionRuntimeResolver
+	runtimeResolver *RuntimeResolver
 	persistFn       wa.MessagePersistFunc
 }
 
-func NewMessageService(engine *wa.Manager, provider *cloudWA.Client, sessRepo *repo.SessionRepository, runtimeResolver *SessionRuntimeResolver) *MessageService {
+func NewMessageService(engine *wa.Manager, provider *cloudWA.Client, sessRepo *repo.SessionRepository, runtimeResolver *RuntimeResolver) *MessageService {
 	if runtimeResolver == nil {
-		runtimeResolver = NewSessionRuntimeResolver(sessRepo, engine, provider)
+		runtimeResolver = NewRuntimeResolver(sessRepo, engine, provider)
 	}
 	return &MessageService{runtimeResolver: runtimeResolver}
 }
@@ -64,7 +64,7 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	return runConnectedSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
 		opts := buildSendOptsCloud(req.CustomID, req.ReplyTo)
 		resp, err := provider.SendText(ctx, session.ID, req.Phone, req.Body, opts...)
 		if err != nil {
@@ -118,7 +118,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		return "", err
 	}
 
-	return runConnectedSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
 		return s.sendMediaCloud(ctx, session.ID, provider, req, mediaType)
 	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
@@ -143,14 +143,14 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			if checkFFmpegAvailable() {
 				convertedData, convErr := convertToOGG(data)
 				if convErr != nil {
-					logger.Warn().Err(convErr).Str("session", session.ID).Msg("Failed to convert audio to OGG, sending original")
+					logger.Warn().Str("component", "service").Err(convErr).Str("session", session.ID).Msg("Failed to convert audio to OGG, sending original")
 				} else {
 					data = convertedData
 					req.MimeType = "audio/ogg"
-					logger.Debug().Str("session", session.ID).Msg("Audio converted to OGG Opus format")
+					logger.Debug().Str("component", "service").Str("session", session.ID).Msg("Audio converted to OGG Opus format")
 				}
 			} else {
-				logger.Warn().Str("session", session.ID).Msg("ffmpeg not available, sending audio without conversion")
+				logger.Warn().Str("component", "service").Str("session", session.ID).Msg("ffmpeg not available, sending audio without conversion")
 			}
 		}
 

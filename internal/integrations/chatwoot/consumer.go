@@ -89,7 +89,9 @@ func NewConsumer(js jetstream.JetStream, svc *Service) (*Consumer, error) {
 }
 
 func (c *Consumer) startQueueDepthPoller(ctx context.Context) {
+	c.wg.Add(1)
 	go func() {
+		defer c.wg.Done()
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 		for {
@@ -174,7 +176,7 @@ func (c *Consumer) Stop() {
 	select {
 	case <-done:
 	case <-time.After(30 * time.Second):
-		logger.Warn().Msg("[CW] consumer drain timed out after 30s")
+		logger.Warn().Str("component", "chatwoot").Msg("consumer drain timed out after 30s")
 	}
 }
 
@@ -249,7 +251,7 @@ func (c *Consumer) processInbound(ctx context.Context, msg jetstream.Msg) {
 
 	var env inboundEnvelope
 	if err := json.Unmarshal(msg.Data(), &env); err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to unmarshal inbound envelope")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to unmarshal inbound envelope")
 		_ = msg.Ack()
 		return
 	}
@@ -264,7 +266,7 @@ func (c *Consumer) processInbound(ctx context.Context, msg jetstream.Msg) {
 	cbSpan.End()
 
 	if !cbAllowed {
-		logger.Warn().Str("session", env.SessionID).Msg("[CW] circuit breaker OPEN, NAK inbound for retry")
+		logger.Warn().Str("component", "chatwoot").Str("session", env.SessionID).Msg("circuit breaker OPEN, NAK inbound for retry")
 		metrics.CWCircuitBreakerState.WithLabelValues(env.SessionID).Set(float64(cbOpen))
 		_ = msg.Nak()
 		return
@@ -273,14 +275,14 @@ func (c *Consumer) processInbound(ctx context.Context, msg jetstream.Msg) {
 	start := time.Now()
 	if err := c.service.processInboundEvent(spanCtx, env.SessionID, env.Event, env.Payload); err != nil {
 		if ctx.Err() != nil {
-			logger.Debug().Str("session", env.SessionID).Str("event", string(env.Event)).Msg("[CW] inbound processing interrupted by shutdown, will redeliver on restart")
+			logger.Debug().Str("component", "chatwoot").Str("session", env.SessionID).Str("event", string(env.Event)).Msg("inbound processing interrupted by shutdown, will redeliver on restart")
 			_ = msg.Nak()
 			return
 		}
 		c.service.cb.RecordFailure(env.SessionID)
 		metrics.CWMessagesFailed.WithLabelValues(env.SessionID, string(env.Event), "processing_error").Inc()
 		metrics.CWCircuitBreakerState.WithLabelValues(env.SessionID).Set(float64(c.service.cb.get(env.SessionID).State()))
-		logger.Warn().Err(err).Str("session", env.SessionID).Str("event", string(env.Event)).Msg("[CW] inbound processing error, will retry")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", env.SessionID).Str("event", string(env.Event)).Msg("inbound processing error, will retry")
 		_ = msg.Nak()
 		return
 	}
@@ -313,7 +315,7 @@ func (c *Consumer) processOutbound(ctx context.Context, msg jetstream.Msg) {
 
 	var env outboundEnvelope
 	if err := json.Unmarshal(msg.Data(), &env); err != nil {
-		logger.Warn().Err(err).Msg("[CW] failed to unmarshal outbound envelope")
+		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to unmarshal outbound envelope")
 		_ = msg.Ack()
 		return
 	}
@@ -328,7 +330,7 @@ func (c *Consumer) processOutbound(ctx context.Context, msg jetstream.Msg) {
 	cbSpan.End()
 
 	if !cbAllowed {
-		logger.Warn().Str("session", env.SessionID).Msg("[CW] circuit breaker OPEN, NAK outbound for retry")
+		logger.Warn().Str("component", "chatwoot").Str("session", env.SessionID).Msg("circuit breaker OPEN, NAK outbound for retry")
 		metrics.CWCircuitBreakerState.WithLabelValues(env.SessionID).Set(float64(cbOpen))
 		_ = msg.Nak()
 		return
@@ -337,14 +339,14 @@ func (c *Consumer) processOutbound(ctx context.Context, msg jetstream.Msg) {
 	start := time.Now()
 	if err := c.service.processOutboundWebhook(spanCtx, env.SessionID, env.Payload); err != nil {
 		if ctx.Err() != nil {
-			logger.Debug().Str("session", env.SessionID).Msg("[CW] outbound processing interrupted by shutdown, will redeliver on restart")
+			logger.Debug().Str("component", "chatwoot").Str("session", env.SessionID).Msg("outbound processing interrupted by shutdown, will redeliver on restart")
 			_ = msg.Nak()
 			return
 		}
 		c.service.cb.RecordFailure(env.SessionID)
 		metrics.CWMessagesFailed.WithLabelValues(env.SessionID, "outbound", "processing_error").Inc()
 		metrics.CWCircuitBreakerState.WithLabelValues(env.SessionID).Set(float64(c.service.cb.get(env.SessionID).State()))
-		logger.Warn().Err(err).Str("session", env.SessionID).Msg("[CW] outbound processing error, will retry")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", env.SessionID).Msg("outbound processing error, will retry")
 		_ = msg.Nak()
 		return
 	}
@@ -360,9 +362,9 @@ func (c *Consumer) processOutbound(ctx context.Context, msg jetstream.Msg) {
 func (c *Consumer) sendToDeadLetter(ctx context.Context, direction string, data []byte) {
 	subject := fmt.Sprintf("%s.%s", deadLetterBase, direction)
 	if err := c.nats.Publish(ctx, subject, data); err != nil {
-		logger.Error().Err(err).Str("direction", direction).Msg("[CW] failed to publish to dead letter")
+		logger.Error().Str("component", "chatwoot").Err(err).Str("direction", direction).Msg("failed to publish to dead letter")
 	} else {
-		logger.Error().Str("direction", direction).Msg("[CW] message sent to dead letter after max retries")
+		logger.Error().Str("component", "chatwoot").Str("direction", direction).Msg("message sent to dead letter after max retries")
 		metrics.CWDeadLetterCount.WithLabelValues(direction).Inc()
 	}
 }

@@ -54,7 +54,6 @@ type Manager struct {
 	sessionNames map[string]string // cache de sessionID -> name
 	mu           sync.RWMutex
 
-	ctx                   context.Context
 	sessionRepo           *repo.SessionRepository
 	container             *sqlstore.Container
 	nats                  *broker.NATS
@@ -102,7 +101,7 @@ func (m *Manager) UpdateSessionName(sessionID, name string) {
 	m.mu.Unlock()
 }
 
-func (m *Manager) getSessionName(sessionID string) string {
+func (m *Manager) getSessionName(ctx context.Context, sessionID string) string {
 	m.mu.RLock()
 	name, ok := m.sessionNames[sessionID]
 	m.mu.RUnlock()
@@ -113,7 +112,7 @@ func (m *Manager) getSessionName(sessionID string) string {
 
 	// Buscar do banco se não estiver em cache
 	if m.sessionRepo != nil {
-		session, err := m.sessionRepo.FindByID(m.ctx, sessionID)
+		session, err := m.sessionRepo.FindByID(ctx, sessionID)
 		if err == nil {
 			m.mu.Lock()
 			m.sessionNames[sessionID] = session.Name

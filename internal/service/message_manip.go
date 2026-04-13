@@ -101,7 +101,7 @@ func (s *MessageService) ForwardMessage(ctx context.Context, sessionID string, r
 		return "", err
 	}
 
-	return runConnectedSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		destJID, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err

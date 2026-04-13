@@ -19,19 +19,19 @@ func TestRequireCapability(t *testing.T) {
 			name:       "complete support",
 			engine:     "whatsmeow",
 			capability: model.CapabilityMessageText,
-			want:       model.CapabilitySupportComplete,
+			want:       model.SupportComplete,
 		},
 		{
 			name:       "partial support",
 			engine:     "cloud_api",
 			capability: model.CapabilityMessageLink,
-			want:       model.CapabilitySupportPartial,
+			want:       model.SupportPartial,
 		},
 		{
 			name:       "unavailable support",
 			engine:     "cloud_api",
 			capability: model.CapabilityMessagePoll,
-			want:       model.CapabilitySupportUnavailable,
+			want:       model.SupportUnavailable,
 			wantErr:    true,
 		},
 	}

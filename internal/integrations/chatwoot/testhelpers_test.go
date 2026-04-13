@@ -12,7 +12,7 @@ import (
 	"wzap/internal/model"
 )
 
-type mockCWClient struct {
+type mockClient struct {
 	mu                      sync.Mutex
 	messages                []MessageReq
 	attachments             []string
@@ -24,7 +24,7 @@ type mockCWClient struct {
 	createConversationCalls int
 }
 
-func (m *mockCWClient) FilterContacts(_ context.Context, _ string) ([]Contact, error) {
+func (m *mockClient) FilterContacts(_ context.Context, _ string) ([]Contact, error) {
 	m.mu.Lock()
 	m.filterContactsCalls++
 	delay := m.filterDelay
@@ -36,30 +36,30 @@ func (m *mockCWClient) FilterContacts(_ context.Context, _ string) ([]Contact, e
 	return contacts, nil
 }
 
-func (m *mockCWClient) CreateContact(_ context.Context, _ CreateContactReq) (*Contact, error) {
+func (m *mockClient) CreateContact(_ context.Context, _ CreateContactReq) (*Contact, error) {
 	return &Contact{ID: 1}, nil
 }
 
-func (m *mockCWClient) UpdateContact(_ context.Context, _ int, _ UpdateContactReq) error {
+func (m *mockClient) UpdateContact(_ context.Context, _ int, _ UpdateContactReq) error {
 	return nil
 }
 
-func (m *mockCWClient) ListContactConversations(_ context.Context, _ int) ([]Conversation, error) {
+func (m *mockClient) ListContactConversations(_ context.Context, _ int) ([]Conversation, error) {
 	return m.conversations, nil
 }
 
-func (m *mockCWClient) CreateConversation(_ context.Context, _ CreateConversationReq) (*Conversation, error) {
+func (m *mockClient) CreateConversation(_ context.Context, _ CreateConversationReq) (*Conversation, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.createConversationCalls++
 	return &Conversation{ID: 1}, nil
 }
 
-func (m *mockCWClient) UpdateConversationStatus(_ context.Context, _ int, _ string) error {
+func (m *mockClient) UpdateConversationStatus(_ context.Context, _ int, _ string) error {
 	return nil
 }
 
-func (m *mockCWClient) CreateMessage(_ context.Context, _ int, req MessageReq) (*Message, error) {
+func (m *mockClient) CreateMessage(_ context.Context, _ int, req MessageReq) (*Message, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.messages = append(m.messages, req)
@@ -67,73 +67,73 @@ func (m *mockCWClient) CreateMessage(_ context.Context, _ int, req MessageReq) (
 	return &Message{ID: 1, SourceID: "src-1"}, nil
 }
 
-func (m *mockCWClient) CreateMessageWithAttachment(_ context.Context, _ int, _ string, filename string, _ []byte, _ string, _ string, _ string) (*Message, error) {
+func (m *mockClient) CreateMessageWithAttachment(_ context.Context, _ int, _ string, filename string, _ []byte, _ string, _ string, _ string, _ int, _ map[string]any) (*Message, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.attachments = append(m.attachments, filename)
 	return &Message{ID: 1}, nil
 }
 
-func (m *mockCWClient) DeleteMessage(_ context.Context, _, _ int) error {
+func (m *mockClient) DeleteMessage(_ context.Context, _, _ int) error {
 	return nil
 }
 
-func (m *mockCWClient) UpdateMessage(_ context.Context, _, _ int, _ string) error {
+func (m *mockClient) UpdateMessage(_ context.Context, _, _ int, _ string) error {
 	return nil
 }
 
-func (m *mockCWClient) UpdateLastSeen(_ context.Context, _, _ string, _ int) error {
+func (m *mockClient) UpdateLastSeen(_ context.Context, _, _ string, _ int) error {
 	return nil
 }
 
-func (m *mockCWClient) ListInboxes(_ context.Context) ([]Inbox, error) {
+func (m *mockClient) ListInboxes(_ context.Context) ([]Inbox, error) {
 	return []Inbox{{ID: 1, Name: "test-inbox"}}, nil
 }
 
-func (m *mockCWClient) CreateInbox(_ context.Context, _ string, _ string) (*Inbox, error) {
+func (m *mockClient) CreateInbox(_ context.Context, _ string, _ string) (*Inbox, error) {
 	return &Inbox{ID: 1}, nil
 }
 
-func (m *mockCWClient) UpdateInboxWebhook(_ context.Context, _ int, _ string) error {
+func (m *mockClient) UpdateInboxWebhook(_ context.Context, _ int, _ string) error {
 	return nil
 }
 
-func (m *mockCWClient) GetConversation(_ context.Context, convID int) (*Conversation, error) {
+func (m *mockClient) GetConversation(_ context.Context, convID int) (*Conversation, error) {
 	return &Conversation{ID: convID}, nil
 }
 
-func (m *mockCWClient) MergeContacts(_ context.Context, _, _ int) error {
+func (m *mockClient) MergeContacts(_ context.Context, _, _ int) error {
 	return nil
 }
 
-func (m *mockCWClient) FilterContactsCallCount() int {
+func (m *mockClient) FilterContactsCallCount() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.filterContactsCalls
 }
 
-func (m *mockCWClient) CreateConversationCallCount() int {
+func (m *mockClient) CreateConversationCallCount() int {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	return m.createConversationCalls
 }
 
 type mockRepo struct {
-	cfg      *ChatwootConfig
+	cfg      *Config
 	notFound bool
 }
 
-func (m *mockRepo) Upsert(_ context.Context, cfg *ChatwootConfig) error {
+func (m *mockRepo) Upsert(_ context.Context, cfg *Config) error {
 	m.cfg = cfg
 	return nil
 }
 
-func (m *mockRepo) FindBySessionID(_ context.Context, sessionID string) (*ChatwootConfig, error) {
+func (m *mockRepo) FindBySessionID(_ context.Context, sessionID string) (*Config, error) {
 	if m.notFound {
 		return nil, fmt.Errorf("not found")
 	}
 	if m.cfg == nil {
-		return &ChatwootConfig{SessionID: sessionID, Enabled: true, InboxID: 1}, nil
+		return &Config{SessionID: sessionID, Enabled: true, InboxID: 1}, nil
 	}
 	return m.cfg, nil
 }
@@ -273,11 +273,11 @@ func (m *mockMsgRepoFixed) FindByCWMessageID(ctx context.Context, sessionID stri
 	return m.FindByID(ctx, sessionID, "fixed-msg")
 }
 
-func newTestService(client *mockCWClient) *Service {
+func newTestService(client *mockClient) *Service {
 	return &Service{
-		repo:       &mockRepo{cfg: &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}},
+		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
 		msgRepo:    &mockMsgRepoWithDuplicates{existingSourceIDs: map[string]bool{}},
-		clientFn:   func(_ *ChatwootConfig) CWClient { return client },
+		clientFn:   func(_ *Config) Client { return client },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
 		cb:         newCircuitBreakerManager(),

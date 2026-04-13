@@ -3,6 +3,7 @@ package chatwoot
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -37,46 +38,46 @@ type MediaDownloader interface {
 }
 type SessionConnector interface {
 	Connect(ctx context.Context, sessionID string) error
-	Disconnect(sessionID string) error
+	Disconnect(ctx context.Context, sessionID string) error
 	Logout(ctx context.Context, sessionID string) error
 	IsConnected(sessionID string) bool
 }
-type ProfilePictureGetter interface {
+type AvatarGetter interface {
 	GetProfilePicture(ctx context.Context, sessionID, jid string) (string, error)
 }
 type NumberChecker interface {
 	IsOnWhatsApp(ctx context.Context, sessionID string, phones []string) (map[string]string, error)
 }
 
-type noConfigEntry struct {
+type missingEntry struct {
 	expiresAt time.Time
 }
 
 type Service struct {
-	repo             Repo
-	msgRepo          repo.MessageRepo
-	clientFn         func(cfg *ChatwootConfig) CWClient
-	messageSvc       MessageService
-	cache            Cache
-	jidResolver      JIDResolver
-	mediaDownloader  MediaDownloader
-	connector        SessionConnector
-	profilePicGetter ProfilePictureGetter
-	numberChecker    NumberChecker
-	serverURL        string
-	lastBotNotify    sync.Map
-	httpClient       *http.Client
-	js               jetstream.JetStream
-	cb               *circuitBreakerManager
-	convFlight       singleflight.Group
-	noConfigCache    sync.Map
+	repo            Repo
+	msgRepo         repo.MessageRepo
+	clientFn        func(cfg *Config) Client
+	messageSvc      MessageService
+	cache           Cache
+	jidResolver     JIDResolver
+	mediaDownloader MediaDownloader
+	connector       SessionConnector
+	picGetter       AvatarGetter
+	numberChecker   NumberChecker
+	serverURL       string
+	lastBotNotify   sync.Map
+	httpClient      *http.Client
+	js              jetstream.JetStream
+	cb              *circuitBreakerManager
+	convFlight      singleflight.Group
+	missingConfig   sync.Map
 }
 
 func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messageSvc MessageService) *Service {
 	return &Service{
 		repo:    repo,
 		msgRepo: msgRepo,
-		clientFn: func(cfg *ChatwootConfig) CWClient {
+		clientFn: func(cfg *Config) Client {
 			return NewClient(cfg.URL, cfg.AccountID, cfg.Token, &http.Client{Timeout: 30 * time.Second})
 		},
 		messageSvc: messageSvc,
@@ -86,49 +87,55 @@ func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messag
 	}
 }
 
-func (s *Service) SetJIDResolver(r JIDResolver)                   { s.jidResolver = r }
-func (s *Service) SetMediaDownloader(d MediaDownloader)           { s.mediaDownloader = d }
-func (s *Service) SetSessionConnector(c SessionConnector)         { s.connector = c }
-func (s *Service) SetProfilePictureGetter(p ProfilePictureGetter) { s.profilePicGetter = p }
-func (s *Service) SetNumberChecker(n NumberChecker)               { s.numberChecker = n }
-func (s *Service) SetServerURL(url string)                        { s.serverURL = url }
-func (s *Service) SetJetStream(js jetstream.JetStream)            { s.js = js }
-func (s *Service) SetCache(c Cache)                               { s.cache = c }
-func (s *Service) InvalidateNoConfigCache(sessionID string) {
-	s.noConfigCache.Delete(sessionID)
+func (s *Service) SetJIDResolver(r JIDResolver)           { s.jidResolver = r }
+func (s *Service) SetMediaDownloader(d MediaDownloader)   { s.mediaDownloader = d }
+func (s *Service) SetSessionConnector(c SessionConnector) { s.connector = c }
+func (s *Service) SetAvatarGetter(p AvatarGetter)         { s.picGetter = p }
+func (s *Service) SetNumberChecker(n NumberChecker)       { s.numberChecker = n }
+func (s *Service) SetServerURL(url string)                { s.serverURL = url }
+func (s *Service) SetJetStream(js jetstream.JetStream)    { s.js = js }
+func (s *Service) SetCache(c Cache)                       { s.cache = c }
+func (s *Service) ClearConfigCache(sessionID string) {
+	s.missingConfig.Delete(sessionID)
 }
 
-func (s *Service) OnEvent(sessionID string, event model.EventType, payload []byte) {
+func (s *Service) OnEvent(ctx context.Context, sessionID string, event model.EventType, payload []byte) {
 	if s.js != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		publishCtx := ctx
+		if publishCtx == nil {
+			publishCtx = context.Background()
+		}
+		pubCtx, cancel := context.WithTimeout(publishCtx, 5*time.Second)
 		defer cancel()
-		if err := publishInbound(ctx, s.js, sessionID, event, payload); err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Msg("[CW] failed to publish inbound event, falling back to sync")
-			s.processInboundSync(sessionID, event, payload)
+		if err := publishInbound(pubCtx, s.js, sessionID, event, payload); err != nil {
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("failed to publish inbound event, falling back to sync")
+			s.processInboundSync(ctx, sessionID, event, payload)
 		}
 		return
 	}
 
-	s.processInboundSync(sessionID, event, payload)
+	s.processInboundSync(ctx, sessionID, event, payload)
 }
 
-func (s *Service) processInboundSync(sessionID string, event model.EventType, payload []byte) {
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+func (s *Service) processInboundSync(ctx context.Context, sessionID string, event model.EventType, payload []byte) {
+	syncCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	_ = s.processInboundEvent(ctx, sessionID, event, payload)
+	if err := s.processInboundEvent(syncCtx, sessionID, event, payload); err != nil {
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("event", string(event)).Msg("processInboundSync error")
+	}
 }
 
 func (s *Service) processInboundEvent(ctx context.Context, sessionID string, event model.EventType, payload []byte) error {
-	if v, ok := s.noConfigCache.Load(sessionID); ok {
-		if entry, valid := v.(noConfigEntry); valid && time.Now().Before(entry.expiresAt) {
+	if v, ok := s.missingConfig.Load(sessionID); ok {
+		if entry, valid := v.(missingEntry); valid && time.Now().Before(entry.expiresAt) {
 			return nil
 		}
-		s.noConfigCache.Delete(sessionID)
+		s.missingConfig.Delete(sessionID)
 	}
 
 	cfg, err := s.repo.FindBySessionID(ctx, sessionID)
 	if err != nil {
-		s.noConfigCache.Store(sessionID, noConfigEntry{expiresAt: time.Now().Add(5 * time.Minute)})
+		s.missingConfig.Store(sessionID, missingEntry{expiresAt: time.Now().Add(5 * time.Minute)})
 		return nil
 	}
 	if !cfg.Enabled {
@@ -141,14 +148,14 @@ func (s *Service) processInboundEvent(ctx context.Context, sessionID string, eve
 			if isRetryableError(err) {
 				return err
 			}
-			logger.Warn().Err(err).Str("session", sessionID).Msg("[CW] permanent error in handleMessage, dropping")
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("permanent error in handleMessage, dropping")
 		}
 	case model.EventGroupInfo:
 		if err := s.handleGroupInfo(ctx, cfg, payload); err != nil {
 			if isRetryableError(err) {
 				return err
 			}
-			logger.Warn().Err(err).Str("session", sessionID).Msg("[CW] permanent error in handleGroupInfo, dropping")
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("permanent error in handleGroupInfo, dropping")
 		}
 	case model.EventReceipt:
 		s.handleReceipt(ctx, cfg, payload)
@@ -179,7 +186,7 @@ func (s *Service) processInboundEvent(ctx context.Context, sessionID string, eve
 func (s *Service) processOutboundWebhook(ctx context.Context, sessionID string, rawPayload json.RawMessage) error {
 	var body dto.ChatwootWebhookPayload
 	if err := json.Unmarshal(rawPayload, &body); err != nil {
-		return nil
+		return fmt.Errorf("unmarshal outbound webhook: %w", err)
 	}
 	return s.HandleIncomingWebhook(ctx, sessionID, body)
 }
@@ -192,11 +199,11 @@ func (s *Service) importHistory(ctx context.Context, sessionID, period string, c
 
 	days := importPeriodToDays(period, customDays)
 	if days <= 0 {
-		logger.Warn().Str("session", sessionID).Str("period", period).Msg("[CW] invalid import period")
+		logger.Warn().Str("component", "chatwoot").Str("session", sessionID).Str("period", period).Msg("invalid import period")
 		return
 	}
 
-	logger.Info().Str("session", sessionID).Str("period", period).Int("days", days).Msg("[CW] Starting history import")
+	logger.Info().Str("component", "chatwoot").Str("session", sessionID).Str("period", period).Int("days", days).Msg("Starting history import")
 	metrics.CWHistoryImportProgress.WithLabelValues(sessionID).Set(0)
 
 	// Rate limiter: max 10 msgs/s
@@ -211,7 +218,7 @@ func (s *Service) importHistory(ctx context.Context, sessionID, period string, c
 	// filtered by timestamp >= since, respecting the rate limit.
 	// For each message, call processInboundEvent to re-create in Chatwoot.
 	// Progress is updated as percentage of total messages processed.
-	logger.Info().Str("session", sessionID).Msg("[CW] history import complete (no historical messages available in current store)")
+	logger.Info().Str("component", "chatwoot").Str("session", sessionID).Msg("history import complete (no historical messages available in current store)")
 	metrics.CWHistoryImportProgress.WithLabelValues(sessionID).Set(100)
 }
 

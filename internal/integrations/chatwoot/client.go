@@ -15,7 +15,7 @@ import (
 	"wzap/internal/logger"
 )
 
-type CWClient interface {
+type Client interface {
 	FilterContacts(ctx context.Context, phone string) ([]Contact, error)
 	CreateContact(ctx context.Context, req CreateContactReq) (*Contact, error)
 	UpdateContact(ctx context.Context, id int, req UpdateContactReq) error
@@ -25,7 +25,7 @@ type CWClient interface {
 	GetConversation(ctx context.Context, convID int) (*Conversation, error)
 	MergeContacts(ctx context.Context, baseID, mergeeID int) error
 	CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error)
-	CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string) (*Message, error)
+	CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error)
 	DeleteMessage(ctx context.Context, convID, msgID int) error
 	UpdateMessage(ctx context.Context, convID, msgID int, content string) error
 	UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error
@@ -34,16 +34,16 @@ type CWClient interface {
 	UpdateInboxWebhook(ctx context.Context, inboxID int, webhookURL string) error
 }
 
-type Client struct {
+type HTTPClient struct {
 	baseURL    string
 	accountID  int
 	token      string
 	httpClient *http.Client
 }
 
-func NewClient(baseURL string, accountID int, token string, httpClient *http.Client) *Client {
+func NewClient(baseURL string, accountID int, token string, httpClient *http.Client) *HTTPClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	return &Client{
+	return &HTTPClient{
 		baseURL:    baseURL,
 		accountID:  accountID,
 		token:      token,
@@ -51,7 +51,7 @@ func NewClient(baseURL string, accountID int, token string, httpClient *http.Cli
 	}
 }
 
-func (c *Client) do(ctx context.Context, method, path string, body any, result any, contentType string) error {
+func (c *HTTPClient) do(ctx context.Context, method, path string, body any, result any, contentType string) error {
 	var reqBody io.Reader
 	var ct string
 
@@ -97,7 +97,7 @@ func (c *Client) do(ctx context.Context, method, path string, body any, result a
 		if len(bodyBytes) > 512 {
 			bodyBytes = bodyBytes[:512]
 		}
-		return fmt.Errorf("chatwoot API error: status=%d, body=%s", resp.StatusCode, string(bodyBytes))
+		return &APIError{StatusCode: resp.StatusCode, Message: string(bodyBytes)}
 	}
 
 	if result != nil && resp.StatusCode != http.StatusNoContent {
@@ -115,15 +115,34 @@ type Contact struct {
 	PhoneNumber          string         `json:"phone_number"`
 	Identifier           string         `json:"identifier,omitempty"`
 	Email                string         `json:"email,omitempty"`
+	Thumbnail            string         `json:"thumbnail,omitempty"`
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
 
-func (c *Client) FilterContacts(ctx context.Context, phone string) ([]Contact, error) {
+func (c *HTTPClient) FilterContacts(ctx context.Context, phone string) ([]Contact, error) {
+	type filterEntry struct {
+		AttributeKey   string   `json:"attribute_key"`
+		FilterOperator string   `json:"filter_operator"`
+		Values         []string `json:"values"`
+		QueryOperator  *string  `json:"query_operator"`
+	}
+	body := struct {
+		Payload []filterEntry `json:"payload"`
+	}{
+		Payload: []filterEntry{
+			{
+				AttributeKey:   "phone_number",
+				FilterOperator: "equal_to",
+				Values:         []string{strings.TrimPrefix(phone, "+")},
+				QueryOperator:  nil,
+			},
+		},
+	}
 	var result struct {
 		Payload []Contact `json:"payload"`
 	}
-	path := fmt.Sprintf("/api/v1/accounts/%d/contacts/search?q=%s&include_contacts=true", c.accountID, phone)
-	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
+	path := fmt.Sprintf("/api/v1/accounts/%d/contacts/filter", c.accountID)
+	if err := c.do(ctx, http.MethodPost, path, body, &result, ""); err != nil {
 		return nil, err
 	}
 	return result.Payload, nil
@@ -139,7 +158,7 @@ type CreateContactReq struct {
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
 
-func (c *Client) CreateContact(ctx context.Context, req CreateContactReq) (*Contact, error) {
+func (c *HTTPClient) CreateContact(ctx context.Context, req CreateContactReq) (*Contact, error) {
 	var result struct {
 		Payload struct {
 			Contact Contact `json:"contact"`
@@ -165,7 +184,7 @@ type UpdateContactReq struct {
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
 }
 
-func (c *Client) UpdateContact(ctx context.Context, id int, req UpdateContactReq) error {
+func (c *HTTPClient) UpdateContact(ctx context.Context, id int, req UpdateContactReq) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/contacts/%d", c.accountID, id)
 	data, err := json.Marshal(req)
 	if err != nil {
@@ -182,7 +201,7 @@ type Conversation struct {
 	Messages  []Message `json:"messages,omitempty"`
 }
 
-func (c *Client) ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error) {
+func (c *HTTPClient) ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error) {
 	var result struct {
 		Payload []Conversation `json:"payload"`
 	}
@@ -200,7 +219,7 @@ type CreateConversationReq struct {
 	Status    string `json:"status,omitempty"`
 }
 
-func (c *Client) CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error) {
+func (c *HTTPClient) CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error) {
 	var result Conversation
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations", c.accountID)
 	data, err := json.Marshal(req)
@@ -213,7 +232,7 @@ func (c *Client) CreateConversation(ctx context.Context, req CreateConversationR
 	return &result, nil
 }
 
-func (c *Client) UpdateConversationStatus(ctx context.Context, convID int, status string) error {
+func (c *HTTPClient) UpdateConversationStatus(ctx context.Context, convID int, status string) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/toggle_status", c.accountID, convID)
 	body := map[string]string{"status": status}
 	data, err := json.Marshal(body)
@@ -223,7 +242,7 @@ func (c *Client) UpdateConversationStatus(ctx context.Context, convID int, statu
 	return c.do(ctx, http.MethodPost, path, data, nil, "")
 }
 
-func (c *Client) GetConversation(ctx context.Context, convID int) (*Conversation, error) {
+func (c *HTTPClient) GetConversation(ctx context.Context, convID int) (*Conversation, error) {
 	var result Conversation
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d", c.accountID, convID)
 	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
@@ -232,7 +251,7 @@ func (c *Client) GetConversation(ctx context.Context, convID int) (*Conversation
 	return &result, nil
 }
 
-func (c *Client) MergeContacts(ctx context.Context, baseID, mergeeID int) error {
+func (c *HTTPClient) MergeContacts(ctx context.Context, baseID, mergeeID int) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/actions/contact_merge", c.accountID)
 	body := map[string]int{
 		"base_contact_id":   baseID,
@@ -264,7 +283,7 @@ type Message struct {
 	ConversationID int    `json:"conversation_id"`
 }
 
-func (c *Client) CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error) {
+func (c *HTTPClient) CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error) {
 	var result Message
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
 
@@ -285,7 +304,7 @@ func (c *Client) CreateMessage(ctx context.Context, convID int, req MessageReq) 
 		if len(req.ContentAttributes) > 0 {
 			caJSON, err := json.Marshal(req.ContentAttributes)
 			if err == nil {
-				logger.Debug().Str("content_attributes", string(caJSON)).Int("source_reply_id", req.SourceReplyID).Msg("[CW] sending FormData to Chatwoot")
+				logger.Debug().Str("component", "chatwoot").Str("content_attributes", string(caJSON)).Int("source_reply_id", req.SourceReplyID).Msg("sending FormData to Chatwoot")
 				_ = writer.WriteField("content_attributes", string(caJSON))
 			}
 		}
@@ -307,7 +326,7 @@ func (c *Client) CreateMessage(ctx context.Context, convID int, req MessageReq) 
 	return &result, nil
 }
 
-func (c *Client) CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string) (*Message, error) {
+func (c *HTTPClient) CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error) {
 	var result Message
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
 
@@ -320,6 +339,14 @@ func (c *Client) CreateMessageWithAttachment(ctx context.Context, convID int, co
 	_ = writer.WriteField("message_type", messageType)
 	if sourceID != "" {
 		_ = writer.WriteField("source_id", sourceID)
+	}
+	if sourceReplyID > 0 {
+		_ = writer.WriteField("source_reply_id", fmt.Sprintf("%d", sourceReplyID))
+	}
+	if len(contentAttrs) > 0 {
+		if caJSON, err := json.Marshal(contentAttrs); err == nil {
+			_ = writer.WriteField("content_attributes", string(caJSON))
+		}
 	}
 
 	h := make(textproto.MIMEHeader)
@@ -340,12 +367,12 @@ func (c *Client) CreateMessageWithAttachment(ctx context.Context, convID int, co
 	return &result, c.do(ctx, http.MethodPost, path, &buf, &result, writer.FormDataContentType())
 }
 
-func (c *Client) DeleteMessage(ctx context.Context, convID, msgID int) error {
+func (c *HTTPClient) DeleteMessage(ctx context.Context, convID, msgID int) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages/%d", c.accountID, convID, msgID)
 	return c.do(ctx, http.MethodDelete, path, nil, nil, "")
 }
 
-func (c *Client) UpdateMessage(ctx context.Context, convID, msgID int, content string) error {
+func (c *HTTPClient) UpdateMessage(ctx context.Context, convID, msgID int, content string) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages/%d", c.accountID, convID, msgID)
 	body := map[string]string{"content": content}
 	data, err := json.Marshal(body)
@@ -362,7 +389,7 @@ type Inbox struct {
 	WebhookURL  string `json:"webhook_url,omitempty"`
 }
 
-func (c *Client) ListInboxes(ctx context.Context) ([]Inbox, error) {
+func (c *HTTPClient) ListInboxes(ctx context.Context) ([]Inbox, error) {
 	var result struct {
 		Payload []Inbox `json:"payload"`
 	}
@@ -373,7 +400,7 @@ func (c *Client) ListInboxes(ctx context.Context) ([]Inbox, error) {
 	return result.Payload, nil
 }
 
-func (c *Client) CreateInbox(ctx context.Context, name, webhookURL string) (*Inbox, error) {
+func (c *HTTPClient) CreateInbox(ctx context.Context, name, webhookURL string) (*Inbox, error) {
 	var result Inbox
 	path := fmt.Sprintf("/api/v1/accounts/%d/inboxes", c.accountID)
 	body := map[string]any{
@@ -393,7 +420,7 @@ func (c *Client) CreateInbox(ctx context.Context, name, webhookURL string) (*Inb
 	return &result, nil
 }
 
-func (c *Client) UpdateInboxWebhook(ctx context.Context, inboxID int, webhookURL string) error {
+func (c *HTTPClient) UpdateInboxWebhook(ctx context.Context, inboxID int, webhookURL string) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/inboxes/%d", c.accountID, inboxID)
 	body := map[string]any{
 		"channel": map[string]any{
@@ -407,7 +434,7 @@ func (c *Client) UpdateInboxWebhook(ctx context.Context, inboxID int, webhookURL
 	return c.do(ctx, http.MethodPatch, path, data, nil, "")
 }
 
-func (c *Client) UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error {
+func (c *HTTPClient) UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error {
 	path := fmt.Sprintf("/public/api/v1/inboxes/%s/contact_inboxes/conversations/%d/update_last_seen", inboxIdentifier, convID)
 	body := map[string]any{
 		"source_id": sourceID,

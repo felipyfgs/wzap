@@ -150,7 +150,7 @@ func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID s
 
 	allContacts, contactsErr := client.Store.Contacts.GetAllContacts(ctx)
 	if contactsErr != nil {
-		logger.Warn().Err(contactsErr).Str("session", sessionID).Msg("failed to load contacts for group info")
+		logger.Warn().Str("component", "service").Err(contactsErr).Str("session", sessionID).Msg("failed to load contacts for group info")
 	}
 	contactName := func(j types.JID) string {
 		if c, ok := allContacts[j]; ok {
@@ -212,7 +212,7 @@ func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID s
 	var subgroups []dto.SubgroupResp
 	if info.IsParent {
 		if sgs, sgErr := client.GetSubGroups(ctx, jid); sgErr != nil {
-			logger.Warn().Err(sgErr).Str("session", sessionID).Str("group", groupJID).Msg("failed to get subgroups")
+			logger.Warn().Str("component", "service").Err(sgErr).Str("session", sessionID).Str("group", groupJID).Msg("failed to get subgroups")
 		} else {
 			subgroups = make([]dto.SubgroupResp, 0, len(sgs))
 			for _, sg := range sgs {

@@ -18,47 +18,47 @@ import (
 )
 
 type stubLifecycleService struct {
-	connectResult    *service.SessionConnectResult
+	connectResult    *service.ConnectResult
 	connectErr       error
-	disconnectResult *service.SessionDisconnectResult
+	disconnectResult *service.DisconnectResult
 	disconnectErr    error
-	qrResult         *service.SessionQRResult
+	qrResult         *service.QRResult
 	qrErr            error
-	pairResult       *service.SessionPairResult
+	pairResult       *service.PairResult
 	pairErr          error
-	logoutResult     *service.SessionLogoutResult
+	logoutResult     *service.LogoutResult
 	logoutErr        error
-	reconnectResult  *service.SessionReconnectResult
+	reconnectResult  *service.ReconnectResult
 	reconnectErr     error
-	restartResult    *service.SessionRestartResult
+	restartResult    *service.RestartResult
 	restartErr       error
 }
 
-func (s *stubLifecycleService) Connect(ctx context.Context, sessionID string) (*service.SessionConnectResult, error) {
+func (s *stubLifecycleService) Connect(ctx context.Context, sessionID string) (*service.ConnectResult, error) {
 	return s.connectResult, s.connectErr
 }
 
-func (s *stubLifecycleService) Disconnect(ctx context.Context, sessionID string) (*service.SessionDisconnectResult, error) {
+func (s *stubLifecycleService) Disconnect(ctx context.Context, sessionID string) (*service.DisconnectResult, error) {
 	return s.disconnectResult, s.disconnectErr
 }
 
-func (s *stubLifecycleService) QR(ctx context.Context, sessionID string) (*service.SessionQRResult, error) {
+func (s *stubLifecycleService) QR(ctx context.Context, sessionID string) (*service.QRResult, error) {
 	return s.qrResult, s.qrErr
 }
 
-func (s *stubLifecycleService) Pair(ctx context.Context, sessionID, phone string) (*service.SessionPairResult, error) {
+func (s *stubLifecycleService) Pair(ctx context.Context, sessionID, phone string) (*service.PairResult, error) {
 	return s.pairResult, s.pairErr
 }
 
-func (s *stubLifecycleService) Logout(ctx context.Context, sessionID string) (*service.SessionLogoutResult, error) {
+func (s *stubLifecycleService) Logout(ctx context.Context, sessionID string) (*service.LogoutResult, error) {
 	return s.logoutResult, s.logoutErr
 }
 
-func (s *stubLifecycleService) Reconnect(ctx context.Context, sessionID string) (*service.SessionReconnectResult, error) {
+func (s *stubLifecycleService) Reconnect(ctx context.Context, sessionID string) (*service.ReconnectResult, error) {
 	return s.reconnectResult, s.reconnectErr
 }
 
-func (s *stubLifecycleService) Restart(ctx context.Context, sessionID string) (*service.SessionRestartResult, error) {
+func (s *stubLifecycleService) Restart(ctx context.Context, sessionID string) (*service.RestartResult, error) {
 	return s.restartResult, s.restartErr
 }
 
@@ -110,7 +110,7 @@ func TestSessionQR_NotFound(t *testing.T) {
 
 func TestSessionPair_NotSupported(t *testing.T) {
 	app := newSessionLifecycleApp(&stubLifecycleService{
-		pairErr: &service.CapabilityError{Engine: "cloud_api", Capability: model.CapabilitySessionPair, Support: model.CapabilitySupportUnavailable},
+		pairErr: &service.CapabilityError{Engine: "cloud_api", Capability: model.CapabilitySessionPair, Support: model.SupportUnavailable},
 	})
 	body, _ := json.Marshal(dto.PairPhoneReq{Phone: "5511999999999"})
 
@@ -127,7 +127,7 @@ func TestSessionPair_NotSupported(t *testing.T) {
 
 func TestSessionRestart_Success(t *testing.T) {
 	app := newSessionLifecycleApp(&stubLifecycleService{
-		restartResult: &service.SessionRestartResult{Session: &dto.SessionResp{ID: "sess1", Name: "sess1", Engine: "whatsmeow"}},
+		restartResult: &service.RestartResult{Session: &dto.SessionResp{ID: "sess1", Name: "sess1", Engine: "whatsmeow"}},
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/sessions/sess1/restart", nil)

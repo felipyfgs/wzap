@@ -19,7 +19,7 @@ func (s *MessageService) SendButton(ctx context.Context, sessionID string, req d
 		return "", err
 	}
 
-	return runConnectedSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
 		buttons := make([]cloudWA.InteractiveButton, len(req.Buttons))
 		for i, b := range req.Buttons {
 			buttons[i] = cloudWA.InteractiveButton{
@@ -92,7 +92,7 @@ func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	return runConnectedSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
 		sections := make([]cloudWA.InteractiveSection, len(req.Sections))
 		for i, sec := range req.Sections {
 			rows := make([]cloudWA.InteractiveSectionRow, len(sec.Rows))

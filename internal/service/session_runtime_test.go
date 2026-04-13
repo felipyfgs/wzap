@@ -26,7 +26,7 @@ func (s *stubSessionLookup) FindByID(ctx context.Context, id string) (*model.Ses
 	return s.session, nil
 }
 
-func TestSessionRuntimeResolverResolveReusesContext(t *testing.T) {
+func TestRuntimeResolverResolveReusesContext(t *testing.T) {
 	repo := &stubSessionLookup{
 		session: &model.Session{
 			ID:                 "sess-cloud",
@@ -40,7 +40,7 @@ func TestSessionRuntimeResolverResolveReusesContext(t *testing.T) {
 			UpdatedAt:          time.Now(),
 		},
 	}
-	resolver := newSessionRuntimeResolver(repo, nil, nil)
+	resolver := newRuntimeResolver(repo, nil, nil)
 
 	runtime, err := resolver.Resolve(context.Background(), "sess-cloud")
 	if err != nil {
@@ -87,7 +87,7 @@ func TestSessionConfigReaderReadConfigReusesRuntimeContext(t *testing.T) {
 			UpdatedAt:          time.Now(),
 		},
 	}
-	resolver := newSessionRuntimeResolver(repo, nil, nil)
+	resolver := newRuntimeResolver(repo, nil, nil)
 	reader := &SessionConfigReader{resolver: resolver}
 
 	runtime, err := resolver.Resolve(context.Background(), "sess-cloud")
@@ -110,7 +110,7 @@ func TestSessionConfigReaderReadConfigReusesRuntimeContext(t *testing.T) {
 	}
 }
 
-func TestSessionRuntimeResolverResolveMessageCapability(t *testing.T) {
+func TestRuntimeResolverResolveMessageCapability(t *testing.T) {
 	repo := &stubSessionLookup{
 		session: &model.Session{
 			ID:        "sess-cloud",
@@ -119,13 +119,13 @@ func TestSessionRuntimeResolverResolveMessageCapability(t *testing.T) {
 			UpdatedAt: time.Now(),
 		},
 	}
-	resolver := newSessionRuntimeResolver(repo, nil, nil)
+	resolver := newRuntimeResolver(repo, nil, nil)
 
 	runtime, err := resolver.ResolveMessage(context.Background(), "sess-cloud", model.CapabilityMessageLink)
 	if err != nil {
 		t.Fatalf("unexpected resolve message error: %v", err)
 	}
-	if runtime.Support() != model.CapabilitySupportPartial {
+	if runtime.Support() != model.SupportPartial {
 		t.Fatalf("expected partial support, got %s", runtime.Support())
 	}
 
@@ -137,7 +137,7 @@ func TestSessionRuntimeResolverResolveMessageCapability(t *testing.T) {
 	if !errors.As(err, &capabilityErr) {
 		t.Fatalf("expected CapabilityError, got %T", err)
 	}
-	if capabilityErr.Support != model.CapabilitySupportUnavailable {
+	if capabilityErr.Support != model.SupportUnavailable {
 		t.Fatalf("expected unavailable support, got %s", capabilityErr.Support)
 	}
 }

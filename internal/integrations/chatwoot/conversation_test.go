@@ -9,22 +9,22 @@ import (
 )
 
 func TestFindOrCreateConversation_ConcurrentCalls(t *testing.T) {
-	client := &mockCWClient{
+	client := &mockClient{
 		contacts:      []Contact{{ID: 1, Name: "Contato"}},
 		conversations: []Conversation{},
 		filterDelay:   100 * time.Millisecond,
 	}
 
 	svc := &Service{
-		repo:       &mockRepo{cfg: &ChatwootConfig{SessionID: "sess", Enabled: true, InboxID: 1}},
+		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
 		msgRepo:    &mockMsgRepo{},
-		clientFn:   func(_ *ChatwootConfig) CWClient { return client },
+		clientFn:   func(_ *Config) Client { return client },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
 		cb:         newCircuitBreakerManager(),
 	}
 
-	cfg := &ChatwootConfig{
+	cfg := &Config{
 		SessionID: "sess",
 		Enabled:   true,
 		InboxID:   1,

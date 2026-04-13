@@ -110,7 +110,7 @@ func TestExtractTextFromMessage_ContactsArray_WithDisplayName(t *testing.T) {
 			},
 		},
 	}
-	result := extractTextFromMessage(msg)
+	result := extractText(msg)
 
 	if !containsStr(result, "_Nome:_ Alice Override") {
 		t.Errorf("expected displayName override for Alice, got:\n%s", result)
@@ -134,7 +134,7 @@ func TestExtractTextFromMessage_ContactsArray_NoGlobalPrefix(t *testing.T) {
 			},
 		},
 	}
-	result := extractTextFromMessage(msg)
+	result := extractText(msg)
 
 	if containsStr(result, "Contatos:") {
 		t.Errorf("expected no global 'Contatos:' prefix, got:\n%s", result)
@@ -152,7 +152,7 @@ func TestExtractTextFromMessage_LocationRichFormat(t *testing.T) {
 			"name":             "Test Place",
 		},
 	}
-	result := extractTextFromMessage(msg)
+	result := extractText(msg)
 
 	if !containsStr(result, "*Localização:*") {
 		t.Errorf("expected rich location header, got:\n%s", result)

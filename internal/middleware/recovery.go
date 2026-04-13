@@ -19,6 +19,10 @@ func Recovery() fiber.Handler {
 				}
 
 				logger.Error().
+					Str("component", "http").
+					Str("method", c.Method()).
+					Str("path", c.Path()).
+					Str("ip", c.IP()).
 					Err(err).
 					Str("stack", string(debug.Stack())).
 					Msg("panic recovered")

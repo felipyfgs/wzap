@@ -33,6 +33,7 @@ const schema = z.object({
   url: z.string().url('Must be a valid URL'),
   accountId: z.coerce.number().int().min(1, 'Required'),
   token: z.string().min(1, 'Required'),
+  inboxId: z.coerce.number().int().min(0).optional(),
   inboxName: z.string().optional(),
   signMsg: z.boolean(),
   signDelimiter: z.string().optional(),
@@ -48,6 +49,7 @@ const state = reactive<Partial<Schema>>({
   url: '',
   accountId: undefined,
   token: '',
+  inboxId: undefined,
   inboxName: '',
   signMsg: false,
   signDelimiter: '',
@@ -108,6 +110,7 @@ function startEditing() {
   state.url = config.value?.url || ''
   state.accountId = config.value?.accountId
   state.token = ''
+  state.inboxId = config.value?.inboxId || undefined
   state.inboxName = config.value?.inboxName || ''
   state.signMsg = config.value?.signMsg ?? false
   state.signDelimiter = config.value?.signDelimiter || ''
@@ -214,17 +217,29 @@ watch(() => props.sessionId, fetchConfig, { immediate: true })
             />
           </UFormField>
         </div>
+        <UFormField label="API Token" name="token" required>
+          <UInput
+            v-model="state.token"
+            type="password"
+            placeholder="Token"
+            class="w-full"
+          />
+        </UFormField>
         <div class="grid grid-cols-2 gap-3">
-          <UFormField label="API Token" name="token" required>
+          <UFormField
+            label="Inbox ID"
+            name="inboxId"
+            :hint="state.inboxId ? 'Uses existing inbox' : 'Leave empty to auto-create'"
+          >
             <UInput
-              v-model="state.token"
-              type="password"
-              placeholder="Token"
+              v-model.number="state.inboxId"
+              type="number"
+              placeholder="Optional"
               class="w-full"
             />
           </UFormField>
-          <UFormField label="Inbox Name" name="inboxName">
-            <UInput v-model="state.inboxName" placeholder="WhatsApp" class="w-full" />
+          <UFormField label="Inbox Name" name="inboxName" :hint="!state.inboxId ? 'Used when creating a new inbox' : undefined">
+            <UInput v-model="state.inboxName" placeholder="WhatsApp" class="w-full" :disabled="!!state.inboxId" />
           </UFormField>
         </div>
 

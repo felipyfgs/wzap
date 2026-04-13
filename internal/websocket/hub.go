@@ -28,7 +28,7 @@ func (h *Hub) Register(sessionID string, conn *ws.Conn) {
 		h.connections[sessionID] = make(map[*ws.Conn]struct{})
 	}
 	h.connections[sessionID][conn] = struct{}{}
-	logger.Debug().Str("session", sessionID).Msg("WebSocket client connected")
+	logger.Debug().Str("component", "ws").Str("session", sessionID).Msg("WebSocket client connected")
 }
 
 func (h *Hub) Unregister(sessionID string, conn *ws.Conn) {
@@ -41,17 +41,20 @@ func (h *Hub) Unregister(sessionID string, conn *ws.Conn) {
 			delete(h.connections, sessionID)
 		}
 	}
-	logger.Debug().Str("session", sessionID).Msg("WebSocket client disconnected")
+	logger.Debug().Str("component", "ws").Str("session", sessionID).Msg("WebSocket client disconnected")
 }
 
 func (h *Hub) Broadcast(sessionID string, payload []byte) {
 	h.mu.RLock()
-	conns := h.connections[sessionID]
+	snapshot := make(map[*ws.Conn]struct{}, len(h.connections[sessionID]))
+	for conn := range h.connections[sessionID] {
+		snapshot[conn] = struct{}{}
+	}
 	h.mu.RUnlock()
 
-	for conn := range conns {
+	for conn := range snapshot {
 		if err := conn.WriteMessage(ws.TextMessage, payload); err != nil {
-			logger.Warn().Err(err).Str("session", sessionID).Msg("WebSocket write failed, closing connection")
+			logger.Warn().Str("component", "ws").Err(err).Str("session", sessionID).Msg("WebSocket write failed, closing connection")
 			h.Unregister(sessionID, conn)
 			_ = conn.Close()
 		}
@@ -78,7 +81,7 @@ func (h *Hub) BroadcastAll(payload []byte) {
 func (h *Hub) BroadcastJSON(sessionID string, data interface{}) {
 	payload, err := json.Marshal(data)
 	if err != nil {
-		logger.Error().Err(err).Msg("Failed to marshal WebSocket payload")
+		logger.Error().Str("component", "ws").Err(err).Msg("Failed to marshal WebSocket payload")
 		return
 	}
 	h.Broadcast(sessionID, payload)

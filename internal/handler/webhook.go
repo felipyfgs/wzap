@@ -38,7 +38,7 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 
 	webhook, err := h.webhookSvc.Create(c.Context(), sessionID, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", sessionID).Msg("failed to create webhook")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", sessionID).Msg("failed to create webhook")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Create Error", "internal server error"))
 	}
 
@@ -59,7 +59,7 @@ func (h *WebhookHandler) List(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)
 	webhooks, err := h.webhookSvc.List(c.Context(), sessionID)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", sessionID).Msg("failed to list webhooks")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", sessionID).Msg("failed to list webhooks")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("List Error", "internal server error"))
 	}
 
@@ -91,7 +91,7 @@ func (h *WebhookHandler) Update(c *fiber.Ctx) error {
 
 	webhook, err := h.webhookSvc.Update(c.Context(), sessionID, webhookID, req)
 	if err != nil {
-		logger.Warn().Err(err).Str("sessionID", sessionID).Msg("failed to update webhook")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", sessionID).Msg("failed to update webhook")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Update Error", "internal server error"))
 	}
 
@@ -114,7 +114,7 @@ func (h *WebhookHandler) Delete(c *fiber.Ctx) error {
 	webhookID := c.Params("wid")
 
 	if err := h.webhookSvc.Delete(c.Context(), sessionID, webhookID); err != nil {
-		logger.Warn().Err(err).Str("sessionID", sessionID).Msg("failed to delete webhook")
+		logger.Warn().Err(err).Str("component", "handler").Str("session", sessionID).Msg("failed to delete webhook")
 		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Delete Error", "internal server error"))
 	}
 

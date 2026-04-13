@@ -35,7 +35,7 @@ func (m *stubLifecycleManager) Connect(ctx context.Context, sessionID string) (*
 	return m.connectClient, m.connectQR, m.connectErr
 }
 
-func (m *stubLifecycleManager) Disconnect(sessionID string) error {
+func (m *stubLifecycleManager) Disconnect(ctx context.Context, sessionID string) error {
 	m.disconnectCalls++
 	return m.disconnectErr
 }
@@ -73,12 +73,12 @@ func (s *stubSessionReader) Get(ctx context.Context, id string) (*dto.SessionRes
 	return s.resp, nil
 }
 
-func TestSessionLifecycleOrchestratorConnectCloudPartial(t *testing.T) {
+func TestLifecycleOrchestratorConnectCloudPartial(t *testing.T) {
 	repo := &stubSessionLookup{
 		session: &model.Session{ID: "sess-cloud", Engine: "cloud_api", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	manager := &stubLifecycleManager{}
-	orchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(repo, nil, nil), manager, nil)
+	orchestrator := newLifecycleOrchestrator(newRuntimeResolver(repo, nil, nil), manager, nil)
 
 	result, err := orchestrator.Connect(context.Background(), "sess-cloud")
 	if err != nil {
@@ -87,7 +87,7 @@ func TestSessionLifecycleOrchestratorConnectCloudPartial(t *testing.T) {
 	if result.Status != "CONNECTED" {
 		t.Fatalf("expected CONNECTED, got %s", result.Status)
 	}
-	if result.Support != model.CapabilitySupportPartial {
+	if result.Support != model.SupportPartial {
 		t.Fatalf("expected partial support, got %s", result.Support)
 	}
 	if manager.connectCalls != 0 {
@@ -95,12 +95,12 @@ func TestSessionLifecycleOrchestratorConnectCloudPartial(t *testing.T) {
 	}
 }
 
-func TestSessionLifecycleOrchestratorConnectWhatsmeowPairing(t *testing.T) {
+func TestLifecycleOrchestratorConnectWhatsmeowPairing(t *testing.T) {
 	repo := &stubSessionLookup{
 		session: &model.Session{ID: "sess-wa", Engine: "whatsmeow", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	manager := &stubLifecycleManager{connectQR: make(chan whatsmeow.QRChannelItem)}
-	orchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(repo, nil, nil), manager, nil)
+	orchestrator := newLifecycleOrchestrator(newRuntimeResolver(repo, nil, nil), manager, nil)
 
 	result, err := orchestrator.Connect(context.Background(), "sess-wa")
 	if err != nil {
@@ -109,7 +109,7 @@ func TestSessionLifecycleOrchestratorConnectWhatsmeowPairing(t *testing.T) {
 	if result.Status != "PAIRING" {
 		t.Fatalf("expected PAIRING, got %s", result.Status)
 	}
-	if result.Support != model.CapabilitySupportComplete {
+	if result.Support != model.SupportComplete {
 		t.Fatalf("expected complete support, got %s", result.Support)
 	}
 	if manager.connectCalls != 1 {
@@ -117,11 +117,11 @@ func TestSessionLifecycleOrchestratorConnectWhatsmeowPairing(t *testing.T) {
 	}
 }
 
-func TestSessionLifecycleOrchestratorQRByEngine(t *testing.T) {
+func TestLifecycleOrchestratorQRByEngine(t *testing.T) {
 	cloudRepo := &stubSessionLookup{
 		session: &model.Session{ID: "sess-cloud", Engine: "cloud_api", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
-	cloudOrchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(cloudRepo, nil, nil), &stubLifecycleManager{}, nil)
+	cloudOrchestrator := newLifecycleOrchestrator(newRuntimeResolver(cloudRepo, nil, nil), &stubLifecycleManager{}, nil)
 
 	_, err := cloudOrchestrator.QR(context.Background(), "sess-cloud")
 	if err == nil {
@@ -135,7 +135,7 @@ func TestSessionLifecycleOrchestratorQRByEngine(t *testing.T) {
 	waRepo := &stubSessionLookup{
 		session: &model.Session{ID: "sess-wa", Engine: "whatsmeow", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
-	waOrchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(waRepo, nil, nil), &stubLifecycleManager{qrCode: "qr-code"}, nil)
+	waOrchestrator := newLifecycleOrchestrator(newRuntimeResolver(waRepo, nil, nil), &stubLifecycleManager{qrCode: "qr-code"}, nil)
 
 	result, err := waOrchestrator.QR(context.Background(), "sess-wa")
 	if err != nil {
@@ -146,11 +146,11 @@ func TestSessionLifecycleOrchestratorQRByEngine(t *testing.T) {
 	}
 }
 
-func TestSessionLifecycleOrchestratorPairByEngine(t *testing.T) {
+func TestLifecycleOrchestratorPairByEngine(t *testing.T) {
 	cloudRepo := &stubSessionLookup{
 		session: &model.Session{ID: "sess-cloud", Engine: "cloud_api", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
-	cloudOrchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(cloudRepo, nil, nil), &stubLifecycleManager{}, nil)
+	cloudOrchestrator := newLifecycleOrchestrator(newRuntimeResolver(cloudRepo, nil, nil), &stubLifecycleManager{}, nil)
 
 	_, err := cloudOrchestrator.Pair(context.Background(), "sess-cloud", "5511999999999")
 	if err == nil {
@@ -165,7 +165,7 @@ func TestSessionLifecycleOrchestratorPairByEngine(t *testing.T) {
 		session: &model.Session{ID: "sess-wa", Engine: "whatsmeow", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	manager := &stubLifecycleManager{pairCode: "123-456"}
-	waOrchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(waRepo, nil, nil), manager, nil)
+	waOrchestrator := newLifecycleOrchestrator(newRuntimeResolver(waRepo, nil, nil), manager, nil)
 
 	result, err := waOrchestrator.Pair(context.Background(), "sess-wa", "5511999999999")
 	if err != nil {
@@ -179,13 +179,13 @@ func TestSessionLifecycleOrchestratorPairByEngine(t *testing.T) {
 	}
 }
 
-func TestSessionLifecycleOrchestratorRestartByEngine(t *testing.T) {
+func TestLifecycleOrchestratorRestartByEngine(t *testing.T) {
 	cloudRepo := &stubSessionLookup{
 		session: &model.Session{ID: "sess-cloud", Engine: "cloud_api", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	cloudReader := &stubSessionReader{resp: &dto.SessionResp{ID: "sess-cloud", Engine: "cloud_api"}}
 	cloudManager := &stubLifecycleManager{}
-	cloudOrchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(cloudRepo, nil, nil), cloudManager, cloudReader)
+	cloudOrchestrator := newLifecycleOrchestrator(newRuntimeResolver(cloudRepo, nil, nil), cloudManager, cloudReader)
 
 	cloudResult, err := cloudOrchestrator.Restart(context.Background(), "sess-cloud")
 	if err != nil {
@@ -203,7 +203,7 @@ func TestSessionLifecycleOrchestratorRestartByEngine(t *testing.T) {
 	}
 	waReader := &stubSessionReader{resp: &dto.SessionResp{ID: "sess-wa", Engine: "whatsmeow"}}
 	waManager := &stubLifecycleManager{}
-	waOrchestrator := newSessionLifecycleOrchestrator(newSessionRuntimeResolver(waRepo, nil, nil), waManager, waReader)
+	waOrchestrator := newLifecycleOrchestrator(newRuntimeResolver(waRepo, nil, nil), waManager, waReader)
 
 	waResult, err := waOrchestrator.Restart(context.Background(), "sess-wa")
 	if err != nil {

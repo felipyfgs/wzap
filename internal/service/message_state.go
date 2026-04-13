@@ -20,7 +20,7 @@ func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req dto
 		return err
 	}
 
-	return runSessionRuntimeErr(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) error {
+	return runRuntimeErr(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) error {
 		return provider.MarkRead(ctx, session.ID, req.MessageID)
 	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) error {
 		jid, err := parseJID(req.Phone)
@@ -38,7 +38,7 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 		return err
 	}
 
-	return runSessionRuntimeErr(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) error {
+	return runRuntimeErr(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) error {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return err

@@ -23,7 +23,7 @@ func (h *MessageHandler) respondMessageError(c *fiber.Ctx, err error, sessionID,
 		return nil
 	}
 
-	logger.Warn().Err(err).Str("sessionID", sessionID).Msg(logMsg)
+	logger.Warn().Str("component", "handler").Err(err).Str("session", sessionID).Msg(logMsg)
 	return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Send Error", "internal server error"))
 }
 

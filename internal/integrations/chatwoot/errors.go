@@ -3,31 +3,29 @@ package chatwoot
 import (
 	"context"
 	"errors"
-	"strings"
+	"fmt"
+	"net/http"
 )
+
+type APIError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *APIError) Error() string {
+	return fmt.Sprintf("chatwoot API error: status=%d, body=%s", e.StatusCode, e.Message)
+}
 
 func isRetryableError(err error) bool {
 	if err == nil {
 		return false
 	}
-
 	if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
 		return true
 	}
-
-	msg := err.Error()
-
-	if strings.Contains(msg, "status=429") {
-		return true
+	var apiErr *APIError
+	if errors.As(err, &apiErr) {
+		return apiErr.StatusCode == http.StatusTooManyRequests || apiErr.StatusCode >= 500
 	}
-
-	if strings.Contains(msg, "chatwoot API error:") {
-		return strings.Contains(msg, "status=5")
-	}
-
-	if strings.Contains(msg, "do request:") {
-		return true
-	}
-
-	return false
+	return true
 }

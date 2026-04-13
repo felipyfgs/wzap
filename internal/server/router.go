@@ -47,14 +47,14 @@ func (s *Server) SetupRoutes() error {
 	chatRepo := repo.NewChatRepository(s.db.Pool)
 
 	// Initialize Cloud API Provider
-	runtimeResolver := service.NewSessionRuntimeResolver(sessionRepo, engine, nil)
+	runtimeResolver := service.NewRuntimeResolver(sessionRepo, engine, nil)
 	configReader := service.NewSessionConfigReader(runtimeResolver)
 	cloudProvider := cloudWA.NewClient(&http.Client{Timeout: s.Config.HTTPTimeout}, configReader)
 	runtimeResolver.SetProvider(cloudProvider)
 
 	// Initialize Services
 	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, cloudProvider, runtimeResolver)
-	lifecycleSvc := service.NewSessionLifecycleOrchestrator(runtimeResolver, engine, sessionSvc)
+	lifecycleSvc := service.NewLifecycleOrchestrator(runtimeResolver, engine, sessionSvc)
 	messageSvc := service.NewMessageService(engine, cloudProvider, sessionRepo, runtimeResolver)
 	contactSvc := service.NewContactService(engine)
 	groupSvc := service.NewGroupService(engine)
@@ -73,18 +73,18 @@ func (s *Server) SetupRoutes() error {
 	chatwootSvc.SetJIDResolver(engine)
 	chatwootSvc.SetMediaDownloader(engine)
 	chatwootSvc.SetSessionConnector(chatwoot.NewSessionConnector(engine))
-	chatwootSvc.SetProfilePictureGetter(engine)
+	chatwootSvc.SetAvatarGetter(engine)
 	chatwootSvc.SetNumberChecker(engine)
 	chatwootSvc.SetServerURL(s.Config.ServerURL)
-	chatwootSvc.SetCache(chatwoot.NewCache(s.Config.RedisURL))
+	chatwootSvc.SetCache(chatwoot.NewCache(s.ctx, s.Config.RedisURL))
 	if s.nats != nil {
 		chatwootSvc.SetJetStream(s.nats.JS)
 		cwConsumer, cwErr := chatwoot.NewConsumer(s.nats.JS, chatwootSvc)
 		if cwErr != nil {
-			logger.Warn().Err(cwErr).Msg("Failed to create Chatwoot NATS consumer, falling back to sync mode")
+			logger.Warn().Str("component", "server").Err(cwErr).Msg("Failed to create Chatwoot NATS consumer, falling back to sync mode")
 		} else {
 			if err := cwConsumer.Start(s.ctx); err != nil {
-				logger.Warn().Err(err).Msg("Failed to start Chatwoot NATS consumer")
+				logger.Warn().Str("component", "server").Err(err).Msg("Failed to start Chatwoot NATS consumer")
 			}
 		}
 	}

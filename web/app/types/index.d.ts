@@ -37,6 +37,7 @@ export interface Session {
   pushName?: string
   businessName?: string
   platform?: string
+  pictureUrl?: string
   chatwootEnabled?: boolean
   proxy?: SessionProxy
   settings?: SessionSettings

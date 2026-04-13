@@ -16,9 +16,9 @@ type sessionLookup interface {
 	FindByID(ctx context.Context, id string) (*model.Session, error)
 }
 
-type sessionRuntimeContextKey struct{}
+type runtimeCtxKey struct{}
 
-type SessionRuntimeResolver struct {
+type RuntimeResolver struct {
 	repo     sessionLookup
 	engine   *wa.Manager
 	provider *cloudWA.Client
@@ -51,22 +51,22 @@ type ProfileRuntime struct {
 	support model.CapabilitySupport
 }
 
-func NewSessionRuntimeResolver(repo *repo.SessionRepository, engine *wa.Manager, provider *cloudWA.Client) *SessionRuntimeResolver {
-	return newSessionRuntimeResolver(repo, engine, provider)
+func NewRuntimeResolver(repo *repo.SessionRepository, engine *wa.Manager, provider *cloudWA.Client) *RuntimeResolver {
+	return newRuntimeResolver(repo, engine, provider)
 }
 
-func newSessionRuntimeResolver(repo sessionLookup, engine *wa.Manager, provider *cloudWA.Client) *SessionRuntimeResolver {
-	return &SessionRuntimeResolver{repo: repo, engine: engine, provider: provider}
+func newRuntimeResolver(repo sessionLookup, engine *wa.Manager, provider *cloudWA.Client) *RuntimeResolver {
+	return &RuntimeResolver{repo: repo, engine: engine, provider: provider}
 }
 
-func (r *SessionRuntimeResolver) SetProvider(provider *cloudWA.Client) {
+func (r *RuntimeResolver) SetProvider(provider *cloudWA.Client) {
 	if r == nil {
 		return
 	}
 	r.provider = provider
 }
 
-func (r *SessionRuntimeResolver) Resolve(ctx context.Context, sessionID string) (*SessionRuntime, error) {
+func (r *RuntimeResolver) Resolve(ctx context.Context, sessionID string) (*SessionRuntime, error) {
 	if runtime, ok := sessionRuntimeFromContext(ctx, sessionID); ok {
 		return runtime, nil
 	}
@@ -94,7 +94,7 @@ func (r *SessionRuntimeResolver) Resolve(ctx context.Context, sessionID string) 
 	return runtime, nil
 }
 
-func (r *SessionRuntimeResolver) ResolveMessage(ctx context.Context, sessionID string, capability model.EngineCapability) (*MessageRuntime, error) {
+func (r *RuntimeResolver) ResolveMessage(ctx context.Context, sessionID string, capability model.EngineCapability) (*MessageRuntime, error) {
 	runtime, support, err := r.resolveCapability(ctx, sessionID, capability)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (r *SessionRuntimeResolver) ResolveMessage(ctx context.Context, sessionID s
 	return &MessageRuntime{SessionRuntime: runtime, support: support}, nil
 }
 
-func (r *SessionRuntimeResolver) ResolveMedia(ctx context.Context, sessionID string, capability model.EngineCapability) (*MediaRuntime, error) {
+func (r *RuntimeResolver) ResolveMedia(ctx context.Context, sessionID string, capability model.EngineCapability) (*MediaRuntime, error) {
 	runtime, support, err := r.resolveCapability(ctx, sessionID, capability)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (r *SessionRuntimeResolver) ResolveMedia(ctx context.Context, sessionID str
 	return &MediaRuntime{SessionRuntime: runtime, support: support}, nil
 }
 
-func (r *SessionRuntimeResolver) ResolveStatus(ctx context.Context, sessionID string) (*StatusRuntime, error) {
+func (r *RuntimeResolver) ResolveStatus(ctx context.Context, sessionID string) (*StatusRuntime, error) {
 	runtime, support, err := r.resolveCapability(ctx, sessionID, model.CapabilitySessionStatus)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (r *SessionRuntimeResolver) ResolveStatus(ctx context.Context, sessionID st
 	return &StatusRuntime{SessionRuntime: runtime, support: support}, nil
 }
 
-func (r *SessionRuntimeResolver) ResolveProfile(ctx context.Context, sessionID string) (*ProfileRuntime, error) {
+func (r *RuntimeResolver) ResolveProfile(ctx context.Context, sessionID string) (*ProfileRuntime, error) {
 	runtime, support, err := r.resolveCapability(ctx, sessionID, model.CapabilitySessionProfile)
 	if err != nil {
 		return nil, err
@@ -126,10 +126,10 @@ func (r *SessionRuntimeResolver) ResolveProfile(ctx context.Context, sessionID s
 	return &ProfileRuntime{SessionRuntime: runtime, support: support}, nil
 }
 
-func (r *SessionRuntimeResolver) resolveCapability(ctx context.Context, sessionID string, capability model.EngineCapability) (*SessionRuntime, model.CapabilitySupport, error) {
+func (r *RuntimeResolver) resolveCapability(ctx context.Context, sessionID string, capability model.EngineCapability) (*SessionRuntime, model.CapabilitySupport, error) {
 	runtime, err := r.Resolve(ctx, sessionID)
 	if err != nil {
-		return nil, model.CapabilitySupportUnavailable, err
+		return nil, model.SupportUnavailable, err
 	}
 
 	support, err := runtime.RequireCapability(capability)
@@ -166,7 +166,7 @@ func (r *SessionRuntime) Provider() *cloudWA.Client {
 }
 
 func (r *SessionRuntime) WithContext(ctx context.Context) context.Context {
-	return context.WithValue(ctx, sessionRuntimeContextKey{}, r)
+	return context.WithValue(ctx, runtimeCtxKey{}, r)
 }
 
 func (r *SessionRuntime) CloudConfig() (*cloudWA.Config, error) {
@@ -208,35 +208,35 @@ func (r *SessionRuntime) ConnectedClient() (*whatsmeow.Client, error) {
 
 func (r *SessionRuntime) RequireCapability(capability model.EngineCapability) (model.CapabilitySupport, error) {
 	if r == nil || r.session == nil {
-		return model.CapabilitySupportUnavailable, fmt.Errorf("session runtime is nil")
+		return model.SupportUnavailable, fmt.Errorf("session runtime is nil")
 	}
 	return requireCapability(r.session.Engine, capability)
 }
 
 func (r *MessageRuntime) Support() model.CapabilitySupport {
 	if r == nil {
-		return model.CapabilitySupportUnavailable
+		return model.SupportUnavailable
 	}
 	return r.support
 }
 
 func (r *MediaRuntime) Support() model.CapabilitySupport {
 	if r == nil {
-		return model.CapabilitySupportUnavailable
+		return model.SupportUnavailable
 	}
 	return r.support
 }
 
 func (r *StatusRuntime) Support() model.CapabilitySupport {
 	if r == nil {
-		return model.CapabilitySupportUnavailable
+		return model.SupportUnavailable
 	}
 	return r.support
 }
 
 func (r *ProfileRuntime) Support() model.CapabilitySupport {
 	if r == nil {
-		return model.CapabilitySupportUnavailable
+		return model.SupportUnavailable
 	}
 	return r.support
 }
@@ -245,7 +245,7 @@ func sessionRuntimeFromContext(ctx context.Context, sessionID string) (*SessionR
 	if ctx == nil {
 		return nil, false
 	}
-	runtime, ok := ctx.Value(sessionRuntimeContextKey{}).(*SessionRuntime)
+	runtime, ok := ctx.Value(runtimeCtxKey{}).(*SessionRuntime)
 	if !ok || runtime == nil || runtime.session == nil {
 		return nil, false
 	}
@@ -296,7 +296,7 @@ func runSessionRuntime[T any](ctx context.Context, runtime *SessionRuntime, clou
 	return whatsmeowFn(ctx, runtime.session, client)
 }
 
-func runConnectedSessionRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
+func runConnectedRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
 	var zero T
 	if runtime == nil || runtime.session == nil {
 		return zero, fmt.Errorf("session runtime is nil")
@@ -322,7 +322,7 @@ func runConnectedSessionRuntime[T any](ctx context.Context, runtime *SessionRunt
 	return whatsmeowFn(ctx, runtime.session, client)
 }
 
-func runSessionRuntimeErr(ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) error, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) error) error {
+func runRuntimeErr(ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) error, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) error) error {
 	_, err := runSessionRuntime(ctx, runtime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (struct{}, error) {
 		if cloud == nil {
 			return struct{}{}, fmt.Errorf("cloud runtime handler is nil")

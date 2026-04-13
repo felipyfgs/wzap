@@ -56,7 +56,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chatwoot_postgres_pass}
     ports:
-      - "${POSTGRES_PORT:-5433}:5432"
+      - "${CHATWOOT_POSTGRES_HOST_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -71,7 +71,7 @@ services:
     container_name: chatwoot_redis
     command: redis-server --requirepass ${REDIS_PASSWORD:-chatwoot_redis_pass}
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "${CHATWOOT_REDIS_HOST_PORT:-6380}:6379"
     volumes:
       - redis_data:/data
     healthcheck:

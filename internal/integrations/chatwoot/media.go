@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func GetMIMETypeAndExt(url string, data []byte) (mimeType, ext string) {
+func DetectMIME(url string, data []byte) (mimeType, ext string) {
 	if url != "" {
 		if e := filepath.Ext(url); e != "" {
 			ext = e

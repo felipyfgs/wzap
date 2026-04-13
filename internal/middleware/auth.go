@@ -13,7 +13,7 @@ import (
 
 func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
 	if cfg.AdminToken == "" {
-		logger.Warn().Msg("ADMIN_TOKEN not set: all requests will be rejected")
+		logger.Warn().Str("component", "http").Msg("ADMIN_TOKEN not set: all requests will be rejected")
 	}
 	return func(c *fiber.Ctx) error {
 		if cfg.AdminToken == "" {

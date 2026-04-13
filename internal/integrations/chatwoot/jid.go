@@ -12,6 +12,9 @@ func shouldIgnoreJID(chatJID string, ignoreGroups bool, ignoreJIDs []string) boo
 	if chatJID == "status@broadcast" {
 		return true
 	}
+	if strings.HasSuffix(chatJID, "@newsletter") {
+		return true
+	}
 
 	if ignoreGroups && strings.HasSuffix(chatJID, "@g.us") {
 		return true
@@ -54,7 +57,7 @@ func extractPhone(jid string) string {
 	return jid
 }
 
-func addOrRemoveBR9thDigit(phone string) string {
+func normalizeBRPhone(phone string) string {
 	if !strings.HasPrefix(phone, "55") {
 		return phone
 	}
@@ -89,12 +92,18 @@ func (s *Service) resolveJID(ctx context.Context, sessionID, jid string) string 
 	return jid
 }
 
+func urlFilename(rawURL string) string {
+	u := strings.Split(strings.Split(rawURL, "?")[0], "#")[0]
+	parts := strings.Split(u, "/")
+	return parts[len(parts)-1]
+}
+
 func (s *Service) resolvePhoneToJID(ctx context.Context, sessionID, phone string) string {
 	if s.numberChecker == nil {
 		return phone + "@s.whatsapp.net"
 	}
 
-	variant := addOrRemoveBR9thDigit(phone)
+	variant := normalizeBRPhone(phone)
 	phones := []string{"+" + phone}
 	if variant != phone {
 		phones = append(phones, "+"+variant)
@@ -102,7 +111,7 @@ func (s *Service) resolvePhoneToJID(ctx context.Context, sessionID, phone string
 
 	resolved, err := s.numberChecker.IsOnWhatsApp(ctx, sessionID, phones)
 	if err != nil {
-		logger.Warn().Err(err).Str("phone", phone).Msg("[CW] IsOnWhatsApp check failed, using phone as-is")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("phone", phone).Msg("IsOnWhatsApp check failed, using phone as-is")
 		return phone + "@s.whatsapp.net"
 	}
 

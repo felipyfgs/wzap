@@ -39,10 +39,10 @@ func New(cfg *config.Config) (*Minio, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bucket: %w", err)
 		}
-		logger.Info().Str("bucket", cfg.MinioBucket).Msg("Created new MinIO bucket")
+		logger.Info().Str("component", "s3").Str("bucket", cfg.MinioBucket).Msg("Created new MinIO bucket")
 	}
 
-	logger.Info().Msg("Successfully connected to MinIO")
+	logger.Info().Str("component", "s3").Msg("Successfully connected to MinIO")
 
 	return &Minio{
 		Client: client,

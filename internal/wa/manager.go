@@ -211,7 +211,7 @@ func (m *Manager) DownloadMediaByPath(ctx context.Context, sessionID, directPath
 	case strings.HasPrefix(mediaType, "application/"), mediaType == "document":
 		wmMediaType = whatsmeow.MediaDocument
 	default:
-		return nil, fmt.Errorf("unknown media type: %s", mediaType)
+		wmMediaType = whatsmeow.MediaDocument
 	}
 
 	return client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, fileLength, wmMediaType, "")

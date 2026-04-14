@@ -3,7 +3,9 @@ package wa
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
+	"time"
 
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -17,7 +19,7 @@ import (
 	"wzap/internal/webhook"
 )
 
-type MediaAutoUploadFunc func(sessionID, messageID, mimeType string, downloadable whatsmeow.DownloadableMessage)
+type MediaAutoUploadFunc func(sessionID, messageID, chatJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage)
 type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{})
 type HistorySyncPersistFunc func(sessionID string, sync *events.HistorySync)
 
@@ -130,14 +132,14 @@ func (m *Manager) DownloadMediaByPath(ctx context.Context, sessionID, directPath
 	}
 
 	var wmMediaType whatsmeow.MediaType
-	switch mediaType {
-	case "image", "sticker":
+	switch {
+	case strings.HasPrefix(mediaType, "image/"), mediaType == "image", mediaType == "sticker":
 		wmMediaType = whatsmeow.MediaImage
-	case "audio":
+	case strings.HasPrefix(mediaType, "audio/"), mediaType == "audio":
 		wmMediaType = whatsmeow.MediaAudio
-	case "video":
+	case strings.HasPrefix(mediaType, "video/"), mediaType == "video":
 		wmMediaType = whatsmeow.MediaVideo
-	case "document":
+	case strings.HasPrefix(mediaType, "application/"), mediaType == "document":
 		wmMediaType = whatsmeow.MediaDocument
 	default:
 		return nil, fmt.Errorf("unknown media type: %s", mediaType)
@@ -188,4 +190,32 @@ func (m *Manager) IsOnWhatsApp(ctx context.Context, sessionID string, phones []s
 		}
 	}
 	return result, nil
+}
+
+func (m *Manager) GetContactName(ctx context.Context, sessionID, jid string) string {
+	client, err := m.GetClient(sessionID)
+	if err != nil {
+		return ""
+	}
+
+	parsedJID, err := types.ParseJID(jid)
+	if err != nil {
+		return ""
+	}
+
+	contact, err := client.Store.Contacts.GetContact(ctx, parsedJID)
+	if err != nil {
+		return ""
+	}
+
+	if contact.FullName != "" {
+		return contact.FullName
+	}
+	if contact.FirstName != "" {
+		return contact.FirstName
+	}
+	if contact.PushName != "" {
+		return contact.PushName
+	}
+	return ""
 }

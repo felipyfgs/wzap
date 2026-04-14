@@ -387,8 +387,9 @@ func TestJIDsContainGroup(t *testing.T) {
 	}
 }
 
-func TestImportHistory_Returns501(t *testing.T) {
-	app, _, _ := newChatwootApp()
+func TestImportHistory_Returns404_NoConfig(t *testing.T) {
+	app, repo, _ := newChatwootApp()
+	repo.notFound = true
 
 	req := httptest.NewRequest("POST", "/sessions/test-session/integrations/chatwoot/import", bytes.NewReader([]byte(`{"period":"7d"}`)))
 	req.Header.Set("Content-Type", "application/json")
@@ -397,8 +398,24 @@ func TestImportHistory_Returns501(t *testing.T) {
 	if err != nil {
 		t.Fatalf("app.Test: %v", err)
 	}
-	if resp.StatusCode != 501 {
-		t.Fatalf("expected 501, got %d", resp.StatusCode)
+	if resp.StatusCode != 404 {
+		t.Fatalf("expected 404 (no config), got %d", resp.StatusCode)
+	}
+}
+
+func TestImportHistory_Returns202_WithConfig(t *testing.T) {
+	app, repo, _ := newChatwootApp()
+	repo.cfg = &Config{SessionID: "test-session", Enabled: true, InboxID: 1}
+
+	req := httptest.NewRequest("POST", "/sessions/test-session/integrations/chatwoot/import", bytes.NewReader([]byte(`{"period":"7d"}`)))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
+	if err != nil {
+		t.Fatalf("app.Test: %v", err)
+	}
+	if resp.StatusCode != 202 {
+		t.Fatalf("expected 202, got %d", resp.StatusCode)
 	}
 
 	var result map[string]interface{}
@@ -407,15 +424,16 @@ func TestImportHistory_Returns501(t *testing.T) {
 	}
 
 	success, _ := result["success"].(bool)
-	if success {
-		t.Fatal("expected success=false")
+	if !success {
+		t.Fatal("expected success=true")
 	}
 
-	if result["error"] != "Not Implemented" {
-		t.Errorf("expected error Not Implemented, got %v", result["error"])
+	data, _ := result["data"].(map[string]interface{})
+	if data["status"] != "importing" {
+		t.Errorf("expected status importing, got %v", data["status"])
 	}
-	if result["message"] != "History import is not yet implemented" {
-		t.Errorf("unexpected message: %v", result["message"])
+	if data["period"] != "7d" {
+		t.Errorf("expected period 7d, got %v", data["period"])
 	}
 }
 

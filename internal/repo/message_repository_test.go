@@ -93,3 +93,128 @@ func TestMessageRepositorySavePreservesBestDataAcrossHistoryAndLive(t *testing.T
 		t.Fatalf("expected 1 canonical message after deduplication, got %d", len(messages))
 	}
 }
+
+func TestFindUnimportedHistory(t *testing.T) {
+	db := openTestDB(t)
+	sessionID := insertTestSession(t, db, "find-unimported")
+	repository := repo.NewMessageRepository(db.Pool)
+
+	now := time.Now()
+
+	msg1 := &model.Message{
+		ID:        "hist-msg-1",
+		SessionID: sessionID,
+		ChatJID:   "5511999990001@s.whatsapp.net",
+		FromMe:    false,
+		MsgType:   "text",
+		Body:      "hello from history",
+		Source:    "history_sync",
+		Timestamp: now.Add(-2 * time.Hour),
+	}
+	msg2 := &model.Message{
+		ID:        "hist-msg-2",
+		SessionID: sessionID,
+		ChatJID:   "5511999990001@s.whatsapp.net",
+		FromMe:    false,
+		MsgType:   "text",
+		Body:      "another history msg",
+		Source:    "history_sync",
+		Timestamp: now.Add(-1 * time.Hour),
+	}
+	liveMsg := &model.Message{
+		ID:        "live-msg-1",
+		SessionID: sessionID,
+		ChatJID:   "5511999990001@s.whatsapp.net",
+		FromMe:    false,
+		MsgType:   "text",
+		Body:      "live message",
+		Source:    "live",
+		Timestamp: now,
+	}
+
+	for _, m := range []*model.Message{msg1, msg2, liveMsg} {
+		if err := repository.Save(context.Background(), m); err != nil {
+			t.Fatalf("failed to save message: %v", err)
+		}
+	}
+
+	t.Cleanup(func() {
+		for _, id := range []string{"hist-msg-1", "hist-msg-2", "live-msg-1"} {
+			_, _ = db.Pool.Exec(context.Background(), `DELETE FROM wz_messages WHERE id = $1 AND session_id = $2`, id, sessionID)
+		}
+	})
+
+	since := now.Add(-24 * time.Hour)
+	msgs, err := repository.FindUnimportedHistory(context.Background(), sessionID, since, 100, 0)
+	if err != nil {
+		t.Fatalf("FindUnimportedHistory failed: %v", err)
+	}
+	if len(msgs) != 2 {
+		t.Fatalf("expected 2 unimported history messages, got %d", len(msgs))
+	}
+	if msgs[0].ID != "hist-msg-1" {
+		t.Fatalf("expected first message to be hist-msg-1, got %s", msgs[0].ID)
+	}
+	if msgs[1].ID != "hist-msg-2" {
+		t.Fatalf("expected second message to be hist-msg-2, got %s", msgs[1].ID)
+	}
+
+	if err := repository.MarkImportedToChatwoot(context.Background(), sessionID, "hist-msg-1"); err != nil {
+		t.Fatalf("MarkImportedToChatwoot failed: %v", err)
+	}
+
+	msgs, err = repository.FindUnimportedHistory(context.Background(), sessionID, since, 100, 0)
+	if err != nil {
+		t.Fatalf("FindUnimportedHistory after mark failed: %v", err)
+	}
+	if len(msgs) != 1 {
+		t.Fatalf("expected 1 unimported history message after mark, got %d", len(msgs))
+	}
+	if msgs[0].ID != "hist-msg-2" {
+		t.Fatalf("expected remaining message to be hist-msg-2, got %s", msgs[0].ID)
+	}
+}
+
+func TestMarkImportedToChatwoot(t *testing.T) {
+	db := openTestDB(t)
+	sessionID := insertTestSession(t, db, "mark-imported")
+	repository := repo.NewMessageRepository(db.Pool)
+
+	msg := &model.Message{
+		ID:        "import-mark-msg",
+		SessionID: sessionID,
+		ChatJID:   "5511999990001@s.whatsapp.net",
+		FromMe:    false,
+		MsgType:   "text",
+		Body:      "test mark",
+		Source:    "history_sync",
+		Timestamp: time.Now(),
+	}
+	if err := repository.Save(context.Background(), msg); err != nil {
+		t.Fatalf("failed to save message: %v", err)
+	}
+
+	t.Cleanup(func() {
+		_, _ = db.Pool.Exec(context.Background(), `DELETE FROM wz_messages WHERE id = $1 AND session_id = $2`, "import-mark-msg", sessionID)
+	})
+
+	stored, err := repository.FindByID(context.Background(), sessionID, "import-mark-msg")
+	if err != nil {
+		t.Fatalf("failed to find message: %v", err)
+	}
+	if stored.ImportedToChatwootAt != nil {
+		t.Fatalf("expected imported_to_chatwoot_at to be nil before mark, got %v", stored.ImportedToChatwootAt)
+	}
+
+	if err := repository.MarkImportedToChatwoot(context.Background(), sessionID, "import-mark-msg"); err != nil {
+		t.Fatalf("MarkImportedToChatwoot failed: %v", err)
+	}
+
+	stored, err = repository.FindByID(context.Background(), sessionID, "import-mark-msg")
+	if err != nil {
+		t.Fatalf("failed to find message after mark: %v", err)
+	}
+	if stored.ImportedToChatwootAt == nil {
+		t.Fatal("expected imported_to_chatwoot_at to be set after mark")
+	}
+}

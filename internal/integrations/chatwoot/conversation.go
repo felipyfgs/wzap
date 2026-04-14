@@ -35,6 +35,13 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 	client := s.clientFn(cfg)
 	phone := extractPhone(chatJID)
 
+	contactName := pushName
+	if s.contactNameGetter != nil {
+		if name := s.contactNameGetter.GetContactName(ctx, cfg.SessionID, chatJID); name != "" {
+			contactName = name
+		}
+	}
+
 	contacts, _ := client.FilterContacts(ctx, phone)
 
 	if strings.HasPrefix(phone, "55") {
@@ -66,7 +73,7 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 
 	var contactID int
 	if len(contacts) == 0 {
-		name := pushName
+		name := contactName
 		if name == "" {
 			name = phone
 		}
@@ -98,8 +105,8 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 		logger.Debug().Str("component", "chatwoot").Int("contactID", contactID).Str("phone", phone).Msg("contact found")
 
 		update := UpdateContactReq{}
-		if pushName != "" && (contacts[0].Name == "" || contacts[0].Name == phone) {
-			update.Name = pushName
+		if contactName != "" && (contacts[0].Name == "" || contacts[0].Name == phone) {
+			update.Name = contactName
 		}
 		if contacts[0].Identifier == "" || strings.HasSuffix(contacts[0].Identifier, "@lid") {
 			update.Identifier = chatJID

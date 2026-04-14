@@ -67,6 +67,10 @@ func (s *Server) SetupRoutes() error {
 	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo, mediaPool, runtimeResolver)
 	historyPool := s.async.AddPool("history", 2, 100)
 	historySvc := service.NewHistoryService(messageRepo, chatRepo, historyPool)
+	historySvc.SetMediaDownloader(engine)
+	if s.minio != nil {
+		historySvc.SetMediaStorage(service.NewMinioMediaStorage(s.minio))
+	}
 
 	chatwootRepo := chatwoot.NewRepository(s.db.Pool)
 	chatwootSvc := chatwoot.NewService(s.ctx, chatwootRepo, messageRepo, messageSvc)
@@ -75,6 +79,10 @@ func (s *Server) SetupRoutes() error {
 	chatwootSvc.SetSessionConnector(chatwoot.NewSessionConnector(engine))
 	chatwootSvc.SetAvatarGetter(engine)
 	chatwootSvc.SetNumberChecker(engine)
+	chatwootSvc.SetContactNameGetter(engine)
+	if s.minio != nil {
+		chatwootSvc.SetMediaPresigner(mediaSvc)
+	}
 	chatwootSvc.SetServerURL(s.Config.ServerURL)
 	chatwootSvc.SetCache(chatwoot.NewCache(s.ctx, s.Config.RedisURL))
 	if s.nats != nil {
@@ -91,6 +99,7 @@ func (s *Server) SetupRoutes() error {
 	chatwootHandler := chatwoot.NewHandler(chatwootSvc, chatwootRepo)
 	disp.AddListener(chatwootSvc)
 
+	mediaSvc.SetMessageRepo(messageRepo)
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
 	engine.SetMessagePersist(historySvc.PersistMessage)
 	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)
@@ -107,7 +116,7 @@ func (s *Server) SetupRoutes() error {
 	newsletterHandler := handler.NewNewsletterHandler(newsletterSvc)
 	communityHandler := handler.NewCommunityHandler(communitySvc)
 	chatHandler := handler.NewChatHandler(chatSvc)
-	mediaHandler := handler.NewMediaHandler(mediaSvc)
+	mediaHandler := handler.NewMediaHandler(mediaSvc, messageRepo)
 	historyHandler := handler.NewHistoryHandler(messageRepo)
 
 	wsHandler := handler.NewWebSocketHandler(hub, s.Config)

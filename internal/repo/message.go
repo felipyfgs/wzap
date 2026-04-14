@@ -34,6 +34,9 @@ type MessageRepo interface {
 	FindLastReceivedByChat(ctx context.Context, sessionID, chatJID string) (*model.Message, error)
 	UpdateChatwootRef(ctx context.Context, sessionID, msgID string, cwMsgID, cwConvID int, cwSourceID string) error
 	ExistsBySourceID(ctx context.Context, sessionID, sourceID string) (bool, error)
+	FindUnimportedHistory(ctx context.Context, sessionID string, since time.Time, limit, offset int) ([]model.Message, error)
+	MarkImportedToChatwoot(ctx context.Context, sessionID, msgID string) error
+	UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error
 }
 
 type MessageRepository struct {
@@ -291,4 +294,51 @@ func (r *MessageRepository) FindLastReceivedByChat(ctx context.Context, sessionI
 		return nil, fmt.Errorf("failed to find last received message by chat: %w", err)
 	}
 	return &m, nil
+}
+
+func (r *MessageRepository) FindUnimportedHistory(ctx context.Context, sessionID string, since time.Time, limit, offset int) ([]model.Message, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 100
+	}
+	query := `SELECT ` + messageSelectColumns + `
+		FROM wz_messages
+		WHERE session_id = $1 AND source = 'history_sync' AND imported_to_chatwoot_at IS NULL AND timestamp >= $2
+		ORDER BY timestamp ASC, id ASC
+		LIMIT $3 OFFSET $4`
+
+	rows, err := r.db.Query(ctx, query, sessionID, since, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query unimported history: %w", err)
+	}
+	defer rows.Close()
+
+	msgs := make([]model.Message, 0)
+	for rows.Next() {
+		var m model.Message
+		if err := scanMessage(rows, &m); err != nil {
+			return nil, err
+		}
+		msgs = append(msgs, m)
+	}
+	return msgs, rows.Err()
+}
+
+func (r *MessageRepository) MarkImportedToChatwoot(ctx context.Context, sessionID, msgID string) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE wz_messages SET imported_to_chatwoot_at = NOW() WHERE id = $1 AND session_id = $2`,
+		msgID, sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to mark message as imported to chatwoot: %w", err)
+	}
+	return nil
+}
+
+func (r *MessageRepository) UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE wz_messages SET media_url = $1 WHERE id = $2 AND session_id = $3`,
+		mediaURL, msgID, sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to update media url: %w", err)
+	}
+	return nil
 }

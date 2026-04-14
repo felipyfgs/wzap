@@ -1,18 +1,23 @@
 package handler
 
 import (
-	"wzap/internal/dto"
-	"wzap/internal/service"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
+
+	"wzap/internal/dto"
+	"wzap/internal/repo"
+	"wzap/internal/service"
+	"wzap/internal/storage"
 )
 
 type MediaHandler struct {
-	mediaSvc *service.MediaService
+	mediaSvc    *service.MediaService
+	messageRepo *repo.MessageRepository
 }
 
-func NewMediaHandler(mediaSvc *service.MediaService) *MediaHandler {
-	return &MediaHandler{mediaSvc: mediaSvc}
+func NewMediaHandler(mediaSvc *service.MediaService, messageRepo *repo.MessageRepository) *MediaHandler {
+	return &MediaHandler{mediaSvc: mediaSvc, messageRepo: messageRepo}
 }
 
 // GetMedia godoc
@@ -33,7 +38,24 @@ func (h *MediaHandler) GetMedia(c *fiber.Ctx) error {
 	}
 	messageID := c.Params("messageId")
 
-	url, err := h.mediaSvc.GetPresignedURL(c.Context(), sessionID, messageID)
+	msg, err := h.messageRepo.FindByID(c.Context(), sessionID, messageID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "message not found"))
+	}
+
+	key := msg.MediaURL
+	if strings.HasPrefix(key, "http") || key == "" {
+		key = storage.MediaObjectKey(storage.MediaKeyParams{
+			SessionID: msg.SessionID,
+			ChatJID:   msg.ChatJID,
+			FromMe:    msg.FromMe,
+			MessageID: msg.ID,
+			MimeType:  msg.MediaType,
+			Timestamp: msg.Timestamp,
+		})
+	}
+
+	url, err := h.mediaSvc.GetPresignedURL(c.Context(), key)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", err.Error()))
 	}

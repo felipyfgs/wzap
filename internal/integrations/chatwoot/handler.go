@@ -292,9 +292,28 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 // @Success 202 {object} dto.APIResponse
 // @Failure 400 {object} dto.APIError
 // @Failure 401 {object} dto.APIError
+// @Failure 404 {object} dto.APIError
 // @Router /sessions/{sessionId}/integrations/chatwoot/import [post]
 func (h *Handler) ImportHistory(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusNotImplemented).JSON(dto.ErrorResp("Not Implemented", "History import is not yet implemented"))
+	sessionID := mustGetSessionID(c)
+
+	_, err := h.repo.FindBySessionID(c.Context(), sessionID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "Chatwoot integration not configured for this session"))
+	}
+
+	var req dto.ImportHistoryReq
+	if err := validateReq(c, &req); err != nil {
+		return nil
+	}
+
+	go h.service.ImportHistoryAsync(context.Background(), sessionID, req.Period, req.CustomDays)
+
+	return c.Status(fiber.StatusAccepted).JSON(dto.SuccessResp(dto.ImportHistoryResp{
+		SessionID: sessionID,
+		Period:    req.Period,
+		Status:    "importing",
+	}))
 }
 
 func mustGetSessionID(c *fiber.Ctx) string {

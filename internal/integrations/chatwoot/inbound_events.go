@@ -242,9 +242,7 @@ func (s *Service) handleConnected(ctx context.Context, cfg *Config, payload []by
 			period = "7d"
 		}
 		go func() {
-			importCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-			defer cancel()
-			s.importHistory(importCtx, cfg.SessionID, period, 0)
+			s.ImportHistoryAsync(context.Background(), cfg.SessionID, period, 0)
 		}()
 	}
 }
@@ -378,6 +376,13 @@ func (s *Service) handlePushName(ctx context.Context, cfg *Config, payload []byt
 	contacts, _ := client.FilterContacts(ctx, phone)
 	if len(contacts) == 0 {
 		return
+	}
+
+	if s.contactNameGetter != nil {
+		existingName := s.contactNameGetter.GetContactName(ctx, cfg.SessionID, jid)
+		if existingName != "" && existingName != phone {
+			return
+		}
 	}
 
 	_ = client.UpdateContact(ctx, contacts[0].ID, UpdateContactReq{Name: data.NewPushName})

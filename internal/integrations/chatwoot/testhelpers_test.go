@@ -40,7 +40,12 @@ func (m *mockClient) CreateContact(_ context.Context, _ CreateContactReq) (*Cont
 	return &Contact{ID: 1}, nil
 }
 
-func (m *mockClient) UpdateContact(_ context.Context, _ int, _ UpdateContactReq) error {
+func (m *mockClient) UpdateContact(_ context.Context, _ int, req UpdateContactReq) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if req.Name != "" && len(m.contacts) > 0 {
+		m.contacts[0].Name = req.Name
+	}
 	return nil
 }
 
@@ -196,6 +201,18 @@ func (m *mockMsgRepo) FindLastReceivedByChat(_ context.Context, _, _ string) (*m
 	return nil, fmt.Errorf("not found")
 }
 
+func (m *mockMsgRepo) FindUnimportedHistory(_ context.Context, _ string, _ time.Time, _, _ int) ([]model.Message, error) {
+	return []model.Message{}, nil
+}
+
+func (m *mockMsgRepo) MarkImportedToChatwoot(_ context.Context, _, _ string) error {
+	return nil
+}
+
+func (m *mockMsgRepo) UpdateMediaURL(_ context.Context, _, _, _ string) error {
+	return nil
+}
+
 type mockMsgRepoWithDuplicates struct {
 	existingSourceIDs map[string]bool
 }
@@ -250,6 +267,18 @@ func (m *mockMsgRepoWithDuplicates) FindByTimestampWindow(_ context.Context, _, 
 
 func (m *mockMsgRepoWithDuplicates) FindLastReceivedByChat(_ context.Context, _, _ string) (*model.Message, error) {
 	return nil, fmt.Errorf("not found")
+}
+
+func (m *mockMsgRepoWithDuplicates) FindUnimportedHistory(_ context.Context, _ string, _ time.Time, _, _ int) ([]model.Message, error) {
+	return []model.Message{}, nil
+}
+
+func (m *mockMsgRepoWithDuplicates) MarkImportedToChatwoot(_ context.Context, _, _ string) error {
+	return nil
+}
+
+func (m *mockMsgRepoWithDuplicates) UpdateMediaURL(_ context.Context, _, _, _ string) error {
+	return nil
 }
 
 type mockMsgRepoFixed struct {

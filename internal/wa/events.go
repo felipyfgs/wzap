@@ -71,17 +71,20 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 			}
 
 			if m.OnMediaReceived != nil && v.Message != nil {
+				chatJID := v.Info.Chat.String()
+				fromMe := v.Info.IsFromMe
+				ts := v.Info.Timestamp
 				switch {
 				case v.Message.GetImageMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetImageMessage().GetMimetype(), v.Message.GetImageMessage())
+					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, v.Message.GetImageMessage().GetMimetype(), fromMe, ts, v.Message.GetImageMessage())
 				case v.Message.GetVideoMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetVideoMessage().GetMimetype(), v.Message.GetVideoMessage())
+					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, v.Message.GetVideoMessage().GetMimetype(), fromMe, ts, v.Message.GetVideoMessage())
 				case v.Message.GetAudioMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetAudioMessage().GetMimetype(), v.Message.GetAudioMessage())
+					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, v.Message.GetAudioMessage().GetMimetype(), fromMe, ts, v.Message.GetAudioMessage())
 				case v.Message.GetDocumentMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetDocumentMessage().GetMimetype(), v.Message.GetDocumentMessage())
+					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, v.Message.GetDocumentMessage().GetMimetype(), fromMe, ts, v.Message.GetDocumentMessage())
 				case v.Message.GetStickerMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, v.Message.GetStickerMessage().GetMimetype(), v.Message.GetStickerMessage())
+					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, v.Message.GetStickerMessage().GetMimetype(), fromMe, ts, v.Message.GetStickerMessage())
 				}
 			}
 

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -49,6 +51,14 @@ type NumberChecker interface {
 	IsOnWhatsApp(ctx context.Context, sessionID string, phones []string) (map[string]string, error)
 }
 
+type ContactNameGetter interface {
+	GetContactName(ctx context.Context, sessionID, jid string) string
+}
+
+type MediaPresigner interface {
+	GetPresignedURL(ctx context.Context, key string) (string, error)
+}
+
 type missingEntry struct {
 	expiresAt time.Time
 }
@@ -64,12 +74,15 @@ type Service struct {
 	connector       SessionConnector
 	picGetter       AvatarGetter
 	numberChecker   NumberChecker
+	contactNameGetter ContactNameGetter
+	mediaPresigner    MediaPresigner
 	serverURL       string
 	lastBotNotify   sync.Map
 	httpClient      *http.Client
 	js              jetstream.JetStream
 	cb              *circuitBreakerManager
 	convFlight      singleflight.Group
+	importFlight    singleflight.Group
 	missingConfig   sync.Map
 }
 
@@ -87,14 +100,16 @@ func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messag
 	}
 }
 
-func (s *Service) SetJIDResolver(r JIDResolver)           { s.jidResolver = r }
-func (s *Service) SetMediaDownloader(d MediaDownloader)   { s.mediaDownloader = d }
-func (s *Service) SetSessionConnector(c SessionConnector) { s.connector = c }
-func (s *Service) SetAvatarGetter(p AvatarGetter)         { s.picGetter = p }
-func (s *Service) SetNumberChecker(n NumberChecker)       { s.numberChecker = n }
-func (s *Service) SetServerURL(url string)                { s.serverURL = url }
-func (s *Service) SetJetStream(js jetstream.JetStream)    { s.js = js }
-func (s *Service) SetCache(c Cache)                       { s.cache = c }
+func (s *Service) SetJIDResolver(r JIDResolver)               { s.jidResolver = r }
+func (s *Service) SetMediaDownloader(d MediaDownloader)        { s.mediaDownloader = d }
+func (s *Service) SetSessionConnector(c SessionConnector)      { s.connector = c }
+func (s *Service) SetAvatarGetter(p AvatarGetter)              { s.picGetter = p }
+func (s *Service) SetNumberChecker(n NumberChecker)            { s.numberChecker = n }
+func (s *Service) SetServerURL(url string)                     { s.serverURL = url }
+func (s *Service) SetJetStream(js jetstream.JetStream)         { s.js = js }
+func (s *Service) SetCache(c Cache)                            { s.cache = c }
+func (s *Service) SetContactNameGetter(g ContactNameGetter)    { s.contactNameGetter = g }
+func (s *Service) SetMediaPresigner(p MediaPresigner)          { s.mediaPresigner = p }
 func (s *Service) ClearConfigCache(sessionID string) {
 	s.missingConfig.Delete(sessionID)
 }
@@ -197,6 +212,11 @@ func (s *Service) importHistory(ctx context.Context, sessionID, period string, c
 		return
 	}
 
+	if s.msgRepo == nil {
+		logger.Warn().Str("component", "chatwoot").Str("session", sessionID).Msg("msgRepo is nil, cannot import history")
+		return
+	}
+
 	days := importPeriodToDays(period, customDays)
 	if days <= 0 {
 		logger.Warn().Str("component", "chatwoot").Str("session", sessionID).Str("period", period).Msg("invalid import period")
@@ -206,20 +226,176 @@ func (s *Service) importHistory(ctx context.Context, sessionID, period string, c
 	logger.Info().Str("component", "chatwoot").Str("session", sessionID).Str("period", period).Int("days", days).Msg("Starting history import")
 	metrics.CWHistoryImportProgress.WithLabelValues(sessionID).Set(0)
 
-	// Rate limiter: max 10 msgs/s
 	rateTicker := time.NewTicker(100 * time.Millisecond)
 	defer rateTicker.Stop()
 
-	// Fetch messages from the local store within the period
 	since := time.Now().Add(-time.Duration(days) * 24 * time.Hour)
-	_ = since
 
-	// Placeholder: in a real implementation, iterate messages from msgRepo
-	// filtered by timestamp >= since, respecting the rate limit.
-	// For each message, call processInboundEvent to re-create in Chatwoot.
-	// Progress is updated as percentage of total messages processed.
-	logger.Info().Str("component", "chatwoot").Str("session", sessionID).Msg("history import complete (no historical messages available in current store)")
+	var totalProcessed int
+	var failedCount int
+	const chunkSize = 100
+
+	for {
+		select {
+		case <-ctx.Done():
+			logger.Warn().Str("component", "chatwoot").Str("session", sessionID).Err(ctx.Err()).Msg("history import context cancelled")
+			return
+		default:
+		}
+
+		msgs, err := s.msgRepo.FindUnimportedHistory(ctx, sessionID, since, chunkSize, failedCount)
+		if err != nil {
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("failed to fetch unimported history")
+			return
+		}
+		if len(msgs) == 0 {
+			break
+		}
+
+		for _, msg := range msgs {
+			select {
+			case <-ctx.Done():
+				logger.Warn().Str("component", "chatwoot").Str("session", sessionID).Err(ctx.Err()).Msg("history import context cancelled during processing")
+				return
+			case <-rateTicker.C:
+			}
+
+			if err := s.importSingleMessage(ctx, cfg, &msg); err != nil {
+				failedCount++
+				logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("failed to import history message")
+			} else {
+				if err := s.msgRepo.MarkImportedToChatwoot(ctx, sessionID, msg.ID); err != nil {
+					failedCount++
+					logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("failed to mark message as imported")
+				}
+			}
+
+			totalProcessed++
+			metrics.CWHistoryImportProgress.WithLabelValues(sessionID).Set(float64(totalProcessed))
+		}
+
+		if len(msgs) < chunkSize {
+			break
+		}
+	}
+
 	metrics.CWHistoryImportProgress.WithLabelValues(sessionID).Set(100)
+	logger.Info().Str("component", "chatwoot").Str("session", sessionID).Int("processed", totalProcessed).Msg("history import complete")
+}
+
+func (s *Service) importSingleMessage(ctx context.Context, cfg *Config, msg *model.Message) error {
+	if msg == nil || msg.ID == "" {
+		return nil
+	}
+
+	chatJID := msg.ChatJID
+	if strings.HasSuffix(chatJID, "@lid") {
+		if s.jidResolver != nil {
+			if pn := s.jidResolver.GetPNForLID(ctx, cfg.SessionID, chatJID); pn != "" {
+				chatJID = pn + "@s.whatsapp.net"
+			}
+		}
+	}
+
+	contactName := ""
+	if s.contactNameGetter != nil {
+		contactName = s.contactNameGetter.GetContactName(ctx, cfg.SessionID, chatJID)
+	}
+
+	convID, err := s.findOrCreateConversation(ctx, cfg, chatJID, contactName)
+	if err != nil {
+		return fmt.Errorf("findOrCreateConversation: %w", err)
+	}
+
+	client := s.clientFn(cfg)
+	sourceID := "WAID:" + msg.ID
+	messageType := "outgoing"
+	if !msg.FromMe {
+		messageType = "incoming"
+	}
+
+	if msg.MediaURL != "" {
+		if !strings.HasPrefix(msg.MediaURL, "http") && s.mediaPresigner != nil {
+			url, err := s.mediaPresigner.GetPresignedURL(ctx, msg.MediaURL)
+			if err != nil {
+				return fmt.Errorf("resolve media URL from key: %w", err)
+			}
+			msg.MediaURL = url
+		}
+		return s.importMediaMessage(ctx, cfg, client, convID, msg, messageType, sourceID)
+	}
+
+	if msg.Body == "" {
+		return nil
+	}
+
+	content := msg.Body
+	if msg.MsgType == "text" {
+		content = convertWAToCWMarkdown(content)
+	}
+
+	_, err = client.CreateMessage(ctx, convID, MessageReq{
+		Content:     content,
+		MessageType: messageType,
+		SourceID:    sourceID,
+	})
+	if err != nil {
+		return fmt.Errorf("CreateMessage: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) importMediaMessage(ctx context.Context, cfg *Config, client Client, convID int, msg *model.Message, messageType, sourceID string) error {
+	mediaCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
+
+	req, err := httpGetWithContext(mediaCtx, s.httpClient, msg.MediaURL)
+	if err != nil {
+		return fmt.Errorf("download media from minio: %w", err)
+	}
+	defer func() {
+		_, _ = io.Copy(io.Discard, req.Body)
+		_ = req.Body.Close()
+	}()
+
+	data, err := io.ReadAll(io.LimitReader(req.Body, maxMediaBytes+1))
+	if err != nil {
+		return fmt.Errorf("read media data: %w", err)
+	}
+	if int64(len(data)) > maxMediaBytes {
+		return fmt.Errorf("media too large: %d bytes", len(data))
+	}
+
+	mimeType := msg.MediaType
+	if mimeType == "" {
+		mimeType, _ = DetectMIME("", data)
+	}
+
+	filename := msg.MsgType
+	ext := mimeTypeToExt(mimeType)
+	if ext != "" {
+		filename += ext
+	}
+
+	caption := msg.Body
+
+	_, err = client.CreateMessageWithAttachment(ctx, convID, caption, filename, data, mimeType, messageType, sourceID, 0, nil)
+	if err != nil {
+		return fmt.Errorf("CreateMessageWithAttachment: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Service) ImportHistoryAsync(ctx context.Context, sessionID, period string, customDays int) {
+	key := "import:" + sessionID
+	_, _, _ = s.importFlight.Do(key, func() (interface{}, error) {
+		importCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+		s.importHistory(importCtx, sessionID, period, customDays)
+		return nil, nil
+	})
 }
 
 func importPeriodToDays(period string, customDays int) int {

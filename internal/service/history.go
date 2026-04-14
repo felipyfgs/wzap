@@ -1,7 +1,9 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"math"
 	"strings"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"wzap/internal/async"
 	"wzap/internal/logger"
 	"wzap/internal/model"
+	"wzap/internal/storage"
 )
 
 type messageHistoryRepository interface {
@@ -22,6 +25,14 @@ type messageHistoryRepository interface {
 
 type chatHistoryRepository interface {
 	Upsert(ctx context.Context, chat *model.ChatUpsert) error
+}
+
+type MediaDownloader interface {
+	DownloadMediaByPath(ctx context.Context, sessionID, directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int, mediaType string) ([]byte, error)
+}
+
+type MediaStorage interface {
+	Upload(ctx context.Context, sessionID, messageID, chatJID string, fromMe bool, data []byte, mimeType string, timestamp time.Time) (string, error)
 }
 
 type jidAliasMaps struct {
@@ -34,10 +45,38 @@ type HistoryService struct {
 	messageRepo messageHistoryRepository
 	chatRepo    chatHistoryRepository
 	pool        *async.Pool
+	downloader  MediaDownloader
+	storage     MediaStorage
 }
 
 func NewHistoryService(messageRepo messageHistoryRepository, chatRepo chatHistoryRepository, pool *async.Pool) *HistoryService {
 	return &HistoryService{messageRepo: messageRepo, chatRepo: chatRepo, pool: pool}
+}
+
+func (s *HistoryService) SetMediaDownloader(d MediaDownloader) { s.downloader = d }
+func (s *HistoryService) SetMediaStorage(ms MediaStorage)      { s.storage = ms }
+
+func NewMinioMediaStorage(m *storage.Minio) MediaStorage {
+	return &minioMediaStorage{minio: m}
+}
+
+type minioMediaStorage struct {
+	minio *storage.Minio
+}
+
+func (m *minioMediaStorage) Upload(ctx context.Context, sessionID, messageID, chatJID string, fromMe bool, data []byte, mimeType string, timestamp time.Time) (string, error) {
+	key := storage.MediaObjectKey(storage.MediaKeyParams{
+		SessionID: sessionID,
+		ChatJID:   chatJID,
+		FromMe:    fromMe,
+		MessageID: messageID,
+		MimeType:  mimeType,
+		Timestamp: timestamp,
+	})
+	if err := m.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
+		return "", fmt.Errorf("failed to upload media to S3: %w", err)
+	}
+	return key, nil
 }
 
 func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{}) {
@@ -98,6 +137,30 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 				if msg == nil {
 					continue
 				}
+
+				if s.downloader != nil && s.storage != nil && msg.MediaURL == "" {
+					info := historyMessage.GetMessage()
+					if info != nil {
+						protoMsg := info.GetMessage()
+						directPath, encFileHash, fileHash, mediaKey, fileLength, hasMedia := extractMediaDownloadInfo(protoMsg)
+						if hasMedia && directPath != "" {
+							dlCtx, dlCancel := context.WithTimeout(ctx, 30*time.Second)
+							data, err := s.downloader.DownloadMediaByPath(dlCtx, sessionID, directPath, encFileHash, fileHash, mediaKey, fileLength, msg.MediaType)
+							dlCancel()
+							if err != nil {
+								logger.Debug().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Str("mediaType", msg.MediaType).Msg("History sync media expired or unavailable, skipping")
+							} else if len(data) > 0 {
+								mediaURL, err := s.storage.Upload(ctx, sessionID, msg.ID, msg.ChatJID, msg.FromMe, data, msg.MediaType, msg.Timestamp)
+								if err != nil {
+									logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("Failed to upload history sync media to storage")
+								} else {
+									msg.MediaURL = mediaURL
+								}
+							}
+						}
+					}
+				}
+
 				if err := s.messageRepo.Save(ctx, msg); err != nil {
 					logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("Failed to persist history sync message")
 				}
@@ -398,6 +461,31 @@ func uint64ToInt64(value uint64) int64 {
 		return 0
 	}
 	return int64(value)
+}
+
+func extractMediaDownloadInfo(msg *waE2E.Message) (directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int, ok bool) {
+	if msg == nil {
+		return "", nil, nil, nil, 0, false
+	}
+	switch {
+	case msg.GetImageMessage() != nil:
+		im := msg.GetImageMessage()
+		return im.GetDirectPath(), im.GetFileEncSHA256(), im.GetFileSHA256(), im.GetMediaKey(), int(im.GetFileLength()), true
+	case msg.GetVideoMessage() != nil:
+		vm := msg.GetVideoMessage()
+		return vm.GetDirectPath(), vm.GetFileEncSHA256(), vm.GetFileSHA256(), vm.GetMediaKey(), int(vm.GetFileLength()), true
+	case msg.GetAudioMessage() != nil:
+		am := msg.GetAudioMessage()
+		return am.GetDirectPath(), am.GetFileEncSHA256(), am.GetFileSHA256(), am.GetMediaKey(), int(am.GetFileLength()), true
+	case msg.GetDocumentMessage() != nil:
+		dm := msg.GetDocumentMessage()
+		return dm.GetDirectPath(), dm.GetFileEncSHA256(), dm.GetFileSHA256(), dm.GetMediaKey(), int(dm.GetFileLength()), true
+	case msg.GetStickerMessage() != nil:
+		sm := msg.GetStickerMessage()
+		return sm.GetDirectPath(), sm.GetFileEncSHA256(), sm.GetFileSHA256(), sm.GetMediaKey(), int(sm.GetFileLength()), true
+	default:
+		return "", nil, nil, nil, 0, false
+	}
 }
 
 func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string) {

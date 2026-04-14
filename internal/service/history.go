@@ -402,8 +402,10 @@ func resolveMessageSenderJID(info *waWeb.WebMessageInfo, chatJID string) string 
 		return ""
 	}
 
-	senderJID := info.GetKey().GetParticipant()
-	if senderJID != "" {
+	if senderJID := info.GetKey().GetParticipant(); senderJID != "" {
+		return senderJID
+	}
+	if senderJID := info.GetParticipant(); senderJID != "" {
 		return senderJID
 	}
 	if info.GetKey().GetFromMe() {

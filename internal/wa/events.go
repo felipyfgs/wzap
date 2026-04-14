@@ -544,6 +544,11 @@ func (m *Manager) handleMediaRetry(v *events.MediaRetry) {
 		return
 	}
 
+	if retryData.GetDirectPath() == "" {
+		logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: SUCCESS mas directPath vazio")
+		return
+	}
+
 	if m.OnMediaRetry == nil {
 		return
 	}

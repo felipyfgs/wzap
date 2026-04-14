@@ -119,10 +119,6 @@ func (m *Manager) RequestMediaRetry(ctx context.Context, sessionID, messageID, c
 		Timestamp: timestamp,
 	}
 
-	if err := client.SendMediaRetryReceipt(ctx, &msgInfo, mediaKey); err != nil {
-		return fmt.Errorf("failed to send media retry receipt: %w", err)
-	}
-
 	m.mediaRetryCache.Store(messageID, mediaRetryCacheEntry{
 		sessionID:   sessionID,
 		chatJID:     chatJID,
@@ -136,6 +132,11 @@ func (m *Manager) RequestMediaRetry(ctx context.Context, sessionID, messageID, c
 		fileLength:  fileLength,
 		expiresAt:   time.Now().Add(10 * time.Minute),
 	})
+
+	if err := client.SendMediaRetryReceipt(ctx, &msgInfo, mediaKey); err != nil {
+		m.mediaRetryCache.Delete(messageID)
+		return fmt.Errorf("failed to send media retry receipt: %w", err)
+	}
 
 	return nil
 }

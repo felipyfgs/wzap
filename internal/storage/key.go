@@ -10,6 +10,7 @@ import (
 type MediaKeyParams struct {
 	SessionID string
 	ChatJID   string
+	SenderJID string
 	FromMe    bool
 	MessageID string
 	MimeType  string
@@ -28,9 +29,15 @@ func MediaObjectKey(p MediaKeyParams) string {
 
 	chatJID := sanitizeJID(p.ChatJID)
 
+	senderJID := p.SenderJID
+	if senderJID == "" {
+		senderJID = p.ChatJID
+	}
+	senderJID = sanitizeJID(senderJID)
+
 	ext := extensionFromMime(p.MimeType)
 
-	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s", p.SessionID, chatJID, direction, date, mediaCategory, p.MessageID)
+	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", p.SessionID, chatJID, senderJID, direction, date, mediaCategory, p.MessageID)
 	if ext != "" {
 		key += ext
 	}

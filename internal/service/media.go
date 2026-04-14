@@ -40,7 +40,7 @@ func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA
 	return &MediaService{minio: minio, pool: pool, runtimeResolver: runtimeResolver}
 }
 
-func (s *MediaService) DownloadAndStore(ctx context.Context, sessionID string, msg whatsmeow.DownloadableMessage, mimeType, messageID, chatJID string, fromMe bool) (string, error) {
+func (s *MediaService) DownloadAndStore(ctx context.Context, sessionID string, msg whatsmeow.DownloadableMessage, mimeType, messageID, chatJID, senderJID string, fromMe bool) (string, error) {
 	runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
 	if err != nil {
 		return "", err
@@ -55,6 +55,7 @@ func (s *MediaService) DownloadAndStore(ctx context.Context, sessionID string, m
 		key := storage.MediaObjectKey(storage.MediaKeyParams{
 			SessionID: session.ID,
 			ChatJID:   chatJID,
+			SenderJID: senderJID,
 			FromMe:    fromMe,
 			MessageID: messageID,
 			MimeType:  mimeType,
@@ -130,7 +131,7 @@ func (s *MediaService) GetPresignedURL(ctx context.Context, key string) (string,
 	return url, nil
 }
 
-func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
+func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
 	if s.minio == nil {
 		return
 	}
@@ -152,6 +153,7 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, mimeType s
 			key := storage.MediaObjectKey(storage.MediaKeyParams{
 				SessionID: session.ID,
 				ChatJID:   chatJID,
+				SenderJID: senderJID,
 				FromMe:    fromMe,
 				MessageID: messageID,
 				MimeType:  mimeType,

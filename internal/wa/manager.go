@@ -19,7 +19,7 @@ import (
 	"wzap/internal/webhook"
 )
 
-type MediaAutoUploadFunc func(sessionID, messageID, chatJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage)
+type MediaAutoUploadFunc func(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage)
 type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{})
 type HistorySyncPersistFunc func(sessionID string, sync *events.HistorySync)
 

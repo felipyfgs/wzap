@@ -32,7 +32,7 @@ type MediaDownloader interface {
 }
 
 type MediaStorage interface {
-	Upload(ctx context.Context, sessionID, messageID, chatJID string, fromMe bool, data []byte, mimeType string, timestamp time.Time) (string, error)
+	Upload(ctx context.Context, sessionID, messageID, chatJID, senderJID string, fromMe bool, data []byte, mimeType string, timestamp time.Time) (string, error)
 }
 
 type jidAliasMaps struct {
@@ -64,10 +64,11 @@ type minioMediaStorage struct {
 	minio *storage.Minio
 }
 
-func (m *minioMediaStorage) Upload(ctx context.Context, sessionID, messageID, chatJID string, fromMe bool, data []byte, mimeType string, timestamp time.Time) (string, error) {
+func (m *minioMediaStorage) Upload(ctx context.Context, sessionID, messageID, chatJID, senderJID string, fromMe bool, data []byte, mimeType string, timestamp time.Time) (string, error) {
 	key := storage.MediaObjectKey(storage.MediaKeyParams{
 		SessionID: sessionID,
 		ChatJID:   chatJID,
+		SenderJID: senderJID,
 		FromMe:    fromMe,
 		MessageID: messageID,
 		MimeType:  mimeType,
@@ -150,7 +151,7 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 							if err != nil {
 								logger.Debug().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Str("mediaType", msg.MediaType).Msg("History sync media expired or unavailable, skipping")
 							} else if len(data) > 0 {
-								mediaURL, err := s.storage.Upload(ctx, sessionID, msg.ID, msg.ChatJID, msg.FromMe, data, msg.MediaType, msg.Timestamp)
+								mediaURL, err := s.storage.Upload(ctx, sessionID, msg.ID, msg.ChatJID, msg.SenderJID, msg.FromMe, data, msg.MediaType, msg.Timestamp)
 								if err != nil {
 									logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("Failed to upload history sync media to storage")
 								} else {

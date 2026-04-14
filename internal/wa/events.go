@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"sync"
 	"time"
 
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/proto/waMmsRetry"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/types/events"
 
@@ -101,7 +104,8 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 
 	case *events.MediaRetry:
 		eventType = model.EventMediaRetry
-		logger.Debug().Str("component", "wa").Str("session", sessionID).Str("mid", v.MessageID).Msg("Media retry")
+		logger.Debug().Str("component", "wa").Str("session", sessionID).Str("mid", string(v.MessageID)).Msg("Media retry")
+		m.handleMediaRetry(v)
 
 	case *events.Receipt:
 		eventType = model.EventReceipt
@@ -510,4 +514,44 @@ func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string)
 	default:
 		return "unknown", "", ""
 	}
+}
+
+func (m *Manager) handleMediaRetry(v *events.MediaRetry) {
+	raw, ok := m.mediaRetryCache.Load(string(v.MessageID))
+	if !ok {
+		return
+	}
+
+	entry := raw.(mediaRetryCacheEntry)
+	m.mediaRetryCache.Delete(string(v.MessageID))
+
+	if time.Now().After(entry.expiresAt) {
+		return
+	}
+
+	retryData, err := whatsmeow.DecryptMediaRetryNotification(v, entry.mediaKey)
+	if err != nil {
+		if errors.Is(err, whatsmeow.ErrMediaNotAvailableOnPhone) {
+			logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: mídia não disponível no celular")
+		} else {
+			logger.Warn().Str("component", "wa").Err(err).Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: falha ao decriptar notificação")
+		}
+		return
+	}
+
+	if retryData.GetResult() != waMmsRetry.MediaRetryNotification_SUCCESS {
+		logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Str("result", retryData.GetResult().String()).Msg("Media retry: servidor retornou falha")
+		return
+	}
+
+	if m.OnMediaRetry == nil {
+		return
+	}
+
+	logger.Debug().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: sucesso, re-enviando para upload")
+	m.OnMediaRetry(
+		entry.sessionID, string(v.MessageID), entry.chatJID, entry.senderJID,
+		entry.fromMe, entry.mimeType, entry.timestamp,
+		retryData.GetDirectPath(), entry.encFileHash, entry.fileHash, entry.mediaKey, entry.fileLength,
+	)
 }

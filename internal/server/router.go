@@ -101,8 +101,10 @@ func (s *Server) SetupRoutes() error {
 
 	mediaSvc.SetMessageRepo(messageRepo)
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
+	engine.SetMediaRetry(mediaSvc.RetryMediaUpload)
 	engine.SetMessagePersist(historySvc.PersistMessage)
 	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)
+	historySvc.SetMediaRetryRequester(engine)
 	messageSvc.SetMessagePersist(historySvc.PersistMessage)
 
 	// Initialize Handlers

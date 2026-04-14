@@ -20,8 +20,23 @@ import (
 )
 
 type MediaAutoUploadFunc func(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage)
+type MediaRetryFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, mimeType string, timestamp time.Time, directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int)
 type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{})
 type HistorySyncPersistFunc func(sessionID string, sync *events.HistorySync)
+
+type mediaRetryCacheEntry struct {
+	sessionID   string
+	chatJID     string
+	senderJID   string
+	fromMe      bool
+	mimeType    string
+	timestamp   time.Time
+	encFileHash []byte
+	fileHash    []byte
+	mediaKey    []byte
+	fileLength  int
+	expiresAt   time.Time
+}
 
 type ClientInfo struct {
 	PushName     string
@@ -63,12 +78,66 @@ type Manager struct {
 	cfg                   *config.Config
 	waLog                 waLog.Logger
 	OnMediaReceived       MediaAutoUploadFunc
+	OnMediaRetry          MediaRetryFunc
 	OnMessageReceived     MessagePersistFunc
 	OnHistorySyncReceived HistorySyncPersistFunc
+	mediaRetryCache       sync.Map
 }
 
 func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {
 	m.OnMediaReceived = fn
+}
+
+func (m *Manager) SetMediaRetry(fn MediaRetryFunc) {
+	m.OnMediaRetry = fn
+}
+
+func (m *Manager) RequestMediaRetry(ctx context.Context, sessionID, messageID, chatJID, senderJID string, fromMe bool, mimeType string, timestamp time.Time, encFileHash, fileHash, mediaKey []byte, fileLength int) error {
+	client, err := m.GetClient(sessionID)
+	if err != nil {
+		return err
+	}
+
+	parsedChatJID, err := types.ParseJID(chatJID)
+	if err != nil {
+		return fmt.Errorf("failed to parse chat JID: %w", err)
+	}
+
+	var parsedSenderJID types.JID
+	if senderJID != "" {
+		parsedSenderJID, _ = types.ParseJID(senderJID)
+	}
+
+	msgInfo := types.MessageInfo{
+		MessageSource: types.MessageSource{
+			Chat:     parsedChatJID,
+			Sender:   parsedSenderJID,
+			IsFromMe: fromMe,
+			IsGroup:  parsedChatJID.Server == "g.us",
+		},
+		ID:        types.MessageID(messageID),
+		Timestamp: timestamp,
+	}
+
+	if err := client.SendMediaRetryReceipt(ctx, &msgInfo, mediaKey); err != nil {
+		return fmt.Errorf("failed to send media retry receipt: %w", err)
+	}
+
+	m.mediaRetryCache.Store(messageID, mediaRetryCacheEntry{
+		sessionID:   sessionID,
+		chatJID:     chatJID,
+		senderJID:   senderJID,
+		fromMe:      fromMe,
+		mimeType:    mimeType,
+		timestamp:   timestamp,
+		encFileHash: encFileHash,
+		fileHash:    fileHash,
+		mediaKey:    mediaKey,
+		fileLength:  fileLength,
+		expiresAt:   time.Now().Add(10 * time.Minute),
+	})
+
+	return nil
 }
 
 func (m *Manager) SetMessagePersist(fn MessagePersistFunc) {

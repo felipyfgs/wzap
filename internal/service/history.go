@@ -3,11 +3,13 @@ package service
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
 	"time"
 
+	"go.mau.fi/whatsmeow"
 	waE2E "go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/proto/waHistorySync"
 	"go.mau.fi/whatsmeow/proto/waWeb"
@@ -35,6 +37,10 @@ type MediaStorage interface {
 	Upload(ctx context.Context, sessionID, messageID, chatJID, senderJID string, fromMe bool, data []byte, mimeType string, timestamp time.Time) (string, error)
 }
 
+type MediaRetryRequester interface {
+	RequestMediaRetry(ctx context.Context, sessionID, messageID, chatJID, senderJID string, fromMe bool, mimeType string, timestamp time.Time, encFileHash, fileHash, mediaKey []byte, fileLength int) error
+}
+
 type jidAliasMaps struct {
 	pnToLID       map[string]string
 	lidToPN       map[string]string
@@ -42,19 +48,21 @@ type jidAliasMaps struct {
 }
 
 type HistoryService struct {
-	messageRepo messageHistoryRepository
-	chatRepo    chatHistoryRepository
-	pool        *async.Pool
-	downloader  MediaDownloader
-	storage     MediaStorage
+	messageRepo    messageHistoryRepository
+	chatRepo       chatHistoryRepository
+	pool           *async.Pool
+	downloader     MediaDownloader
+	storage        MediaStorage
+	retryRequester MediaRetryRequester
 }
 
 func NewHistoryService(messageRepo messageHistoryRepository, chatRepo chatHistoryRepository, pool *async.Pool) *HistoryService {
 	return &HistoryService{messageRepo: messageRepo, chatRepo: chatRepo, pool: pool}
 }
 
-func (s *HistoryService) SetMediaDownloader(d MediaDownloader) { s.downloader = d }
-func (s *HistoryService) SetMediaStorage(ms MediaStorage)      { s.storage = ms }
+func (s *HistoryService) SetMediaDownloader(d MediaDownloader)          { s.downloader = d }
+func (s *HistoryService) SetMediaStorage(ms MediaStorage)                { s.storage = ms }
+func (s *HistoryService) SetMediaRetryRequester(r MediaRetryRequester)   { s.retryRequester = r }
 
 func NewMinioMediaStorage(m *storage.Minio) MediaStorage {
 	return &minioMediaStorage{minio: m}
@@ -149,7 +157,15 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 							data, err := s.downloader.DownloadMediaByPath(dlCtx, sessionID, directPath, encFileHash, fileHash, mediaKey, fileLength, msg.MediaType)
 							dlCancel()
 							if err != nil {
-								logger.Debug().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Str("mediaType", msg.MediaType).Msg("History sync media expired or unavailable, skipping")
+								if s.retryRequester != nil && isExpiredMediaError(err) {
+									if retryErr := s.retryRequester.RequestMediaRetry(ctx, sessionID, msg.ID, msg.ChatJID, msg.SenderJID, msg.FromMe, msg.MediaType, msg.Timestamp, encFileHash, fileHash, mediaKey, fileLength); retryErr != nil {
+										logger.Warn().Str("component", "service").Err(retryErr).Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media: falha ao solicitar retry")
+									} else {
+										logger.Debug().Str("component", "service").Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media: retry solicitado ao celular")
+									}
+								} else {
+									logger.Debug().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Str("mediaType", msg.MediaType).Msg("History sync media expired or unavailable, skipping")
+								}
 							} else if len(data) > 0 {
 								mediaURL, err := s.storage.Upload(ctx, sessionID, msg.ID, msg.ChatJID, msg.SenderJID, msg.FromMe, data, msg.MediaType, msg.Timestamp)
 								if err != nil {
@@ -521,4 +537,10 @@ func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string)
 	default:
 		return "unknown", "", ""
 	}
+}
+
+func isExpiredMediaError(err error) bool {
+	return errors.Is(err, whatsmeow.ErrMediaDownloadFailedWith403) ||
+		errors.Is(err, whatsmeow.ErrMediaDownloadFailedWith404) ||
+		errors.Is(err, whatsmeow.ErrMediaDownloadFailedWith410)
 }

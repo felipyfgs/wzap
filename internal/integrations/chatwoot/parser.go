@@ -45,8 +45,8 @@ type waMessageInfo struct {
 }
 
 type waMessagePayload struct {
-	Info    waMessageInfo          `json:"Info"`
-	Message map[string]interface{} `json:"Message"`
+	Info    waMessageInfo  `json:"Info"`
+	Message map[string]any `json:"Message"`
 }
 
 type waReceiptPayload struct {
@@ -64,7 +64,7 @@ type waDeletePayload struct {
 	Timestamp flexTimestamp `json:"Timestamp"`
 }
 
-func parseEnvelopeData(payload []byte, target interface{}) error {
+func parseEnvelopeData(payload []byte, target any) error {
 	envelope, err := model.ParseEventEnvelope(payload)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal event envelope: %w", err)
@@ -118,7 +118,7 @@ var mediaTypeMap = map[string]string{
 	"stickerMessage":  "sticker",
 }
 
-func extractMediaInfo(msg map[string]interface{}) *mediaInfo {
+func extractMediaInfo(msg map[string]any) *mediaInfo {
 	if msg == nil {
 		return nil
 	}
@@ -186,7 +186,7 @@ var msgTypeKeys = []struct {
 	{"reactionMessage", "reaction"},
 }
 
-func detectMessageType(msg map[string]interface{}) string {
+func detectMessageType(msg map[string]any) string {
 	if msg == nil {
 		return "text"
 	}
@@ -198,7 +198,7 @@ func detectMessageType(msg map[string]interface{}) string {
 	return "text"
 }
 
-func extractText(msg map[string]interface{}) string {
+func extractText(msg map[string]any) string {
 	if msg == nil {
 		return ""
 	}
@@ -254,10 +254,10 @@ func extractText(msg map[string]interface{}) string {
 	}
 
 	if contactsMsg := getMapField(msg, "contactsArrayMessage"); contactsMsg != nil {
-		contacts, _ := contactsMsg["contacts"].([]interface{})
+		contacts, _ := contactsMsg["contacts"].([]any)
 		var parts []string
 		for _, c := range contacts {
-			if cm, ok := c.(map[string]interface{}); ok {
+			if cm, ok := c.(map[string]any); ok {
 				displayName := getStringField(cm, "displayName")
 				if vcard := getStringField(cm, "vcard"); vcard != "" {
 					formatted := formatVCardWithName(vcard, displayName)
@@ -273,7 +273,7 @@ func extractText(msg map[string]interface{}) string {
 	return ""
 }
 
-func formatLocation(locMsg map[string]interface{}) string {
+func formatLocation(locMsg map[string]any) string {
 	lat := getFloatField(locMsg, "degreesLatitude")
 	lng := getFloatField(locMsg, "degreesLongitude")
 	name := getStringField(locMsg, "name")
@@ -374,7 +374,7 @@ func lastIndex(s, sep string) int {
 	return idx
 }
 
-func getStringField(m map[string]interface{}, key string) string {
+func getStringField(m map[string]any, key string) string {
 	if v, ok := m[key]; ok {
 		if s, ok := v.(string); ok {
 			return s
@@ -383,7 +383,7 @@ func getStringField(m map[string]interface{}, key string) string {
 	return ""
 }
 
-func getFloatField(m map[string]interface{}, key string) float64 {
+func getFloatField(m map[string]any, key string) float64 {
 	if v, ok := m[key]; ok {
 		if f, ok := v.(float64); ok {
 			return f
@@ -392,16 +392,16 @@ func getFloatField(m map[string]interface{}, key string) float64 {
 	return 0
 }
 
-func getMapField(m map[string]interface{}, key string) map[string]interface{} {
+func getMapField(m map[string]any, key string) map[string]any {
 	if v, ok := m[key]; ok {
-		if m2, ok := v.(map[string]interface{}); ok {
+		if m2, ok := v.(map[string]any); ok {
 			return m2
 		}
 	}
 	return nil
 }
 
-func extractStanzaID(msg map[string]interface{}) string {
+func extractStanzaID(msg map[string]any) string {
 	if msg == nil {
 		return ""
 	}
@@ -444,7 +444,7 @@ func extractStanzaID(msg map[string]interface{}) string {
 	return ""
 }
 
-func extractQuoteText(msg map[string]interface{}) string {
+func extractQuoteText(msg map[string]any) string {
 	if msg == nil {
 		return ""
 	}
@@ -459,15 +459,15 @@ func extractQuoteText(msg map[string]interface{}) string {
 	}
 
 	for _, key := range msgTypes {
-		sub, ok := msg[key].(map[string]interface{})
+		sub, ok := msg[key].(map[string]any)
 		if !ok {
 			continue
 		}
-		ci, ok := sub["contextInfo"].(map[string]interface{})
+		ci, ok := sub["contextInfo"].(map[string]any)
 		if !ok {
 			continue
 		}
-		quoted, ok := ci["quotedMessage"].(map[string]interface{})
+		quoted, ok := ci["quotedMessage"].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -475,7 +475,7 @@ func extractQuoteText(msg map[string]interface{}) string {
 			text := strings.Trim(conv, `"`)
 			return strings.TrimSpace(text)
 		}
-		if extText, ok := quoted["extendedTextMessage"].(map[string]interface{}); ok {
+		if extText, ok := quoted["extendedTextMessage"].(map[string]any); ok {
 			if text, ok := extText["text"].(string); ok && text != "" {
 				return strings.TrimSpace(text)
 			}

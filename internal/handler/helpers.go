@@ -30,7 +30,7 @@ func mustGetSessionID(c *fiber.Ctx) string {
 	return val
 }
 
-func parseAndValidate(c *fiber.Ctx, req interface{}) error {
+func parseAndValidate(c *fiber.Ctx, req any) error {
 	if err := c.BodyParser(req); err != nil {
 		_ = c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 		return fiber.ErrBadRequest

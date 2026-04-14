@@ -64,26 +64,26 @@ type missingEntry struct {
 }
 
 type Service struct {
-	repo            Repo
-	msgRepo         repo.MessageRepo
-	clientFn        func(cfg *Config) Client
-	messageSvc      MessageService
-	cache           Cache
-	jidResolver     JIDResolver
-	mediaDownloader MediaDownloader
-	connector       SessionConnector
-	picGetter       AvatarGetter
-	numberChecker   NumberChecker
+	repo              Repo
+	msgRepo           repo.MessageRepo
+	clientFn          func(cfg *Config) Client
+	messageSvc        MessageService
+	cache             Cache
+	jidResolver       JIDResolver
+	mediaDownloader   MediaDownloader
+	connector         SessionConnector
+	picGetter         AvatarGetter
+	numberChecker     NumberChecker
 	contactNameGetter ContactNameGetter
 	mediaPresigner    MediaPresigner
-	serverURL       string
-	lastBotNotify   sync.Map
-	httpClient      *http.Client
-	js              jetstream.JetStream
-	cb              *circuitBreakerManager
-	convFlight      singleflight.Group
-	importFlight    singleflight.Group
-	missingConfig   sync.Map
+	serverURL         string
+	lastBotNotify     sync.Map
+	httpClient        *http.Client
+	js                jetstream.JetStream
+	cb                *circuitBreakerManager
+	convFlight        singleflight.Group
+	importFlight      singleflight.Group
+	missingConfig     sync.Map
 }
 
 func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messageSvc MessageService) *Service {
@@ -100,16 +100,16 @@ func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messag
 	}
 }
 
-func (s *Service) SetJIDResolver(r JIDResolver)               { s.jidResolver = r }
-func (s *Service) SetMediaDownloader(d MediaDownloader)        { s.mediaDownloader = d }
-func (s *Service) SetSessionConnector(c SessionConnector)      { s.connector = c }
-func (s *Service) SetAvatarGetter(p AvatarGetter)              { s.picGetter = p }
-func (s *Service) SetNumberChecker(n NumberChecker)            { s.numberChecker = n }
-func (s *Service) SetServerURL(url string)                     { s.serverURL = url }
-func (s *Service) SetJetStream(js jetstream.JetStream)         { s.js = js }
-func (s *Service) SetCache(c Cache)                            { s.cache = c }
-func (s *Service) SetContactNameGetter(g ContactNameGetter)    { s.contactNameGetter = g }
-func (s *Service) SetMediaPresigner(p MediaPresigner)          { s.mediaPresigner = p }
+func (s *Service) SetJIDResolver(r JIDResolver)             { s.jidResolver = r }
+func (s *Service) SetMediaDownloader(d MediaDownloader)     { s.mediaDownloader = d }
+func (s *Service) SetSessionConnector(c SessionConnector)   { s.connector = c }
+func (s *Service) SetAvatarGetter(p AvatarGetter)           { s.picGetter = p }
+func (s *Service) SetNumberChecker(n NumberChecker)         { s.numberChecker = n }
+func (s *Service) SetServerURL(url string)                  { s.serverURL = url }
+func (s *Service) SetJetStream(js jetstream.JetStream)      { s.js = js }
+func (s *Service) SetCache(c Cache)                         { s.cache = c }
+func (s *Service) SetContactNameGetter(g ContactNameGetter) { s.contactNameGetter = g }
+func (s *Service) SetMediaPresigner(p MediaPresigner)       { s.mediaPresigner = p }
 func (s *Service) ClearConfigCache(sessionID string) {
 	s.missingConfig.Delete(sessionID)
 }
@@ -390,7 +390,7 @@ func (s *Service) importMediaMessage(ctx context.Context, cfg *Config, client Cl
 
 func (s *Service) ImportHistoryAsync(ctx context.Context, sessionID, period string, customDays int) {
 	key := "import:" + sessionID
-	_, _, _ = s.importFlight.Do(key, func() (interface{}, error) {
+	_, _, _ = s.importFlight.Do(key, func() (any, error) {
 		importCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		s.importHistory(importCtx, sessionID, period, customDays)

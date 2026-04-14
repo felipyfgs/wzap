@@ -16,7 +16,7 @@ func NewApp() *fiber.App {
 	})
 }
 
-func DoRequest(app *fiber.App, method, path string, body interface{}) (*http.Response, []byte) {
+func DoRequest(app *fiber.App, method, path string, body any) (*http.Response, []byte) {
 	var reqBody io.Reader
 	if body != nil {
 		b, _ := json.Marshal(body)
@@ -35,8 +35,8 @@ func DoRequest(app *fiber.App, method, path string, body interface{}) (*http.Res
 	return resp, respBody
 }
 
-func ParseResp(body []byte) map[string]interface{} {
-	var m map[string]interface{}
+func ParseResp(body []byte) map[string]any {
+	var m map[string]any
 	_ = json.Unmarshal(body, &m)
 	return m
 }

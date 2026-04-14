@@ -148,7 +148,7 @@ func TestConfigure_SuccessEnvelope(t *testing.T) {
 		t.Fatalf("expected 200, got %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
@@ -156,7 +156,7 @@ func TestConfigure_SuccessEnvelope(t *testing.T) {
 	if success, ok := result["success"].(bool); !ok || !success {
 		t.Errorf("expected success=true, got %v", result["success"])
 	}
-	data, ok := result["data"].(map[string]interface{})
+	data, ok := result["data"].(map[string]any)
 	if !ok {
 		t.Fatal("expected data object in response")
 	}
@@ -189,20 +189,20 @@ func TestGetConfig_ResponseShapeParity(t *testing.T) {
 		t.Fatalf("expected 200, got %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	_ = json.NewDecoder(resp.Body).Decode(&result)
 
 	if success, ok := result["success"].(bool); !ok || !success {
 		t.Errorf("expected success=true, got %v", result["success"])
 	}
 
-	data, _ := result["data"].(map[string]interface{})
+	data, _ := result["data"].(map[string]any)
 
 	if ignoreGroups, ok := data["ignoreGroups"].(bool); !ok || !ignoreGroups {
 		t.Error("expected ignoreGroups=true because @g.us is in ignoreJids")
 	}
 
-	jids, _ := data["ignoreJids"].([]interface{})
+	jids, _ := data["ignoreJids"].([]any)
 	if len(jids) != 2 {
 		t.Errorf("expected 2 ignoreJids, got %d", len(jids))
 	}
@@ -232,12 +232,12 @@ func TestGetConfig_MasksRedisURL(t *testing.T) {
 		t.Fatalf("expected 200, got %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 
-	data, _ := result["data"].(map[string]interface{})
+	data, _ := result["data"].(map[string]any)
 	if data["redisUrl"] != "redis://***@redis.host:6379/0" {
 		t.Errorf("expected masked redisUrl, got %v", data["redisUrl"])
 	}
@@ -358,7 +358,7 @@ func TestConfigure_ResponseUsesSuccessEnvelope(t *testing.T) {
 		t.Fatalf("app.Test: %v", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	_ = json.NewDecoder(resp.Body).Decode(&result)
 
 	if _, ok := result["success"]; !ok {
@@ -418,7 +418,7 @@ func TestImportHistory_Returns202_WithConfig(t *testing.T) {
 		t.Fatalf("expected 202, got %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
@@ -428,7 +428,7 @@ func TestImportHistory_Returns202_WithConfig(t *testing.T) {
 		t.Fatal("expected success=true")
 	}
 
-	data, _ := result["data"].(map[string]interface{})
+	data, _ := result["data"].(map[string]any)
 	if data["status"] != "importing" {
 		t.Errorf("expected status importing, got %v", data["status"])
 	}

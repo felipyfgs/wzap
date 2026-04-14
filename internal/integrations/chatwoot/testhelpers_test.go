@@ -313,7 +313,7 @@ func newTestService(client *mockClient) *Service {
 	}
 }
 
-func buildPayload(t *testing.T, sessionID string, event model.EventType, data interface{}) []byte {
+func buildPayload(t *testing.T, sessionID string, event model.EventType, data any) []byte {
 	t.Helper()
 	env := model.EventEnvelope{
 		Event:     string(event),

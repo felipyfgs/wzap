@@ -5,7 +5,7 @@ import (
 )
 
 func TestFormatLocation_Full(t *testing.T) {
-	locMsg := map[string]interface{}{
+	locMsg := map[string]any{
 		"degreesLatitude":  -23.5505,
 		"degreesLongitude": -46.6333,
 		"name":             "Praça da Sé",
@@ -29,7 +29,7 @@ func TestFormatLocation_Full(t *testing.T) {
 }
 
 func TestFormatLocation_NoNameNoAddress(t *testing.T) {
-	locMsg := map[string]interface{}{
+	locMsg := map[string]any{
 		"degreesLatitude":  -15.7801,
 		"degreesLongitude": -47.9292,
 	}
@@ -96,14 +96,14 @@ func TestFormatVCardWithName_EmptyDisplayNameUsesFN(t *testing.T) {
 }
 
 func TestExtractTextFromMessage_ContactsArray_WithDisplayName(t *testing.T) {
-	msg := map[string]interface{}{
-		"contactsArrayMessage": map[string]interface{}{
-			"contacts": []interface{}{
-				map[string]interface{}{
+	msg := map[string]any{
+		"contactsArrayMessage": map[string]any{
+			"contacts": []any{
+				map[string]any{
 					"displayName": "Alice Override",
 					"vcard":       "BEGIN:VCARD\nFN:Alice Original\nTEL:+5511111111111\nEND:VCARD",
 				},
-				map[string]interface{}{
+				map[string]any{
 					"displayName": "",
 					"vcard":       "BEGIN:VCARD\nFN:Bob Original\nTEL:+5522222222222\nEND:VCARD",
 				},
@@ -124,10 +124,10 @@ func TestExtractTextFromMessage_ContactsArray_WithDisplayName(t *testing.T) {
 }
 
 func TestExtractTextFromMessage_ContactsArray_NoGlobalPrefix(t *testing.T) {
-	msg := map[string]interface{}{
-		"contactsArrayMessage": map[string]interface{}{
-			"contacts": []interface{}{
-				map[string]interface{}{
+	msg := map[string]any{
+		"contactsArrayMessage": map[string]any{
+			"contacts": []any{
+				map[string]any{
 					"displayName": "Test",
 					"vcard":       "BEGIN:VCARD\nFN:Test\nTEL:+5500000000000\nEND:VCARD",
 				},
@@ -145,8 +145,8 @@ func TestExtractTextFromMessage_ContactsArray_NoGlobalPrefix(t *testing.T) {
 }
 
 func TestExtractTextFromMessage_LocationRichFormat(t *testing.T) {
-	msg := map[string]interface{}{
-		"locationMessage": map[string]interface{}{
+	msg := map[string]any{
+		"locationMessage": map[string]any{
 			"degreesLatitude":  -23.5505,
 			"degreesLongitude": -46.6333,
 			"name":             "Test Place",

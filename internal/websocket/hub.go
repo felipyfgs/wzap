@@ -78,7 +78,7 @@ func (h *Hub) BroadcastAll(payload []byte) {
 	}
 }
 
-func (h *Hub) BroadcastJSON(sessionID string, data interface{}) {
+func (h *Hub) BroadcastJSON(sessionID string, data any) {
 	payload, err := json.Marshal(data)
 	if err != nil {
 		logger.Error().Str("component", "ws").Err(err).Msg("Failed to marshal WebSocket payload")

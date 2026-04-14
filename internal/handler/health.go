@@ -38,7 +38,7 @@ func (h *HealthHandler) Check(c *fiber.Ctx) error {
 		overall = "DEGRADED"
 	}
 
-	status := map[string]interface{}{
+	status := map[string]any{
 		"status": overall,
 		"services": map[string]bool{
 			"database": dbOK,

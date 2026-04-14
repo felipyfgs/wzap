@@ -20,7 +20,7 @@ type EventEnvelope struct {
 	Data      json.RawMessage `json:"data"`
 }
 
-func BuildEventEnvelope(sessionID, sessionName string, event EventType, data interface{}) ([]byte, error) {
+func BuildEventEnvelope(sessionID, sessionName string, event EventType, data any) ([]byte, error) {
 	dataBytes, err := json.Marshal(data)
 	if err != nil {
 		return nil, err

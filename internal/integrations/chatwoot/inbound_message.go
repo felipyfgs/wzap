@@ -290,7 +290,7 @@ func (s *Service) resolveInboundReply(ctx context.Context, sessionID, chatJID, s
 	return 0
 }
 
-func (s *Service) handleMediaMessage(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, stanzaID string, cwReplyID int) {
+func (s *Service) handleMediaMessage(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, stanzaID string, cwReplyID int) {
 	info := extractMediaInfo(msg)
 	if info == nil {
 		logger.Warn().Str("component", "chatwoot").Msg("no media info found in message")
@@ -499,15 +499,15 @@ func buildPalette(img image.Image, bounds image.Rectangle) gocolor.Palette {
 	return palette
 }
 
-func (s *Service) handlePollCreation(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, poll map[string]interface{}) {
+func (s *Service) handlePollCreation(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, poll map[string]any) {
 	name := getStringField(poll, "name")
-	optionsRaw, _ := poll["options"].([]interface{})
+	optionsRaw, _ := poll["options"].([]any)
 	var sb strings.Builder
 	sb.WriteString("📊 *Enquete:* ")
 	sb.WriteString(name)
 	sb.WriteString("\n")
 	for i, opt := range optionsRaw {
-		if optMap, ok := opt.(map[string]interface{}); ok {
+		if optMap, ok := opt.(map[string]any); ok {
 			fmt.Fprintf(&sb, "%d. %s\n", i+1, getStringField(optMap, "optionName"))
 		}
 	}
@@ -535,7 +535,7 @@ func (s *Service) handlePollCreation(ctx context.Context, cfg *Config, convID in
 	}
 }
 
-func (s *Service) handlePollUpdate(ctx context.Context, cfg *Config, pollUpdate map[string]interface{}) {
+func (s *Service) handlePollUpdate(ctx context.Context, cfg *Config, pollUpdate map[string]any) {
 	pollCreation := getMapField(pollUpdate, "pollCreationMessageKey")
 	if pollCreation == nil {
 		return
@@ -554,11 +554,11 @@ func (s *Service) handlePollUpdate(ctx context.Context, cfg *Config, pollUpdate 
 	if votes == nil {
 		return
 	}
-	selectedOpts, _ := votes["selectedOptions"].([]interface{})
+	selectedOpts, _ := votes["selectedOptions"].([]any)
 	var sb strings.Builder
 	sb.WriteString("📊 *Voto registrado:*\n")
 	for _, opt := range selectedOpts {
-		if optMap, ok := opt.(map[string]interface{}); ok {
+		if optMap, ok := opt.(map[string]any); ok {
 			fmt.Fprintf(&sb, "✅ %s\n", getStringField(optMap, "optionName"))
 		}
 	}
@@ -572,7 +572,7 @@ func (s *Service) handlePollUpdate(ctx context.Context, cfg *Config, pollUpdate 
 	})
 }
 
-func (s *Service) handleReaction(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, reactMsg map[string]interface{}) {
+func (s *Service) handleReaction(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, reactMsg map[string]any) {
 	key := getMapField(reactMsg, "key")
 	if key == nil {
 		return
@@ -618,7 +618,7 @@ func (s *Service) handleReaction(ctx context.Context, cfg *Config, convID int, m
 	}
 }
 
-func (s *Service) handleButtonResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, btnResp map[string]interface{}) {
+func (s *Service) handleButtonResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, btnResp map[string]any) {
 	text := getStringField(btnResp, "selectedDisplayText")
 	if text == "" {
 		text = getStringField(btnResp, "selectedButtonId")
@@ -652,7 +652,7 @@ func (s *Service) handleButtonResponse(ctx context.Context, cfg *Config, convID 
 	}
 }
 
-func (s *Service) handleListResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, listResp map[string]interface{}) {
+func (s *Service) handleListResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, listResp map[string]any) {
 	selection := getMapField(listResp, "singleSelectReply")
 	title := ""
 	description := ""
@@ -696,7 +696,7 @@ func (s *Service) handleListResponse(ctx context.Context, cfg *Config, convID in
 	}
 }
 
-func (s *Service) handleTemplateReply(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]interface{}, tmpl map[string]interface{}) {
+func (s *Service) handleTemplateReply(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, tmpl map[string]any) {
 	text := getStringField(tmpl, "selectedDisplayText")
 	content := fmt.Sprintf("[Template] %s", text)
 
@@ -727,7 +727,7 @@ func (s *Service) handleTemplateReply(ctx context.Context, cfg *Config, convID i
 	}
 }
 
-func (s *Service) handleViewOnce(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, vonce map[string]interface{}, tryDownload bool, stanzaID string, cwReplyID int) {
+func (s *Service) handleViewOnce(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, vonce map[string]any, tryDownload bool, stanzaID string, cwReplyID int) {
 	client := s.clientFn(cfg)
 	messageType := "incoming"
 	if fromMe {
@@ -796,7 +796,7 @@ func (s *Service) handleViewOnce(ctx context.Context, cfg *Config, convID int, m
 	}
 }
 
-func (s *Service) handleEditedMessage(ctx context.Context, cfg *Config, editMsg map[string]interface{}) {
+func (s *Service) handleEditedMessage(ctx context.Context, cfg *Config, editMsg map[string]any) {
 	key := getMapField(editMsg, "key")
 	if key == nil {
 		return
@@ -835,7 +835,7 @@ func (s *Service) handleEditedMessage(ctx context.Context, cfg *Config, editMsg 
 	})
 }
 
-func (s *Service) handleLiveLocation(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, liveMsg map[string]interface{}) {
+func (s *Service) handleLiveLocation(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, liveMsg map[string]any) {
 	text := formatLocation(liveMsg)
 
 	client := s.clientFn(cfg)
@@ -860,7 +860,7 @@ func (s *Service) handleLiveLocation(ctx context.Context, cfg *Config, convID in
 	}
 }
 
-func applyMessagePrefixes(msg map[string]interface{}, text string) string {
+func applyMessagePrefixes(msg map[string]any, text string) string {
 	if msg == nil {
 		return text
 	}
@@ -889,7 +889,7 @@ func applyMessagePrefixes(msg map[string]interface{}, text string) string {
 	return strings.Join(prefixes, " ") + " " + text
 }
 
-func extractContextInfo(msg map[string]interface{}) map[string]interface{} {
+func extractContextInfo(msg map[string]any) map[string]any {
 	if ci := getMapField(msg, "contextInfo"); ci != nil {
 		return ci
 	}
@@ -903,7 +903,7 @@ func extractContextInfo(msg map[string]interface{}) map[string]interface{} {
 	return nil
 }
 
-func isEphemeral(msg map[string]interface{}) bool {
+func isEphemeral(msg map[string]any) bool {
 	if ci := extractContextInfo(msg); ci != nil {
 		if ts := getFloatField(ci, "ephemeralSettingTimestamp"); ts > 0 {
 			return true
@@ -912,7 +912,7 @@ func isEphemeral(msg map[string]interface{}) bool {
 	return false
 }
 
-func isGIF(msg map[string]interface{}) bool {
+func isGIF(msg map[string]any) bool {
 	if vidMsg := getMapField(msg, "videoMessage"); vidMsg != nil {
 		if gif, _ := vidMsg["gifPlayback"].(bool); gif {
 			return true

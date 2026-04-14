@@ -120,12 +120,12 @@ func TestImportHistory_ProcessesTextMessages(t *testing.T) {
 	}
 
 	svc := &Service{
-		repo:      &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo:   mr,
-		clientFn:  func(_ *Config) Client { return client },
-		cache:     newMemoryCache(context.Background()),
+		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
+		msgRepo:    mr,
+		clientFn:   func(_ *Config) Client { return client },
+		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
-		cb:        newCircuitBreakerManager(),
+		cb:         newCircuitBreakerManager(),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -159,12 +159,12 @@ func TestImportHistory_MediaMessages(t *testing.T) {
 	}
 
 	svc := &Service{
-		repo:      &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo:   mr,
-		clientFn:  func(_ *Config) Client { return client },
-		cache:     newMemoryCache(context.Background()),
+		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
+		msgRepo:    mr,
+		clientFn:   func(_ *Config) Client { return client },
+		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
-		cb:        newCircuitBreakerManager(),
+		cb:         newCircuitBreakerManager(),
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -202,12 +202,12 @@ func TestImportHistory_SingleflightPreventsConcurrent(t *testing.T) {
 	mr := &singleflightTestMsgRepo{}
 
 	svc := &Service{
-		repo:      &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo:   mr,
-		clientFn:  func(_ *Config) Client { return client },
-		cache:     newMemoryCache(context.Background()),
+		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
+		msgRepo:    mr,
+		clientFn:   func(_ *Config) Client { return client },
+		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
-		cb:        newCircuitBreakerManager(),
+		cb:         newCircuitBreakerManager(),
 	}
 
 	done := make(chan struct{})

@@ -30,7 +30,7 @@ func NewHandler(service *Service, repo Repo) *Handler {
 	}
 }
 
-func validateReq(c *fiber.Ctx, req interface{}) error {
+func validateReq(c *fiber.Ctx, req any) error {
 	if err := c.BodyParser(req); err != nil {
 		_ = c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
 		return fiber.ErrBadRequest

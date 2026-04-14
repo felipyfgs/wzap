@@ -40,7 +40,7 @@ func (h *HistoryHandler) ListMessages(c *fiber.Ctx) error {
 	limit, _ := strconv.Atoi(c.Query("limit", "50"))
 	offset, _ := strconv.Atoi(c.Query("offset", "0"))
 
-	var msgs interface{}
+	var msgs any
 
 	if chatJID != "" {
 		msgs, err = h.messageRepo.FindByChat(c.Context(), sessionID, chatJID, limit, offset)

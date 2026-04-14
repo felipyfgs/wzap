@@ -8,13 +8,13 @@ import (
 )
 
 func TestBuildEventEnvelope_Structure(t *testing.T) {
-	data := map[string]interface{}{"key": "value"}
+	data := map[string]any{"key": "value"}
 	bytes, err := BuildEventEnvelope("sess-1", "MySession", EventMessage, data)
 	if err != nil {
 		t.Fatalf("BuildEventEnvelope returned error: %v", err)
 	}
 
-	var raw map[string]interface{}
+	var raw map[string]any
 	if err := json.Unmarshal(bytes, &raw); err != nil {
 		t.Fatalf("unmarshal envelope: %v", err)
 	}
@@ -39,7 +39,7 @@ func TestBuildEventEnvelope_Structure(t *testing.T) {
 		t.Errorf("expected event=Message, got %v", raw["event"])
 	}
 
-	session, _ := raw["session"].(map[string]interface{})
+	session, _ := raw["session"].(map[string]any)
 	if session["id"] != "sess-1" || session["name"] != "MySession" {
 		t.Errorf("unexpected session: %v", session)
 	}
@@ -79,7 +79,7 @@ func TestBuildEventEnvelopeFromRaw_Structure(t *testing.T) {
 }
 
 func TestBuildEventEnvelope_DistinctEventIDs(t *testing.T) {
-	data := map[string]interface{}{"x": 1}
+	data := map[string]any{"x": 1}
 	b1, _ := BuildEventEnvelope("s", "n", EventConnected, data)
 	b2, _ := BuildEventEnvelope("s", "n", EventConnected, data)
 
@@ -93,7 +93,7 @@ func TestBuildEventEnvelope_DistinctEventIDs(t *testing.T) {
 }
 
 func TestParseEventEnvelope_RoundTrip(t *testing.T) {
-	original := map[string]interface{}{
+	original := map[string]any{
 		"Chat":   "5511@s.whatsapp.net",
 		"Sender": "5511@s.whatsapp.net",
 		"ID":     "msg-1",
@@ -115,7 +115,7 @@ func TestParseEventEnvelope_RoundTrip(t *testing.T) {
 		t.Errorf("expected s1, got %s", env.Session.ID)
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 	if err := json.Unmarshal(env.Data, &data); err != nil {
 		t.Fatalf("unmarshal data: %v", err)
 	}
@@ -125,17 +125,17 @@ func TestParseEventEnvelope_RoundTrip(t *testing.T) {
 }
 
 func TestEnvelopeParity_BothEnginesProduceSameTopLevel(t *testing.T) {
-	whatsmeowData := map[string]interface{}{
-		"Info": map[string]interface{}{
+	whatsmeowData := map[string]any{
+		"Info": map[string]any{
 			"Chat":     "5511@s.whatsapp.net",
 			"IsFromMe": false,
 			"ID":       "wa-msg-1",
 		},
-		"Message": map[string]interface{}{"conversation": "hello from whatsmeow"},
+		"Message": map[string]any{"conversation": "hello from whatsmeow"},
 	}
 	waBytes, _ := BuildEventEnvelope("sess", "MySess", EventMessage, whatsmeowData)
 
-	cloudData := map[string]interface{}{
+	cloudData := map[string]any{
 		"from": "5511",
 		"id":   "cloud-msg-1",
 		"type": "text",
@@ -146,7 +146,7 @@ func TestEnvelopeParity_BothEnginesProduceSameTopLevel(t *testing.T) {
 	topLevelFields := []string{"event", "eventId", "session", "timestamp", "data"}
 
 	for label, raw := range map[string][]byte{"whatsmeow": waBytes, "cloud_api": cloudBytes} {
-		var m map[string]interface{}
+		var m map[string]any
 		if err := json.Unmarshal(raw, &m); err != nil {
 			t.Fatalf("unmarshal %s envelope: %v", label, err)
 		}
@@ -176,7 +176,7 @@ func TestParseEventEnvelope_Empty(t *testing.T) {
 }
 
 func TestBuildEventEnvelope_LargeData(t *testing.T) {
-	data := map[string]interface{}{
+	data := map[string]any{
 		"body": strings.Repeat("x", 1024*1024),
 	}
 	bytes, err := BuildEventEnvelope("s", "n", EventMessage, data)
@@ -191,7 +191,7 @@ func TestBuildEventEnvelope_LargeData(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parse large: %v", err)
 	}
-	var parsed map[string]interface{}
+	var parsed map[string]any
 	_ = json.Unmarshal(env.Data, &parsed)
 	if len(parsed["body"].(string)) != 1024*1024 {
 		t.Error("body length mismatch")

@@ -22,8 +22,8 @@ func TestHandleMessage_FileTooBig(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60, TimeoutLargeSeconds: 300}
 
-	msg := map[string]interface{}{
-		"imageMessage": map[string]interface{}{
+	msg := map[string]any{
+		"imageMessage": map[string]any{
 			"directPath": "/v/test",
 			"mediaKey":   "AAAA",
 			"fileLength": float64(maxMediaBytes + 1),
@@ -88,11 +88,11 @@ func TestHandlePollCreation(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	poll := map[string]interface{}{
+	poll := map[string]any{
 		"name": "Qual sua cor favorita?",
-		"options": []interface{}{
-			map[string]interface{}{"optionName": "Azul"},
-			map[string]interface{}{"optionName": "Verde"},
+		"options": []any{
+			map[string]any{"optionName": "Azul"},
+			map[string]any{"optionName": "Verde"},
 		},
 	}
 	svc.handlePollCreation(context.Background(), cfg, 1, "poll-msg", false, poll)
@@ -119,8 +119,8 @@ func TestHandleReaction_Add(t *testing.T) {
 	svc.msgRepo = &mockMsgRepoFixed{cwMsgID: &cwID, cwConvID: &convID}
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	reactMsg := map[string]interface{}{
-		"key":  map[string]interface{}{"ID": "target-msg"},
+	reactMsg := map[string]any{
+		"key":  map[string]any{"ID": "target-msg"},
 		"text": "👍",
 	}
 	svc.handleReaction(context.Background(), cfg, convID, "react-msg", false, reactMsg)
@@ -144,8 +144,8 @@ func TestHandleReaction_Remove(t *testing.T) {
 	svc.msgRepo = &mockMsgRepoFixed{cwMsgID: &cwID, cwConvID: &convID}
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	reactMsg := map[string]interface{}{
-		"key":  map[string]interface{}{"ID": "target-msg"},
+	reactMsg := map[string]any{
+		"key":  map[string]any{"ID": "target-msg"},
 		"text": "",
 	}
 	svc.handleReaction(context.Background(), cfg, convID, "react-msg", false, reactMsg)
@@ -214,8 +214,8 @@ func TestFormatVCard(t *testing.T) {
 // ── Task 10.6: Indicadores especiais ─────────────────────────────────────────
 
 func TestApplyMessagePrefixes_Forwarded(t *testing.T) {
-	msg := map[string]interface{}{
-		"contextInfo": map[string]interface{}{
+	msg := map[string]any{
+		"contextInfo": map[string]any{
 			"isForwarded":     true,
 			"forwardingScore": float64(1),
 		},
@@ -227,8 +227,8 @@ func TestApplyMessagePrefixes_Forwarded(t *testing.T) {
 }
 
 func TestApplyMessagePrefixes_ForwardedMany(t *testing.T) {
-	msg := map[string]interface{}{
-		"contextInfo": map[string]interface{}{
+	msg := map[string]any{
+		"contextInfo": map[string]any{
 			"isForwarded":     true,
 			"forwardingScore": float64(5),
 		},
@@ -240,8 +240,8 @@ func TestApplyMessagePrefixes_ForwardedMany(t *testing.T) {
 }
 
 func TestApplyMessagePrefixes_Ephemeral(t *testing.T) {
-	msg := map[string]interface{}{
-		"contextInfo": map[string]interface{}{
+	msg := map[string]any{
+		"contextInfo": map[string]any{
 			"ephemeralSettingTimestamp": float64(1234567890),
 		},
 	}
@@ -252,15 +252,15 @@ func TestApplyMessagePrefixes_Ephemeral(t *testing.T) {
 }
 
 func TestIsGIF(t *testing.T) {
-	msg := map[string]interface{}{
-		"videoMessage": map[string]interface{}{
+	msg := map[string]any{
+		"videoMessage": map[string]any{
 			"gifPlayback": true,
 		},
 	}
 	if !isGIF(msg) {
 		t.Error("expected isGIF = true for gifPlayback video")
 	}
-	if isGIF(map[string]interface{}{}) {
+	if isGIF(map[string]any{}) {
 		t.Error("expected isGIF = false for empty message")
 	}
 }
@@ -274,7 +274,7 @@ func TestHandleGroupInfo_ParticipantAdd(t *testing.T) {
 	}
 	svc := newTestService(client)
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"JID":  "123456789-987654321@g.us",
 		"Join": []string{"5511999999999@s.whatsapp.net"},
 	}
@@ -297,9 +297,9 @@ func TestHandleGroupInfo_SubjectChange(t *testing.T) {
 	}
 	svc := newTestService(client)
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"JID": "123456789-987654321@g.us",
-		"Name": map[string]interface{}{
+		"Name": map[string]any{
 			"Name": "Novo Nome do Grupo",
 		},
 	}
@@ -325,11 +325,11 @@ func TestHandleButtonResponse(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	btnResp := map[string]interface{}{
+	btnResp := map[string]any{
 		"selectedDisplayText": "Confirmar",
 		"selectedButtonId":    "btn_1",
 	}
-	svc.handleButtonResponse(context.Background(), cfg, 1, "btn-msg", false, map[string]interface{}{}, btnResp)
+	svc.handleButtonResponse(context.Background(), cfg, 1, "btn-msg", false, map[string]any{}, btnResp)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected button response message")
@@ -347,13 +347,13 @@ func TestHandleListResponse(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	listResp := map[string]interface{}{
-		"singleSelectReply": map[string]interface{}{
+	listResp := map[string]any{
+		"singleSelectReply": map[string]any{
 			"title":       "Opção A",
 			"description": "Descrição da opção A",
 		},
 	}
-	svc.handleListResponse(context.Background(), cfg, 1, "list-msg", false, map[string]interface{}{}, listResp)
+	svc.handleListResponse(context.Background(), cfg, 1, "list-msg", false, map[string]any{}, listResp)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected list response message")
@@ -371,8 +371,8 @@ func TestHandleTemplateButtonReply(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	tmpl := map[string]interface{}{"selectedDisplayText": "Sim, quero"}
-	svc.handleTemplateReply(context.Background(), cfg, 1, "tmpl-msg", false, map[string]interface{}{}, tmpl)
+	tmpl := map[string]any{"selectedDisplayText": "Sim, quero"}
+	svc.handleTemplateReply(context.Background(), cfg, 1, "tmpl-msg", false, map[string]any{}, tmpl)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected template reply message")
@@ -392,10 +392,10 @@ func TestHandleButtonResponse_WithStanzaID(t *testing.T) {
 	svc.msgRepo = &mockMsgRepoFixed{cwMsgID: &cwID}
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	msg := map[string]interface{}{
-		"contextInfo": map[string]interface{}{"stanzaId": "stanza-abc"},
+	msg := map[string]any{
+		"contextInfo": map[string]any{"stanzaId": "stanza-abc"},
 	}
-	btnResp := map[string]interface{}{"selectedDisplayText": "OK"}
+	btnResp := map[string]any{"selectedDisplayText": "OK"}
 	svc.handleButtonResponse(context.Background(), cfg, 1, "btn2", false, msg, btnResp)
 
 	if len(client.messages) == 0 {
@@ -438,9 +438,9 @@ func TestHandleViewOnce_V2_DownloadSuccess(t *testing.T) {
 	svc.mediaDownloader = &mockMediaDownloader{data: []byte("fake-image-data")}
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
 
-	vonce := map[string]interface{}{
-		"message": map[string]interface{}{
-			"imageMessage": map[string]interface{}{
+	vonce := map[string]any{
+		"message": map[string]any{
+			"imageMessage": map[string]any{
 				"directPath": "/v/test",
 				"mediaKey":   "AAAA",
 				"mimetype":   "image/jpeg",
@@ -467,9 +467,9 @@ func TestHandleViewOnce_V2_DownloadFail_FallsBackToText(t *testing.T) {
 	svc.mediaDownloader = &mockMediaDownloader{err: fmt.Errorf("download failed")}
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
 
-	vonce := map[string]interface{}{
-		"message": map[string]interface{}{
-			"imageMessage": map[string]interface{}{
+	vonce := map[string]any{
+		"message": map[string]any{
+			"imageMessage": map[string]any{
 				"directPath": "/v/test",
 				"mediaKey":   "AAAA",
 				"mimetype":   "image/jpeg",
@@ -499,9 +499,9 @@ func TestHandleViewOnce_V1_AlwaysText(t *testing.T) {
 	svc.mediaDownloader = &mockMediaDownloader{data: []byte("should-not-be-used")}
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	vonce := map[string]interface{}{
-		"message": map[string]interface{}{
-			"imageMessage": map[string]interface{}{
+	vonce := map[string]any{
+		"message": map[string]any{
+			"imageMessage": map[string]any{
 				"directPath": "/v/test",
 				"mediaKey":   "AAAA",
 				"mimetype":   "image/jpeg",

@@ -79,7 +79,7 @@ func (m *Manager) ReconnectAll(ctx context.Context) error {
 		client := whatsmeow.NewClient(device, m.waLog)
 		client.AutomaticMessageRerequestFromPhone = true
 		client.UseRetryMessageStore = true
-		client.AddEventHandler(func(evt interface{}) {
+		client.AddEventHandler(func(evt any) {
 			m.handleEvent(sessionID, evt)
 		})
 
@@ -162,11 +162,11 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 		m.mu.Unlock()
 	}
 
-	client.AddEventHandler(func(evt interface{}) {
+	client.AddEventHandler(func(evt any) {
 		m.handleEvent(sessionID, evt)
 	})
 
-	client.AddEventHandler(func(evt interface{}) {
+	client.AddEventHandler(func(evt any) {
 		opCtx, opCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer opCancel()
 		switch v := evt.(type) {

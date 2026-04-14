@@ -17,7 +17,7 @@ const messageSelectColumns = `id, session_id, chat_jid, sender_jid, from_me, msg
 	cw_message_id, cw_conversation_id, cw_source_id, imported_to_chatwoot_at`
 
 type messageScanner interface {
-	Scan(dest ...interface{}) error
+	Scan(dest ...any) error
 }
 
 type MessageRepo interface {

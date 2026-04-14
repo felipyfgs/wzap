@@ -65,6 +65,7 @@ type ChatwootWebhookMessage struct {
 	ID                int            `json:"id"`
 	Content           string         `json:"content,omitempty"`
 	MessageType       any            `json:"message_type"`
+	Private           bool           `json:"private,omitempty"`
 	ContentType       string         `json:"content_type,omitempty"`
 	ContentAttributes map[string]any `json:"content_attributes,omitempty"`
 	SourceID          string         `json:"source_id,omitempty"`

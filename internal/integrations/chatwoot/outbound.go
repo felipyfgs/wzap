@@ -33,11 +33,11 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 		return nil
 	}
 
-	if body.Private {
+	msg := body.GetMessage()
+
+	if body.Private || (msg != nil && msg.Private) {
 		return nil
 	}
-
-	msg := body.GetMessage()
 
 	eventType := body.EventType
 	if eventType == "" {

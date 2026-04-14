@@ -295,6 +295,9 @@ func (c *HTTPClient) CreateMessage(ctx context.Context, convID int, req MessageR
 			_ = writer.WriteField("content", req.Content)
 		}
 		_ = writer.WriteField("message_type", req.MessageType)
+		if req.Private {
+			_ = writer.WriteField("private", "true")
+		}
 		if req.SourceID != "" {
 			_ = writer.WriteField("source_id", req.SourceID)
 		}

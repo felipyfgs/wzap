@@ -304,7 +304,7 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *Config, convID in
 			messageType = "outgoing"
 		}
 		warnMsg := fmt.Sprintf("⚠️ Arquivo muito grande (%d MB) para download (limite: 256 MB)", info.FileLength/(1024*1024))
-		_, _ = client.CreateMessage(ctx, convID, MessageReq{Content: warnMsg, MessageType: messageType})
+		_, _ = client.CreateMessage(ctx, convID, MessageReq{Content: warnMsg, MessageType: messageType, Private: true})
 		return
 	}
 
@@ -605,6 +605,7 @@ func (s *Service) handleReaction(ctx context.Context, cfg *Config, convID int, m
 	cwMsg, err := client.CreateMessage(ctx, convID, MessageReq{
 		Content:           emoji,
 		MessageType:       messageType,
+		Private:           true,
 		SourceReplyID:     *origMsg.CWMessageID,
 		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID, "reply_source_id": "WAID:" + targetMsgID},
 	})
@@ -828,6 +829,7 @@ func (s *Service) handleEditedMessage(ctx context.Context, cfg *Config, editMsg 
 	_, _ = client.CreateMessage(ctx, *origMsg.CWConversationID, MessageReq{
 		Content:           "✏️ *Mensagem editada:*\n" + newText,
 		MessageType:       messageType,
+		Private:           true,
 		SourceReplyID:     *origMsg.CWMessageID,
 		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID},
 	})

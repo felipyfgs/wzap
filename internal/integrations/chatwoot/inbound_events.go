@@ -162,6 +162,7 @@ func (s *Service) handleEdit(ctx context.Context, cfg *Config, payload []byte) {
 	_, err = client.CreateMessage(ctx, *msg.CWConversationID, MessageReq{
 		Content:           editedContent,
 		MessageType:       messageType,
+		Private:           true,
 		SourceReplyID:     *msg.CWMessageID,
 		ContentAttributes: map[string]any{"in_reply_to": *msg.CWMessageID},
 	})

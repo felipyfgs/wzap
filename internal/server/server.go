@@ -16,6 +16,7 @@ import (
 	"wzap/internal/logger"
 	"wzap/internal/middleware"
 	"wzap/internal/storage"
+	"wzap/internal/wa"
 )
 
 type Server struct {
@@ -28,6 +29,7 @@ type Server struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 	async  *async.Runtime
+	engine *wa.Manager
 }
 
 func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) *Server {
@@ -76,6 +78,10 @@ func (s *Server) Start() error {
 func (s *Server) Shutdown(ctx context.Context) error {
 	logger.Info().Str("component", "server").Msg("Shutting down API server")
 	s.cancel()
+
+	if s.engine != nil {
+		s.engine.StopCacheGC()
+	}
 
 	if s.async != nil {
 		s.async.Shutdown(ctx)

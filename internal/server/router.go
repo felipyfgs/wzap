@@ -106,6 +106,8 @@ func (s *Server) SetupRoutes() error {
 	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)
 	historySvc.SetMediaRetryRequester(engine)
 	messageSvc.SetMessagePersist(historySvc.PersistMessage)
+	engine.StartCacheGC()
+	s.engine = engine
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)

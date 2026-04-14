@@ -21,7 +21,7 @@ import (
 
 type MediaAutoUploadFunc func(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage)
 type MediaRetryFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, mimeType string, timestamp time.Time, directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int)
-type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{})
+type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any)
 type HistorySyncPersistFunc func(sessionID string, sync *events.HistorySync)
 
 type mediaRetryCacheEntry struct {
@@ -82,6 +82,35 @@ type Manager struct {
 	OnMessageReceived     MessagePersistFunc
 	OnHistorySyncReceived HistorySyncPersistFunc
 	mediaRetryCache       sync.Map
+	stopGC                chan struct{}
+}
+
+func (m *Manager) StartCacheGC() {
+	m.stopGC = make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-m.stopGC:
+				return
+			case <-ticker.C:
+				now := time.Now()
+				m.mediaRetryCache.Range(func(key, value any) bool {
+					if entry, ok := value.(mediaRetryCacheEntry); ok && now.After(entry.expiresAt) {
+						m.mediaRetryCache.Delete(key)
+					}
+					return true
+				})
+			}
+		}
+	}()
+}
+
+func (m *Manager) StopCacheGC() {
+	if m.stopGC != nil {
+		close(m.stopGC)
+	}
 }
 
 func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {

@@ -47,6 +47,8 @@ type jidAliasMaps struct {
 	pushnameByJID map[string]string
 }
 
+const mediaRetryInterval = 3 * time.Second
+
 type HistoryService struct {
 	messageRepo    messageHistoryRepository
 	chatRepo       chatHistoryRepository
@@ -60,9 +62,9 @@ func NewHistoryService(messageRepo messageHistoryRepository, chatRepo chatHistor
 	return &HistoryService{messageRepo: messageRepo, chatRepo: chatRepo, pool: pool}
 }
 
-func (s *HistoryService) SetMediaDownloader(d MediaDownloader)          { s.downloader = d }
-func (s *HistoryService) SetMediaStorage(ms MediaStorage)                { s.storage = ms }
-func (s *HistoryService) SetMediaRetryRequester(r MediaRetryRequester)   { s.retryRequester = r }
+func (s *HistoryService) SetMediaDownloader(d MediaDownloader)         { s.downloader = d }
+func (s *HistoryService) SetMediaStorage(ms MediaStorage)              { s.storage = ms }
+func (s *HistoryService) SetMediaRetryRequester(r MediaRetryRequester) { s.retryRequester = r }
 
 func NewMinioMediaStorage(m *storage.Minio) MediaStorage {
 	return &minioMediaStorage{minio: m}
@@ -88,7 +90,7 @@ func (m *minioMediaStorage) Upload(ctx context.Context, sessionID, messageID, ch
 	return key, nil
 }
 
-func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw interface{}) {
+func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any) {
 	_ = s.pool.Submit(func(ctx context.Context) {
 		msg := &model.Message{
 			ID:        messageID,
@@ -158,6 +160,8 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 							dlCancel()
 							if err != nil {
 								if s.retryRequester != nil && isExpiredMediaError(err) {
+									logger.Debug().Str("component", "service").Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media retry: aguardando rate limit")
+									time.Sleep(mediaRetryInterval)
 									if retryErr := s.retryRequester.RequestMediaRetry(ctx, sessionID, msg.ID, msg.ChatJID, msg.SenderJID, msg.FromMe, msg.MediaType, msg.Timestamp, encFileHash, fileHash, mediaKey, fileLength); retryErr != nil {
 										logger.Warn().Str("component", "service").Err(retryErr).Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media: falha ao solicitar retry")
 									} else {
@@ -225,7 +229,7 @@ func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conver
 	lastMessageID := conversationLastMessageID(conversation)
 	lastMessageAt := unixTimePtr(uint64ToInt64(conversation.GetLastMsgTimestamp()))
 	conversationTimestamp := unixTimePtr(uint64ToInt64(conversation.GetConversationTimestamp()))
-	raw := map[string]interface{}{
+	raw := map[string]any{
 		"id":                   conversation.GetID(),
 		"newJID":               conversation.GetNewJID(),
 		"oldJID":               conversation.GetOldJID(),
@@ -270,6 +274,22 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 	info := historyMessage.GetMessage()
 	if info == nil || info.GetKey() == nil {
 		return nil
+	}
+
+	if info.GetMessageStubType() != 0 {
+		return nil
+	}
+
+	protoMsg := info.GetMessage()
+	if protoMsg != nil && protoMsg.GetProtocolMessage() != nil {
+		return nil
+	}
+
+	if protoMsg != nil && protoMsg.GetSenderKeyDistributionMessage() != nil {
+		msgType, _, _ := extractMessageContent(protoMsg)
+		if msgType == "unknown" {
+			return nil
+		}
 	}
 
 	key := info.GetKey()
@@ -536,6 +556,14 @@ func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string)
 		return "buttons", msg.GetButtonsMessage().GetContentText(), ""
 	case msg.GetPollCreationMessage() != nil:
 		return "poll", msg.GetPollCreationMessage().GetName(), ""
+	case msg.GetReactionMessage() != nil:
+		return "reaction", msg.GetReactionMessage().GetText(), ""
+	case msg.GetTemplateMessage() != nil:
+		return "template", msg.GetTemplateMessage().GetHydratedTemplate().GetHydratedContentText(), ""
+	case msg.GetInteractiveMessage() != nil:
+		return "interactive", msg.GetInteractiveMessage().GetHeader().GetSubtitle(), ""
+	case msg.GetPollUpdateMessage() != nil:
+		return "poll_update", "", ""
 	default:
 		return "unknown", "", ""
 	}

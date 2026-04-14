@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/proto/waMmsRetry"
 	"go.mau.fi/whatsmeow/proto/waE2E"
+	"go.mau.fi/whatsmeow/proto/waMmsRetry"
 	"go.mau.fi/whatsmeow/types/events"
 
 	"wzap/internal/logger"
@@ -19,7 +19,7 @@ import (
 
 var eventBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
 
-func (m *Manager) handleEvent(sessionID string, evt interface{}) {
+func (m *Manager) handleEvent(sessionID string, evt any) {
 	var eventType model.EventType
 
 	switch v := evt.(type) {
@@ -49,7 +49,20 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 				Str("chat", v.Info.Chat.String()).
 				Bool("fromMe", v.Info.IsFromMe).
 				Msg("Message edited")
+		} else if proto := v.Message.GetProtocolMessage(); proto != nil {
+			return
 		} else {
+			if v.Message.GetSenderKeyDistributionMessage() != nil {
+				msgType, _, _ := extractMessageContent(v.Message)
+				if msgType == "unknown" {
+					logger.Debug().
+						Str("component", "wa").
+						Str("session", sessionID).
+						Str("mid", v.Info.ID).
+						Msg("Sender key distribution message filtered")
+					return
+				}
+			}
 			eventType = model.EventMessage
 			{
 				msgType, _, mediaType := extractMessageContent(v.Message)
@@ -406,11 +419,11 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		return
 	}
 
-	var data map[string]interface{}
+	var data map[string]any
 
 	switch v := evt.(type) {
 	case *events.HistorySync:
-		data = map[string]interface{}{}
+		data = map[string]any{}
 		if v.Data != nil {
 			data["syncType"] = v.Data.GetSyncType().String()
 			data["chunkOrder"] = v.Data.GetChunkOrder()
@@ -418,7 +431,7 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 			data["conversationCount"] = len(v.Data.GetConversations())
 		}
 	case *events.AppState:
-		data = map[string]interface{}{}
+		data = map[string]any{}
 		data["index"] = v.Index
 		if v.SyncActionValue != nil {
 			data["timestamp"] = v.GetTimestamp()
@@ -457,10 +470,11 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 		}
 	}
 
-	opCtx, opCancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer opCancel()
+	nameCtx, nameCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	sessionName := m.getSessionName(nameCtx, sessionID)
+	nameCancel()
 
-	bytes, err := model.BuildEventEnvelope(sessionID, m.getSessionName(opCtx, sessionID), eventType, data)
+	bytes, err := model.BuildEventEnvelope(sessionID, sessionName, eventType, data)
 	if err != nil {
 		logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to marshal event payload")
 		return
@@ -470,8 +484,12 @@ func (m *Manager) handleEvent(sessionID string, evt interface{}) {
 	if m.nats != nil {
 		if len(bytes) > maxNATSPayloadSize {
 			logger.Debug().Str("component", "wa").Str("session", sessionID).Str("event", string(eventType)).Int("size", len(bytes)).Msg("Event payload too large for NATS, skipping")
-		} else if err := m.nats.Publish(opCtx, "wzap.events."+sessionID, bytes); err != nil {
-			logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
+		} else {
+			pubCtx, pubCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			if err := m.nats.Publish(pubCtx, "wzap.events."+sessionID, bytes); err != nil {
+				logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
+			}
+			pubCancel()
 		}
 	}
 
@@ -511,19 +529,26 @@ func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string)
 		return "poll", msg.GetPollCreationMessage().GetName(), ""
 	case msg.GetReactionMessage() != nil:
 		return "reaction", msg.GetReactionMessage().GetText(), ""
+	case msg.GetTemplateMessage() != nil:
+		return "template", msg.GetTemplateMessage().GetHydratedTemplate().GetHydratedContentText(), ""
+	case msg.GetInteractiveMessage() != nil:
+		return "interactive", msg.GetInteractiveMessage().GetHeader().GetSubtitle(), ""
+	case msg.GetPollUpdateMessage() != nil:
+		return "poll_update", "", ""
 	default:
 		return "unknown", "", ""
 	}
 }
 
 func (m *Manager) handleMediaRetry(v *events.MediaRetry) {
-	raw, ok := m.mediaRetryCache.Load(string(v.MessageID))
+	mid := string(v.MessageID)
+	raw, ok := m.mediaRetryCache.Load(mid)
 	if !ok {
 		return
 	}
 
 	entry := raw.(mediaRetryCacheEntry)
-	m.mediaRetryCache.Delete(string(v.MessageID))
+	m.mediaRetryCache.Delete(mid)
 
 	if time.Now().After(entry.expiresAt) {
 		return
@@ -532,20 +557,20 @@ func (m *Manager) handleMediaRetry(v *events.MediaRetry) {
 	retryData, err := whatsmeow.DecryptMediaRetryNotification(v, entry.mediaKey)
 	if err != nil {
 		if errors.Is(err, whatsmeow.ErrMediaNotAvailableOnPhone) {
-			logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: mídia não disponível no celular")
+			logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", mid).Msg("Media retry: mídia não disponível no celular")
 		} else {
-			logger.Warn().Str("component", "wa").Err(err).Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: falha ao decriptar notificação")
+			logger.Warn().Str("component", "wa").Err(err).Str("session", entry.sessionID).Str("mid", mid).Msg("Media retry: falha ao decriptar notificação")
 		}
 		return
 	}
 
 	if retryData.GetResult() != waMmsRetry.MediaRetryNotification_SUCCESS {
-		logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Str("result", retryData.GetResult().String()).Msg("Media retry: servidor retornou falha")
+		logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", mid).Str("result", retryData.GetResult().String()).Msg("Media retry: servidor retornou falha")
 		return
 	}
 
 	if retryData.GetDirectPath() == "" {
-		logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: SUCCESS mas directPath vazio")
+		logger.Warn().Str("component", "wa").Str("session", entry.sessionID).Str("mid", mid).Msg("Media retry: SUCCESS mas directPath vazio")
 		return
 	}
 
@@ -553,9 +578,9 @@ func (m *Manager) handleMediaRetry(v *events.MediaRetry) {
 		return
 	}
 
-	logger.Debug().Str("component", "wa").Str("session", entry.sessionID).Str("mid", string(v.MessageID)).Msg("Media retry: sucesso, re-enviando para upload")
+	logger.Debug().Str("component", "wa").Str("session", entry.sessionID).Str("mid", mid).Msg("Media retry: sucesso, re-enviando para upload")
 	m.OnMediaRetry(
-		entry.sessionID, string(v.MessageID), entry.chatJID, entry.senderJID,
+		entry.sessionID, mid, entry.chatJID, entry.senderJID,
 		entry.fromMe, entry.mimeType, entry.timestamp,
 		retryData.GetDirectPath(), entry.encFileHash, entry.fileHash, entry.mediaKey, entry.fileLength,
 	)

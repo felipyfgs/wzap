@@ -14,7 +14,7 @@ func (s *Service) findOrCreateConversation(ctx context.Context, cfg *Config, cha
 	}
 
 	key := cfg.SessionID + "+" + chatJID
-	result, err, _ := s.convFlight.Do(key, func() (interface{}, error) {
+	result, err, _ := s.convFlight.Do(key, func() (any, error) {
 		if convID, _, ok := s.cache.GetConv(ctx, cfg.SessionID, chatJID); ok {
 			return convID, nil
 		}
@@ -120,7 +120,9 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 			}
 		}
 		if update.Name != "" || update.Identifier != "" || update.AvatarURL != "" {
-			_ = client.UpdateContact(ctx, contactID, update)
+			if err := client.UpdateContact(ctx, contactID, update); err != nil {
+				logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Int("contactID", contactID).Msg("Failed to update contact info")
+			}
 		}
 	}
 
@@ -245,7 +247,9 @@ func (s *Service) ensureBotContact(ctx context.Context, cfg *Config) (int, error
 
 	contactID := contacts[0].ID
 	if contacts[0].Name != botName {
-		_ = client.UpdateContact(ctx, contactID, UpdateContactReq{Name: botName})
+		if err := client.UpdateContact(ctx, contactID, UpdateContactReq{Name: botName}); err != nil {
+			logger.Warn().Str("component", "chatwoot").Err(err).Int("contactID", contactID).Msg("Failed to update bot contact name")
+		}
 	}
 	return contactID, nil
 }
@@ -275,7 +279,9 @@ func (s *Service) Configure(ctx context.Context, cfg *Config) error {
 	for _, inbox := range inboxes {
 		if inbox.ID == cfg.InboxID {
 			found = true
-			_ = client.UpdateInboxWebhook(ctx, cfg.InboxID, whURL)
+			if err := client.UpdateInboxWebhook(ctx, cfg.InboxID, whURL); err != nil {
+				logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Int("inboxID", cfg.InboxID).Msg("Failed to update inbox webhook URL")
+			}
 			break
 		}
 	}

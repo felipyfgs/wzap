@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/url"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -164,7 +165,7 @@ func (h *StatusHandler) ListContactStatus(c *fiber.Ctx) error {
 		return err
 	}
 
-	senderJID := c.Params("senderJid")
+	senderJID, _ := url.QueryUnescape(c.Params("senderJid"))
 	if senderJID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", "senderJid is required"))
 	}

@@ -38,9 +38,8 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 <template>
   <UModal
-    :model-value="true"
-    :ui="{ width: 'sm:max-w-2xl' }"
-    @update:model-value="$emit('close')"
+    :open="true"
+    @update:open="$emit('close')"
   >
     <template #header>
       <div class="flex items-center justify-between w-full">

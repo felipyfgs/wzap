@@ -1,0 +1,30 @@
+services:
+  app:
+    image: wzap:latest
+    build:
+      context: .
+      target: combined
+    container_name: wzap_app
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-wzap}:${POSTGRES_PASSWORD:-wzap123}@postgres:5432/${POSTGRES_DB:-wzap}?sslmode=disable
+      MINIO_ENDPOINT: minio:9000
+      NATS_URL: nats://nats:4222
+      SERVER_URL: ${SERVER_URL:-http://wzap_app:8080}
+      NUXT_API_URL: http://localhost:8080
+      NUXT_MINIO_ENDPOINT: http://minio:9000
+    ports:
+      - "${PORT:-8080}:8080"
+      - "${WEB_PORT:-3001}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - default
+      - wzap_chatwoot
+    restart: unless-stopped

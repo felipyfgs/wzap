@@ -1,9 +1,10 @@
 # wzap Makefile
 
 .PHONY: help dev build run tidy up down down-clean clean install-tools docs \
-        web-install web-dev web-build dev-all prod logs \
+        web-install web-dev web-build \
+        docker-dev docker-prod docker-build docker-down docker-logs \
         chatwoot-up chatwoot-down chatwoot-logs \
-        build-api build-web build-all push deploy deploy-pull deploy-status
+        push deploy deploy-pull deploy-status
 
 # Variables
 APP_NAME=wzap
@@ -51,45 +52,40 @@ web-dev: ## Run the frontend dev server
 web-build: ## Build the frontend for production
 	cd web && pnpm build
 
-dev-all: ## Run backend and frontend concurrently
-	make dev & make web-dev
 
-# ─── Docker (local) ──────────────────────────────────────────────────────────
+# ─── Docker ───────────────────────────────────────────────────────────────────
+# Infra (postgres, minio, nats) é sempre docker-compose.yml
+# App: docker-compose.dev.yml  → hot reload (air + nuxt dev)
+#      docker-compose.prod.yml → imagem combinada compilada
 
-up: ## Start dev stack (hot reload)
-	docker compose up -d --build
+COMPOSE_INFRA = docker compose -f docker-compose.yml
+COMPOSE_DEV   = $(COMPOSE_INFRA) -f docker-compose.dev.yml
+COMPOSE_PROD  = $(COMPOSE_INFRA) -f docker-compose.prod.yml
 
-down: ## Stop dev stack
-	docker compose down
+docker-dev: ## Sobe infra + API (air) + Web (nuxt dev) com hot reload
+	$(COMPOSE_DEV) up -d --build --remove-orphans
 
-down-clean: ## Stop dev stack and remove volumes (DESTRUCTIVE)
-	docker compose down -v
+docker-prod: ## Sobe infra + imagem combinada (produção)
+	$(COMPOSE_PROD) up -d --remove-orphans
 
-prod: ## Start prod stack (compiled image)
-	docker compose -f docker-compose.prod.yml up -d --build
+docker-build: ## Builda a imagem combinada de produção
+	./scripts/setup.sh
 
-logs: ## Tail wzap container logs
-	docker compose logs -f wzap
+docker-down: ## Para todos os containers (dev ou prod)
+	$(COMPOSE_DEV) down --remove-orphans 2>/dev/null; \
+	$(COMPOSE_PROD) down --remove-orphans 2>/dev/null; true
 
-# ─── Docker Build & Push ─────────────────────────────────────────────────────
+docker-down-v: ## Para todos os containers e remove volumes (DESTRUTIVO)
+	$(COMPOSE_DEV) down -v --remove-orphans 2>/dev/null; \
+	$(COMPOSE_PROD) down -v --remove-orphans 2>/dev/null; true
 
-build-api: ## Build API Docker image
-	./scripts/build.sh api
+logs: ## Logs do app em tempo real
+	$(COMPOSE_DEV) logs -f api web 2>/dev/null || $(COMPOSE_PROD) logs -f app
 
-build-web: ## Build Web Docker image
-	./scripts/build.sh web
+# ─── Docker Push ──────────────────────────────────────────────────────────────
 
-build-all: ## Build API + Web Docker images
-	./scripts/build.sh all
-
-push: ## Build and push all images to Docker Hub
-	./scripts/build.sh all --push
-
-push-api: ## Build and push API image to Docker Hub
-	./scripts/build.sh api --push
-
-push-web: ## Build and push Web image to Docker Hub
-	./scripts/build.sh web --push
+push: ## Builda e faz push da imagem combinada para Docker Hub
+	./scripts/setup.sh --push
 
 # ─── Docker Swarm Deploy ─────────────────────────────────────────────────────
 

@@ -19,6 +19,7 @@ const viewStatuses = ref<Status[]>([])
 const viewIndex = ref(0)
 const viewSenderName = ref('')
 const sentinelRef = ref<HTMLElement | null>(null)
+let _observer: IntersectionObserver | null = null
 
 function mergeStatuses(list: Status[]) {
   const groups = groupedBySender.value
@@ -94,17 +95,21 @@ async function openView(senderJid: string) {
   }
 }
 
-onMounted(async () => {
-  await loadStatuses(true)
-
-  const observer = new IntersectionObserver(
+onMounted(() => {
+  loadStatuses(true)
+  _observer = new IntersectionObserver(
     entries => { if (entries[0]?.isIntersecting) loadMore() },
     { threshold: 0.1 }
   )
-  watchEffect(() => {
-    if (sentinelRef.value) observer.observe(sentinelRef.value)
-  })
-  onUnmounted(() => observer.disconnect())
+})
+
+watchEffect(() => {
+  if (sentinelRef.value && _observer) _observer.observe(sentinelRef.value)
+})
+
+onUnmounted(() => {
+  _observer?.disconnect()
+  _observer = null
 })
 </script>
 

@@ -66,4 +66,4 @@ EXPOSE 8080 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD wget -qO- http://localhost:${PORT}/health || exit 1
 
-CMD ["sh", "-c", "./api & API=$!; node web/server/index.mjs & WEB=$!; wait $API $WEB"]
+CMD ["sh", "-c", "./api & API=$!; PORT=${WEB_PORT} node web/server/index.mjs & WEB=$!; wait $API $WEB"]

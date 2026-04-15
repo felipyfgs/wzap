@@ -17,6 +17,7 @@ import (
 
 type Client interface {
 	FilterContacts(ctx context.Context, phone string) ([]Contact, error)
+	SearchContacts(ctx context.Context, q string) ([]Contact, error)
 	CreateContact(ctx context.Context, req CreateContactReq) (*Contact, error)
 	UpdateContact(ctx context.Context, id int, req UpdateContactReq) error
 	ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error)
@@ -117,6 +118,17 @@ type Contact struct {
 	Email                string         `json:"email,omitempty"`
 	Thumbnail            string         `json:"thumbnail,omitempty"`
 	AdditionalAttributes map[string]any `json:"additional_attributes,omitempty"`
+}
+
+func (c *HTTPClient) SearchContacts(ctx context.Context, q string) ([]Contact, error) {
+	var result struct {
+		Payload []Contact `json:"payload"`
+	}
+	path := fmt.Sprintf("/api/v1/accounts/%d/contacts/search?q=%s", c.accountID, q)
+	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
+		return nil, err
+	}
+	return result.Payload, nil
 }
 
 func (c *HTTPClient) FilterContacts(ctx context.Context, phone string) ([]Contact, error) {

@@ -33,7 +33,7 @@ func (s *Service) findOrCreateConversation(ctx context.Context, cfg *Config, cha
 
 func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, pushName string) (int, error) {
 	client := s.clientFn(cfg)
-	phone := extractPhone(chatJID)
+	isGroup := strings.HasSuffix(chatJID, "@g.us")
 
 	contactName := pushName
 	if s.contactNameGetter != nil {
@@ -42,32 +42,42 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 		}
 	}
 
-	contacts, _ := client.FilterContacts(ctx, phone)
-
-	if strings.HasPrefix(phone, "55") {
-		phoneVariant := normalizeBRPhone(phone)
-		if phoneVariant != phone {
-			contacts2, _ := client.FilterContacts(ctx, phoneVariant)
-			contacts = deduplicateContacts(append(contacts, contacts2...))
-		}
-	}
-
-	if cfg.MergeBRContacts && len(contacts) == 2 {
-		phone0 := strings.TrimPrefix(contacts[0].PhoneNumber, "+")
-		phone1 := strings.TrimPrefix(contacts[1].PhoneNumber, "+")
-		var baseID, mergeeID int
-		if len(phone0) == 14 && len(phone1) == 13 {
-			baseID = contacts[0].ID
-			mergeeID = contacts[1].ID
-		} else if len(phone1) == 14 && len(phone0) == 13 {
-			baseID = contacts[1].ID
-			mergeeID = contacts[0].ID
-		}
-		if baseID > 0 && mergeeID > 0 {
-			if err := client.MergeContacts(ctx, baseID, mergeeID); err != nil {
-				logger.Warn().Str("component", "chatwoot").Err(err).Int("baseID", baseID).Int("mergeeID", mergeeID).Msg("failed to merge BR contacts")
+	var contacts []Contact
+	if isGroup {
+		all, _ := client.SearchContacts(ctx, chatJID)
+		for _, c := range all {
+			if c.Identifier == chatJID {
+				contacts = append(contacts, c)
+				break
 			}
-			contacts = []Contact{{ID: baseID}}
+		}
+	} else {
+		phone := extractPhone(chatJID)
+		contacts, _ = client.FilterContacts(ctx, phone)
+		if strings.HasPrefix(phone, "55") {
+			phoneVariant := normalizeBRPhone(phone)
+			if phoneVariant != phone {
+				contacts2, _ := client.FilterContacts(ctx, phoneVariant)
+				contacts = deduplicateContacts(append(contacts, contacts2...))
+			}
+		}
+		if cfg.MergeBRContacts && len(contacts) == 2 {
+			phone0 := strings.TrimPrefix(contacts[0].PhoneNumber, "+")
+			phone1 := strings.TrimPrefix(contacts[1].PhoneNumber, "+")
+			var baseID, mergeeID int
+			if len(phone0) == 14 && len(phone1) == 13 {
+				baseID = contacts[0].ID
+				mergeeID = contacts[1].ID
+			} else if len(phone1) == 14 && len(phone0) == 13 {
+				baseID = contacts[1].ID
+				mergeeID = contacts[0].ID
+			}
+			if baseID > 0 && mergeeID > 0 {
+				if err := client.MergeContacts(ctx, baseID, mergeeID); err != nil {
+					logger.Warn().Str("component", "chatwoot").Err(err).Int("baseID", baseID).Int("mergeeID", mergeeID).Msg("failed to merge BR contacts")
+				}
+				contacts = []Contact{{ID: baseID}}
+			}
 		}
 	}
 
@@ -75,7 +85,11 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 	if len(contacts) == 0 {
 		name := contactName
 		if name == "" {
-			name = phone
+			if isGroup {
+				name = chatJID
+			} else {
+				name = extractPhone(chatJID)
+			}
 		}
 		var avatarURL string
 		if s.picGetter != nil {
@@ -83,17 +97,20 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 				avatarURL = picURL
 			}
 		}
-		contact, err := client.CreateContact(ctx, CreateContactReq{
-			InboxID:     cfg.InboxID,
-			Name:        name,
-			Identifier:  chatJID,
-			PhoneNumber: "+" + phone,
-			AvatarURL:   avatarURL,
-		})
+		req := CreateContactReq{
+			InboxID:    cfg.InboxID,
+			Name:       name,
+			Identifier: chatJID,
+			AvatarURL:  avatarURL,
+		}
+		if !isGroup {
+			req.PhoneNumber = "+" + extractPhone(chatJID)
+		}
+		contact, err := client.CreateContact(ctx, req)
 		if err != nil {
 			return 0, fmt.Errorf("failed to create contact: %w", err)
 		}
-		logger.Debug().Str("component", "chatwoot").Int("contactID", contact.ID).Str("phone", phone).Msg("contact created")
+		logger.Debug().Str("component", "chatwoot").Int("contactID", contact.ID).Str("jid", chatJID).Msg("contact created")
 		contactID = contact.ID
 		if cfg.DatabaseURI != "" {
 			if err := addLabelToContact(ctx, cfg.DatabaseURI, cfg.InboxName, contact.ID); err != nil {
@@ -102,10 +119,11 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 		}
 	} else {
 		contactID = contacts[0].ID
-		logger.Debug().Str("component", "chatwoot").Int("contactID", contactID).Str("phone", phone).Msg("contact found")
+		logger.Debug().Str("component", "chatwoot").Int("contactID", contactID).Str("jid", chatJID).Msg("contact found")
 
 		update := UpdateContactReq{}
-		if contactName != "" && (contacts[0].Name == "" || contacts[0].Name == phone) {
+		existingPhone := extractPhone(chatJID)
+		if contactName != "" && (contacts[0].Name == "" || contacts[0].Name == existingPhone) {
 			update.Name = contactName
 		}
 		if contacts[0].Identifier == "" || strings.HasSuffix(contacts[0].Identifier, "@lid") {

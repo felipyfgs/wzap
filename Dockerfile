@@ -19,6 +19,24 @@ COPY go.mod go.sum ./
 RUN go mod download
 CMD ["air", "-c", ".air.toml"]
 
+# ── dev-combined: API (air) + Web (nuxt dev) numa imagem só ──────────────────
+FROM base AS dev-combined
+RUN apk add --no-cache nodejs npm ffmpeg \
+    && go install github.com/air-verse/air@latest \
+    && npm install -g pnpm@10.33.0
+COPY go.mod go.sum ./
+RUN go mod download
+COPY web/pnpm-lock.yaml web/package.json ./web/
+RUN cd web && pnpm install --frozen-lockfile
+ENV PORT=8080 \
+    SERVER_HOST=0.0.0.0 \
+    LOG_LEVEL=debug \
+    ENVIRONMENT=development \
+    HOST=0.0.0.0 \
+    WEB_PORT=3000
+EXPOSE 8080 3000
+CMD ["sh", "-c", "air -c .air.toml & API=$!; cd web && PORT=${WEB_PORT} pnpm dev --host 0.0.0.0 & WEB=$!; wait $API $WEB"]
+
 # ── builder: generate docs + compile binary ───────────────────────────────────
 FROM base AS builder
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6

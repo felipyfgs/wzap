@@ -1,23 +1,28 @@
 services:
-  api:
+  app:
     image: wzap:dev
     build:
       context: .
-      target: dev
-    container_name: wzap_api
+      target: dev-combined
+    container_name: wzap_app
     env_file:
       - .env
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-wzap}:${POSTGRES_PASSWORD:-wzap123}@postgres:5432/${POSTGRES_DB:-wzap}?sslmode=disable
       MINIO_ENDPOINT: minio:9000
       NATS_URL: nats://nats:4222
-      SERVER_URL: ${SERVER_URL:-http://wzap_api:8080}
+      SERVER_URL: ${SERVER_URL:-http://wzap_app:8080}
+      NUXT_API_URL: http://localhost:8080
+      NUXT_MINIO_ENDPOINT: http://minio:9000
     volumes:
       - .:/app
       - go_mod_cache:/go/pkg/mod
       - go_build_cache:/root/.cache/go-build
+      - web_node_modules:/app/web/node_modules
+      - web_nuxt_cache:/app/web/.nuxt
     ports:
       - "${PORT:-8080}:8080"
+      - "${WEB_PORT:-3001}:3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -28,27 +33,6 @@ services:
     networks:
       - default
       - wzap_chatwoot
-    restart: unless-stopped
-
-  web:
-    image: wzap-web:dev
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-      target: web-dev
-    container_name: wzap_web
-    environment:
-      NUXT_API_URL: http://api:8080
-      NUXT_MINIO_ENDPOINT: http://minio:9000
-      NUXT_DEVTOOLS_ENABLED: "false"
-    volumes:
-      - ./web:/app
-      - web_node_modules:/app/node_modules
-      - web_nuxt_cache:/app/.nuxt
-    ports:
-      - "${WEB_PORT:-3001}:3000"
-    depends_on:
-      - api
     restart: unless-stopped
 
 volumes:

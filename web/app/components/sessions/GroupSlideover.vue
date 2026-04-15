@@ -46,7 +46,7 @@ async function fetchDetail() {
   if (!props.groupJid) return
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${props.sessionId}/groups/info`, {
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/groups/info`, {
       method: 'POST',
       body: { groupJid: props.groupJid }
     })
@@ -61,7 +61,7 @@ async function fetchDetail() {
 
 async function fetchJoinRequests() {
   try {
-    const res: any = await api(`/sessions/${props.sessionId}/groups/requests`, {
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/groups/requests`, {
       method: 'POST',
       body: { groupJid: props.groupJid }
     })

@@ -30,7 +30,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   result.value = null
   try {
     const phone = event.data.phone.replace(/\D/g, '')
-    const res: any = await api(`/sessions/${props.sessionId}/contacts/check`, {
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/contacts/check`, {
       method: 'POST',
       body: { phones: [phone] }
     })

@@ -2,18 +2,20 @@
 const props = defineProps<{ count?: number }>()
 const emit = defineEmits<{ confirmed: [] }>()
 
-const { api } = useWzap()
-const toast = useToast()
 const open = ref(false)
 const loading = ref(false)
 
 async function onConfirm() {
   loading.value = true
   emit('confirmed')
-  toast.add({ title: `${props.count} session(s) deleted`, color: 'success' })
-  open.value = false
-  loading.value = false
 }
+
+function done() {
+  loading.value = false
+  open.value = false
+}
+
+defineExpose({ done })
 </script>
 
 <template>

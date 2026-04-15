@@ -22,7 +22,7 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 async function fetchWebhooks() {
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${sessionId.value}/webhooks`)
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}/webhooks`)
     webhooks.value = res.data || []
   } catch {
     webhooks.value = []
@@ -155,14 +155,7 @@ watch(sessionId, fetchWebhooks)
         :data="webhooks"
         :columns="columns"
         :loading="loading"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default',
-          separator: 'h-0'
-        }"
+        :ui="TABLE_UI"
       >
         <template #empty>
           <div class="flex flex-col items-center justify-center py-16 gap-3 text-muted">

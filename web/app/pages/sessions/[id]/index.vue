@@ -22,7 +22,7 @@ async function fetchSession() {
 
 async function connect() {
   try {
-    const res: any = await api(`/sessions/${sessionId.value}/connect`, { method: 'POST' })
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}/connect`, { method: 'POST' })
     if (res.data?.status === 'PAIRING') {
       await nextTick()
       qrModal.value?.show()

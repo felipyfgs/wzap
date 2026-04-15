@@ -8,11 +8,11 @@ const toast = useToast()
 const pictures = reactive<Map<string, string | null>>(new Map())
 
 async function loadPictures() {
-  const connected = sessions.value.filter((s) => s.status === 'connected')
+  const connected = sessions.value.filter(s => s.status === 'connected')
   await Promise.allSettled(
     connected.map(async (s) => {
       try {
-        const res: any = await api(`/sessions/${s.id}/profile`)
+        const res: { data: unknown } = await api(`/sessions/${s.id}/profile`)
         pictures.set(s.id, res.data?.pictureUrl || null)
       } catch {
         pictures.set(s.id, null)
@@ -25,6 +25,9 @@ const nameFilter = ref('')
 const statusFilter = ref('all')
 const qrModal = useTemplateRef('qrModal')
 const qrSession = ref<Session | null>(null)
+const confirmDeleteOpen = ref(false)
+const confirmDeleteId = ref('')
+const confirmModal = useTemplateRef('confirmModal')
 
 const statusOptions = [
   { label: 'All', value: 'all' },
@@ -33,7 +36,7 @@ const statusOptions = [
   { label: 'Pairing', value: 'pairing' }
 ]
 
-async function copyText(text: string, label: string) {
+async function _copyText(text: string, label: string) {
   await navigator.clipboard.writeText(text)
   toast.add({ title: `${label} copied`, color: 'success' })
 }
@@ -68,7 +71,7 @@ function sessionInitials(name: string): string {
 
 async function connectSession(session: Session) {
   try {
-    const res: any = await api(`/sessions/${session.id}/connect`, { method: 'POST' })
+    const res: { data: unknown } = await api(`/sessions/${session.id}/connect`, { method: 'POST' })
     if (res.data?.status === 'PAIRING') {
       qrSession.value = session
       await nextTick()
@@ -110,7 +113,10 @@ function dropdownItems(session: Session) {
       ? { label: 'Disconnect', icon: 'i-lucide-unplug', onSelect: () => disconnectSession(session.id) }
       : { label: 'Connect', icon: 'i-lucide-plug', onSelect: () => connectSession(session) },
     { type: 'separator' as const },
-    { label: 'Delete', icon: 'i-lucide-trash', color: 'error' as const, onSelect: () => deleteSession(session.id) }
+    { label: 'Delete', icon: 'i-lucide-trash', color: 'error' as const, onSelect: () => {
+      confirmDeleteId.value = session.id
+      confirmDeleteOpen.value = true
+    } }
   ]
 }
 
@@ -308,11 +314,22 @@ onMounted(async () => {
               size="xs"
               color="error"
               variant="ghost"
-              @click="deleteSession(session.id)"
+              @click="confirmDeleteId = session.id; confirmDeleteOpen = true"
             />
           </div>
         </UCard>
       </div>
+
+      <SessionsConfirmModal
+        ref="confirmModal"
+        v-model:open="confirmDeleteOpen"
+        title="Delete Session"
+        description="Are you sure you want to delete this session? This action cannot be undone."
+        confirm-label="Delete"
+        confirm-color="error"
+        icon="i-lucide-trash"
+        @confirm="async () => { await deleteSession(confirmDeleteId); confirmModal?.done() }"
+      />
 
       <SessionsQRModal
         v-if="qrSession"

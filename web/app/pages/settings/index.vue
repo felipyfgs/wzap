@@ -30,7 +30,7 @@ async function testConnection() {
   healthResult.value = null
   try {
     setToken(state.token)
-    const res: any = await api('/health')
+    const res: { data: unknown } = await api('/health')
     healthResult.value = res.data
   } catch {
     healthResult.value = { status: 'UNREACHABLE', services: {} }

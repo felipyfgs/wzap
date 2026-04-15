@@ -23,7 +23,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true
   pairingCode.value = ''
   try {
-    const res: any = await api(`/sessions/${props.sessionId}/pair`, {
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/pair`, {
       method: 'POST',
       body: { phone: event.data.phone.replace(/\D/g, '') }
     })

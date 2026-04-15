@@ -15,13 +15,18 @@ export function useWzap() {
     }
   }
 
-  const api = async <T = any>(path: string, options: any = {}): Promise<T> => {
+  const api = async <T = unknown>(path: string, options: Omit<RequestInit, 'body'> & { body?: unknown } = {}): Promise<T> => {
+    const headers: Record<string, string> = {
+      'Authorization': token.value,
+    }
+    if (options.body !== undefined && !(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json'
+    }
     return await $fetch<T>(`/api${path}`, {
       ...options,
       headers: {
-        'Authorization': token.value,
-        'Content-Type': 'application/json',
-        ...options.headers
+        ...headers,
+        ...(options.headers as Record<string, string>)
       }
     })
   }

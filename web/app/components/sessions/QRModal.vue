@@ -10,26 +10,29 @@ let intervalId: ReturnType<typeof setInterval> | null = null
 
 async function pollQR() {
   try {
-    const res: any = await api(`/sessions/${props.sessionId}/qr`)
-    qrImage.value = res.data?.image || ''
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/qr`)
+    const qrData = res.data as { image?: string } | null
+    qrImage.value = qrData?.image || ''
   } catch {
-    // QR not ready yet or already expired — keep polling
+    /* QR not ready yet or already expired — keep polling */
   }
 }
 
 async function checkStatus() {
   try {
-    const res: any = await api(`/sessions/${props.sessionId}`)
-    if (res.data?.status === 'connected') {
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}`)
+    if ((res.data as { status?: string } | null)?.status === 'connected') {
       emit('connected')
       close()
     }
-  } catch {}
+  } catch { /* ignore — keep polling */ }
 }
 
 function startPolling() {
   loadingQR.value = true
-  pollQR().then(() => { loadingQR.value = false })
+  pollQR().then(() => {
+    loadingQR.value = false
+  })
   intervalId = setInterval(async () => {
     await pollQR()
     await checkStatus()

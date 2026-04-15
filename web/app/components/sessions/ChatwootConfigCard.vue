@@ -11,8 +11,11 @@ const toast = useToast()
 const loading = ref(true)
 const saving = ref(false)
 const removing = ref(false)
+const importing = ref(false)
 const hasConfig = ref(false)
 const editing = ref(false)
+const confirmImportOpen = ref(false)
+const confirmImportModal = useTemplateRef('confirmImportModal')
 
 interface ChatwootConfig {
   url: string
@@ -62,7 +65,7 @@ const state = reactive<Partial<Schema>>({
 async function fetchConfig() {
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${props.sessionId}/integrations/chatwoot`)
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/integrations/chatwoot`)
     if (res.data?.url) {
       config.value = res.data
       hasConfig.value = true
@@ -119,6 +122,18 @@ function startEditing() {
   state.ignoreGroups = config.value?.ignoreGroups ?? false
   state.autoCreateInbox = false
   editing.value = true
+}
+
+async function importHistory() {
+  importing.value = true
+  try {
+    await api(`/sessions/${props.sessionId}/integrations/chatwoot/import`, { method: 'POST' })
+    toast.add({ title: 'Import started', description: 'History import has been queued. This may take a while.', color: 'success' })
+  } catch {
+    toast.add({ title: 'Failed to start import', color: 'error' })
+  }
+  importing.value = false
+  confirmImportModal.value?.done()
 }
 
 watch(() => props.sessionId, fetchConfig, { immediate: true })
@@ -185,6 +200,15 @@ watch(() => props.sessionId, fetchConfig, { immediate: true })
           @click="startEditing"
         />
         <UButton
+          label="Import History"
+          icon="i-lucide-download"
+          size="sm"
+          color="neutral"
+          variant="outline"
+          :loading="importing"
+          @click="confirmImportOpen = true"
+        />
+        <UButton
           label="Remove Integration"
           icon="i-lucide-trash"
           size="sm"
@@ -194,6 +218,17 @@ watch(() => props.sessionId, fetchConfig, { immediate: true })
           @click="removeConfig"
         />
       </div>
+
+      <SessionsConfirmModal
+        ref="confirmImportModal"
+        v-model:open="confirmImportOpen"
+        title="Import Chatwoot History"
+        description="This will import all conversation history from Chatwoot. The process may take several minutes depending on the volume of messages."
+        confirm-label="Import"
+        confirm-color="primary"
+        icon="i-lucide-download"
+        @confirm="importHistory"
+      />
     </template>
 
     <!-- Configuration form -->
@@ -239,7 +274,12 @@ watch(() => props.sessionId, fetchConfig, { immediate: true })
             />
           </UFormField>
           <UFormField label="Inbox Name" name="inboxName" :hint="!state.inboxId ? 'Used when creating a new inbox' : undefined">
-            <UInput v-model="state.inboxName" placeholder="WhatsApp" class="w-full" :disabled="!!state.inboxId" />
+            <UInput
+              v-model="state.inboxName"
+              placeholder="WhatsApp"
+              class="w-full"
+              :disabled="!!state.inboxId"
+            />
           </UFormField>
         </div>
 

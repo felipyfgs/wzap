@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { token } = useWzap()
 
-const events = ref<any[]>([])
+const events = ref<Record<string, unknown>[]>([])
 const connected = ref(false)
 const maxEvents = 200
 let ws: WebSocket | null = null
@@ -11,16 +11,22 @@ function connect() {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const wsUrl = `${proto}//${window.location.host}/ws?token=${token.value}`
   ws = new WebSocket(wsUrl)
-  ws.onopen = () => { connected.value = true }
+  ws.onopen = () => {
+    connected.value = true
+  }
   ws.onmessage = (e) => {
     try {
       const data = JSON.parse(e.data)
       events.value.unshift({ id: Date.now(), timestamp: new Date().toLocaleTimeString(), ...data })
       if (events.value.length > maxEvents) events.value = events.value.slice(0, maxEvents)
-    } catch {}
+    } catch { /* ignore parse errors */ }
   }
-  ws.onclose = () => { connected.value = false }
-  ws.onerror = () => { connected.value = false }
+  ws.onclose = () => {
+    connected.value = false
+  }
+  ws.onerror = () => {
+    connected.value = false
+  }
 }
 
 function disconnect() {

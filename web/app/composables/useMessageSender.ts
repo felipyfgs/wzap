@@ -28,18 +28,18 @@ export const MESSAGE_TYPE_OPTIONS: { label: string, value: MessageType }[] = [
 ]
 
 const TYPE_TO_ENDPOINT: Record<MessageType, string> = {
-  text: 'text',
-  image: 'image',
-  video: 'video',
-  document: 'document',
-  audio: 'audio',
-  contact: 'contact',
-  location: 'location',
-  poll: 'poll',
-  sticker: 'sticker',
-  link: 'link',
-  button: 'button',
-  list: 'list'
+  'text': 'text',
+  'image': 'image',
+  'video': 'video',
+  'document': 'document',
+  'audio': 'audio',
+  'contact': 'contact',
+  'location': 'location',
+  'poll': 'poll',
+  'sticker': 'sticker',
+  'link': 'link',
+  'button': 'button',
+  'list': 'list'
 }
 
 export interface SendTextPayload {
@@ -121,17 +121,6 @@ export interface SendListPayload {
   buttonText: string
   sections: ListSection[]
 }
-
-export type SendMessagePayload
-  = | SendTextPayload
-    | SendMediaPayload
-    | SendContactPayload
-    | SendLocationPayload
-    | SendPollPayload
-    | SendStickerPayload
-    | SendLinkPayload
-    | SendButtonPayload
-    | SendListPayload
 
 export function useMessageSender() {
   const { api } = useWzap()

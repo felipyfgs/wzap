@@ -27,6 +27,10 @@ const sessionNavLinks = computed(() => {
     icon: 'i-lucide-message-square',
     to: `/sessions/${id}/messages`
   }, {
+    label: 'Status',
+    icon: 'i-lucide-circle-dot',
+    to: `/sessions/${id}/status`
+  }, {
     label: 'Contacts',
     icon: 'i-lucide-users',
     to: `/sessions/${id}/contacts`

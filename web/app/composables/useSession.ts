@@ -13,7 +13,7 @@ const _useSession = () => {
     if (!isAuthenticated.value) return
     loadingSessions.value = true
     try {
-      const res: any = await api('/sessions')
+      const res: { data: unknown } = await api('/sessions')
       sessions.value = res.data || []
     } catch {
       sessions.value = []
@@ -24,7 +24,7 @@ const _useSession = () => {
 
   async function refreshProfile(id: string) {
     try {
-      const res: any = await api(`/sessions/${id}/profile`)
+      const res: { data: unknown } = await api(`/sessions/${id}/profile`)
       profile.value = res.data
     } catch {
       profile.value = null
@@ -33,7 +33,7 @@ const _useSession = () => {
 
   async function refreshCurrent(id: string) {
     try {
-      const res: any = await api(`/sessions/${id}`)
+      const res: { data: unknown } = await api(`/sessions/${id}`)
       current.value = res.data
       if (res.data?.status === 'connected') {
         await refreshProfile(id)

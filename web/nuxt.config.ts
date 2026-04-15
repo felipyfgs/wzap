@@ -20,12 +20,6 @@ export default defineNuxtConfig({
     apiUrl: 'http://localhost:8080'
   },
 
-  nitro: {
-    experimental: {
-      websocket: true
-    }
-  },
-
   compatibilityDate: '2024-07-11',
 
   vite: {
@@ -35,6 +29,12 @@ export default defineNuxtConfig({
         '@internationalized/date',
         '@unovis/vue'
       ]
+    }
+  },
+
+  nitro: {
+    experimental: {
+      websocket: true
     }
   },
 

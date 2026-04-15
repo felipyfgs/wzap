@@ -25,7 +25,7 @@ async function fetchInfo() {
   info.value = null
   try {
     const phone = props.contactJid.split('@')[0]
-    const res: any = await api(`/sessions/${props.sessionId}/contacts/info`, {
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/contacts/info`, {
       method: 'POST',
       body: { phones: [phone] }
     })

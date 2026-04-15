@@ -1,30 +1,29 @@
 export function useNewsletter(sessionId: Ref<string> | string) {
   const { api } = useWzap()
-  const id = typeof sessionId === 'string' ? sessionId : sessionId.value
   const resolveId = () => typeof sessionId === 'string' ? sessionId : sessionId.value
 
   async function listNewsletters() {
-    const res: any = await api(`/sessions/${resolveId()}/newsletter/list`)
+    const res: { data: unknown } = await api(`/sessions/${resolveId()}/newsletter/list`)
     return res.data || []
   }
 
   async function createNewsletter(body: { name: string, description?: string, picture?: string }) {
-    const res: any = await api(`/sessions/${resolveId()}/newsletter/create`, { method: 'POST', body })
+    const res: { data: unknown } = await api(`/sessions/${resolveId()}/newsletter/create`, { method: 'POST', body })
     return res.data
   }
 
   async function getNewsletterInfo(newsletterJid: string) {
-    const res: any = await api(`/sessions/${resolveId()}/newsletter/info`, { method: 'POST', body: { newsletterJid } })
+    const res: { data: unknown } = await api(`/sessions/${resolveId()}/newsletter/info`, { method: 'POST', body: { newsletterJid } })
     return res.data
   }
 
   async function getInviteLink(newsletterJid: string) {
-    const res: any = await api(`/sessions/${resolveId()}/newsletter/invite`, { method: 'POST', body: { newsletterJid } })
+    const res: { data: unknown } = await api(`/sessions/${resolveId()}/newsletter/invite`, { method: 'POST', body: { newsletterJid } })
     return res.data
   }
 
   async function getMessages(newsletterJid: string, count?: number) {
-    const res: any = await api(`/sessions/${resolveId()}/newsletter/messages`, { method: 'POST', body: { newsletterJid, count: count || 50 } })
+    const res: { data: unknown } = await api(`/sessions/${resolveId()}/newsletter/messages`, { method: 'POST', body: { newsletterJid, count: count || 50 } })
     return res.data || []
   }
 

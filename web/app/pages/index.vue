@@ -12,7 +12,7 @@ const loading = ref(false)
 async function fetchData() {
   loading.value = true
   try {
-    const [sessionsRes, healthRes]: [any, any] = await Promise.all([
+    const [sessionsRes, healthRes]: [{ data: unknown }, { data: unknown }] = await Promise.all([
       api('/sessions'),
       api('/health')
     ])
@@ -177,13 +177,7 @@ onMounted(fetchData)
             :data="sessions"
             :loading="loading"
             class="w-full"
-            :ui="{
-              base: 'table-fixed border-separate border-spacing-0',
-              thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-              tbody: '[&>tr]:last:[&>td]:border-b-0',
-              th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-              td: 'border-b border-default'
-            }"
+            :ui="TABLE_UI"
           >
             <template #status-cell="{ row }">
               <UBadge :color="statusColor(row.original.status)" variant="subtle" class="capitalize">

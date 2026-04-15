@@ -8,6 +8,7 @@ const toast = useToast()
 
 const sessionId = computed(() => route.params.id as string)
 const { archiveChat, muteChat, pinChat, deleteChat, markUnread } = useChatOperations(sessionId)
+const { wrapAction } = useActionWrapper()
 
 const labelModalOpen = ref(false)
 const labelMode = ref<'add-chat' | 'remove-chat'>('add-chat')
@@ -15,6 +16,13 @@ const labelTargetJid = ref('')
 
 const infoSlideoverOpen = ref(false)
 const infoTargetJid = ref('')
+
+const confirmDeleteChatOpen = ref(false)
+const confirmDeleteChatJid = ref('')
+const confirmDeleteChatModal = useTemplateRef('confirmDeleteChatModal')
+const confirmBlockOpen = ref(false)
+const confirmBlockJid = ref('')
+const confirmBlockModal = useTemplateRef('confirmBlockModal')
 
 interface Contact {
   jid: string
@@ -50,7 +58,7 @@ const pagination = ref({
 async function fetchContacts() {
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${sessionId.value}/contacts?filter=${contactFilter.value}`)
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}/contacts?filter=${contactFilter.value}`)
     contacts.value = res.data || []
   } catch {
     contacts.value = []
@@ -61,7 +69,7 @@ async function fetchContacts() {
 async function fetchBlockedList() {
   loadingBlocked.value = true
   try {
-    const res: any = await api(`/sessions/${sessionId.value}/contacts/blocklist`)
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}/contacts/blocklist`)
     blockedList.value = res.data || []
   } catch {
     blockedList.value = []
@@ -100,12 +108,12 @@ async function unblockContact(jid: string) {
 async function checkContact(jid: string) {
   try {
     const phone = jid.split('@')[0]
-    const res: any = await api(`/sessions/${sessionId.value}/contacts/check`, {
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}/contacts/check`, {
       method: 'POST',
       body: { phones: [phone] }
     })
     const results = res.data || []
-    const found = results.find((r: any) => r.isRegistered || r.IsRegistered)
+    const found = results.find((r: Record<string, unknown>) => r.isRegistered || r.IsRegistered)
     toast.add({
       title: found ? 'Registered on WhatsApp' : 'Not registered',
       color: found ? 'success' : 'warning'
@@ -152,35 +160,43 @@ watch(viewTab, (tab) => {
   if (tab === 'blocked') fetchBlockedList()
 })
 
-async function wrapAction(fn: () => Promise<void>, label: string) {
-  try {
-    await fn()
-    toast.add({ title: label, color: 'success' })
-  } catch {
-    toast.add({ title: `Failed: ${label}`, color: 'error' })
-  }
-}
-
 function getContactActions(c: Contact) {
   return [
     [
-      { label: 'View Info', icon: 'i-lucide-info', onSelect: () => { infoTargetJid.value = c.jid; infoSlideoverOpen.value = true } },
+      { label: 'View Info', icon: 'i-lucide-info', onSelect: () => {
+        infoTargetJid.value = c.jid
+        infoSlideoverOpen.value = true
+      } },
       { label: 'Check WhatsApp', icon: 'i-lucide-search-check', onSelect: () => checkContact(c.jid) },
       { label: 'Subscribe Presence', icon: 'i-lucide-eye', onSelect: () => subscribePresence(c.jid) }
     ],
     [
-      { label: 'Archive chat', icon: 'i-lucide-archive', onSelect: () => wrapAction(() => archiveChat(c.jid), 'Chat archived') },
-      { label: 'Mute chat', icon: 'i-lucide-bell-off', onSelect: () => wrapAction(() => muteChat(c.jid), 'Chat muted') },
-      { label: 'Pin chat', icon: 'i-lucide-pin', onSelect: () => wrapAction(() => pinChat(c.jid), 'Chat pinned') },
-      { label: 'Mark unread', icon: 'i-lucide-eye-off', onSelect: () => wrapAction(() => markUnread(c.jid), 'Marked unread') }
+      { label: 'Archive chat', icon: 'i-lucide-archive', onSelect: () => wrapAction(() => archiveChat(c.jid), { success: 'Chat archived', error: 'Failed: Chat archived' }) },
+      { label: 'Mute chat', icon: 'i-lucide-bell-off', onSelect: () => wrapAction(() => muteChat(c.jid), { success: 'Chat muted', error: 'Failed: Chat muted' }) },
+      { label: 'Pin chat', icon: 'i-lucide-pin', onSelect: () => wrapAction(() => pinChat(c.jid), { success: 'Chat pinned', error: 'Failed: Chat pinned' }) },
+      { label: 'Mark unread', icon: 'i-lucide-eye-off', onSelect: () => wrapAction(() => markUnread(c.jid), { success: 'Marked unread', error: 'Failed: Marked unread' }) }
     ],
     [
-      { label: 'Add label', icon: 'i-lucide-tag', onSelect: () => { labelMode.value = 'add-chat'; labelTargetJid.value = c.jid; labelModalOpen.value = true } },
-      { label: 'Remove label', icon: 'i-lucide-tag-off', onSelect: () => { labelMode.value = 'remove-chat'; labelTargetJid.value = c.jid; labelModalOpen.value = true } }
+      { label: 'Add label', icon: 'i-lucide-tag', onSelect: () => {
+        labelMode.value = 'add-chat'
+        labelTargetJid.value = c.jid
+        labelModalOpen.value = true
+      } },
+      { label: 'Remove label', icon: 'i-lucide-tag-off', onSelect: () => {
+        labelMode.value = 'remove-chat'
+        labelTargetJid.value = c.jid
+        labelModalOpen.value = true
+      } }
     ],
     [
-      { label: 'Delete chat', icon: 'i-lucide-trash', color: 'error', onSelect: () => wrapAction(() => deleteChat(c.jid), 'Chat deleted') },
-      { label: 'Block', icon: 'i-lucide-ban', color: 'error', onSelect: () => blockContact(c.jid) }
+      { label: 'Delete chat', icon: 'i-lucide-trash', color: 'error', onSelect: () => {
+        confirmDeleteChatJid.value = c.jid
+        confirmDeleteChatOpen.value = true
+      } },
+      { label: 'Block', icon: 'i-lucide-ban', color: 'error', onSelect: () => {
+        confirmBlockJid.value = c.jid
+        confirmBlockOpen.value = true
+      } }
     ]
   ]
 }
@@ -276,14 +292,7 @@ watch(sessionId, fetchContacts)
           :data="filtered"
           :loading="loading"
           class="shrink-0"
-          :ui="{
-            base: 'table-fixed border-separate border-spacing-0',
-            thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-            tbody: '[&>tr]:last:[&>td]:border-b-0',
-            th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-            td: 'border-b border-default',
-            separator: 'h-0'
-          }"
+          :ui="TABLE_UI"
         >
           <template #empty>
             <div class="flex flex-col items-center justify-center py-16 gap-3 text-muted">
@@ -339,6 +348,28 @@ watch(sessionId, fetchContacts)
         :session-id="sessionId"
         :jid="labelTargetJid"
         :mode="labelMode"
+      />
+
+      <SessionsConfirmModal
+        ref="confirmDeleteChatModal"
+        v-model:open="confirmDeleteChatOpen"
+        title="Delete Chat"
+        description="Are you sure you want to delete this chat? This action cannot be undone."
+        confirm-label="Delete"
+        confirm-color="error"
+        icon="i-lucide-trash"
+        @confirm="async () => { await wrapAction(() => deleteChat(confirmDeleteChatJid), { success: 'Chat deleted', error: 'Failed: Chat deleted' }); confirmDeleteChatModal?.done() }"
+      />
+
+      <SessionsConfirmModal
+        ref="confirmBlockModal"
+        v-model:open="confirmBlockOpen"
+        title="Block Contact"
+        description="Are you sure you want to block this contact?"
+        confirm-label="Block"
+        confirm-color="error"
+        icon="i-lucide-ban"
+        @confirm="async () => { await blockContact(confirmBlockJid); confirmBlockModal?.done() }"
       />
 
       <SessionsContactInfoSlideover

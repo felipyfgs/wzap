@@ -2,7 +2,7 @@
 import type { GroupDetail } from './types'
 
 const props = defineProps<{ sessionId: string, group: GroupDetail }>()
-const emit = defineEmits<{ updated: [] }>()
+const _emit = defineEmits<{ updated: [] }>()
 
 const { api } = useWzap()
 const toast = useToast()
@@ -38,7 +38,7 @@ async function toggleSetting(r: { value: boolean }, endpoint: string, value: boo
     })
     toast.add({ title: 'Setting updated', color: 'success' })
   } catch {
-    refs.value = prev
+    r.value = prev
     toast.add({ title: 'Failed to update setting', color: 'error' })
   }
 }
@@ -64,11 +64,12 @@ async function fetchInviteLink(reset = false) {
     const url = reset
       ? `/sessions/${props.sessionId}/groups/invite-link?reset=true`
       : `/sessions/${props.sessionId}/groups/invite-link`
-    const res: any = await api(url, {
+    const res: { data: unknown } = await api(url, {
       method: 'POST',
       body: { groupJid: props.group.jid }
     })
-    inviteLink.value = res.data?.link || ''
+    const data = res.data as { link?: string } | null
+    inviteLink.value = data?.link || ''
     if (reset) toast.add({ title: 'Invite link reset', color: 'success' })
   } catch {
     toast.add({ title: 'Failed to get invite link', color: 'error' })

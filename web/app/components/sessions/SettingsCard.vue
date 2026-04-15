@@ -12,7 +12,7 @@ const flags = [
 ] as const
 
 function isEnabled(key: string): boolean {
-  return !!(props.session.settings as any)?.[key]
+  return !!(props.session.settings as Record<string, unknown>)?.[key]
 }
 </script>
 

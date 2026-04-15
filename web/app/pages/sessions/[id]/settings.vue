@@ -59,7 +59,7 @@ const isCloudApi = computed(() => sessionEngine.value === 'cloud_api')
 async function fetchSession() {
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${sessionId.value}`)
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}`)
     const s = res.data
     sessionName.value = s.name
     sessionEngine.value = s.engine ?? ''

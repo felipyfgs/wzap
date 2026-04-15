@@ -5,7 +5,7 @@ const toast = useToast()
 const sessionId = computed(() => route.params.id as string)
 const { listNewsletters, subscribe, unsubscribe, muteNewsletter, getInviteLink } = useNewsletter(sessionId)
 
-const newsletters = ref<any[]>([])
+const newsletters = ref<Record<string, unknown>[]>([])
 const loading = ref(false)
 const filter = ref('')
 
@@ -22,12 +22,12 @@ async function fetchNewsletters() {
 const filtered = computed(() => {
   if (!filter.value) return newsletters.value
   const q = filter.value.toLowerCase()
-  return newsletters.value.filter((n: any) =>
+  return newsletters.value.filter((n: Record<string, unknown>) =>
     (n.name || '').toLowerCase().includes(q) || (n.description || '').toLowerCase().includes(q)
   )
 })
 
-async function handleSubscribe(jid: string) {
+async function _handleSubscribe(jid: string) {
   try {
     await subscribe(jid)
     toast.add({ title: 'Subscribed', color: 'success' })
@@ -70,7 +70,7 @@ async function copyInviteLink(jid: string) {
   }
 }
 
-function dropdownItems(n: any) {
+function dropdownItems(n: Record<string, unknown>) {
   return [
     { label: 'Copy invite link', icon: 'i-lucide-link', onSelect: () => copyInviteLink(n.jid) },
     { label: n.muted ? 'Unmute' : 'Mute', icon: n.muted ? 'i-lucide-bell' : 'i-lucide-bell-off', onSelect: () => handleMute(n.jid, !n.muted) },

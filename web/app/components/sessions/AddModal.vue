@@ -107,7 +107,7 @@ function resetState() {
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   loading.value = true
   try {
-    const body: any = { name: event.data.name }
+    const body: Record<string, unknown> = { name: event.data.name }
 
     if (event.data.engine === 'cloud_api') {
       body.engine = 'cloud_api'

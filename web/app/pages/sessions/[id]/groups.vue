@@ -6,11 +6,16 @@ const { api } = useWzap()
 const toast = useToast()
 
 const sessionId = computed(() => route.params.id as string)
-const { archiveChat, unarchiveChat, muteChat, unmuteChat, pinChat, unpinChat, deleteChat, markRead, markUnread } = useChatOperations(sessionId)
+const { archiveChat, muteChat, pinChat, deleteChat, markUnread } = useChatOperations(sessionId)
+const { wrapAction } = useActionWrapper()
 
 const labelModalOpen = ref(false)
 const labelMode = ref<'add-chat' | 'remove-chat'>('add-chat')
 const labelTargetJid = ref('')
+
+const confirmDeleteChatOpen = ref(false)
+const confirmDeleteChatJid = ref('')
+const confirmDeleteChatModal = useTemplateRef('confirmDeleteChatModal')
 
 interface Group {
   jid: string
@@ -64,7 +69,7 @@ async function processAvatarQueue() {
     if (avatarCache.value[jid] !== undefined) continue
     avatarActive++
     try {
-      const res: any = await api(`/sessions/${sessionId.value}/contacts/avatar`, {
+      const res: { data: unknown } = await api(`/sessions/${sessionId.value}/contacts/avatar`, {
         method: 'POST',
         body: { phone: jid }
       })
@@ -77,7 +82,7 @@ async function processAvatarQueue() {
   }
 }
 
-function fetchAvatarsForVisibleItems(virtualizer: any) {
+function fetchAvatarsForVisibleItems(virtualizer: { getVirtualItems?: () => { index: number }[] }) {
   const items = virtualizer.getVirtualItems?.() || []
   const list = filtered.value
   for (const vItem of items) {
@@ -93,7 +98,7 @@ function fetchAvatarsForVisibleItems(virtualizer: any) {
 async function fetchGroups() {
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${sessionId.value}/groups`)
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}/groups`)
     groups.value = res.data || []
   } catch {
     groups.value = []
@@ -142,7 +147,7 @@ async function previewInvite() {
   if (!joinCode.value.trim()) return
   previewing.value = true
   try {
-    const res: any = await api(`/sessions/${sessionId.value}/groups/invite-info`, {
+    const res: { data: unknown } = await api(`/sessions/${sessionId.value}/groups/invite-info`, {
       method: 'POST',
       body: { inviteCode: joinCode.value.trim() }
     })
@@ -197,29 +202,31 @@ async function createCommunity() {
   creatingCommunity.value = false
 }
 
-async function wrapAction(fn: () => Promise<void>, label: string) {
-  try {
-    await fn()
-    toast.add({ title: label, color: 'success' })
-  } catch {
-    toast.add({ title: `Failed: ${label}`, color: 'error' })
-  }
-}
-
 function getGroupActions(g: Group): DropdownMenuItem[][] {
   return [
     [
-      { label: 'Archive chat', icon: 'i-lucide-archive', onSelect: () => wrapAction(() => archiveChat(g.jid), 'Chat archived') },
-      { label: 'Mute chat', icon: 'i-lucide-bell-off', onSelect: () => wrapAction(() => muteChat(g.jid), 'Chat muted') },
-      { label: 'Pin chat', icon: 'i-lucide-pin', onSelect: () => wrapAction(() => pinChat(g.jid), 'Chat pinned') },
-      { label: 'Mark unread', icon: 'i-lucide-eye-off', onSelect: () => wrapAction(() => markUnread(g.jid), 'Marked unread') }
+      { label: 'Archive chat', icon: 'i-lucide-archive', onSelect: () => wrapAction(() => archiveChat(g.jid), { success: 'Chat archived', error: 'Failed: Chat archived' }) },
+      { label: 'Mute chat', icon: 'i-lucide-bell-off', onSelect: () => wrapAction(() => muteChat(g.jid), { success: 'Chat muted', error: 'Failed: Chat muted' }) },
+      { label: 'Pin chat', icon: 'i-lucide-pin', onSelect: () => wrapAction(() => pinChat(g.jid), { success: 'Chat pinned', error: 'Failed: Chat pinned' }) },
+      { label: 'Mark unread', icon: 'i-lucide-eye-off', onSelect: () => wrapAction(() => markUnread(g.jid), { success: 'Marked unread', error: 'Failed: Marked unread' }) }
     ],
     [
-      { label: 'Add label', icon: 'i-lucide-tag', onSelect: () => { labelMode.value = 'add-chat'; labelTargetJid.value = g.jid; labelModalOpen.value = true } },
-      { label: 'Remove label', icon: 'i-lucide-tag-off', onSelect: () => { labelMode.value = 'remove-chat'; labelTargetJid.value = g.jid; labelModalOpen.value = true } }
+      { label: 'Add label', icon: 'i-lucide-tag', onSelect: () => {
+        labelMode.value = 'add-chat'
+        labelTargetJid.value = g.jid
+        labelModalOpen.value = true
+      } },
+      { label: 'Remove label', icon: 'i-lucide-tag-off', onSelect: () => {
+        labelMode.value = 'remove-chat'
+        labelTargetJid.value = g.jid
+        labelModalOpen.value = true
+      } }
     ],
     [
-      { label: 'Delete chat', icon: 'i-lucide-trash', color: 'error' as const, onSelect: () => wrapAction(() => deleteChat(g.jid), 'Chat deleted') }
+      { label: 'Delete chat', icon: 'i-lucide-trash', color: 'error' as const, onSelect: () => {
+        confirmDeleteChatJid.value = g.jid
+        confirmDeleteChatOpen.value = true
+      } }
     ]
   ]
 }
@@ -599,6 +606,17 @@ watch(sessionId, fetchGroups)
         :session-id="sessionId"
         :jid="labelTargetJid"
         :mode="labelMode"
+      />
+
+      <SessionsConfirmModal
+        ref="confirmDeleteChatModal"
+        v-model:open="confirmDeleteChatOpen"
+        title="Delete Chat"
+        description="Are you sure you want to delete this chat? This action cannot be undone."
+        confirm-label="Delete"
+        confirm-color="error"
+        icon="i-lucide-trash"
+        @confirm="async () => { await wrapAction(() => deleteChat(confirmDeleteChatJid), { success: 'Chat deleted', error: 'Failed: Chat deleted' }); confirmDeleteChatModal?.done() }"
       />
     </template>
   </UDashboardPanel>

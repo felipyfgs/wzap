@@ -21,7 +21,7 @@ const pagination = ref({ pageIndex: 0, pageSize: 10 })
 
 async function fetchSessions() {
   try {
-    const res: any = await api('/sessions')
+    const res: { data: unknown } = await api('/sessions')
     sessions.value = res.data || []
     if (sessions.value.length > 0 && !selectedSessionId.value) {
       selectedSessionId.value = sessions.value[0].id
@@ -39,7 +39,7 @@ async function fetchWebhooks() {
   }
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${selectedSessionId.value}/webhooks`)
+    const res: { data: unknown } = await api(`/sessions/${selectedSessionId.value}/webhooks`)
     webhooks.value = res.data || []
   } catch {
     webhooks.value = []
@@ -194,14 +194,7 @@ onMounted(async () => {
         :data="webhooks"
         :columns="columns"
         :loading="loading"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default',
-          separator: 'h-0'
-        }"
+        :ui="TABLE_UI"
       />
 
       <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">

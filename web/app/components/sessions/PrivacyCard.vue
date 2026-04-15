@@ -33,7 +33,7 @@ const valueOptions = [
 async function fetchPrivacy() {
   loading.value = true
   try {
-    const res: any = await api(`/sessions/${props.sessionId}/contacts/privacy`)
+    const res: { data: unknown } = await api(`/sessions/${props.sessionId}/contacts/privacy`)
     const data = res.data || {}
     settings.value = Object.entries(data).map(([name, value]) => ({
       name,

@@ -7,6 +7,7 @@ export default defineWebSocketHandler({
     const qs = reqUrl.includes('?') ? reqUrl.slice(reqUrl.indexOf('?')) : ''
 
     const upstream = new WebSocket(target + qs)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ;(peer as any)._upstream = upstream
 
     upstream.addEventListener('message', e => peer.send(e.data as string))
@@ -15,6 +16,7 @@ export default defineWebSocketHandler({
   },
 
   message(peer, msg) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const upstream: WebSocket | undefined = (peer as any)._upstream
     if (upstream?.readyState === WebSocket.OPEN) {
       upstream.send(msg.text())
@@ -22,6 +24,7 @@ export default defineWebSocketHandler({
   },
 
   close(peer) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const upstream: WebSocket | undefined = (peer as any)._upstream
     upstream?.close()
   }

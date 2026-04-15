@@ -34,11 +34,11 @@ const page = computed({
   set: (v: number) => { pagination.value = { ...pagination.value, pageIndex: v - 1 } }
 })
 
-const table = useTemplateRef('table') as Ref<{ tableApi?: any } | null>
+const table = useTemplateRef('table') as Ref<{ tableApi?: { getFilteredSelectedRowModel: () => { rows: Array<{ original: { jid: string } }> } } } | null>
 const adminCount = computed(() => props.members.filter(p => p.isAdmin || p.isSuperAdmin).length)
 const memberCount = computed(() => props.members.filter(p => !p.isAdmin && !p.isSuperAdmin).length)
 const selectedCount = computed((): number => table.value?.tableApi?.getFilteredSelectedRowModel().rows.length ?? 0)
-const selectedJids = computed((): string[] => table.value?.tableApi?.getFilteredSelectedRowModel().rows.map((r: any) => r.original.jid) ?? [])
+const selectedJids = computed((): string[] => table.value?.tableApi?.getFilteredSelectedRowModel().rows.map(r => r.original.jid) ?? [])
 
 const filteredParticipants = computed(() => {
   let list = props.members
@@ -139,6 +139,7 @@ function roleWeight(p: GroupParticipant) {
 
 function getRowItems(row: Row<GroupParticipant>) {
   const p = row.original
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items: any[] = [
     { type: 'label', label: 'Actions' },
     {
@@ -328,7 +329,7 @@ const participantColumns = computed<TableColumn<GroupParticipant>[]>(() => {
       :sorting-options="{}"
       :columns="participantColumns"
       :data="filteredParticipants"
-      :get-row-id="(row: any) => row.jid"
+      :get-row-id="(row: GroupParticipant) => row.jid"
       :ui="{ base: 'table-fixed border-separate border-spacing-0', th: 'py-1.5 text-xs', td: 'py-1.5 text-sm' }"
     />
 

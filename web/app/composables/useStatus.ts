@@ -2,6 +2,7 @@ export interface Status {
   id: string
   sessionId: string
   senderJid: string
+  senderName?: string
   fromMe: boolean
   statusType: string
   body: string

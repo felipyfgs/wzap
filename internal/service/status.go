@@ -23,28 +23,30 @@ type MediaPresigner interface {
 	GetPresignedURL(ctx context.Context, key string) (string, error)
 }
 
+type ContactNameGetter interface {
+	GetContactName(ctx context.Context, sessionID, jid string) string
+}
+
 type StatusService struct {
 	runtimeResolver *RuntimeResolver
 	statusRepo      repo.StatusRepo
 	mediaDownloader wa.MediaAutoUploadFunc
 	presigner       MediaPresigner
+	nameGetter      ContactNameGetter
 }
 
-func (s *StatusService) SetMediaPresigner(p MediaPresigner) {
-	s.presigner = p
-}
+func (s *StatusService) SetMediaPresigner(p MediaPresigner)       { s.presigner = p }
+func (s *StatusService) SetContactNameGetter(g ContactNameGetter) { s.nameGetter = g }
 
-func (s *StatusService) presignStatuses(ctx context.Context, statuses []model.Status) []model.Status {
-	if s.presigner == nil {
-		return statuses
-	}
+func (s *StatusService) enrichStatuses(ctx context.Context, sessionID string, statuses []model.Status) []model.Status {
 	for i, st := range statuses {
-		if st.MediaURL == "" || len(st.MediaURL) > 512 {
-			continue
+		if s.presigner != nil && st.MediaURL != "" && len(st.MediaURL) <= 512 {
+			if url, err := s.presigner.GetPresignedURL(ctx, st.MediaURL); err == nil {
+				statuses[i].MediaURL = url
+			}
 		}
-		url, err := s.presigner.GetPresignedURL(ctx, st.MediaURL)
-		if err == nil {
-			statuses[i].MediaURL = url
+		if s.nameGetter != nil && st.SenderName == "" {
+			statuses[i].SenderName = s.nameGetter.GetContactName(ctx, sessionID, st.SenderJID)
 		}
 	}
 	return statuses
@@ -241,7 +243,7 @@ func (s *StatusService) ListStatus(ctx context.Context, sessionID string, limit,
 	if err != nil {
 		return nil, err
 	}
-	return s.presignStatuses(ctx, statuses), nil
+	return s.enrichStatuses(ctx, sessionID, statuses), nil
 }
 
 func (s *StatusService) ListContactStatus(ctx context.Context, sessionID, senderJID string) ([]model.Status, error) {
@@ -249,5 +251,5 @@ func (s *StatusService) ListContactStatus(ctx context.Context, sessionID, sender
 	if err != nil {
 		return nil, err
 	}
-	return s.presignStatuses(ctx, statuses), nil
+	return s.enrichStatuses(ctx, sessionID, statuses), nil
 }

@@ -112,6 +112,7 @@ func (s *Server) SetupRoutes() error {
 	historySvc.SetMediaRetryRequester(engine)
 	messageSvc.SetMessagePersist(historySvc.PersistMessage)
 	statusSvc.SetMediaDownloader(mediaSvc.AutoUploadStatusMedia)
+	statusSvc.SetContactNameGetter(engine)
 	if s.minio != nil {
 		statusSvc.SetMediaPresigner(mediaSvc)
 	}

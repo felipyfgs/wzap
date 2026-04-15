@@ -32,13 +32,18 @@ async function loadStatuses() {
   }
 }
 
+function getSenderName(senderJid: string): string {
+  const statuses = groupedBySender.value.get(senderJid)
+  return statuses?.[0]?.senderName || senderJid.split('@')[0]
+}
+
 async function openView(senderJid: string) {
   try {
     const contactStatuses = await fetchContactStatuses(sessionId.value, senderJid)
     if (contactStatuses.length === 0) return
     viewStatuses.value = contactStatuses
     viewIndex.value = 0
-    viewSenderName.value = senderJid.split('@')[0]
+    viewSenderName.value = contactStatuses[0]?.senderName || getSenderName(senderJid)
     viewModalOpen.value = true
   } catch {
     toast.add({ title: 'Failed to load contact statuses', color: 'error' })
@@ -93,7 +98,9 @@ onMounted(() => loadStatuses())
           v-for="senderJid in getSenderJids()"
           :key="senderJid"
           :sender-jid="senderJid"
+          :sender-name="getSenderName(senderJid)"
           :latest-status="getLatestStatus(senderJid)!"
+          :has-unviewed="true"
           @click="openView(senderJid)"
         />
       </div>

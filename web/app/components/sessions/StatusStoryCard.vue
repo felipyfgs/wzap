@@ -36,12 +36,14 @@ function formatTime(ts?: string): string {
     class="flex items-center gap-3 p-3 rounded-lg hover:bg-elevated/50 transition-colors w-full text-left"
     @click="$emit('click')"
   >
-    <div
-      class="relative flex-shrink-0"
-      :class="hasUnviewed ? 'ring-2 ring-blue-500 rounded-full p-[2px]' : ''"
-    >
-      <div class="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-highlighted">
-        {{ displayName.charAt(0).toUpperCase() }}
+    <div class="relative flex-shrink-0">
+      <div
+        class="rounded-full p-[2.5px]"
+        :style="hasUnviewed ? 'background: linear-gradient(135deg, #25D366, #128C7E)' : 'background: transparent'"
+      >
+        <div class="w-12 h-12 rounded-full bg-muted flex items-center justify-center text-sm font-medium text-highlighted ring-2 ring-default">
+          {{ displayName.charAt(0).toUpperCase() }}
+        </div>
       </div>
     </div>
     <div class="flex-1 min-w-0">

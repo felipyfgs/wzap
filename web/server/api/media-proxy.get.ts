@@ -8,10 +8,13 @@ function getAllowedHosts(): Set<string> {
   hosts.add(apiBase.hostname)
   if (apiBase.port) hosts.add(apiBase.host)
 
-  const minioEndpoint = process.env.MINIO_ENDPOINT || 'localhost:9010'
-  const [minioHost, minioPort] = minioEndpoint.split(':')
-  hosts.add(minioHost)
-  if (minioPort) hosts.add(minioEndpoint)
+  try {
+    const minioBase = new URL(config.minioEndpoint as string)
+    hosts.add(minioBase.hostname)
+    if (minioBase.port) hosts.add(minioBase.host)
+  } catch {
+    // minioEndpoint inválida — ignora
+  }
 
   return hosts
 }

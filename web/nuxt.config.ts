@@ -15,9 +15,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
 
   runtimeConfig: {
-    // URL interna usada pelo proxy server-side (nunca exposta ao browser)
-    // Override em runtime via env: NUXT_API_URL=http://service-name:8080
-    apiUrl: 'http://localhost:8080'
+    apiUrl: '',
+    minioEndpoint: ''
   },
 
   compatibilityDate: '2024-07-11',

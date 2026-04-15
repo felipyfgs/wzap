@@ -12,6 +12,10 @@ tmp_dir = "/tmp/air"
   send_interrupt = true
   stop_on_error = true
 
+[watcher]
+  poll = true
+  poll_interval = 1000
+
 [log]
   time = false
 

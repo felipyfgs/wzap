@@ -5,12 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
 	"time"
 
 	"go.mau.fi/whatsmeow"
-	waE2E "go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/proto/waHistorySync"
 	"go.mau.fi/whatsmeow/proto/waWeb"
 	"go.mau.fi/whatsmeow/types/events"
@@ -19,6 +17,7 @@ import (
 	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/storage"
+	"wzap/internal/wautil"
 )
 
 type messageHistoryRepository interface {
@@ -148,6 +147,7 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 				continue
 			}
 
+			var retryIdx int
 			for _, historyMessage := range conversation.GetMessages() {
 				msg := buildHistoryMessage(sessionID, conversation, historyMessage, aliases, syncType, chunkOrder)
 				if msg == nil {
@@ -158,7 +158,7 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 					info := historyMessage.GetMessage()
 					if info != nil {
 						protoMsg := info.GetMessage()
-						directPath, encFileHash, fileHash, mediaKey, fileLength, hasMedia := extractMediaDownloadInfo(protoMsg)
+						directPath, encFileHash, fileHash, mediaKey, fileLength, hasMedia := wautil.ExtractMediaDownloadInfo(protoMsg)
 						if hasMedia && directPath != "" {
 							dlCtx, dlCancel := context.WithTimeout(ctx, 30*time.Second)
 							data, err := s.downloader.DownloadMediaByPath(dlCtx, sessionID, directPath, encFileHash, fileHash, mediaKey, fileLength, msg.MediaType)
@@ -170,7 +170,9 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 									sessID, msgID, chatJID2, senderJID2 := sessionID, msg.ID, msg.ChatJID, msg.SenderJID
 									fromMe2, mediaType2, ts2 := msg.FromMe, msg.MediaType, msg.Timestamp
 									encHash, fHash, mKey, fLen := encFileHash, fileHash, mediaKey, fileLength
-									time.AfterFunc(mediaRetryInterval, func() {
+									retryIdx++
+									delay := time.Duration(retryIdx) * mediaRetryInterval
+									time.AfterFunc(delay, func() {
 										if retryErr := requester.RequestMediaRetry(context.Background(), sessID, msgID, chatJID2, senderJID2, fromMe2, mediaType2, ts2, encHash, fHash, mKey, fLen); retryErr != nil {
 											logger.Warn().Str("component", "service").Err(retryErr).Str("session", sessID).Str("mid", msgID).Msg("History sync media: falha ao solicitar retry")
 										} else {
@@ -201,14 +203,14 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 }
 
 func buildLiveChatUpsert(sessionID, chatJID, lastMessageID string, timestamp int64) *model.ChatUpsert {
-	chatType := inferChatType(chatJID)
+	chatType := wautil.InferChatType(chatJID)
 	lastMessageAt := time.Unix(timestamp, 0)
 
 	return &model.ChatUpsert{
 		SessionID:     sessionID,
 		ChatJID:       chatJID,
 		ChatType:      &chatType,
-		LastMessageID: stringPtr(lastMessageID),
+		LastMessageID: wautil.StringPtr(lastMessageID),
 		LastMessageAt: &lastMessageAt,
 		Source:        "live",
 	}
@@ -224,9 +226,9 @@ func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conver
 		return nil
 	}
 
-	name := firstNonEmpty(conversation.GetName(), aliases.pushnameByJID[chatJID], aliases.pushnameByJID[conversation.GetPnJID()], aliases.pushnameByJID[conversation.GetLidJID()])
-	displayName := firstNonEmpty(conversation.GetDisplayName(), name)
-	chatType := inferChatType(chatJID)
+	name := wautil.FirstNonEmpty(conversation.GetName(), aliases.pushnameByJID[chatJID], aliases.pushnameByJID[conversation.GetPnJID()], aliases.pushnameByJID[conversation.GetLidJID()])
+	displayName := wautil.FirstNonEmpty(conversation.GetDisplayName(), name)
+	chatType := wautil.InferChatType(chatJID)
 	archived := conversation.GetArchived()
 	pinned := int(conversation.GetPinned())
 	readOnly := conversation.GetReadOnly()
@@ -237,8 +239,8 @@ func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conver
 	username := conversation.GetUsername()
 	accountLID := conversation.GetAccountLid()
 	lastMessageID := conversationLastMessageID(conversation)
-	lastMessageAt := unixTimePtr(uint64ToInt64(conversation.GetLastMsgTimestamp()))
-	conversationTimestamp := unixTimePtr(uint64ToInt64(conversation.GetConversationTimestamp()))
+	lastMessageAt := wautil.UnixTimePtr(wautil.Uint64ToInt64(conversation.GetLastMsgTimestamp()))
+	conversationTimestamp := wautil.UnixTimePtr(wautil.Uint64ToInt64(conversation.GetConversationTimestamp()))
 	raw := map[string]any{
 		"id":                   conversation.GetID(),
 		"newJID":               conversation.GetNewJID(),
@@ -253,8 +255,8 @@ func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conver
 	return &model.ChatUpsert{
 		SessionID:             sessionID,
 		ChatJID:               chatJID,
-		Name:                  stringPtr(name),
-		DisplayName:           stringPtr(displayName),
+		Name:                  wautil.StringPtr(name),
+		DisplayName:           wautil.StringPtr(displayName),
 		ChatType:              &chatType,
 		Archived:              &archived,
 		Pinned:                &pinned,
@@ -262,16 +264,16 @@ func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conver
 		MarkedAsUnread:        &markedAsUnread,
 		UnreadCount:           &unreadCount,
 		UnreadMentionCount:    &unreadMentionCount,
-		LastMessageID:         stringPtr(lastMessageID),
+		LastMessageID:         wautil.StringPtr(lastMessageID),
 		LastMessageAt:         lastMessageAt,
 		ConversationTimestamp: conversationTimestamp,
-		PnJID:                 stringPtr(pnJID),
-		LidJID:                stringPtr(lidJID),
-		Username:              stringPtr(username),
-		AccountLID:            stringPtr(accountLID),
+		PnJID:                 wautil.StringPtr(pnJID),
+		LidJID:                wautil.StringPtr(lidJID),
+		Username:              wautil.StringPtr(username),
+		AccountLID:            wautil.StringPtr(accountLID),
 		Source:                "history_sync",
-		SourceSyncType:        stringPtr(syncType),
-		HistoryChunkOrder:     intPtr(chunkOrder),
+		SourceSyncType:        wautil.StringPtr(syncType),
+		HistoryChunkOrder:     wautil.IntPtr(chunkOrder),
 		Raw:                   raw,
 	}
 }
@@ -296,7 +298,7 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 	}
 
 	if protoMsg != nil && protoMsg.GetSenderKeyDistributionMessage() != nil {
-		msgType, _, _ := extractMessageContent(protoMsg)
+		msgType, _, _ := wautil.ExtractMessageContent(protoMsg)
 		if msgType == "unknown" {
 			return nil
 		}
@@ -308,17 +310,17 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 		return nil
 	}
 
-	chatJID := firstNonEmpty(resolveMessageChatJID(info, conversation, aliases), resolveConversationChatJID(conversation, aliases))
+	chatJID := wautil.FirstNonEmpty(resolveMessageChatJID(info, conversation, aliases), resolveConversationChatJID(conversation, aliases))
 	if chatJID == "" {
 		return nil
 	}
 
 	senderJID := resolveMessageSenderJID(info, chatJID)
-	msgType, body, mediaType := extractMessageContent(info.GetMessage())
+	msgType, body, mediaType := wautil.ExtractMessageContent(info.GetMessage())
 	timestamp := int64(info.GetMessageTimestamp())
 	if timestamp == 0 {
 		if conversation != nil {
-			timestamp = uint64ToInt64(conversation.GetConversationTimestamp())
+			timestamp = wautil.Uint64ToInt64(conversation.GetConversationTimestamp())
 		}
 		if timestamp == 0 {
 			timestamp = time.Now().Unix()
@@ -341,7 +343,7 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 		MediaType:           mediaType,
 		Source:              "history_sync",
 		SourceSyncType:      syncType,
-		HistoryChunkOrder:   intPtr(chunkOrder),
+		HistoryChunkOrder:   wautil.IntPtr(chunkOrder),
 		HistoryMessageOrder: messageOrder,
 		Raw:                 info,
 		Timestamp:           time.Unix(timestamp, 0),
@@ -384,12 +386,12 @@ func resolveConversationChatJID(conversation *waHistorySync.Conversation, aliase
 		return ""
 	}
 
-	chatJID := firstNonEmpty(conversation.GetNewJID(), conversation.GetID(), conversation.GetPnJID(), conversation.GetLidJID())
+	chatJID := wautil.FirstNonEmpty(conversation.GetNewJID(), conversation.GetID(), conversation.GetPnJID(), conversation.GetLidJID())
 	if chatJID == "" {
 		return ""
 	}
 	if resolved, ok := aliases.lidToPN[chatJID]; ok {
-		return firstNonEmpty(conversation.GetPnJID(), resolved, chatJID)
+		return wautil.FirstNonEmpty(conversation.GetPnJID(), resolved, chatJID)
 	}
 	return chatJID
 }
@@ -458,125 +460,6 @@ func conversationLastMessageID(conversation *waHistorySync.Conversation) string 
 		}
 	}
 	return ""
-}
-
-func inferChatType(chatJID string) string {
-	switch {
-	case strings.HasPrefix(chatJID, "status@"):
-		return "status"
-	case strings.HasSuffix(chatJID, "@g.us"):
-		return "group"
-	case strings.HasSuffix(chatJID, "@broadcast"):
-		return "broadcast"
-	case strings.Contains(chatJID, "@newsletter"):
-		return "newsletter"
-	case chatJID == "":
-		return "unknown"
-	default:
-		return "direct"
-	}
-}
-
-func firstNonEmpty(values ...string) string {
-	for _, value := range values {
-		if value != "" {
-			return value
-		}
-	}
-	return ""
-}
-
-func stringPtr(value string) *string {
-	if value == "" {
-		return nil
-	}
-	return &value
-}
-
-func intPtr(value int) *int {
-	return &value
-}
-
-func unixTimePtr(timestamp int64) *time.Time {
-	if timestamp <= 0 {
-		return nil
-	}
-	t := time.Unix(timestamp, 0)
-	return &t
-}
-
-func uint64ToInt64(value uint64) int64 {
-	if value > uint64(math.MaxInt64) {
-		return 0
-	}
-	return int64(value)
-}
-
-func extractMediaDownloadInfo(msg *waE2E.Message) (directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int, ok bool) {
-	if msg == nil {
-		return "", nil, nil, nil, 0, false
-	}
-	switch {
-	case msg.GetImageMessage() != nil:
-		im := msg.GetImageMessage()
-		return im.GetDirectPath(), im.GetFileEncSHA256(), im.GetFileSHA256(), im.GetMediaKey(), int(im.GetFileLength()), true
-	case msg.GetVideoMessage() != nil:
-		vm := msg.GetVideoMessage()
-		return vm.GetDirectPath(), vm.GetFileEncSHA256(), vm.GetFileSHA256(), vm.GetMediaKey(), int(vm.GetFileLength()), true
-	case msg.GetAudioMessage() != nil:
-		am := msg.GetAudioMessage()
-		return am.GetDirectPath(), am.GetFileEncSHA256(), am.GetFileSHA256(), am.GetMediaKey(), int(am.GetFileLength()), true
-	case msg.GetDocumentMessage() != nil:
-		dm := msg.GetDocumentMessage()
-		return dm.GetDirectPath(), dm.GetFileEncSHA256(), dm.GetFileSHA256(), dm.GetMediaKey(), int(dm.GetFileLength()), true
-	case msg.GetStickerMessage() != nil:
-		sm := msg.GetStickerMessage()
-		return sm.GetDirectPath(), sm.GetFileEncSHA256(), sm.GetFileSHA256(), sm.GetMediaKey(), int(sm.GetFileLength()), true
-	default:
-		return "", nil, nil, nil, 0, false
-	}
-}
-
-func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string) {
-	if msg == nil {
-		return "unknown", "", ""
-	}
-	switch {
-	case msg.GetConversation() != "":
-		return "text", msg.GetConversation(), ""
-	case msg.GetExtendedTextMessage() != nil:
-		return "text", msg.GetExtendedTextMessage().GetText(), ""
-	case msg.GetImageMessage() != nil:
-		return "image", msg.GetImageMessage().GetCaption(), msg.GetImageMessage().GetMimetype()
-	case msg.GetVideoMessage() != nil:
-		return "video", msg.GetVideoMessage().GetCaption(), msg.GetVideoMessage().GetMimetype()
-	case msg.GetAudioMessage() != nil:
-		return "audio", "", msg.GetAudioMessage().GetMimetype()
-	case msg.GetDocumentMessage() != nil:
-		return "document", msg.GetDocumentMessage().GetFileName(), msg.GetDocumentMessage().GetMimetype()
-	case msg.GetStickerMessage() != nil:
-		return "sticker", "", msg.GetStickerMessage().GetMimetype()
-	case msg.GetContactMessage() != nil:
-		return "contact", msg.GetContactMessage().GetDisplayName(), ""
-	case msg.GetLocationMessage() != nil:
-		return "location", msg.GetLocationMessage().GetName(), ""
-	case msg.GetListMessage() != nil:
-		return "list", msg.GetListMessage().GetTitle(), ""
-	case msg.GetButtonsMessage() != nil:
-		return "buttons", msg.GetButtonsMessage().GetContentText(), ""
-	case msg.GetPollCreationMessage() != nil:
-		return "poll", msg.GetPollCreationMessage().GetName(), ""
-	case msg.GetReactionMessage() != nil:
-		return "reaction", msg.GetReactionMessage().GetText(), ""
-	case msg.GetTemplateMessage() != nil:
-		return "template", msg.GetTemplateMessage().GetHydratedTemplate().GetHydratedContentText(), ""
-	case msg.GetInteractiveMessage() != nil:
-		return "interactive", msg.GetInteractiveMessage().GetHeader().GetSubtitle(), ""
-	case msg.GetPollUpdateMessage() != nil:
-		return "poll_update", "", ""
-	default:
-		return "unknown", "", ""
-	}
 }
 
 func isExpiredMediaError(err error) bool {

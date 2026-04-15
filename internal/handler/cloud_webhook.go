@@ -124,7 +124,7 @@ func (h *CloudWebhookHandler) Handle(c *fiber.Ctx) error {
 	return c.JSON(dto.SuccessResp(nil))
 }
 
-func (h *CloudWebhookHandler) dispatchMessage(ctx context.Context, sessionID string, msg *cloudWA.Message, metadata *cloudWA.Metadata) {
+func (h *CloudWebhookHandler) dispatchMessage(_ context.Context, sessionID string, msg *cloudWA.Message, metadata *cloudWA.Metadata) {
 	data := map[string]any{
 		"from":        msg.From,
 		"id":          msg.ID,
@@ -202,7 +202,7 @@ func (h *CloudWebhookHandler) dispatchMessage(ctx context.Context, sessionID str
 	}
 }
 
-func (h *CloudWebhookHandler) dispatchStatus(ctx context.Context, sessionID string, status *cloudWA.Status) {
+func (h *CloudWebhookHandler) dispatchStatus(_ context.Context, sessionID string, status *cloudWA.Status) {
 	data := map[string]any{
 		"messageId":   status.ID,
 		"recipientId": status.RecipientID,

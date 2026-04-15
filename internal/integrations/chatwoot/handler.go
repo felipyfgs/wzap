@@ -95,6 +95,7 @@ func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 // @Param sessionId path string true "Session ID or name"
 // @Param body body dto.ChatwootConfigReq true "Chatwoot configuration"
 // @Success 200 {object} dto.APIResponse
+// @Security Authorization
 // @Failure 400 {object} dto.APIError
 // @Failure 401 {object} dto.APIError
 // @Failure 500 {object} dto.APIError
@@ -178,6 +179,7 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 // @Produce json
 // @Param sessionId path string true "Session ID or name"
 // @Success 200 {object} dto.APIResponse
+// @Security Authorization
 // @Failure 401 {object} dto.APIError
 // @Failure 404 {object} dto.APIError
 // @Router /sessions/{sessionId}/integrations/chatwoot [get]
@@ -198,6 +200,7 @@ func (h *Handler) GetConfig(c *fiber.Ctx) error {
 // @Tags Chatwoot
 // @Param sessionId path string true "Session ID or name"
 // @Success 204 "No Content"
+// @Security Authorization
 // @Failure 401 {object} dto.APIError
 // @Failure 500 {object} dto.APIError
 // @Router /sessions/{sessionId}/integrations/chatwoot [delete]
@@ -291,6 +294,7 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 // @Param body body dto.ImportHistoryReq true "Import configuration"
 // @Success 202 {object} dto.APIResponse
 // @Failure 400 {object} dto.APIError
+// @Security Authorization
 // @Failure 401 {object} dto.APIError
 // @Failure 404 {object} dto.APIError
 // @Router /sessions/{sessionId}/integrations/chatwoot/import [post]

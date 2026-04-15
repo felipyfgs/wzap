@@ -346,7 +346,7 @@ func (s *Service) importSingleMessage(ctx context.Context, cfg *Config, msg *mod
 	return nil
 }
 
-func (s *Service) importMediaMessage(ctx context.Context, cfg *Config, client Client, convID int, msg *model.Message, messageType, sourceID string) error {
+func (s *Service) importMediaMessage(ctx context.Context, _ *Config, client Client, convID int, msg *model.Message, messageType, sourceID string) error {
 	mediaCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 

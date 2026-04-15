@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"testing"
 
+	"wzap/internal/imgutil"
 	"wzap/internal/model"
 )
 
@@ -48,7 +49,7 @@ func TestConvertWebPToPNG_ValidImage(t *testing.T) {
 	var buf bytes.Buffer
 	_ = png.Encode(&buf, img)
 
-	out, err := convertWebPToPNG(buf.Bytes())
+	out, err := imgutil.ConvertWebPToPNG(buf.Bytes())
 	if err != nil {
 		t.Fatalf("convertWebPToPNG failed on valid PNG: %v", err)
 	}
@@ -58,7 +59,7 @@ func TestConvertWebPToPNG_ValidImage(t *testing.T) {
 }
 
 func TestConvertWebPToPNG_InvalidData(t *testing.T) {
-	_, err := convertWebPToPNG([]byte("not-an-image"))
+	_, err := imgutil.ConvertWebPToPNG([]byte("not-an-image"))
 	if err == nil {
 		t.Error("expected error on invalid image data")
 	}
@@ -69,7 +70,7 @@ func TestConvertWebPToGIF_ValidImage(t *testing.T) {
 	var buf bytes.Buffer
 	_ = png.Encode(&buf, img)
 
-	out, err := convertWebPToGIF(buf.Bytes())
+	out, err := imgutil.ConvertWebPToGIF(buf.Bytes())
 	if err != nil {
 		t.Fatalf("convertWebPToGIF failed: %v", err)
 	}

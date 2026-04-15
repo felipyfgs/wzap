@@ -6,12 +6,6 @@ import (
 
 func TestChatwootConfigNewFields(t *testing.T) {
 	cfg := &Config{
-		SessionID:           "sess-1",
-		URL:                 "https://cw.example.com",
-		AccountID:           1,
-		Token:               "token",
-		InboxID:             1,
-		InboxName:           "wzap",
 		ImportOnConnect:     true,
 		ImportPeriod:        "7d",
 		TimeoutTextSeconds:  10,

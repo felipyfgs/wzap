@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -16,11 +17,25 @@ import (
 
 	"wzap/internal/logger"
 	"wzap/internal/model"
+	"wzap/internal/wautil"
 )
 
 var eventBufPool = sync.Pool{New: func() any { return new(bytes.Buffer) }}
 
 func (m *Manager) handleEvent(sessionID string, evt any) {
+	eventType, ok := m.classifyEvent(sessionID, evt)
+	if !ok {
+		return
+	}
+	envelope, err := m.serializeEventData(sessionID, eventType, evt)
+	if err != nil {
+		logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to serialize event")
+		return
+	}
+	m.dispatchEvent(sessionID, eventType, envelope)
+}
+
+func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, bool) {
 	var eventType model.EventType
 
 	switch v := evt.(type) {
@@ -51,17 +66,17 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 				Bool("fromMe", v.Info.IsFromMe).
 				Msg("Message edited")
 		} else if proto := v.Message.GetProtocolMessage(); proto != nil {
-			return
+			return "", false
 		} else {
 			if v.Message.GetSenderKeyDistributionMessage() != nil {
-				msgType, _, _ := extractMessageContent(v.Message)
+				msgType, _, _ := wautil.ExtractMessageContent(v.Message)
 				if msgType == "unknown" {
 					logger.Debug().
 						Str("component", "wa").
 						Str("session", sessionID).
 						Str("mid", v.Info.ID).
 						Msg("Sender key distribution message filtered")
-					return
+					return "", false
 				}
 			}
 
@@ -73,10 +88,10 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 						Str("session", sessionID).
 						Str("mid", v.Info.ID).
 						Msg("Status message ignored (IgnoreStatus enabled)")
-					return
+					return "", false
 				}
 				if m.OnStatusReceived != nil {
-					msgType, body, mediaType := extractMessageContent(v.Message)
+					msgType, body, mediaType := wautil.ExtractMessageContent(v.Message)
 					m.OnStatusReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
 				}
 				if m.OnStatusMediaReceived != nil && v.Message != nil {
@@ -91,12 +106,12 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 						m.OnStatusMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetVideoMessage().GetMimetype(), fromMe, ts, v.Message.GetVideoMessage())
 					}
 				}
-				return
+				return "", false
 			}
 
 			eventType = model.EventMessage
 			{
-				msgType, _, mediaType := extractMessageContent(v.Message)
+				msgType, _, mediaType := wautil.ExtractMessageContent(v.Message)
 				logger.Info().
 					Str("component", "wa").
 					Str("session", sessionID).
@@ -137,7 +152,7 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 			}
 
 			if m.OnMessageReceived != nil {
-				msgType, body, mediaType := extractMessageContent(v.Message)
+				msgType, body, mediaType := wautil.ExtractMessageContent(v.Message)
 				m.OnMessageReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
 			}
 		}
@@ -155,7 +170,7 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 		eventType = model.EventReceipt
 		if v.Type != "" && v.Type != "read" && v.Type != "read-self" && v.Type != "played" && v.Type != "played-self" {
 			logger.Debug().Str("component", "wa").Str("session", sessionID).Str("type", string(v.Type)).Msg("Receipt ignored")
-			return
+			return "", false
 		}
 		logger.Debug().Str("component", "wa").Str("session", sessionID).Str("type", string(v.Type)).Str("chat", v.Chat.String()).Int("count", len(v.MessageIDs)).Msg("Receipt received")
 
@@ -447,9 +462,13 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 		logger.Info().Str("component", "wa").Str("session", sessionID).Msg("FB message received")
 
 	default:
-		return
+		return "", false
 	}
 
+	return eventType, eventType != ""
+}
+
+func (m *Manager) serializeEventData(sessionID string, eventType model.EventType, evt any) ([]byte, error) {
 	var data map[string]any
 
 	switch v := evt.(type) {
@@ -472,13 +491,11 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 		buf.Reset()
 		if err := json.NewEncoder(buf).Encode(evt); err != nil {
 			eventBufPool.Put(buf)
-			logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to serialize event")
-			return
+			return nil, fmt.Errorf("encode event: %w", err)
 		}
 		if err := json.NewDecoder(buf).Decode(&data); err != nil {
 			eventBufPool.Put(buf)
-			logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to unmarshal event")
-			return
+			return nil, fmt.Errorf("decode event: %w", err)
 		}
 		eventBufPool.Put(buf)
 
@@ -505,12 +522,10 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 	sessionName := m.getSessionName(nameCtx, sessionID)
 	nameCancel()
 
-	envelope, err := model.BuildEventEnvelope(sessionID, sessionName, eventType, data)
-	if err != nil {
-		logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to marshal event payload")
-		return
-	}
+	return model.BuildEventEnvelope(sessionID, sessionName, eventType, data)
+}
 
+func (m *Manager) dispatchEvent(sessionID string, eventType model.EventType, envelope []byte) {
 	const maxNATSPayloadSize = 512 * 1024
 	if m.nats != nil {
 		if len(envelope) > maxNATSPayloadSize {
@@ -526,48 +541,6 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 
 	if m.dispatcher != nil {
 		m.dispatcher.DispatchAsync(sessionID, eventType, envelope)
-	}
-}
-
-func extractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string) {
-	if msg == nil {
-		return "unknown", "", ""
-	}
-	switch {
-	case msg.GetConversation() != "":
-		return "text", msg.GetConversation(), ""
-	case msg.GetExtendedTextMessage() != nil:
-		return "text", msg.GetExtendedTextMessage().GetText(), ""
-	case msg.GetImageMessage() != nil:
-		return "image", msg.GetImageMessage().GetCaption(), msg.GetImageMessage().GetMimetype()
-	case msg.GetVideoMessage() != nil:
-		return "video", msg.GetVideoMessage().GetCaption(), msg.GetVideoMessage().GetMimetype()
-	case msg.GetAudioMessage() != nil:
-		return "audio", "", msg.GetAudioMessage().GetMimetype()
-	case msg.GetDocumentMessage() != nil:
-		return "document", msg.GetDocumentMessage().GetFileName(), msg.GetDocumentMessage().GetMimetype()
-	case msg.GetStickerMessage() != nil:
-		return "sticker", "", msg.GetStickerMessage().GetMimetype()
-	case msg.GetContactMessage() != nil:
-		return "contact", msg.GetContactMessage().GetDisplayName(), ""
-	case msg.GetLocationMessage() != nil:
-		return "location", msg.GetLocationMessage().GetName(), ""
-	case msg.GetListMessage() != nil:
-		return "list", msg.GetListMessage().GetTitle(), ""
-	case msg.GetButtonsMessage() != nil:
-		return "buttons", msg.GetButtonsMessage().GetContentText(), ""
-	case msg.GetPollCreationMessage() != nil:
-		return "poll", msg.GetPollCreationMessage().GetName(), ""
-	case msg.GetReactionMessage() != nil:
-		return "reaction", msg.GetReactionMessage().GetText(), ""
-	case msg.GetTemplateMessage() != nil:
-		return "template", msg.GetTemplateMessage().GetHydratedTemplate().GetHydratedContentText(), ""
-	case msg.GetInteractiveMessage() != nil:
-		return "interactive", msg.GetInteractiveMessage().GetHeader().GetSubtitle(), ""
-	case msg.GetPollUpdateMessage() != nil:
-		return "poll_update", "", ""
-	default:
-		return "unknown", "", ""
 	}
 }
 

@@ -41,7 +41,7 @@ clean: ## Remove artefatos de build
 
 docs: ## Gera documentação Swagger
 	swag init -g main.go -o docs --parseInternal --useStructName \
-		-d cmd/wzap,internal/handler,internal/dto,internal/model,internal/service,internal/repo
+		-d cmd/wzap,internal
 
 install-tools: ## Instala ferramentas de dev (golangci-lint, swag)
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.11.4

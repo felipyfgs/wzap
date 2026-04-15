@@ -25,6 +25,12 @@ type mockClient struct {
 	createConversationCalls int
 }
 
+func (m *mockClient) SearchContacts(_ context.Context, _ string) ([]Contact, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.contacts, nil
+}
+
 func (m *mockClient) FilterContacts(_ context.Context, _ string) ([]Contact, error) {
 	m.mu.Lock()
 	m.filterContactsCalls++
@@ -166,6 +172,10 @@ func (m *mockMsgRepo) FindByCWMessageID(_ context.Context, sessionID string, _ i
 	return &model.Message{ID: "test-msg", SessionID: sessionID}, nil
 }
 
+func (m *mockMsgRepo) FindAllByCWMessageID(_ context.Context, sessionID string, _ int) ([]model.Message, error) {
+	return []model.Message{{ID: "test-msg", SessionID: sessionID}}, nil
+}
+
 func (m *mockMsgRepo) UpdateChatwootRef(_ context.Context, _, _ string, _, _ int, _ string) error {
 	return nil
 }
@@ -239,6 +249,10 @@ func (m *mockMsgRepoWithDuplicates) FindByID(_ context.Context, sessionID, msgID
 }
 
 func (m *mockMsgRepoWithDuplicates) FindByCWMessageID(_ context.Context, _ string, _ int) (*model.Message, error) {
+	return nil, nil
+}
+
+func (m *mockMsgRepoWithDuplicates) FindAllByCWMessageID(_ context.Context, _ string, _ int) ([]model.Message, error) {
 	return nil, nil
 }
 

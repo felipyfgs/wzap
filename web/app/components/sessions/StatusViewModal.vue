@@ -126,14 +126,14 @@ onUnmounted(() => {
               v-if="currentStatus?.mediaUrl && currentStatus.statusType === 'image'"
               :src="mediaProxyUrl(currentStatus.mediaUrl)"
               :alt="currentStatus.body || 'Status'"
-              class="w-full h-full object-cover"
+              class="w-full h-full object-contain"
               draggable="false"
             >
             <!-- Video -->
             <video
               v-else-if="currentStatus?.mediaUrl && currentStatus.statusType === 'video'"
               :src="mediaProxyUrl(currentStatus.mediaUrl)"
-              class="w-full h-full object-cover"
+              class="w-full h-full object-contain"
               autoplay
               muted
               playsinline

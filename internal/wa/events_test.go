@@ -9,10 +9,12 @@ import (
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 	"google.golang.org/protobuf/proto"
+
+	"wzap/internal/wautil"
 )
 
 func TestExtractMessageContent_Nil(t *testing.T) {
-	msgType, body, mediaType := extractMessageContent(nil)
+	msgType, body, mediaType := wautil.ExtractMessageContent(nil)
 	if msgType != "unknown" || body != "" || mediaType != "" {
 		t.Errorf("unexpected: type=%s body=%s media=%s", msgType, body, mediaType)
 	}
@@ -20,7 +22,7 @@ func TestExtractMessageContent_Nil(t *testing.T) {
 
 func TestExtractMessageContent_Conversation(t *testing.T) {
 	msg := &waE2E.Message{Conversation: proto.String("hello")}
-	msgType, body, mediaType := extractMessageContent(msg)
+	msgType, body, mediaType := wautil.ExtractMessageContent(msg)
 	if msgType != "text" || body != "hello" || mediaType != "" {
 		t.Errorf("unexpected: type=%s body=%s media=%s", msgType, body, mediaType)
 	}
@@ -32,7 +34,7 @@ func TestExtractMessageContent_ExtendedText(t *testing.T) {
 			Text: proto.String("extended hello"),
 		},
 	}
-	msgType, body, mediaType := extractMessageContent(msg)
+	msgType, body, mediaType := wautil.ExtractMessageContent(msg)
 	if msgType != "text" || body != "extended hello" {
 		t.Errorf("unexpected: type=%s body=%s", msgType, body)
 	}
@@ -46,7 +48,7 @@ func TestExtractMessageContent_Image(t *testing.T) {
 			Mimetype: proto.String("image/jpeg"),
 		},
 	}
-	msgType, body, mediaType := extractMessageContent(msg)
+	msgType, body, mediaType := wautil.ExtractMessageContent(msg)
 	if msgType != "image" || body != "photo caption" || mediaType != "image/jpeg" {
 		t.Errorf("unexpected: type=%s body=%s media=%s", msgType, body, mediaType)
 	}
@@ -58,7 +60,7 @@ func TestExtractMessageContent_Audio(t *testing.T) {
 			Mimetype: proto.String("audio/ogg"),
 		},
 	}
-	msgType, body, mediaType := extractMessageContent(msg)
+	msgType, body, mediaType := wautil.ExtractMessageContent(msg)
 	if msgType != "audio" || body != "" || mediaType != "audio/ogg" {
 		t.Errorf("unexpected: type=%s body=%s media=%s", msgType, body, mediaType)
 	}
@@ -71,7 +73,7 @@ func TestExtractMessageContent_Document(t *testing.T) {
 			Mimetype: proto.String("application/pdf"),
 		},
 	}
-	msgType, body, mediaType := extractMessageContent(msg)
+	msgType, body, mediaType := wautil.ExtractMessageContent(msg)
 	if msgType != "document" || body != "report.pdf" || mediaType != "application/pdf" {
 		t.Errorf("unexpected: type=%s body=%s media=%s", msgType, body, mediaType)
 	}
@@ -83,7 +85,7 @@ func TestExtractMessageContent_Poll(t *testing.T) {
 			Name: proto.String("Which option?"),
 		},
 	}
-	msgType, body, _ := extractMessageContent(msg)
+	msgType, body, _ := wautil.ExtractMessageContent(msg)
 	if msgType != "poll" || body != "Which option?" {
 		t.Errorf("unexpected: type=%s body=%s", msgType, body)
 	}
@@ -95,7 +97,7 @@ func TestExtractMessageContent_Reaction(t *testing.T) {
 			Text: proto.String("👍"),
 		},
 	}
-	msgType, body, _ := extractMessageContent(msg)
+	msgType, body, _ := wautil.ExtractMessageContent(msg)
 	if msgType != "reaction" || body != "👍" {
 		t.Errorf("unexpected: type=%s body=%s", msgType, body)
 	}
@@ -105,14 +107,14 @@ func TestExtractMessageContent_PollUpdate(t *testing.T) {
 	msg := &waE2E.Message{
 		PollUpdateMessage: &waE2E.PollUpdateMessage{},
 	}
-	msgType, _, _ := extractMessageContent(msg)
+	msgType, _, _ := wautil.ExtractMessageContent(msg)
 	if msgType != "poll_update" {
 		t.Errorf("unexpected: type=%s", msgType)
 	}
 }
 
 func TestExtractMessageContent_ProtocolMessage(t *testing.T) {
-	msgType, body, mediaType := extractMessageContent(&waE2E.Message{
+	msgType, body, mediaType := wautil.ExtractMessageContent(&waE2E.Message{
 		ProtocolMessage: &waE2E.ProtocolMessage{},
 	})
 	if msgType != "unknown" || body != "" || mediaType != "" {

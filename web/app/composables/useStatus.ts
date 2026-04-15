@@ -17,17 +17,17 @@ export function useStatus() {
   const { api } = useWzap()
 
   async function fetchStatuses(sessionId: string, limit = 50, offset = 0): Promise<Status[]> {
-    const res: { data: Status[] } = await api(`/sessions/${sessionId}/statuses?limit=${limit}&offset=${offset}`)
+    const res: { data: Status[] } = await api(`/sessions/${sessionId}/stories?limit=${limit}&offset=${offset}`)
     return res.data || []
   }
 
   async function fetchContactStatuses(sessionId: string, senderJid: string): Promise<Status[]> {
-    const res: { data: Status[] } = await api(`/sessions/${sessionId}/statuses/${encodeURIComponent(senderJid)}`)
+    const res: { data: Status[] } = await api(`/sessions/${sessionId}/stories/${encodeURIComponent(senderJid)}`)
     return res.data || []
   }
 
   async function sendStatusText(sessionId: string, text: string, backgroundColor?: string, font?: number): Promise<string> {
-    const res: { data: { mid: string } } = await api(`/sessions/${sessionId}/statuses/text`, {
+    const res: { data: { mid: string } } = await api(`/sessions/${sessionId}/stories/text`, {
       method: 'POST',
       body: { text, backgroundColor, font }
     })
@@ -35,7 +35,7 @@ export function useStatus() {
   }
 
   async function sendStatusImage(sessionId: string, payload: { mimeType: string; base64?: string; url?: string; caption?: string }): Promise<string> {
-    const res: { data: { mid: string } } = await api(`/sessions/${sessionId}/statuses/image`, {
+    const res: { data: { mid: string } } = await api(`/sessions/${sessionId}/stories/image`, {
       method: 'POST',
       body: payload
     })
@@ -43,7 +43,7 @@ export function useStatus() {
   }
 
   async function sendStatusVideo(sessionId: string, payload: { mimeType: string; base64?: string; url?: string; caption?: string }): Promise<string> {
-    const res: { data: { mid: string } } = await api(`/sessions/${sessionId}/statuses/video`, {
+    const res: { data: { mid: string } } = await api(`/sessions/${sessionId}/stories/video`, {
       method: 'POST',
       body: payload
     })

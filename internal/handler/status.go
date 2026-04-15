@@ -41,7 +41,7 @@ func (h *StatusHandler) respondStatusError(c *fiber.Ctx, err error, sessionID, l
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
-// @Router      /sessions/{sessionId}/status/text [post]
+// @Router      /sessions/{sessionId}/stories/text [post]
 func (h *StatusHandler) SendText(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -72,7 +72,7 @@ func (h *StatusHandler) SendText(c *fiber.Ctx) error {
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
-// @Router      /sessions/{sessionId}/status/image [post]
+// @Router      /sessions/{sessionId}/stories/image [post]
 func (h *StatusHandler) SendImage(c *fiber.Ctx) error {
 	return h.sendStatusMedia(c, whatsmeow.MediaImage)
 }
@@ -89,7 +89,7 @@ func (h *StatusHandler) SendImage(c *fiber.Ctx) error {
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
-// @Router      /sessions/{sessionId}/status/video [post]
+// @Router      /sessions/{sessionId}/stories/video [post]
 func (h *StatusHandler) SendVideo(c *fiber.Ctx) error {
 	return h.sendStatusMedia(c, whatsmeow.MediaVideo)
 }
@@ -128,7 +128,7 @@ func (h *StatusHandler) sendStatusMedia(c *fiber.Ctx, mediaType whatsmeow.MediaT
 // @Success     200 {object} dto.APIResponse{Data=[]model.Status}
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
-// @Router      /sessions/{sessionId}/status [get]
+// @Router      /sessions/{sessionId}/stories [get]
 func (h *StatusHandler) ListStatus(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {
@@ -158,7 +158,7 @@ func (h *StatusHandler) ListStatus(c *fiber.Ctx) error {
 // @Success     200 {object} dto.APIResponse{Data=[]model.Status}
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
-// @Router      /sessions/{sessionId}/status/{senderJid} [get]
+// @Router      /sessions/{sessionId}/stories/{senderJid} [get]
 func (h *StatusHandler) ListContactStatus(c *fiber.Ctx) error {
 	id, err := getSessionID(c)
 	if err != nil {

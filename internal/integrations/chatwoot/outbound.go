@@ -56,27 +56,33 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 	}
 
 	if msg != nil && msg.IsOutgoing() {
-		sourceID := msg.SourceID
-		if sourceID != "" {
-			if exists, err := s.msgRepo.ExistsBySourceID(ctx, sessionID, sourceID); err == nil && exists {
-				logger.Debug().Str("component", "chatwoot").Str("sourceID", sourceID).Msg("outbound already processed, skipping (idempotency)")
-				metrics.CWIdempotentDrops.WithLabelValues(sessionID).Inc()
-				return nil
-			}
-		}
-		if msg.ID > 0 {
-			cwIdemKey := fmt.Sprintf("cw-out:%d", msg.ID)
-			if s.cache.GetIdempotent(ctx, sessionID, cwIdemKey) {
-				logger.Debug().Str("component", "chatwoot").Int("cwMsgID", msg.ID).Msg("outbound already processed, skipping (CW msg ID idempotency)")
-				metrics.CWIdempotentDrops.WithLabelValues(sessionID).Inc()
-				return nil
-			}
-			s.cache.SetIdempotent(ctx, sessionID, cwIdemKey)
+		if s.isOutboundDuplicate(ctx, sessionID, msg) {
+			return nil
 		}
 		return s.handleOutgoingMessage(ctx, cfg, body)
 	}
 
 	return nil
+}
+
+func (s *Service) isOutboundDuplicate(ctx context.Context, sessionID string, msg *dto.ChatwootWebhookMessage) bool {
+	if sourceID := msg.SourceID; sourceID != "" {
+		if exists, err := s.msgRepo.ExistsBySourceID(ctx, sessionID, sourceID); err == nil && exists {
+			logger.Debug().Str("component", "chatwoot").Str("sourceID", sourceID).Msg("outbound already processed, skipping (idempotency)")
+			metrics.CWIdempotentDrops.WithLabelValues(sessionID).Inc()
+			return true
+		}
+	}
+	if msg.ID > 0 {
+		cwIdemKey := fmt.Sprintf("cw-out:%d", msg.ID)
+		if s.cache.GetIdempotent(ctx, sessionID, cwIdemKey) {
+			logger.Debug().Str("component", "chatwoot").Int("cwMsgID", msg.ID).Msg("outbound already processed, skipping (CW msg ID idempotency)")
+			metrics.CWIdempotentDrops.WithLabelValues(sessionID).Inc()
+			return true
+		}
+		s.cache.SetIdempotent(ctx, sessionID, cwIdemKey)
+	}
+	return false
 }
 
 func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
@@ -145,13 +151,17 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *Config, body d
 	}
 
 	if len(msg.Attachments) > 0 {
-		caption := signContent(msg.Content, senderName, cfg.SignDelimiter)
-		for _, att := range msg.Attachments {
+		firstCaption := signContent(msg.Content, senderName, cfg.SignDelimiter)
+		for i, att := range msg.Attachments {
 			attURL := att.DataURL
 			if attURL == "" {
 				attURL = att.URL
 			}
 			attURL = rewriteAttachmentURL(attURL, cfg.URL)
+			caption := ""
+			if i == 0 {
+				caption = firstCaption
+			}
 			waMsgID, err := s.sendAttachmentToWhatsApp(ctx, cfg, chatJID, attURL, caption, att.FileType, replyTo)
 			if err != nil {
 				logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to send attachment from Chatwoot to WhatsApp")
@@ -204,18 +214,22 @@ func (s *Service) handleMessageEdited(ctx context.Context, cfg *Config, body dto
 		return nil
 	}
 
-	storedMsg, err := s.msgRepo.FindByCWMessageID(ctx, cfg.SessionID, msg.ID)
-	if err != nil {
+	storedMsgs, err := s.msgRepo.FindAllByCWMessageID(ctx, cfg.SessionID, msg.ID)
+	if err != nil || len(storedMsgs) == 0 {
 		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", msg.ID).Msg("handleMessageEdited: message not found in store")
 		return nil
 	}
 
-	_, err = s.messageSvc.EditMessage(ctx, cfg.SessionID, dto.EditMessageReq{
-		Phone:     storedMsg.ChatJID,
-		MessageID: storedMsg.ID,
-		Body:      msg.Content,
-	})
-	return err
+	for _, storedMsg := range storedMsgs {
+		if _, err := s.messageSvc.EditMessage(ctx, cfg.SessionID, dto.EditMessageReq{
+			Phone:     storedMsg.ChatJID,
+			MessageID: storedMsg.ID,
+			Body:      msg.Content,
+		}); err != nil {
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("msgID", storedMsg.ID).Msg("handleMessageEdited: failed to edit WA message")
+		}
+	}
+	return nil
 }
 
 func extractLocationFromText(text string) (lat, lng float64, ok bool) {
@@ -240,7 +254,7 @@ func isVCardContent(content string) bool {
 	return strings.HasPrefix(strings.TrimSpace(content), "BEGIN:VCARD")
 }
 
-func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *Config, chatJID, content string, replyTo *dto.ReplyContext) error {
+func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *Config, chatJID, content string, _ *dto.ReplyContext) error {
 	vcards := splitVCards(content)
 	for _, vcard := range vcards {
 		name := extractVCardName(vcard)
@@ -289,16 +303,18 @@ func (s *Service) handleMessageUpdated(ctx context.Context, cfg *Config, body dt
 	}
 
 	cwMsgID := webhookMsg.ID
-	storedMsg, err := s.msgRepo.FindByCWMessageID(ctx, cfg.SessionID, cwMsgID)
-	if err != nil {
+	storedMsgs, err := s.msgRepo.FindAllByCWMessageID(ctx, cfg.SessionID, cwMsgID)
+	if err != nil || len(storedMsgs) == 0 {
 		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", cwMsgID).Msg("handleMessageUpdated: message not found in store")
 		return nil
 	}
 
-	_, _ = s.messageSvc.DeleteMessage(ctx, cfg.SessionID, dto.DeleteMessageReq{
-		Phone:     storedMsg.ChatJID,
-		MessageID: storedMsg.ID,
-	})
+	for _, storedMsg := range storedMsgs {
+		_, _ = s.messageSvc.DeleteMessage(ctx, cfg.SessionID, dto.DeleteMessageReq{
+			Phone:     storedMsg.ChatJID,
+			MessageID: storedMsg.ID,
+		})
+	}
 
 	if body.Conversation != nil && body.Conversation.Status == "resolved" {
 		sourceID := body.Conversation.ContactInbox.SourceID

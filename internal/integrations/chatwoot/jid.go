@@ -82,6 +82,23 @@ func formatGroupContent(phone, pushName, body string, fromMe bool) string {
 	return fmt.Sprintf("**+%s - %s:**\n\n%s", phone, pushName, body)
 }
 
+// resolveLID resolves a @lid JID to a regular phone JID.
+// It tries each altJID in order before falling back to the store lookup.
+func (s *Service) resolveLID(ctx context.Context, sessionID, jid string, altJIDs ...string) string {
+	if !strings.HasSuffix(jid, "@lid") {
+		return jid
+	}
+	for _, alt := range altJIDs {
+		if alt != "" && !strings.HasSuffix(alt, "@lid") {
+			if !strings.Contains(alt, "@") {
+				return alt + "@s.whatsapp.net"
+			}
+			return alt
+		}
+	}
+	return s.resolveJID(ctx, sessionID, jid)
+}
+
 func (s *Service) resolveJID(ctx context.Context, sessionID, jid string) string {
 	if !strings.HasSuffix(jid, "@lid") || s.jidResolver == nil {
 		return jid

@@ -37,8 +37,12 @@ func (m *Manager) consumeQRChannel(sessionID string, qrChan <-chan whatsmeow.QRC
 
 		case "timeout":
 			logger.Warn().Str("component", "wa").Str("session", sessionID).Msg("QR code timed out")
-			_ = m.sessionRepo.UpdateQRCode(opCtx, sessionID, "")
-			_ = m.sessionRepo.UpdateStatus(opCtx, sessionID, "disconnected")
+			if err := m.sessionRepo.UpdateQRCode(opCtx, sessionID, ""); err != nil {
+				logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to clear QR code on timeout")
+			}
+			if err := m.sessionRepo.UpdateStatus(opCtx, sessionID, "disconnected"); err != nil {
+				logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to update status to disconnected on QR timeout")
+			}
 
 			m.mu.Lock()
 			if client, exists := m.clients[sessionID]; exists {
@@ -49,8 +53,12 @@ func (m *Manager) consumeQRChannel(sessionID string, qrChan <-chan whatsmeow.QRC
 
 		case "success":
 			logger.Info().Str("component", "wa").Str("session", sessionID).Msg("QR pairing completed")
-			_ = m.sessionRepo.UpdateQRCode(opCtx, sessionID, "")
-			_ = m.sessionRepo.UpdateStatus(opCtx, sessionID, "connected")
+			if err := m.sessionRepo.UpdateQRCode(opCtx, sessionID, ""); err != nil {
+				logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to clear QR code on success")
+			}
+			if err := m.sessionRepo.UpdateStatus(opCtx, sessionID, "connected"); err != nil {
+				logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to update status to connected")
+			}
 		}
 		opCancel()
 	}

@@ -28,6 +28,7 @@ type MessageRepo interface {
 	FindBySession(ctx context.Context, sessionID string, limit, offset int) ([]model.Message, error)
 	FindByID(ctx context.Context, sessionID, msgID string) (*model.Message, error)
 	FindByCWMessageID(ctx context.Context, sessionID string, cwMsgID int) (*model.Message, error)
+	FindAllByCWMessageID(ctx context.Context, sessionID string, cwMsgID int) ([]model.Message, error)
 	FindBySourceID(ctx context.Context, sessionID, sourceID string) (*model.Message, error)
 	FindBySourceIDPrefix(ctx context.Context, sessionID, sourceIDPrefix string) (*model.Message, error)
 	FindByBody(ctx context.Context, sessionID, body string, fromMe bool) (*model.Message, error)
@@ -333,6 +334,25 @@ func (r *MessageRepository) FindByCWMessageID(ctx context.Context, sessionID str
 		return nil, fmt.Errorf("failed to find message by CW message ID: %w", err)
 	}
 	return &m, nil
+}
+
+func (r *MessageRepository) FindAllByCWMessageID(ctx context.Context, sessionID string, cwMsgID int) ([]model.Message, error) {
+	rows, err := r.db.Query(ctx,
+		`SELECT `+messageSelectColumns+` FROM wz_messages WHERE cw_message_id = $1 AND session_id = $2`,
+		cwMsgID, sessionID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find messages by CW message ID: %w", err)
+	}
+	defer rows.Close()
+	var msgs []model.Message
+	for rows.Next() {
+		var m model.Message
+		if err := scanMessage(rows, &m); err != nil {
+			return nil, err
+		}
+		msgs = append(msgs, m)
+	}
+	return msgs, rows.Err()
 }
 
 func (r *MessageRepository) ExistsBySourceID(ctx context.Context, sessionID, sourceID string) (bool, error) {

@@ -60,18 +60,12 @@ func newRuntimeResolver(repo sessionLookup, engine *wa.Manager, provider *cloudW
 }
 
 func (r *RuntimeResolver) SetProvider(provider *cloudWA.Client) {
-	if r == nil {
-		return
-	}
 	r.provider = provider
 }
 
 func (r *RuntimeResolver) Resolve(ctx context.Context, sessionID string) (*SessionRuntime, error) {
 	if runtime, ok := sessionRuntimeFromContext(ctx, sessionID); ok {
 		return runtime, nil
-	}
-	if r == nil {
-		return nil, fmt.Errorf("session runtime resolver is nil")
 	}
 	if r.repo == nil {
 		return nil, fmt.Errorf("session repository is nil")
@@ -141,14 +135,11 @@ func (r *RuntimeResolver) resolveCapability(ctx context.Context, sessionID strin
 }
 
 func (r *SessionRuntime) Session() *model.Session {
-	if r == nil {
-		return nil
-	}
 	return r.session
 }
 
 func (r *SessionRuntime) Engine() string {
-	if r == nil || r.session == nil {
+	if r.session == nil {
 		return ""
 	}
 	return r.session.Engine
@@ -159,9 +150,6 @@ func (r *SessionRuntime) IsCloudAPI() bool {
 }
 
 func (r *SessionRuntime) Provider() *cloudWA.Client {
-	if r == nil {
-		return nil
-	}
 	return r.provider
 }
 
@@ -170,7 +158,7 @@ func (r *SessionRuntime) WithContext(ctx context.Context) context.Context {
 }
 
 func (r *SessionRuntime) CloudConfig() (*cloudWA.Config, error) {
-	if r == nil || r.session == nil {
+	if r.session == nil {
 		return nil, fmt.Errorf("session runtime is nil")
 	}
 	if !r.IsCloudAPI() {
@@ -183,7 +171,7 @@ func (r *SessionRuntime) CloudConfig() (*cloudWA.Config, error) {
 }
 
 func (r *SessionRuntime) Client() (*whatsmeow.Client, error) {
-	if r == nil || r.session == nil {
+	if r.session == nil {
 		return nil, fmt.Errorf("session runtime is nil")
 	}
 	if r.IsCloudAPI() {
@@ -207,37 +195,25 @@ func (r *SessionRuntime) ConnectedClient() (*whatsmeow.Client, error) {
 }
 
 func (r *SessionRuntime) RequireCapability(capability model.EngineCapability) (model.CapabilitySupport, error) {
-	if r == nil || r.session == nil {
+	if r.session == nil {
 		return model.SupportUnavailable, fmt.Errorf("session runtime is nil")
 	}
 	return requireCapability(r.session.Engine, capability)
 }
 
 func (r *MessageRuntime) Support() model.CapabilitySupport {
-	if r == nil {
-		return model.SupportUnavailable
-	}
 	return r.support
 }
 
 func (r *MediaRuntime) Support() model.CapabilitySupport {
-	if r == nil {
-		return model.SupportUnavailable
-	}
 	return r.support
 }
 
 func (r *StatusRuntime) Support() model.CapabilitySupport {
-	if r == nil {
-		return model.SupportUnavailable
-	}
 	return r.support
 }
 
 func (r *ProfileRuntime) Support() model.CapabilitySupport {
-	if r == nil {
-		return model.SupportUnavailable
-	}
 	return r.support
 }
 
@@ -270,12 +246,13 @@ func buildCloudConfig(session *model.Session) *cloudWA.Config {
 	return cfg
 }
 
-func runSessionRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
+type clientResolver func() (*whatsmeow.Client, error)
+
+func runClientRuntime[T any](ctx context.Context, runtime *SessionRuntime, resolveClient clientResolver, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
 	var zero T
 	if runtime == nil || runtime.session == nil {
 		return zero, fmt.Errorf("session runtime is nil")
 	}
-
 	ctx = runtime.WithContext(ctx)
 	if runtime.IsCloudAPI() {
 		if cloud == nil {
@@ -289,49 +266,25 @@ func runSessionRuntime[T any](ctx context.Context, runtime *SessionRuntime, clou
 	if whatsmeowFn == nil {
 		return zero, fmt.Errorf("whatsmeow runtime handler is nil")
 	}
-	client, err := runtime.Client()
+	client, err := resolveClient()
 	if err != nil {
 		return zero, err
 	}
 	return whatsmeowFn(ctx, runtime.session, client)
 }
 
-func runConnectedRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
-	var zero T
-	if runtime == nil || runtime.session == nil {
-		return zero, fmt.Errorf("session runtime is nil")
-	}
+func runSessionRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
+	return runClientRuntime(ctx, runtime, runtime.Client, cloud, whatsmeowFn)
+}
 
-	ctx = runtime.WithContext(ctx)
-	if runtime.IsCloudAPI() {
-		if cloud == nil {
-			return zero, fmt.Errorf("cloud runtime handler is nil")
-		}
-		if runtime.provider == nil {
-			return zero, fmt.Errorf("cloud provider unavailable")
-		}
-		return cloud(ctx, runtime.session, runtime.provider)
-	}
-	if whatsmeowFn == nil {
-		return zero, fmt.Errorf("whatsmeow runtime handler is nil")
-	}
-	client, err := runtime.ConnectedClient()
-	if err != nil {
-		return zero, err
-	}
-	return whatsmeowFn(ctx, runtime.session, client)
+func runConnectedRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
+	return runClientRuntime(ctx, runtime, runtime.ConnectedClient, cloud, whatsmeowFn)
 }
 
 func runRuntimeErr(ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) error, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) error) error {
 	_, err := runSessionRuntime(ctx, runtime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (struct{}, error) {
-		if cloud == nil {
-			return struct{}{}, fmt.Errorf("cloud runtime handler is nil")
-		}
 		return struct{}{}, cloud(ctx, session, provider)
 	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
-		if whatsmeowFn == nil {
-			return struct{}{}, fmt.Errorf("whatsmeow runtime handler is nil")
-		}
 		return struct{}{}, whatsmeowFn(ctx, session, client)
 	})
 	return err

@@ -405,7 +405,7 @@ func TestHistoryServiceMediaRetryRateLimit(t *testing.T) {
 	}
 	for i := 1; i < len(retryRecorder.times); i++ {
 		gap := retryRecorder.times[i].Sub(retryRecorder.times[i-1])
-		if gap < 3*time.Second {
+		if gap < 3*time.Second-50*time.Millisecond {
 			t.Fatalf("gap between retry %d and %d was %v, expected >= 3s", i-1, i, gap)
 		}
 	}

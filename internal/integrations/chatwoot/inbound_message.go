@@ -1,18 +1,12 @@
 package chatwoot
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	_ "golang.org/x/image/webp"
-	"image"
-	gocolor "image/color"
-	"image/gif"
-	_ "image/jpeg"
-	"image/png"
 	"strings"
 	"time"
 
+	"wzap/internal/imgutil"
 	"wzap/internal/logger"
 	"wzap/internal/metrics"
 	"wzap/internal/model"
@@ -33,35 +27,10 @@ func (s *Service) handleMessage(ctx context.Context, cfg *Config, payload []byte
 		return nil
 	}
 
+	chatJID = s.resolveLID(ctx, cfg.SessionID, chatJID, data.Info.SenderAlt, data.Info.RecipientAlt)
 	if strings.HasSuffix(chatJID, "@lid") {
-		resolved := false
-		if s.jidResolver != nil {
-			if pn := s.jidResolver.GetPNForLID(ctx, cfg.SessionID, chatJID); pn != "" {
-				logger.Debug().Str("component", "chatwoot").Str("lid", chatJID).Str("pn", pn).Msg("resolved LID to PN via store")
-				chatJID = pn + "@s.whatsapp.net"
-				resolved = true
-			}
-		}
-		if !resolved {
-			var altJID string
-			if !data.Info.IsFromMe {
-				altJID = data.Info.SenderAlt
-			} else {
-				altJID = data.Info.RecipientAlt
-			}
-			if altJID != "" && !strings.HasSuffix(altJID, "@lid") {
-				logger.Debug().Str("component", "chatwoot").Str("lid", chatJID).Str("alt", altJID).Msg("resolved LID to PN via message alt JID")
-				chatJID = altJID
-				if !strings.Contains(chatJID, "@") {
-					chatJID += "@s.whatsapp.net"
-				}
-				resolved = true
-			}
-		}
-		if !resolved {
-			logger.Warn().Str("component", "chatwoot").Str("lid", chatJID).Str("session", cfg.SessionID).Msg("unresolvable LID chat, skipping")
-			return nil
-		}
+		logger.Warn().Str("component", "chatwoot").Str("lid", chatJID).Str("session", cfg.SessionID).Msg("unresolvable LID chat, skipping")
+		return nil
 	}
 
 	if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
@@ -194,14 +163,7 @@ func (s *Service) handleMessage(ctx context.Context, cfg *Config, payload []byte
 	text = applyMessagePrefixes(msg, convertWAToCWMarkdown(text))
 
 	if !fromMe && data.Info.IsGroup && cfg.SignMsg && pushName != "" {
-		senderJID := data.Info.Sender
-		if strings.HasSuffix(senderJID, "@lid") {
-			if data.Info.SenderAlt != "" {
-				senderJID = data.Info.SenderAlt
-			} else {
-				senderJID = s.resolveJID(ctx, cfg.SessionID, senderJID)
-			}
-		}
+		senderJID := s.resolveLID(ctx, cfg.SessionID, data.Info.Sender, data.Info.SenderAlt)
 		phone := extractPhone(senderJID)
 		text = formatGroupContent(phone, pushName, text, fromMe)
 	}
@@ -290,6 +252,29 @@ func (s *Service) resolveInboundReply(ctx context.Context, sessionID, chatJID, s
 	return 0
 }
 
+type cwMsgParams struct {
+	MessageType  string
+	SourceID     string
+	ContentAttrs map[string]any
+}
+
+func newCWMsgParams(fromMe bool, msgID, stanzaID string, cwReplyID int) cwMsgParams {
+	p := cwMsgParams{MessageType: "incoming"}
+	if fromMe {
+		p.MessageType = "outgoing"
+	}
+	if msgID != "" {
+		p.SourceID = "WAID:" + msgID
+	}
+	if stanzaID != "" {
+		p.ContentAttrs = map[string]any{"reply_source_id": "WAID:" + stanzaID}
+		if cwReplyID > 0 {
+			p.ContentAttrs["in_reply_to"] = cwReplyID
+		}
+	}
+	return p
+}
+
 func (s *Service) handleMediaMessage(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, stanzaID string, cwReplyID int) {
 	info := extractMediaInfo(msg)
 	if info == nil {
@@ -299,12 +284,9 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *Config, convID in
 
 	if int64(info.FileLength) > maxMediaBytes {
 		client := s.clientFn(cfg)
-		messageType := "incoming"
-		if fromMe {
-			messageType = "outgoing"
-		}
+		p := newCWMsgParams(fromMe, "", "", 0)
 		warnMsg := fmt.Sprintf("⚠️ Arquivo muito grande (%d MB) para download (limite: 256 MB)", info.FileLength/(1024*1024))
-		_, _ = client.CreateMessage(ctx, convID, MessageReq{Content: warnMsg, MessageType: messageType, Private: true})
+		_, _ = client.CreateMessage(ctx, convID, MessageReq{Content: warnMsg, MessageType: p.MessageType, Private: true})
 		return
 	}
 
@@ -347,28 +329,13 @@ func (s *Service) handleMediaMessage(ctx context.Context, cfg *Config, convID in
 
 	caption := extractText(msg)
 	client := s.clientFn(cfg)
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-	sourceID := ""
-	if msgID != "" {
-		sourceID = "WAID:" + msgID
-	}
+	p := newCWMsgParams(fromMe, msgID, stanzaID, cwReplyID)
 
 	if isGIF(msg) && caption == "" {
 		caption = "[GIF]"
 	}
 
-	var contentAttrs map[string]any
-	if stanzaID != "" {
-		contentAttrs = map[string]any{"reply_source_id": "WAID:" + stanzaID}
-		if cwReplyID > 0 {
-			contentAttrs["in_reply_to"] = cwReplyID
-		}
-	}
-
-	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, caption, filename, data, mimeType, messageType, sourceID, cwReplyID, contentAttrs)
+	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, caption, filename, data, mimeType, p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to upload media to Chatwoot")
 		return
@@ -393,35 +360,20 @@ func (s *Service) handleStickerMessage(ctx context.Context, cfg *Config, convID 
 	metrics.CWMediaDownloadBytes.WithLabelValues(cfg.SessionID, "sticker").Add(float64(len(data)))
 
 	client := s.clientFn(cfg)
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-	sourceID := ""
-	if msgID != "" {
-		sourceID = "WAID:" + msgID
-	}
-
-	var contentAttrs map[string]any
-	if stanzaID != "" {
-		contentAttrs = map[string]any{"reply_source_id": "WAID:" + stanzaID}
-		if cwReplyID > 0 {
-			contentAttrs["in_reply_to"] = cwReplyID
-		}
-	}
+	p := newCWMsgParams(fromMe, msgID, stanzaID, cwReplyID)
 
 	if len(data) > 0 && len(data) <= 1024*1024 {
-		pngData, err := convertWebPToPNG(data)
+		pngData, err := imgutil.ConvertWebPToPNG(data)
 		if err == nil {
-			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.png", pngData, "image/png", messageType, sourceID, cwReplyID, contentAttrs)
+			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.png", pngData, "image/png", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 			if err == nil && msgID != "" {
 				_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 				return
 			}
 		}
-		gifData, err := convertWebPToGIF(data)
+		gifData, err := imgutil.ConvertWebPToGIF(data)
 		if err == nil {
-			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.gif", gifData, "image/gif", messageType, sourceID, cwReplyID, contentAttrs)
+			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.gif", gifData, "image/gif", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 			if err == nil && msgID != "" {
 				_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 				return
@@ -429,7 +381,7 @@ func (s *Service) handleStickerMessage(ctx context.Context, cfg *Config, convID 
 		}
 	}
 
-	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.webp", data, "image/webp", messageType, sourceID, cwReplyID, contentAttrs)
+	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.webp", data, "image/webp", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to upload sticker fallback")
 		return
@@ -437,66 +389,6 @@ func (s *Service) handleStickerMessage(ctx context.Context, cfg *Config, convID 
 	if msgID != "" {
 		_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 	}
-}
-
-func convertWebPToPNG(data []byte) ([]byte, error) {
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, img); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func convertWebPToGIF(data []byte) ([]byte, error) {
-	img, _, err := image.Decode(bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	g := &gif.GIF{
-		Image: []*image.Paletted{imageToPaletted(img)},
-		Delay: []int{10},
-	}
-	var buf bytes.Buffer
-	if err := gif.EncodeAll(&buf, g); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
-}
-
-func imageToPaletted(img image.Image) *image.Paletted {
-	bounds := img.Bounds()
-	pm := image.NewPaletted(bounds, buildPalette(img, bounds))
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			pm.Set(x, y, img.At(x, y))
-		}
-	}
-	return pm
-}
-
-type rgbaKey struct{ R, G, B, A uint8 }
-
-func buildPalette(img image.Image, bounds image.Rectangle) gocolor.Palette {
-	seen := make(map[rgbaKey]struct{}, 256)
-	palette := make(gocolor.Palette, 0, 256)
-	for y := bounds.Min.Y; y < bounds.Max.Y && len(palette) < 256; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X && len(palette) < 256; x++ {
-			r32, g32, b32, a32 := img.At(x, y).RGBA()
-			k := rgbaKey{uint8(r32 >> 8), uint8(g32 >> 8), uint8(b32 >> 8), uint8(a32 >> 8)}
-			if _, ok := seen[k]; !ok {
-				seen[k] = struct{}{}
-				palette = append(palette, gocolor.RGBA{R: k.R, G: k.G, B: k.B, A: k.A})
-			}
-		}
-	}
-	for len(palette) < 256 {
-		palette = append(palette, gocolor.RGBA{})
-	}
-	return palette
 }
 
 func (s *Service) handlePollCreation(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, poll map[string]any) {
@@ -513,18 +405,11 @@ func (s *Service) handlePollCreation(ctx context.Context, cfg *Config, convID in
 	}
 
 	client := s.clientFn(cfg)
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-	sourceID := ""
-	if msgID != "" {
-		sourceID = "WAID:" + msgID
-	}
+	p := newCWMsgParams(fromMe, msgID, "", 0)
 	cwMsg, err := client.CreateMessage(ctx, convID, MessageReq{
 		Content:     sb.String(),
-		MessageType: messageType,
-		SourceID:    sourceID,
+		MessageType: p.MessageType,
+		SourceID:    p.SourceID,
 	})
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create poll message")
@@ -587,10 +472,7 @@ func (s *Service) handleReaction(ctx context.Context, cfg *Config, convID int, m
 	}
 
 	client := s.clientFn(cfg)
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
+	p := newCWMsgParams(fromMe, "", "", 0)
 
 	if emoji == "" {
 		if origMsg.CWConversationID != nil {
@@ -604,7 +486,7 @@ func (s *Service) handleReaction(ctx context.Context, cfg *Config, convID int, m
 
 	cwMsg, err := client.CreateMessage(ctx, convID, MessageReq{
 		Content:           emoji,
-		MessageType:       messageType,
+		MessageType:       p.MessageType,
 		Private:           true,
 		SourceReplyID:     *origMsg.CWMessageID,
 		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID, "reply_source_id": "WAID:" + targetMsgID},
@@ -625,12 +507,8 @@ func (s *Service) handleButtonResponse(ctx context.Context, cfg *Config, convID 
 	}
 	content := fmt.Sprintf("[Botão] %s", text)
 
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-
-	msgReq := MessageReq{Content: content, MessageType: messageType, SourceID: "WAID:" + msgID}
+	p := newCWMsgParams(fromMe, msgID, "", 0)
+	msgReq := MessageReq{Content: content, MessageType: p.MessageType, SourceID: p.SourceID}
 	if stanzaID := extractStanzaID(msg); stanzaID != "" {
 		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
 			msgReq.SourceReplyID = *origMsg.CWMessageID
@@ -669,12 +547,8 @@ func (s *Service) handleListResponse(ctx context.Context, cfg *Config, convID in
 		content += ": " + description
 	}
 
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-
-	msgReq := MessageReq{Content: content, MessageType: messageType, SourceID: "WAID:" + msgID}
+	p := newCWMsgParams(fromMe, msgID, "", 0)
+	msgReq := MessageReq{Content: content, MessageType: p.MessageType, SourceID: p.SourceID}
 	if stanzaID := extractStanzaID(msg); stanzaID != "" {
 		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
 			msgReq.SourceReplyID = *origMsg.CWMessageID
@@ -700,12 +574,8 @@ func (s *Service) handleTemplateReply(ctx context.Context, cfg *Config, convID i
 	text := getStringField(tmpl, "selectedDisplayText")
 	content := fmt.Sprintf("[Template] %s", text)
 
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-
-	msgReq := MessageReq{Content: content, MessageType: messageType, SourceID: "WAID:" + msgID}
+	p := newCWMsgParams(fromMe, msgID, "", 0)
+	msgReq := MessageReq{Content: content, MessageType: p.MessageType, SourceID: p.SourceID}
 	if stanzaID := extractStanzaID(msg); stanzaID != "" {
 		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
 			msgReq.SourceReplyID = *origMsg.CWMessageID
@@ -729,14 +599,7 @@ func (s *Service) handleTemplateReply(ctx context.Context, cfg *Config, convID i
 
 func (s *Service) handleViewOnce(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, vonce map[string]any, tryDownload bool, stanzaID string, cwReplyID int) {
 	client := s.clientFn(cfg)
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-	sourceID := ""
-	if msgID != "" {
-		sourceID = "WAID:" + msgID
-	}
+	p := newCWMsgParams(fromMe, msgID, stanzaID, cwReplyID)
 
 	if tryDownload {
 		if innerMsg := getMapField(vonce, "message"); innerMsg != nil && s.mediaDownloader != nil {
@@ -761,14 +624,7 @@ func (s *Service) handleViewOnce(ctx context.Context, cfg *Config, convID int, m
 						filename = info.MediaType + ext
 					}
 
-					var contentAttrs map[string]any
-					if stanzaID != "" {
-						contentAttrs = map[string]any{"reply_source_id": "WAID:" + stanzaID}
-						if cwReplyID > 0 {
-							contentAttrs["in_reply_to"] = cwReplyID
-						}
-					}
-					cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", filename, data, mimeType, messageType, sourceID, cwReplyID, contentAttrs)
+					cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", filename, data, mimeType, p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 					if err == nil {
 						if msgID != "" {
 							_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
@@ -784,9 +640,10 @@ func (s *Service) handleViewOnce(ctx context.Context, cfg *Config, convID int, m
 	}
 
 	cwMsg, err := client.CreateMessage(ctx, convID, MessageReq{
-		Content:     "[mensagem vista uma vez]",
-		MessageType: messageType,
-		SourceID:    sourceID,
+		Content:           "[mensagem vista uma vez]",
+		MessageType:       p.MessageType,
+		SourceID:          p.SourceID,
+		ContentAttributes: p.ContentAttrs,
 	})
 	if err != nil {
 		return
@@ -820,18 +677,14 @@ func (s *Service) handleEditedMessage(ctx context.Context, cfg *Config, editMsg 
 	}
 
 	client := s.clientFn(cfg)
-
-	messageType := "incoming"
-	if origMsg.FromMe {
-		messageType = "outgoing"
-	}
+	p := newCWMsgParams(origMsg.FromMe, "", "", 0)
 
 	_, _ = client.CreateMessage(ctx, *origMsg.CWConversationID, MessageReq{
 		Content:           "✏️ *Mensagem editada:*\n" + newText,
-		MessageType:       messageType,
+		MessageType:       p.MessageType,
 		Private:           true,
 		SourceReplyID:     *origMsg.CWMessageID,
-		ContentAttributes: map[string]any{"in_reply_to": *origMsg.CWMessageID},
+		ContentAttributes: p.ContentAttrs,
 	})
 }
 
@@ -839,18 +692,11 @@ func (s *Service) handleLiveLocation(ctx context.Context, cfg *Config, convID in
 	text := formatLocation(liveMsg)
 
 	client := s.clientFn(cfg)
-	messageType := "incoming"
-	if fromMe {
-		messageType = "outgoing"
-	}
-	sourceID := ""
-	if msgID != "" {
-		sourceID = "WAID:" + msgID
-	}
+	p := newCWMsgParams(fromMe, msgID, "", 0)
 	cwMsg, err := client.CreateMessage(ctx, convID, MessageReq{
 		Content:     text,
-		MessageType: messageType,
-		SourceID:    sourceID,
+		MessageType: p.MessageType,
+		SourceID:    p.SourceID,
 	})
 	if err != nil {
 		return

@@ -183,7 +183,9 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 			if err := m.sessionRepo.UpdateJID(opCtx, sessionID, jidStr); err != nil {
 				logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Str("jid", jidStr).Msg("Failed to update jid on pair")
 			}
-			_ = m.sessionRepo.UpdateQRCode(opCtx, sessionID, "")
+			if err := m.sessionRepo.UpdateQRCode(opCtx, sessionID, ""); err != nil {
+				logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to clear QR code on pair")
+			}
 			logger.Info().Str("component", "wa").Str("session", sessionID).Str("jid", jidStr).Msg("QR pairing successful")
 		case *events.Disconnected:
 			if err := m.sessionRepo.UpdateStatus(opCtx, sessionID, "disconnected"); err != nil {
@@ -199,7 +201,9 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 			if err := m.sessionRepo.ClearDevice(opCtx, sessionID); err != nil {
 				logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to clear device on logout")
 			}
-			_ = m.sessionRepo.UpdateQRCode(opCtx, sessionID, "")
+			if err := m.sessionRepo.UpdateQRCode(opCtx, sessionID, ""); err != nil {
+				logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to clear QR code on logout")
+			}
 		}
 	})
 
@@ -231,7 +235,9 @@ func (m *Manager) Connect(ctx context.Context, sessionID string) (*whatsmeow.Cli
 			return nil, nil, err
 		}
 
-		_ = m.sessionRepo.UpdateStatus(ctx, sessionID, "connecting")
+		if err := m.sessionRepo.UpdateStatus(ctx, sessionID, "connecting"); err != nil {
+			logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to update status to connecting")
+		}
 		go m.consumeQRChannel(sessionID, qrChan)
 
 		return client, qrChan, nil
@@ -320,7 +326,9 @@ func (m *Manager) PairPhone(ctx context.Context, sessionID, phone string) (strin
 }
 
 func (m *Manager) Reconnect(ctx context.Context, sessionID string) error {
-	_ = m.Disconnect(ctx, sessionID)
+	if err := m.Disconnect(ctx, sessionID); err != nil {
+		logger.Warn().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to disconnect before reconnect")
+	}
 	_, _, err := m.Connect(ctx, sessionID)
 	return err
 }

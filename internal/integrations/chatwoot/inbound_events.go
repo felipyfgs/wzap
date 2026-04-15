@@ -3,7 +3,6 @@ package chatwoot
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"wzap/internal/logger"
@@ -216,7 +215,7 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 	return msg, nil
 }
 
-func (s *Service) handleConnected(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) handleConnected(ctx context.Context, cfg *Config, _ []byte) {
 	now := time.Now()
 	if v, ok := s.lastBotNotify.Load(cfg.SessionID); ok {
 		if lastTime, valid := v.(time.Time); valid && now.Sub(lastTime) < 30*time.Second {
@@ -247,7 +246,7 @@ func (s *Service) handleConnected(ctx context.Context, cfg *Config, payload []by
 	}
 }
 
-func (s *Service) handleDisconnected(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) handleDisconnected(ctx context.Context, cfg *Config, _ []byte) {
 	convID, ok := s.findOpenBotConversation(ctx, cfg)
 	if !ok {
 		return
@@ -289,8 +288,10 @@ func (s *Service) handleQR(ctx context.Context, cfg *Config, payload []byte) {
 	}
 
 	caption := "⚡️ QR Code gerado com sucesso!\n\nEscaneie o QR Code abaixo no WhatsApp para conectar."
-	if data.PairingCode != "" {
+	if len(data.PairingCode) >= 4 {
 		caption += fmt.Sprintf("\n\n*Código de pareamento:* %s-%s", data.PairingCode[:4], data.PairingCode[4:])
+	} else if data.PairingCode != "" {
+		caption += fmt.Sprintf("\n\n*Código de pareamento:* %s", data.PairingCode)
 	}
 
 	_, _ = client.CreateMessageWithAttachment(ctx, convID, caption, "qrcode.png", qrPNG, "image/png", "incoming", "", 0, nil)
@@ -314,17 +315,11 @@ func (s *Service) handleContact(ctx context.Context, cfg *Config, payload []byte
 		return
 	}
 
-	jid := data.JID
-	if strings.HasSuffix(jid, "@lid") {
-		if data.Action.PnJID != nil && *data.Action.PnJID != "" {
-			jid = *data.Action.PnJID
-			if !strings.Contains(jid, "@") {
-				jid = jid + "@s.whatsapp.net"
-			}
-		} else {
-			jid = s.resolveJID(ctx, cfg.SessionID, jid)
-		}
+	pnJID := ""
+	if data.Action.PnJID != nil {
+		pnJID = *data.Action.PnJID
 	}
+	jid := s.resolveLID(ctx, cfg.SessionID, data.JID, pnJID)
 
 	phone := extractPhone(jid)
 	name := ""
@@ -361,14 +356,7 @@ func (s *Service) handlePushName(ctx context.Context, cfg *Config, payload []byt
 		return
 	}
 
-	jid := data.JID
-	if strings.HasSuffix(jid, "@lid") {
-		if data.JIDAlt != "" {
-			jid = data.JIDAlt
-		} else {
-			jid = s.resolveJID(ctx, cfg.SessionID, jid)
-		}
-	}
+	jid := s.resolveLID(ctx, cfg.SessionID, data.JID, data.JIDAlt)
 
 	phone := extractPhone(jid)
 
@@ -402,10 +390,7 @@ func (s *Service) handlePicture(ctx context.Context, cfg *Config, payload []byte
 		return
 	}
 
-	jid := data.JID
-	if strings.HasSuffix(jid, "@lid") {
-		jid = s.resolveJID(ctx, cfg.SessionID, jid)
-	}
+	jid := s.resolveLID(ctx, cfg.SessionID, data.JID)
 
 	phone := extractPhone(jid)
 
@@ -475,27 +460,17 @@ func (s *Service) handleGroupInfo(ctx context.Context, cfg *Config, payload []by
 	if data.SenderPN != nil && *data.SenderPN != "" {
 		senderPhone = extractPhone(*data.SenderPN)
 	} else if data.Sender != nil && *data.Sender != "" {
-		senderJID := *data.Sender
-		if strings.HasSuffix(senderJID, "@lid") {
-			senderJID = s.resolveJID(ctx, cfg.SessionID, senderJID)
-		}
-		senderPhone = extractPhone(senderJID)
+		senderPhone = extractPhone(s.resolveLID(ctx, cfg.SessionID, *data.Sender))
 	}
 
 	var notifications []string
 
 	for _, jid := range data.Join {
-		pJID := jid
-		if strings.HasSuffix(pJID, "@lid") {
-			pJID = s.resolveJID(ctx, cfg.SessionID, pJID)
-		}
+		pJID := s.resolveLID(ctx, cfg.SessionID, jid)
 		notifications = append(notifications, fmt.Sprintf("➕ %s entrou no grupo", extractPhone(pJID)))
 	}
 	for _, jid := range data.Leave {
-		pJID := jid
-		if strings.HasSuffix(pJID, "@lid") {
-			pJID = s.resolveJID(ctx, cfg.SessionID, pJID)
-		}
+		pJID := s.resolveLID(ctx, cfg.SessionID, jid)
 		phone := extractPhone(pJID)
 		if senderPhone != "" && senderPhone != phone {
 			notifications = append(notifications, fmt.Sprintf("➖ %s foi removido do grupo por %s", phone, senderPhone))
@@ -504,17 +479,11 @@ func (s *Service) handleGroupInfo(ctx context.Context, cfg *Config, payload []by
 		}
 	}
 	for _, jid := range data.Promote {
-		pJID := jid
-		if strings.HasSuffix(pJID, "@lid") {
-			pJID = s.resolveJID(ctx, cfg.SessionID, pJID)
-		}
+		pJID := s.resolveLID(ctx, cfg.SessionID, jid)
 		notifications = append(notifications, fmt.Sprintf("⬆️ %s foi promovido a admin por %s", extractPhone(pJID), senderPhone))
 	}
 	for _, jid := range data.Demote {
-		pJID := jid
-		if strings.HasSuffix(pJID, "@lid") {
-			pJID = s.resolveJID(ctx, cfg.SessionID, pJID)
-		}
+		pJID := s.resolveLID(ctx, cfg.SessionID, jid)
 		notifications = append(notifications, fmt.Sprintf("⬇️ %s foi rebaixado de admin por %s", extractPhone(pJID), senderPhone))
 	}
 
@@ -555,6 +524,6 @@ func (s *Service) handleGroupInfo(ctx context.Context, cfg *Config, payload []by
 	return nil
 }
 
-func (s *Service) handleHistorySync(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) handleHistorySync(_ context.Context, cfg *Config, _ []byte) {
 	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Msg("HistorySync received (no-op until import triggered)")
 }

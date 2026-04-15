@@ -211,12 +211,12 @@ func (s *Server) SetupRoutes() error {
 	sess.Get("/media/:messageId", mediaHandler.GetMedia)
 	sess.Get("/messages", historyHandler.ListMessages)
 
-	// 3.2. Status (WhatsApp Stories)
-	sess.Post("/status/text", statusHandler.SendText)
-	sess.Post("/status/image", statusHandler.SendImage)
-	sess.Post("/status/video", statusHandler.SendVideo)
-	sess.Get("/status", statusHandler.ListStatus)
-	sess.Get("/status/:senderJid", statusHandler.ListContactStatus)
+	// 3.2. Statuses (WhatsApp Stories)
+	sess.Post("/statuses/text", statusHandler.SendText)
+	sess.Post("/statuses/image", statusHandler.SendImage)
+	sess.Post("/statuses/video", statusHandler.SendVideo)
+	sess.Get("/statuses", statusHandler.ListStatus)
+	sess.Get("/statuses/:senderJid", statusHandler.ListContactStatus)
 
 	// 4. Contacts
 	sess.Get("/contacts", contactHandler.List)

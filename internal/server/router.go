@@ -111,7 +111,21 @@ func (s *Server) SetupRoutes() error {
 	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)
 	historySvc.SetMediaRetryRequester(engine)
 	messageSvc.SetMessagePersist(historySvc.PersistMessage)
+	statusSvc.SetMediaDownloader(mediaSvc.AutoUploadStatusMedia)
+	if s.minio != nil {
+		statusSvc.SetMediaPresigner(mediaSvc)
+	}
 	engine.SetStatusReceived(statusSvc.PersistStatusReceived)
+
+	go func() {
+		sessions, err := sessionRepo.FindAll(context.Background())
+		if err != nil {
+			return
+		}
+		for _, sess := range sessions {
+			statusSvc.RetryMissingMedia(context.Background(), sess.ID)
+		}
+	}()
 	engine.SetShouldIgnoreStatus(func(sessionID string) bool {
 		sess, err := sessionRepo.FindByID(context.Background(), sessionID)
 		if err != nil || sess == nil {

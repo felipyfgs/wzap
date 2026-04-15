@@ -23,6 +23,7 @@ type StatusRepo interface {
 	FindBySession(ctx context.Context, sessionID string, limit, offset int) ([]model.Status, error)
 	FindBySender(ctx context.Context, sessionID, senderJID string) ([]model.Status, error)
 	UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error
+	FindWithMissingMedia(ctx context.Context, sessionID string, limit int) ([]model.Status, error)
 	DeleteExpired(ctx context.Context, before time.Time) (int64, error)
 	DeleteBySender(ctx context.Context, sessionID, senderJID string) error
 }
@@ -113,6 +114,37 @@ func (r *StatusRepository) FindBySender(ctx context.Context, sessionID, senderJI
 	rows, err := r.db.Query(ctx, query, sessionID, senderJID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query statuses by sender: %w", err)
+	}
+	defer rows.Close()
+
+	var statuses []model.Status
+	for rows.Next() {
+		var s model.Status
+		if err := scanStatus(rows, &s); err != nil {
+			return nil, err
+		}
+		statuses = append(statuses, s)
+	}
+	return statuses, rows.Err()
+}
+
+func (r *StatusRepository) FindWithMissingMedia(ctx context.Context, sessionID string, limit int) ([]model.Status, error) {
+	if limit <= 0 || limit > 500 {
+		limit = 200
+	}
+	query := `SELECT ` + statusSelectColumns + `
+		FROM wz_statuses
+		WHERE session_id = $1
+		  AND status_type IN ('image', 'video')
+		  AND (media_url IS NULL OR media_url = '')
+		  AND raw IS NOT NULL AND raw != 'null'::jsonb
+		  AND expires_at > NOW()
+		ORDER BY timestamp DESC
+		LIMIT $2`
+
+	rows, err := r.db.Query(ctx, query, sessionID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query statuses missing media: %w", err)
 	}
 	defer rows.Close()
 

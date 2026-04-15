@@ -14,6 +14,17 @@ const emit = defineEmits<{
 const currentIndex = ref(props.initialIndex ?? 0)
 const currentStatus = computed(() => props.statuses[currentIndex.value])
 
+function mediaProxyUrl(url: string): string {
+  if (!url) return ''
+  try {
+    const parsed = new URL(url)
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1' || !parsed.hostname.includes('.')) {
+      return `/api/media-proxy?url=${encodeURIComponent(url)}`
+    }
+  } catch {}
+  return url
+}
+
 function next() {
   if (currentIndex.value < props.statuses.length - 1) {
     currentIndex.value++
@@ -99,7 +110,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             <!-- Image status -->
             <img
               v-else-if="currentStatus.mediaUrl && currentStatus.statusType === 'image'"
-              :src="currentStatus.mediaUrl"
+              :src="mediaProxyUrl(currentStatus.mediaUrl)"
               :alt="currentStatus.body || 'Status image'"
               class="max-h-[60vh] max-w-full rounded-lg object-contain"
             >
@@ -107,7 +118,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             <!-- Video status -->
             <video
               v-else-if="currentStatus.mediaUrl && currentStatus.statusType === 'video'"
-              :src="currentStatus.mediaUrl"
+              :src="mediaProxyUrl(currentStatus.mediaUrl)"
               controls
               class="max-h-[60vh] max-w-full rounded-lg"
             />

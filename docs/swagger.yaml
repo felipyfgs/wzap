@@ -1,0 +1,5011 @@
+definitions:
+  dto.APIError:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dto.APIResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dto.BlockContactReq:
+    properties:
+      phone:
+        type: string
+    required:
+    - phone
+    type: object
+  dto.ButtonItem:
+    properties:
+      id:
+        type: string
+      text:
+        type: string
+    required:
+    - id
+    - text
+    type: object
+  dto.ChatActionReq:
+    properties:
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
+  dto.ChatMarkReadReq:
+    properties:
+      jid:
+        type: string
+      messageIds:
+        items:
+          type: string
+        type: array
+    required:
+    - jid
+    - messageIds
+    type: object
+  dto.ChatMarkUnreadReq:
+    properties:
+      jid:
+        type: string
+    required:
+    - jid
+    type: object
+  dto.ChatwootConfigReq:
+    properties:
+      accountId:
+        type: integer
+      autoCreateInbox:
+        type: boolean
+      conversationPending:
+        type: boolean
+      databaseUri:
+        type: string
+      ignoreGroups:
+        type: boolean
+      ignoreJids:
+        items:
+          type: string
+        type: array
+      importOnConnect:
+        type: boolean
+      importPeriod:
+        type: string
+      inboxId:
+        type: integer
+      inboxName:
+        type: string
+      mergeBrContacts:
+        type: boolean
+      messageRead:
+        type: boolean
+      redisUrl:
+        type: string
+      reopenConversation:
+        type: boolean
+      signDelimiter:
+        type: string
+      signMsg:
+        type: boolean
+      timeoutLargeSeconds:
+        type: integer
+      timeoutMediaSeconds:
+        type: integer
+      timeoutTextSeconds:
+        type: integer
+      token:
+        type: string
+      url:
+        type: string
+      webhookToken:
+        type: string
+    required:
+    - accountId
+    - token
+    - url
+    type: object
+  dto.CheckContactReq:
+    properties:
+      phones:
+        items:
+          type: string
+        type: array
+    required:
+    - phones
+    type: object
+  dto.CommunityParticipantReq:
+    properties:
+      communityJid:
+        type: string
+      participants:
+        items:
+          type: string
+        type: array
+    required:
+    - communityJid
+    - participants
+    type: object
+  dto.ConnectResp:
+    properties:
+      status:
+        type: string
+    type: object
+  dto.CreateCommunityReq:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateGroupReq:
+    properties:
+      name:
+        example: My Awesome Group
+        type: string
+      participants:
+        example:
+        - "5511999999999"
+        - "5511888888888"
+        items:
+          type: string
+        type: array
+    type: object
+  dto.CreateNewsletterReq:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      picture:
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateWebhookReq:
+    properties:
+      events:
+        items:
+          type: string
+        type: array
+      natsEnabled:
+        type: boolean
+      secret:
+        type: string
+      url:
+        type: string
+    required:
+    - events
+    - url
+    type: object
+  dto.DeleteMessageReq:
+    properties:
+      messageId:
+        type: string
+      phone:
+        type: string
+    required:
+    - messageId
+    - phone
+    type: object
+  dto.EditLabelReq:
+    properties:
+      color:
+        type: integer
+      deleted:
+        type: boolean
+      labelId:
+        type: string
+      name:
+        type: string
+    required:
+    - labelId
+    type: object
+  dto.EditMessageReq:
+    properties:
+      body:
+        type: string
+      messageId:
+        type: string
+      phone:
+        type: string
+    required:
+    - body
+    - messageId
+    - phone
+    type: object
+  dto.ForwardMessageReq:
+    properties:
+      fromJid:
+        type: string
+      messageId:
+        type: string
+      phone:
+        type: string
+    required:
+    - fromJid
+    - messageId
+    - phone
+    type: object
+  dto.GetAvatarReq:
+    properties:
+      phone:
+        type: string
+    required:
+    - phone
+    type: object
+  dto.GetAvatarResp:
+    properties:
+      id:
+        type: string
+      url:
+        type: string
+    type: object
+  dto.GetUserInfoReq:
+    properties:
+      phones:
+        items:
+          type: string
+        type: array
+    required:
+    - phones
+    type: object
+  dto.GroupEphemeralReq:
+    properties:
+      duration:
+        type: integer
+      groupJid:
+        type: string
+    required:
+    - duration
+    - groupJid
+    type: object
+  dto.GroupInviteLinkResp:
+    properties:
+      link:
+        type: string
+    type: object
+  dto.GroupJIDReq:
+    properties:
+      groupJid:
+        type: string
+    required:
+    - groupJid
+    type: object
+  dto.GroupJoinReq:
+    properties:
+      inviteCode:
+        type: string
+    required:
+    - inviteCode
+    type: object
+  dto.GroupParticipantReq:
+    properties:
+      action:
+        example: add
+        type: string
+      groupJid:
+        type: string
+      participants:
+        example:
+        - "5511999999999"
+        items:
+          type: string
+        type: array
+    required:
+    - action
+    - groupJid
+    - participants
+    type: object
+  dto.GroupPhotoReq:
+    properties:
+      groupJid:
+        type: string
+      image:
+        type: string
+    required:
+    - groupJid
+    - image
+    type: object
+  dto.GroupRequestActionReq:
+    properties:
+      action:
+        example: approve
+        type: string
+      groupJid:
+        type: string
+      participants:
+        example:
+        - "5511999999999"
+        items:
+          type: string
+        type: array
+    required:
+    - action
+    - groupJid
+    - participants
+    type: object
+  dto.GroupSettingReq:
+    properties:
+      enabled:
+        type: boolean
+      groupJid:
+        type: string
+    required:
+    - groupJid
+    type: object
+  dto.GroupTextReq:
+    properties:
+      groupJid:
+        type: string
+      text:
+        type: string
+    required:
+    - groupJid
+    - text
+    type: object
+  dto.ImportHistoryReq:
+    properties:
+      customDays:
+        type: integer
+      period:
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        - custom
+        type: string
+    required:
+    - period
+    type: object
+  dto.LabelChatReq:
+    properties:
+      jid:
+        type: string
+      labelId:
+        type: string
+    required:
+    - jid
+    - labelId
+    type: object
+  dto.LabelMessageReq:
+    properties:
+      jid:
+        type: string
+      labelId:
+        type: string
+      messageId:
+        type: string
+    required:
+    - jid
+    - labelId
+    - messageId
+    type: object
+  dto.ListRow:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+    required:
+    - id
+    - title
+    type: object
+  dto.ListSection:
+    properties:
+      rows:
+        items:
+          $ref: '#/definitions/dto.ListRow'
+        minItems: 1
+        type: array
+      title:
+        type: string
+    required:
+    - rows
+    type: object
+  dto.MarkReadReq:
+    properties:
+      messageId:
+        type: string
+      phone:
+        type: string
+    required:
+    - messageId
+    - phone
+    type: object
+  dto.MidResp:
+    properties:
+      messageId:
+        type: string
+    type: object
+  dto.NewsletterMarkViewedReq:
+    properties:
+      newsletterJid:
+        type: string
+      serverIds:
+        items:
+          type: integer
+        type: array
+    required:
+    - newsletterJid
+    - serverIds
+    type: object
+  dto.NewsletterMessageReq:
+    properties:
+      beforeId:
+        type: integer
+      count:
+        type: integer
+      newsletterJid:
+        type: string
+    required:
+    - newsletterJid
+    type: object
+  dto.NewsletterMuteReq:
+    properties:
+      mute:
+        type: boolean
+      newsletterJid:
+        type: string
+    required:
+    - newsletterJid
+    type: object
+  dto.NewsletterReactReq:
+    properties:
+      messageId:
+        type: string
+      newsletterJid:
+        type: string
+      reaction:
+        type: string
+      serverId:
+        type: integer
+    required:
+    - messageId
+    - newsletterJid
+    - reaction
+    - serverId
+    type: object
+  dto.NewsletterSubscribeReq:
+    properties:
+      newsletterJid:
+        type: string
+    required:
+    - newsletterJid
+    type: object
+  dto.PairPhoneReq:
+    properties:
+      phone:
+        type: string
+    required:
+    - phone
+    type: object
+  dto.PairPhoneResp:
+    properties:
+      pairingCode:
+        type: string
+    type: object
+  dto.PictureIDResp:
+    properties:
+      pictureId:
+        type: string
+    type: object
+  dto.QRResp:
+    properties:
+      image:
+        type: string
+      qrCode:
+        type: string
+    type: object
+  dto.ReactMessageReq:
+    properties:
+      messageId:
+        type: string
+      phone:
+        type: string
+      reaction:
+        type: string
+    required:
+    - messageId
+    - phone
+    - reaction
+    type: object
+  dto.ReplyContext:
+    properties:
+      mentionedJid:
+        items:
+          type: string
+        type: array
+      messageId:
+        type: string
+      participant:
+        type: string
+    type: object
+  dto.SendButtonReq:
+    properties:
+      body:
+        type: string
+      buttons:
+        items:
+          $ref: '#/definitions/dto.ButtonItem'
+        minItems: 1
+        type: array
+      customId:
+        type: string
+      footer:
+        type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      replyTo:
+        $ref: '#/definitions/dto.ReplyContext'
+    required:
+    - body
+    - buttons
+    - phone
+    type: object
+  dto.SendContactReq:
+    properties:
+      name:
+        type: string
+      phone:
+        type: string
+      vcard:
+        type: string
+    required:
+    - name
+    - phone
+    - vcard
+    type: object
+  dto.SendLinkReq:
+    properties:
+      description:
+        type: string
+      phone:
+        type: string
+      title:
+        type: string
+      url:
+        type: string
+    required:
+    - phone
+    - url
+    type: object
+  dto.SendListReq:
+    properties:
+      body:
+        type: string
+      buttonText:
+        type: string
+      customId:
+        type: string
+      footer:
+        type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      replyTo:
+        $ref: '#/definitions/dto.ReplyContext'
+      sections:
+        items:
+          $ref: '#/definitions/dto.ListSection'
+        minItems: 1
+        type: array
+      title:
+        type: string
+    required:
+    - body
+    - buttonText
+    - phone
+    - sections
+    - title
+    type: object
+  dto.SendLocationReq:
+    properties:
+      address:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      phone:
+        type: string
+    required:
+    - latitude
+    - longitude
+    - phone
+    type: object
+  dto.SendMediaReq:
+    properties:
+      base64:
+        type: string
+      caption:
+        type: string
+      customId:
+        type: string
+      fileName:
+        type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
+      mimeType:
+        type: string
+      phone:
+        type: string
+      replyTo:
+        $ref: '#/definitions/dto.ReplyContext'
+      url:
+        type: string
+    required:
+    - mimeType
+    - phone
+    type: object
+  dto.SendPollReq:
+    properties:
+      name:
+        type: string
+      options:
+        items:
+          type: string
+        minItems: 2
+        type: array
+      phone:
+        type: string
+      selectableCount:
+        type: integer
+    required:
+    - name
+    - options
+    - phone
+    type: object
+  dto.SendStatusMediaReq:
+    properties:
+      base64:
+        type: string
+      caption:
+        type: string
+      customId:
+        type: string
+      fileName:
+        type: string
+      mimeType:
+        type: string
+      url:
+        type: string
+    required:
+    - mimeType
+    type: object
+  dto.SendStatusTextReq:
+    properties:
+      customId:
+        type: string
+      text:
+        type: string
+    required:
+    - text
+    type: object
+  dto.SendStickerReq:
+    properties:
+      base64:
+        type: string
+      mimeType:
+        type: string
+      phone:
+        type: string
+    required:
+    - base64
+    - mimeType
+    - phone
+    type: object
+  dto.SendTextReq:
+    properties:
+      body:
+        type: string
+      customId:
+        type: string
+      mentionedJids:
+        items:
+          type: string
+        type: array
+      phone:
+        type: string
+      replyTo:
+        $ref: '#/definitions/dto.ReplyContext'
+    required:
+    - body
+    - phone
+    type: object
+  dto.SessionCreateReq:
+    properties:
+      accessToken:
+        type: string
+      appSecret:
+        type: string
+      businessAccountId:
+        type: string
+      engine:
+        enum:
+        - whatsmeow
+        - cloud_api
+        type: string
+      name:
+        type: string
+      phoneNumberId:
+        type: string
+      proxy:
+        $ref: '#/definitions/dto.SessionProxy'
+      settings:
+        $ref: '#/definitions/dto.SessionSettings'
+      token:
+        type: string
+      webhook:
+        $ref: '#/definitions/dto.WebhookCreateInline'
+      webhookVerifyToken:
+        type: string
+    required:
+    - name
+    type: object
+  dto.SessionCreatedResp:
+    properties:
+      businessAccountId:
+        type: string
+      connected:
+        type: integer
+      createdAt:
+        type: string
+      engine:
+        type: string
+      id:
+        type: string
+      jid:
+        type: string
+      name:
+        type: string
+      phoneNumberId:
+        type: string
+      proxy:
+        $ref: '#/definitions/dto.SessionProxy'
+      settings:
+        $ref: '#/definitions/dto.SessionSettings'
+      status:
+        type: string
+      token:
+        type: string
+      updatedAt:
+        type: string
+      webhook:
+        $ref: '#/definitions/dto.WebhookResp'
+    type: object
+  dto.SessionProfileResp:
+    properties:
+      businessName:
+        type: string
+      pictureUrl:
+        type: string
+      platform:
+        type: string
+      pushName:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.SessionProxy:
+    properties:
+      host:
+        type: string
+      password:
+        type: string
+      port:
+        type: integer
+      protocol:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.SessionResp:
+    properties:
+      businessAccountId:
+        type: string
+      businessName:
+        type: string
+      chatwootEnabled:
+        type: boolean
+      connected:
+        type: integer
+      createdAt:
+        type: string
+      engine:
+        type: string
+      id:
+        type: string
+      jid:
+        type: string
+      name:
+        type: string
+      phoneNumberId:
+        type: string
+      platform:
+        type: string
+      proxy:
+        $ref: '#/definitions/dto.SessionProxy'
+      pushName:
+        type: string
+      settings:
+        $ref: '#/definitions/dto.SessionSettings'
+      status:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  dto.SessionSettings:
+    properties:
+      alwaysOnline:
+        type: boolean
+      ignoreGroups:
+        type: boolean
+      ignoreStatus:
+        type: boolean
+      msgRejectCall:
+        type: string
+      readMessages:
+        type: boolean
+      rejectCall:
+        type: boolean
+    type: object
+  dto.SessionStatusResp:
+    properties:
+      connected:
+        type: boolean
+      id:
+        type: string
+      jid:
+        type: string
+      loggedIn:
+        type: boolean
+      name:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.SessionUpdateReq:
+    properties:
+      accessToken:
+        type: string
+      appSecret:
+        type: string
+      businessAccountId:
+        type: string
+      engine:
+        type: string
+      name:
+        type: string
+      phoneNumberId:
+        type: string
+      proxy:
+        $ref: '#/definitions/dto.SessionProxy'
+      settings:
+        $ref: '#/definitions/dto.SessionSettings'
+      webhookVerifyToken:
+        type: string
+    type: object
+  dto.SetPresenceReq:
+    properties:
+      phone:
+        type: string
+      state:
+        type: string
+    required:
+    - phone
+    - state
+    type: object
+  dto.SetPrivacyReq:
+    properties:
+      setting:
+        type: string
+      value:
+        type: string
+    required:
+    - setting
+    - value
+    type: object
+  dto.SetProfilePictureReq:
+    properties:
+      image:
+        type: string
+    required:
+    - image
+    type: object
+  dto.SetStatusMessageReq:
+    properties:
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  dto.SubscribePresenceReq:
+    properties:
+      phone:
+        type: string
+    required:
+    - phone
+    type: object
+  dto.UpdateProfileNameReq:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  dto.UpdateWebhookReq:
+    properties:
+      enabled:
+        type: boolean
+      events:
+        items:
+          type: string
+        type: array
+      natsEnabled:
+        type: boolean
+      secret:
+        type: string
+      url:
+        type: string
+    type: object
+  dto.UserInfoResp:
+    properties:
+      devices:
+        items:
+          type: string
+        type: array
+      jid:
+        type: string
+      picture:
+        type: string
+      status:
+        type: string
+    type: object
+  dto.WebhookCreateInline:
+    properties:
+      events:
+        items:
+          type: string
+        type: array
+      url:
+        type: string
+    type: object
+  dto.WebhookResp:
+    properties:
+      createdAt:
+        type: string
+      enabled:
+        type: boolean
+      events:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      natsEnabled:
+        type: boolean
+      secret:
+        type: string
+      sessionId:
+        type: string
+      updatedAt:
+        type: string
+      url:
+        type: string
+    type: object
+info:
+  contact:
+    name: wzap Support
+    url: https://github.com/felipyfgs/wzap
+  description: WhatsApp Multi-Session API powered by whatsmeow
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: wzap API
+  version: "1.0"
+paths:
+  /chatwoot/webhook/{sessionId}:
+    post:
+      consumes:
+      - application/json
+      description: Handles incoming Chatwoot webhook events (agent replies, message
+        updates, conversation status changes)
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: HMAC-SHA256 signature
+        in: header
+        name: X-Chatwoot-Hmac-Sha256
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      summary: Receive webhook events from Chatwoot
+      tags:
+      - Chatwoot
+  /health:
+    get:
+      description: Returns the health status of the API and its dependencies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Health check
+      tags:
+      - Health
+  /metrics:
+    get:
+      description: Exposes Prometheus metrics for monitoring wzap instance
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: Prometheus text format metrics
+          schema:
+            type: string
+      summary: Prometheus metrics endpoint
+      tags:
+      - Metrics
+  /sessions:
+    get:
+      description: Returns all sessions. Token is never included in list responses.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  items:
+                    $ref: '#/definitions/dto.SessionResp'
+                  type: array
+              type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: List sessions (Admin Only)
+      tags:
+      - Sessions
+    post:
+      consumes:
+      - application/json
+      description: Creates a new session with an auto-generated or custom token. Returns
+        the full session object including the token.
+      parameters:
+      - description: Session data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SessionCreateReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.SessionCreatedResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Create a new session (Admin Only)
+      tags:
+      - Sessions
+  /sessions/{sessionId}:
+    delete:
+      description: Disconnects and permanently deletes the session and its device
+        from the store
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Delete session
+      tags:
+      - Sessions
+    get:
+      description: Returns the session identified by :sessionId (name or id). Token
+        is not included.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.SessionResp'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get session
+      tags:
+      - Sessions
+    put:
+      consumes:
+      - application/json
+      description: Updates session fields (name, proxy, settings). Only provided fields
+        are changed.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Session update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SessionUpdateReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.SessionResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Update session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/chat/archive:
+    post:
+      consumes:
+      - application/json
+      description: Archives a chat identified by JID, moving it out of the main chat
+        list
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Archive a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/delete:
+    post:
+      consumes:
+      - application/json
+      description: Permanently deletes a chat (including media)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Delete a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/mute:
+    post:
+      consumes:
+      - application/json
+      description: Mutes notifications for a chat identified by JID
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Mute a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/pin:
+    post:
+      consumes:
+      - application/json
+      description: Pins a chat to the top of the chat list
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Pin a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/read:
+    post:
+      consumes:
+      - application/json
+      description: Marks specific messages in a chat as read
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID + message IDs
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatMarkReadReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Mark chat as read
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unarchive:
+    post:
+      consumes:
+      - application/json
+      description: Removes a chat from the archived list
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Unarchive a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unmute:
+    post:
+      consumes:
+      - application/json
+      description: Removes mute from a chat
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Unmute a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unpin:
+    post:
+      consumes:
+      - application/json
+      description: Removes a chat from the pinned position at the top of the chat
+        list
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Unpin a chat
+      tags:
+      - Chat
+  /sessions/{sessionId}/chat/unread:
+    post:
+      consumes:
+      - application/json
+      description: 'Marks a chat as unread. Note: WhatsApp protocol does not support
+        this operation directly.'
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatMarkUnreadReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "501":
+          description: Not implemented by WhatsApp protocol
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Mark chat as unread
+      tags:
+      - Chat
+  /sessions/{sessionId}/community/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp Community (a group of groups) with a name
+        and optional description
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Community payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateCommunityReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Create a community
+      tags:
+      - Community
+  /sessions/{sessionId}/community/participant/add:
+    post:
+      consumes:
+      - application/json
+      description: Adds one or more subgroups (by JID) as participants to an existing
+        community
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Community participant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CommunityParticipantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Add subgroup to community
+      tags:
+      - Community
+  /sessions/{sessionId}/community/participant/remove:
+    post:
+      consumes:
+      - application/json
+      description: Removes one or more subgroups (by JID) from an existing community
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Community participant payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CommunityParticipantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Remove subgroup from community
+      tags:
+      - Community
+  /sessions/{sessionId}/connect:
+    post:
+      description: Connects a WhatsApp session. Returns status CONNECTED, PAIRING
+        (QR required), or CONNECTING.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.ConnectResp'
+              type: object
+        "409":
+          description: QR pairing already pending
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Connect session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/contacts:
+    get:
+      description: Returns all contacts from the WhatsApp session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: List contacts
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/avatar:
+    post:
+      consumes:
+      - application/json
+      description: Fetches the profile picture URL and picture ID for the given WhatsApp
+        JID
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetAvatarReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.GetAvatarResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get contact avatar
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/block:
+    post:
+      consumes:
+      - application/json
+      description: Blocks a WhatsApp contact by JID, preventing them from sending
+        messages
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BlockContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Block a contact
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/blocklist:
+    get:
+      description: Returns the full list of JIDs currently blocked by the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get blocked contacts list
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/check:
+    post:
+      consumes:
+      - application/json
+      description: Checks if phone numbers are registered on WhatsApp
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Phone numbers
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CheckContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Check contacts on WhatsApp
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/info:
+    post:
+      consumes:
+      - application/json
+      description: Fetches detailed user info (status, profile picture, devices) for
+        one or more WhatsApp JIDs
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: JIDs payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GetUserInfoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  items:
+                    $ref: '#/definitions/dto.UserInfoResp'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get user info for JIDs
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/presence:
+    post:
+      consumes:
+      - application/json
+      description: Subscribes to presence updates for a contact (online/offline/typing)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SubscribePresenceReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Subscribe to presence
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/privacy:
+    get:
+      description: Retrieves the current session's WhatsApp privacy settings (last-seen,
+        profile photo, status visibility)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get privacy settings
+      tags:
+      - Contacts
+    post:
+      consumes:
+      - application/json
+      description: Updates a privacy setting (groupadd, last, status, profile, readreceipts,
+        online, calladd)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Privacy setting
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SetPrivacyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set privacy setting
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/profile-picture:
+    post:
+      consumes:
+      - application/json
+      description: Updates the session account's WhatsApp profile picture with a base64-encoded
+        image
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Base64 image payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SetProfilePictureReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.PictureIDResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set profile picture
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/status:
+    post:
+      consumes:
+      - application/json
+      description: Updates the session's WhatsApp "About" status message
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Status message
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SetStatusMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set status message
+      tags:
+      - Contacts
+  /sessions/{sessionId}/contacts/unblock:
+    post:
+      consumes:
+      - application/json
+      description: Unblocks a previously blocked WhatsApp contact by JID
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BlockContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Unblock a contact
+      tags:
+      - Contacts
+  /sessions/{sessionId}/disconnect:
+    post:
+      description: Disconnects the active WhatsApp session without removing the device
+        (can reconnect later)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Disconnect session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/groups:
+    get:
+      description: Returns all WhatsApp groups the session is part of
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: List joined groups
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/announce:
+    post:
+      consumes:
+      - application/json
+      description: Sets whether only admins can send messages in the group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Enabled state
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupSettingReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set group announce mode
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp group with the given participants
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Group properties
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateGroupReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Create a new group
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/description:
+    post:
+      consumes:
+      - application/json
+      description: Updates the description of the specified WhatsApp group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: New description
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Update group description
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/ephemeral:
+    post:
+      consumes:
+      - application/json
+      description: 'Sets the disappearing messages timer for a group (in seconds:
+        0, 86400, 604800, 7776000)'
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Ephemeral settings
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupEphemeralReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set ephemeral timer
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/info:
+    post:
+      consumes:
+      - application/json
+      description: Get detailed information about a group by JID
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Target Group JID Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJIDReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get group info
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/invite-info:
+    post:
+      consumes:
+      - application/json
+      description: Previews a group's info using an invite code without joining
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Invite Code Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJoinReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get group info from invite link
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/invite-link:
+    post:
+      consumes:
+      - application/json
+      description: Gets the invite link for a WhatsApp group, optionally resetting
+        it
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Target Group JID Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJIDReq'
+      - description: Reset the invite link
+        in: query
+        name: reset
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.GroupInviteLinkResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get group invite link
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/join:
+    post:
+      consumes:
+      - application/json
+      description: Joins a group using an invite code
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Invite Code
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJoinReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Join group via link
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/join-approval:
+    post:
+      consumes:
+      - application/json
+      description: Activates or deactivates the admin approval system for new members
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Enabled state
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupSettingReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set group join approval mode
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/leave:
+    post:
+      consumes:
+      - application/json
+      description: Leaves a specified WhatsApp group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Target Group JID Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJIDReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Leave group
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/locked:
+    post:
+      consumes:
+      - application/json
+      description: Sets whether only admins can edit group info
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Enabled state
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupSettingReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set group locked mode
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/name:
+    post:
+      consumes:
+      - application/json
+      description: Updates the name of the specified WhatsApp group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: New name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Update group name
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/participants:
+    post:
+      consumes:
+      - application/json
+      description: Add, remove, promote or demote participants in a group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Participants and action
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupParticipantReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Update group participants
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/photo:
+    post:
+      consumes:
+      - application/json
+      description: Updates the profile picture of the specified WhatsApp group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Base64 encoded photo
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupPhotoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.PictureIDResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Update group photo
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/photo/remove:
+    post:
+      consumes:
+      - application/json
+      description: Removes the current group profile photo
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Group JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJIDReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Remove group photo
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/requests:
+    post:
+      consumes:
+      - application/json
+      description: Get the list of participants that requested to join the group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Target Group JID Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupJIDReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get group join requests
+      tags:
+      - Groups
+  /sessions/{sessionId}/groups/requests/action:
+    post:
+      consumes:
+      - application/json
+      description: Approves or rejects participants that requested to join the group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Participants and action (approve/reject)
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.GroupRequestActionReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Approve/Reject group join requests
+      tags:
+      - Groups
+  /sessions/{sessionId}/integrations/chatwoot:
+    delete:
+      description: Removes the Chatwoot integration from the specified session
+      parameters:
+      - description: Session ID or name
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      summary: Delete Chatwoot configuration for a session
+      tags:
+      - Chatwoot
+    get:
+      description: Returns the Chatwoot configuration for the specified session, or
+        404 if not configured
+      parameters:
+      - description: Session ID or name
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      summary: Get Chatwoot configuration for a session
+      tags:
+      - Chatwoot
+    put:
+      consumes:
+      - application/json
+      description: Upserts Chatwoot configuration and optionally auto-creates an inbox
+      parameters:
+      - description: Session ID or name
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chatwoot configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChatwootConfigReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      summary: Configure Chatwoot integration for a session
+      tags:
+      - Chatwoot
+  /sessions/{sessionId}/integrations/chatwoot/import:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Import configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ImportHistoryReq'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      summary: Trigger manual history import from WhatsApp to Chatwoot
+      tags:
+      - Chatwoot
+  /sessions/{sessionId}/label/chat:
+    post:
+      consumes:
+      - application/json
+      description: Applies a label to an entire chat conversation
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Label chat payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LabelChatReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Add label to chat
+      tags:
+      - Labels
+  /sessions/{sessionId}/label/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edits an existing label's name, color, or marks it as deleted
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Edit label payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EditLabelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Edit a label
+      tags:
+      - Labels
+  /sessions/{sessionId}/label/message:
+    post:
+      consumes:
+      - application/json
+      description: Applies a label to a specific message within a chat
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Label message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LabelMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Add label to message
+      tags:
+      - Labels
+  /sessions/{sessionId}/logout:
+    post:
+      description: Logs out the WhatsApp device (requires re-scan), but keeps the
+        session record
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Logout session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/media:
+    get:
+      description: Returns paginated media messages with server-side filtering
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media type filter (image, video, document, audio, sticker)
+        in: query
+        name: type
+        type: string
+      - description: Chat JID filter
+        in: query
+        name: chat
+        type: string
+      - description: Search in body or chat JID
+        in: query
+        name: search
+        type: string
+      - description: ISO date string (start of range)
+        in: query
+        name: since
+        type: string
+      - description: ISO date string (end of range)
+        in: query
+        name: until
+        type: string
+      - description: Cursor for pagination (RFC3339 timestamp of last item)
+        in: query
+        name: cursor
+        type: string
+      - description: 'Sort order: desc (default) or asc'
+        in: query
+        name: sort
+        type: string
+      - description: Max results (default 100, max 200)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: List media
+      tags:
+      - Media
+  /sessions/{sessionId}/media/{messageId}:
+    get:
+      description: Returns a presigned S3 URL for a previously stored media message
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Message ID
+        in: path
+        name: messageId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get media URL
+      tags:
+      - Media
+  /sessions/{sessionId}/messages:
+    get:
+      description: Returns paginated message history for the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Chat JID filter
+        in: query
+        name: chat
+        type: string
+      - description: Max results (default 50, max 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: List messages
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/audio:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded audio file as a voice note (PTT)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send an audio message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/button:
+    post:
+      consumes:
+      - application/json
+      description: Sends a message with interactive buttons
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Button message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendButtonReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a button message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/contact:
+    post:
+      consumes:
+      - application/json
+      description: Sends a vCard contact message via WhatsApp to the specified recipient
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Contact payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendContactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a contact card
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/delete:
+    post:
+      consumes:
+      - application/json
+      description: Revokes a previously sent message for all recipients (unsend)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Delete payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeleteMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Delete a sent message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/document:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded file as a document. Use filename to set
+        the display name.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a document
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/edit:
+    post:
+      consumes:
+      - application/json
+      description: Edits a previously sent message by mid, replacing its text content
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Edit payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.EditMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Edit a sent message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/forward:
+    post:
+      consumes:
+      - application/json
+      description: Forwards an existing message to another chat or group
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Forward message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ForwardMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Forward a message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/image:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded image to a WhatsApp JID with optional caption
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send an image message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/link:
+    post:
+      consumes:
+      - application/json
+      description: Sends a hyperlink with optional title and description as a rich
+        preview message
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Link payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendLinkReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a link preview message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/list:
+    post:
+      consumes:
+      - application/json
+      description: Sends a message with interactive list sections
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: List message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendListReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a list message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/location:
+    post:
+      consumes:
+      - application/json
+      description: Sends a GPS location message with optional name and address to
+        the specified recipient
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Location payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendLocationReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a location message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/poll:
+    post:
+      consumes:
+      - application/json
+      description: Sends a poll with multiple choice options. selectableCount controls
+        how many options a recipient may choose (0 = unlimited)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Poll payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendPollReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a poll message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/presence:
+    post:
+      consumes:
+      - application/json
+      description: 'Sends a chat presence indicator. Accepted values for presence:
+        typing, recording, paused'
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Presence payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SetPresenceReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Set typing/recording presence
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/reaction:
+    post:
+      consumes:
+      - application/json
+      description: Adds an emoji reaction to a message. Pass an empty string for reaction
+        to remove an existing one.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Reaction payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReactMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: React to a message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/read:
+    post:
+      consumes:
+      - application/json
+      description: Sends a read receipt for a specific message (removes unread indicator)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Mark read payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.MarkReadReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Mark a message as read
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/status/image:
+    post:
+      consumes:
+      - application/json
+      description: Sends an image to WhatsApp Stories/Status
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Status image payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendStatusMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send an image status
+      tags:
+      - Status
+  /sessions/{sessionId}/messages/status/text:
+    post:
+      consumes:
+      - application/json
+      description: Sends a text message to WhatsApp Stories/Status
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Status text payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendStatusTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a text status
+      tags:
+      - Status
+  /sessions/{sessionId}/messages/status/video:
+    post:
+      consumes:
+      - application/json
+      description: Sends a video to WhatsApp Stories/Status
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Status video payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendStatusMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a video status
+      tags:
+      - Status
+  /sessions/{sessionId}/messages/sticker:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded sticker image (WebP) to the specified recipient
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Sticker payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendStickerReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a sticker
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/text:
+    post:
+      consumes:
+      - application/json
+      description: Sends a plain text message to a WhatsApp JID (user or group)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendTextReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a text message
+      tags:
+      - Messages
+  /sessions/{sessionId}/messages/video:
+    post:
+      consumes:
+      - application/json
+      description: Sends a base64-encoded video to a WhatsApp JID with optional caption
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Media payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.SendMediaReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.MidResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Send a video message
+      tags:
+      - Messages
+  /sessions/{sessionId}/newsletter/create:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new WhatsApp Newsletter (channel) with optional description
+        and profile picture
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Newsletter payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateNewsletterReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Create a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/info:
+    post:
+      description: Retrieves metadata about a newsletter by its JID
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Newsletter JID
+        in: query
+        name: jid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get newsletter info
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/invite:
+    post:
+      description: Retrieves newsletter metadata from an invite code without subscribing
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Newsletter invite code
+        in: query
+        name: code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get newsletter info from invite code
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/list:
+    get:
+      description: Returns all newsletters the current session is subscribed to
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: List subscribed newsletters
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/messages:
+    post:
+      consumes:
+      - application/json
+      description: Fetches messages from a newsletter; supports pagination via before_id
+        cursor and count
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Messages pagination payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsletterMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get newsletter messages
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/mute:
+    post:
+      consumes:
+      - application/json
+      description: Toggles mute status for a newsletter
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Mute payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsletterMuteReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Mute/unmute a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/react:
+    post:
+      consumes:
+      - application/json
+      description: Sends a reaction to a newsletter message
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Reaction payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsletterReactReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: React to a newsletter message
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/subscribe:
+    post:
+      consumes:
+      - application/json
+      description: Subscribes the current session to a newsletter identified by its
+        JID
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Newsletter JID payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsletterSubscribeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Subscribe to a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/unsubscribe:
+    post:
+      consumes:
+      - application/json
+      description: Unfollows a newsletter
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Newsletter JID
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsletterSubscribeReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Unsubscribe from a newsletter
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/newsletter/viewed:
+    post:
+      consumes:
+      - application/json
+      description: Marks newsletter messages as viewed by server IDs
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Mark viewed payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NewsletterMarkViewedReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Mark newsletter messages as viewed
+      tags:
+      - Newsletter
+  /sessions/{sessionId}/pair:
+    post:
+      consumes:
+      - application/json
+      description: Generates a pairing code for linking without QR scan. Call /connect
+        first.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Phone number
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PairPhoneReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.PairPhoneResp'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Pair via phone number
+      tags:
+      - Sessions
+  /sessions/{sessionId}/profile:
+    get:
+      description: Returns the WhatsApp profile info for this session (push name,
+        picture, bio). Requires an active connection.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.SessionProfileResp'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get WhatsApp profile
+      tags:
+      - Sessions
+  /sessions/{sessionId}/profile/name:
+    post:
+      consumes:
+      - application/json
+      description: Updates the session's WhatsApp profile display name (push name)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Profile name
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProfileNameReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Update profile name
+      tags:
+      - Contacts
+  /sessions/{sessionId}/qr:
+    get:
+      description: Returns the current QR code string and a base64 PNG image. Call
+        /connect first, then poll this endpoint until a code is available.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.QRResp'
+              type: object
+        "404":
+          description: No QR code available yet
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get QR code for pairing
+      tags:
+      - Sessions
+  /sessions/{sessionId}/reconnect:
+    post:
+      description: Disconnects and reconnects the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Reconnect session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/restart:
+    post:
+      description: Disconnects and reconnects the session without losing state
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.SessionResp'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Restart session
+      tags:
+      - Sessions
+  /sessions/{sessionId}/status:
+    get:
+      description: Returns detailed connection status (connected, loggedIn, JID)
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                Data:
+                  $ref: '#/definitions/dto.SessionStatusResp'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Get session status
+      tags:
+      - Sessions
+  /sessions/{sessionId}/unlabel/chat:
+    post:
+      consumes:
+      - application/json
+      description: Removes a label from a chat conversation
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Label chat payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LabelChatReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Remove label from chat
+      tags:
+      - Labels
+  /sessions/{sessionId}/unlabel/message:
+    post:
+      consumes:
+      - application/json
+      description: Removes a label from a specific message
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Label message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LabelMessageReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Remove label from message
+      tags:
+      - Labels
+  /sessions/{sessionId}/webhooks:
+    get:
+      description: Returns all webhooks for the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: List webhooks
+      tags:
+      - Webhooks
+    post:
+      consumes:
+      - application/json
+      description: Registers a new webhook for the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Webhook data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateWebhookReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Create a webhook
+      tags:
+      - Webhooks
+  /sessions/{sessionId}/webhooks/{wid}:
+    delete:
+      description: Removes a webhook from the session
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Webhook ID
+        in: path
+        name: wid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Delete a webhook
+      tags:
+      - Webhooks
+    put:
+      consumes:
+      - application/json
+      description: Updates webhook fields (URL, secret, events, enabled, natsEnabled).
+        Only provided fields are changed.
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Webhook ID
+        in: path
+        name: wid
+        required: true
+        type: string
+      - description: Webhook update data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateWebhookReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      security:
+      - Authorization: []
+      summary: Update a webhook
+      tags:
+      - Webhooks
+  /webhooks/cloud/{sessionId}:
+    get:
+      description: Verifies the webhook subscription from WhatsApp Cloud API
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Webhook mode (subscribe)
+        in: query
+        name: hub.mode
+        required: true
+        type: string
+      - description: Verification token
+        in: query
+        name: hub.verify_token
+        required: true
+        type: string
+      - description: Challenge string
+        in: query
+        name: hub.challenge
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Challenge string
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      summary: Verify Cloud API webhook
+      tags:
+      - Cloud Webhooks
+    post:
+      consumes:
+      - application/json
+      description: Receives and processes webhooks from WhatsApp Cloud API
+      parameters:
+      - description: Session name or ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: HMAC signature
+        in: header
+        name: X-Hub-Signature-256
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.APIError'
+      summary: Receive Cloud API webhook
+      tags:
+      - Cloud Webhooks
+securityDefinitions:
+  Authorization:
+    description: Session or admin token (without Bearer prefix)
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

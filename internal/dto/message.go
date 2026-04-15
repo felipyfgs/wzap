@@ -125,20 +125,6 @@ type SetPresenceReq struct {
 	State string `json:"state" validate:"required"`
 }
 
-type SendStatusTextReq struct {
-	Text     string `json:"text" validate:"required"`
-	CustomID string `json:"customId,omitempty"`
-}
-
-type SendStatusMediaReq struct {
-	MimeType string `json:"mimeType" validate:"required"`
-	Caption  string `json:"caption"`
-	FileName string `json:"fileName"`
-	Base64   string `json:"base64"`
-	URL      string `json:"url,omitempty"`
-	CustomID string `json:"customId,omitempty"`
-}
-
 type ForwardMessageReq struct {
 	MessageID string `json:"messageId" validate:"required"`
 	FromJID   string `json:"fromJid" validate:"required"`

@@ -9,7 +9,7 @@ import (
 )
 
 func shouldIgnoreJID(chatJID string, ignoreGroups bool, ignoreJIDs []string) bool {
-	if chatJID == "status@broadcast" {
+	if strings.HasPrefix(chatJID, "status@") {
 		return true
 	}
 	if strings.HasSuffix(chatJID, "@newsletter") {

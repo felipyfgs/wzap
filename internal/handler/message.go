@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/gofiber/fiber/v2"
-	"go.mau.fi/whatsmeow"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/service"
@@ -493,98 +492,6 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 	msgID, err := h.msgSvc.SendList(c.Context(), id, req)
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to send list")
-	}
-
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
-}
-
-// SendStatusText godoc
-// @Summary     Send a text status
-// @Description Sends a text message to WhatsApp Stories/Status
-// @Tags        Status
-// @Accept      json
-// @Produce     json
-// @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.SendStatusTextReq true "Status text payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400 {object} dto.APIError
-// @Failure     500 {object} dto.APIError
-// @Security    Authorization
-// @Router      /sessions/{sessionId}/messages/status/text [post]
-func (h *MessageHandler) SendStatusText(c *fiber.Ctx) error {
-	id, err := getSessionID(c)
-	if err != nil {
-		return err
-	}
-	var req dto.SendStatusTextReq
-	if err := parseAndValidate(c, &req); err != nil {
-		return err
-	}
-
-	msgID, err := h.msgSvc.SendStatusText(c.Context(), id, req)
-	if err != nil {
-		return h.respondMessageError(c, err, id, "failed to send status text")
-	}
-
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
-}
-
-// SendStatusImage godoc
-// @Summary     Send an image status
-// @Description Sends an image to WhatsApp Stories/Status
-// @Tags        Status
-// @Accept      json
-// @Produce     json
-// @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.SendStatusMediaReq true "Status image payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400 {object} dto.APIError
-// @Failure     500 {object} dto.APIError
-// @Security    Authorization
-// @Router      /sessions/{sessionId}/messages/status/image [post]
-func (h *MessageHandler) SendStatusImage(c *fiber.Ctx) error {
-	return h.sendStatusMedia(c, "image")
-}
-
-// SendStatusVideo godoc
-// @Summary     Send a video status
-// @Description Sends a video to WhatsApp Stories/Status
-// @Tags        Status
-// @Accept      json
-// @Produce     json
-// @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.SendStatusMediaReq true "Status video payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
-// @Failure     400 {object} dto.APIError
-// @Failure     500 {object} dto.APIError
-// @Security    Authorization
-// @Router      /sessions/{sessionId}/messages/status/video [post]
-func (h *MessageHandler) SendStatusVideo(c *fiber.Ctx) error {
-	return h.sendStatusMedia(c, "video")
-}
-
-func (h *MessageHandler) sendStatusMedia(c *fiber.Ctx, mediaType string) error {
-	id, err := getSessionID(c)
-	if err != nil {
-		return err
-	}
-	var req dto.SendStatusMediaReq
-	if err := parseAndValidate(c, &req); err != nil {
-		return err
-	}
-
-	var msgID string
-	switch mediaType {
-	case "image":
-		msgID, err = h.msgSvc.SendStatusMedia(c.Context(), id, req, whatsmeow.MediaImage)
-	case "video":
-		msgID, err = h.msgSvc.SendStatusMedia(c.Context(), id, req, whatsmeow.MediaVideo)
-	default:
-		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Media Type", "media type must be image or video"))
-	}
-
-	if err != nil {
-		return h.respondMessageError(c, err, id, "failed to send status media")
 	}
 
 	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))

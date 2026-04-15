@@ -23,6 +23,8 @@ type MediaAutoUploadFunc func(sessionID, messageID, chatJID, senderJID, mimeType
 type MediaRetryFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, mimeType string, timestamp time.Time, directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int)
 type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any)
 type HistorySyncPersistFunc func(sessionID string, sync *events.HistorySync)
+type StatusReceivedFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any)
+type ShouldIgnoreStatusFunc func(sessionID string) bool
 
 type mediaRetryCacheEntry struct {
 	sessionID   string
@@ -81,6 +83,8 @@ type Manager struct {
 	OnMediaRetry          MediaRetryFunc
 	OnMessageReceived     MessagePersistFunc
 	OnHistorySyncReceived HistorySyncPersistFunc
+	OnStatusReceived     StatusReceivedFunc
+	ShouldIgnoreStatus   ShouldIgnoreStatusFunc
 	mediaRetryCache       sync.Map
 	stopGC                chan struct{}
 }
@@ -176,6 +180,14 @@ func (m *Manager) SetMessagePersist(fn MessagePersistFunc) {
 
 func (m *Manager) SetHistorySyncPersist(fn HistorySyncPersistFunc) {
 	m.OnHistorySyncReceived = fn
+}
+
+func (m *Manager) SetStatusReceived(fn StatusReceivedFunc) {
+	m.OnStatusReceived = fn
+}
+
+func (m *Manager) SetShouldIgnoreStatus(fn ShouldIgnoreStatusFunc) {
+	m.ShouldIgnoreStatus = fn
 }
 
 func (m *Manager) GetPNForLID(ctx context.Context, sessionID, lidJID string) string {

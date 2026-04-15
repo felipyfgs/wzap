@@ -3,7 +3,9 @@ package repo
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"wzap/internal/model"
@@ -23,6 +25,7 @@ type messageScanner interface {
 type MessageRepo interface {
 	Save(ctx context.Context, msg *model.Message) error
 	FindByChat(ctx context.Context, sessionID, chatJID string, limit, offset int) ([]model.Message, error)
+	FindBySession(ctx context.Context, sessionID string, limit, offset int) ([]model.Message, error)
 	FindByID(ctx context.Context, sessionID, msgID string) (*model.Message, error)
 	FindByCWMessageID(ctx context.Context, sessionID string, cwMsgID int) (*model.Message, error)
 	FindBySourceID(ctx context.Context, sessionID, sourceID string) (*model.Message, error)
@@ -37,6 +40,7 @@ type MessageRepo interface {
 	FindUnimportedHistory(ctx context.Context, sessionID string, since time.Time, limit, offset int) ([]model.Message, error)
 	MarkImportedToChatwoot(ctx context.Context, sessionID, msgID string) error
 	UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error
+	FindMedia(ctx context.Context, sessionID string, f MediaFilter) ([]model.Message, int, error)
 }
 
 type MessageRepository struct {
@@ -142,7 +146,7 @@ func (r *MessageRepository) FindBySession(ctx context.Context, sessionID string,
 	}
 	query := `SELECT ` + messageSelectColumns + `
 		FROM wz_messages
-		WHERE session_id = $1
+		WHERE session_id = $1 AND chat_jid NOT LIKE 'status@%'
 		ORDER BY timestamp DESC
 		LIMIT $2 OFFSET $3`
 
@@ -161,6 +165,141 @@ func (r *MessageRepository) FindBySession(ctx context.Context, sessionID string,
 		msgs = append(msgs, m)
 	}
 	return msgs, rows.Err()
+}
+
+// ErrInvalidCursor is returned when the cursor query parameter cannot be parsed.
+var ErrInvalidCursor = errors.New("invalid cursor")
+
+// MediaFilter holds server-side filters for media queries.
+type MediaFilter struct {
+	MsgType string // optional: image, video, document, audio, sticker
+	Chat    string // optional: chat JID
+	Cursor  string // cursor-based pagination: "timestamp|id" (RFC3339 timestamp + message ID)
+	Limit   int
+	Search  string // optional: search in body or chat JID
+	Since   string // optional: ISO date string (start of range)
+	Until   string // optional: ISO date string (end of range)
+	Sort    string // optional: desc (default) or asc
+}
+
+// escapeILIKE escapes % and _ characters for use in ILIKE patterns.
+func escapeILIKE(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `%`, `\%`)
+	s = strings.ReplaceAll(s, `_`, `\_`)
+	return s
+}
+
+// buildMediaWhere constructs a WHERE clause and args slice from the filter.
+// If addCursor is true, the cursor condition is appended.
+// Returns an error if the cursor is malformed.
+func buildMediaWhere(sessionID string, f MediaFilter, sortOrder string, addCursor bool) (string, []any, error) {
+	where := `session_id = $1 AND msg_type IN ('image', 'video', 'document', 'audio', 'sticker')`
+	args := []any{sessionID}
+	argN := 2
+
+	if f.MsgType != "" {
+		where += fmt.Sprintf(` AND msg_type = $%d`, argN)
+		args = append(args, f.MsgType)
+		argN++
+	}
+
+	if f.Chat != "" {
+		where += fmt.Sprintf(` AND chat_jid = $%d`, argN)
+		args = append(args, f.Chat)
+		argN++
+	}
+
+	if f.Search != "" {
+		escaped := "%" + escapeILIKE(f.Search) + "%"
+		where += fmt.Sprintf(` AND (body ILIKE $%d OR chat_jid ILIKE $%d)`, argN, argN+1)
+		args = append(args, escaped, escaped)
+		argN += 2
+	}
+
+	if f.Since != "" {
+		where += fmt.Sprintf(` AND timestamp >= $%d::timestamptz`, argN)
+		args = append(args, f.Since)
+		argN++
+	}
+
+	if f.Until != "" {
+		where += fmt.Sprintf(` AND timestamp <= $%d::timestamptz`, argN)
+		args = append(args, f.Until)
+		argN++
+	}
+
+	if addCursor && f.Cursor != "" {
+		parts := strings.SplitN(f.Cursor, "|", 2)
+		cursorTime, err := time.Parse(time.RFC3339Nano, parts[0])
+		if err != nil {
+			return "", nil, fmt.Errorf("%w: %w", ErrInvalidCursor, err)
+		}
+		cursorID := ""
+		if len(parts) == 2 {
+			cursorID = parts[1]
+		}
+		if sortOrder == "DESC" {
+			where += fmt.Sprintf(` AND (timestamp, id) < ($%d, $%d)`, argN, argN+1)
+		} else {
+			where += fmt.Sprintf(` AND (timestamp, id) > ($%d, $%d)`, argN, argN+1)
+		}
+		args = append(args, cursorTime, cursorID)
+		argN += 2
+	}
+
+	return where, args, nil
+}
+
+// FindMedia returns media messages with server-side filtering and cursor pagination.
+func (r *MessageRepository) FindMedia(ctx context.Context, sessionID string, f MediaFilter) ([]model.Message, int, error) {
+	if f.Limit <= 0 || f.Limit > 200 {
+		f.Limit = 100
+	}
+
+	sortOrder := "DESC"
+	if f.Sort == "asc" {
+		sortOrder = "ASC"
+	}
+
+	// Build WHERE clauses (with cursor for data, without cursor for count)
+	where, args, err := buildMediaWhere(sessionID, f, sortOrder, true)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid cursor: %w", err)
+	}
+	countWhere, countArgs, err := buildMediaWhere(sessionID, f, sortOrder, false)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid cursor: %w", err)
+	}
+
+	// Count total matching items (without cursor)
+	var total int
+	if err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM wz_messages WHERE `+countWhere, countArgs...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("failed to count media: %w", err)
+	}
+
+	// Fetch page
+	query := `SELECT ` + messageSelectColumns + `
+		FROM wz_messages
+		WHERE ` + where + `
+		ORDER BY timestamp ` + sortOrder + `, id ` + sortOrder + `
+		LIMIT ` + fmt.Sprintf("%d", f.Limit)
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query media: %w", err)
+	}
+	defer rows.Close()
+
+	var msgs []model.Message
+	for rows.Next() {
+		var m model.Message
+		if err := scanMessage(rows, &m); err != nil {
+			return nil, 0, err
+		}
+		msgs = append(msgs, m)
+	}
+	return msgs, total, rows.Err()
 }
 
 func (r *MessageRepository) FindByID(ctx context.Context, sessionID, msgID string) (*model.Message, error) {

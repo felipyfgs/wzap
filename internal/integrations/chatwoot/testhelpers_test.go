@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"wzap/internal/model"
+	"wzap/internal/repo"
 )
 
 type mockClient struct {
@@ -213,6 +214,14 @@ func (m *mockMsgRepo) UpdateMediaURL(_ context.Context, _, _, _ string) error {
 	return nil
 }
 
+func (m *mockMsgRepo) FindBySession(_ context.Context, _ string, _, _ int) ([]model.Message, error) {
+	return []model.Message{}, nil
+}
+
+func (m *mockMsgRepo) FindMedia(_ context.Context, _ string, _ repo.MediaFilter) ([]model.Message, int, error) {
+	return []model.Message{}, 0, nil
+}
+
 type mockMsgRepoWithDuplicates struct {
 	existingSourceIDs map[string]bool
 }
@@ -279,6 +288,14 @@ func (m *mockMsgRepoWithDuplicates) MarkImportedToChatwoot(_ context.Context, _,
 
 func (m *mockMsgRepoWithDuplicates) UpdateMediaURL(_ context.Context, _, _, _ string) error {
 	return nil
+}
+
+func (m *mockMsgRepoWithDuplicates) FindBySession(_ context.Context, _ string, _, _ int) ([]model.Message, error) {
+	return []model.Message{}, nil
+}
+
+func (m *mockMsgRepoWithDuplicates) FindMedia(_ context.Context, _ string, _ repo.MediaFilter) ([]model.Message, int, error) {
+	return []model.Message{}, 0, nil
 }
 
 type mockMsgRepoFixed struct {

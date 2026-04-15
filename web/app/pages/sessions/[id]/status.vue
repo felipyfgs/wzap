@@ -148,6 +148,7 @@ onMounted(async () => {
           <SessionsStatusStoryCard
             v-for="jid in unviewedJids"
             :key="jid"
+            :session-id="sessionId"
             :sender-jid="jid"
             :sender-name="getSenderName(jid)"
             :latest-status="getLatestStatus(jid)!"
@@ -164,6 +165,7 @@ onMounted(async () => {
           <SessionsStatusStoryCard
             v-for="jid in viewedJidsList"
             :key="jid"
+            :session-id="sessionId"
             :sender-jid="jid"
             :sender-name="getSenderName(jid)"
             :latest-status="getLatestStatus(jid)!"

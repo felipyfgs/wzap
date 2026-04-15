@@ -26,7 +26,11 @@ export default defineNuxtConfig({
       include: [
         'date-fns',
         '@internationalized/date',
-        '@unovis/vue'
+        '@unovis/vue',
+        '@tanstack/vue-table',
+        '@tanstack/table-core',
+        '@tanstack/vue-virtual',
+        '@tanstack/virtual-core'
       ]
     }
   },

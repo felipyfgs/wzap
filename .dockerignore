@@ -15,7 +15,6 @@ Makefile
 docker-compose*.yml
 docker
 docs
-web
 temp
 bin
 chatwoot-docker

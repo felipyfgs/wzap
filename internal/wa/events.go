@@ -11,6 +11,7 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/proto/waE2E"
 	"go.mau.fi/whatsmeow/proto/waMmsRetry"
+	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
 
 	"wzap/internal/logger"
@@ -63,6 +64,24 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 					return
 				}
 			}
+
+			// Route status (WhatsApp Stories) messages separately
+			if v.Info.Chat.Server == types.BroadcastServer {
+				if m.ShouldIgnoreStatus != nil && m.ShouldIgnoreStatus(sessionID) {
+					logger.Debug().
+						Str("component", "wa").
+						Str("session", sessionID).
+						Str("mid", v.Info.ID).
+						Msg("Status message ignored (IgnoreStatus enabled)")
+					return
+				}
+				if m.OnStatusReceived != nil {
+					msgType, body, mediaType := extractMessageContent(v.Message)
+					m.OnStatusReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
+				}
+				return
+			}
+
 			eventType = model.EventMessage
 			{
 				msgType, _, mediaType := extractMessageContent(v.Message)
@@ -474,7 +493,7 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 	sessionName := m.getSessionName(nameCtx, sessionID)
 	nameCancel()
 
-	bytes, err := model.BuildEventEnvelope(sessionID, sessionName, eventType, data)
+	envelope, err := model.BuildEventEnvelope(sessionID, sessionName, eventType, data)
 	if err != nil {
 		logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to marshal event payload")
 		return
@@ -482,11 +501,11 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 
 	const maxNATSPayloadSize = 512 * 1024
 	if m.nats != nil {
-		if len(bytes) > maxNATSPayloadSize {
-			logger.Debug().Str("component", "wa").Str("session", sessionID).Str("event", string(eventType)).Int("size", len(bytes)).Msg("Event payload too large for NATS, skipping")
+		if len(envelope) > maxNATSPayloadSize {
+			logger.Debug().Str("component", "wa").Str("session", sessionID).Str("event", string(eventType)).Int("size", len(envelope)).Msg("Event payload too large for NATS, skipping")
 		} else {
 			pubCtx, pubCancel := context.WithTimeout(context.Background(), 5*time.Second)
-			if err := m.nats.Publish(pubCtx, "wzap.events."+sessionID, bytes); err != nil {
+			if err := m.nats.Publish(pubCtx, "wzap.events."+sessionID, envelope); err != nil {
 				logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
 			}
 			pubCancel()
@@ -494,7 +513,7 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 	}
 
 	if m.dispatcher != nil {
-		m.dispatcher.DispatchAsync(sessionID, eventType, bytes)
+		m.dispatcher.DispatchAsync(sessionID, eventType, envelope)
 	}
 }
 

@@ -17,19 +17,21 @@ import (
 	"wzap/internal/middleware"
 	"wzap/internal/storage"
 	"wzap/internal/wa"
+	"wzap/internal/webhook"
 )
 
 type Server struct {
 	App    *fiber.App
 	Config *config.Config
 
-	db     *database.DB
-	nats   *broker.NATS
-	minio  *storage.Minio
-	ctx    context.Context
-	cancel context.CancelFunc
-	async  *async.Runtime
-	engine *wa.Manager
+	db         *database.DB
+	nats       *broker.NATS
+	minio      *storage.Minio
+	ctx        context.Context
+	cancel     context.CancelFunc
+	async      *async.Runtime
+	engine     *wa.Manager
+	dispatcher *webhook.Dispatcher
 }
 
 func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) *Server {
@@ -81,6 +83,12 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 	if s.engine != nil {
 		s.engine.StopCacheGC()
+	}
+
+	if s.dispatcher != nil {
+		if err := s.dispatcher.Shutdown(ctx); err != nil {
+			logger.Warn().Str("component", "server").Err(err).Msg("Webhook dispatcher shutdown timed out")
+		}
 	}
 
 	if s.async != nil {

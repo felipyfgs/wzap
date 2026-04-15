@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	ws "github.com/gofiber/contrib/websocket"
@@ -45,6 +46,7 @@ func (s *Server) SetupRoutes() error {
 
 	messageRepo := repo.NewMessageRepository(s.db.Pool)
 	chatRepo := repo.NewChatRepository(s.db.Pool)
+	statusRepo := repo.NewStatusRepository(s.db.Pool)
 
 	// Initialize Cloud API Provider
 	runtimeResolver := service.NewRuntimeResolver(sessionRepo, engine, nil)
@@ -56,6 +58,7 @@ func (s *Server) SetupRoutes() error {
 	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, cloudProvider, runtimeResolver)
 	lifecycleSvc := service.NewLifecycleOrchestrator(runtimeResolver, engine, sessionSvc)
 	messageSvc := service.NewMessageService(engine, cloudProvider, sessionRepo, runtimeResolver)
+	statusSvc := service.NewStatusService(runtimeResolver, statusRepo)
 	contactSvc := service.NewContactService(engine)
 	groupSvc := service.NewGroupService(engine)
 	webhookSvc := service.NewWebhookService(webhookRepo)
@@ -106,13 +109,23 @@ func (s *Server) SetupRoutes() error {
 	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)
 	historySvc.SetMediaRetryRequester(engine)
 	messageSvc.SetMessagePersist(historySvc.PersistMessage)
+	engine.SetStatusReceived(statusSvc.PersistStatusReceived)
+	engine.SetShouldIgnoreStatus(func(sessionID string) bool {
+		sess, err := sessionRepo.FindByID(context.Background(), sessionID)
+		if err != nil || sess == nil {
+			return false
+		}
+		return sess.Settings.IgnoreStatus
+	})
 	engine.StartCacheGC()
 	s.engine = engine
+	s.dispatcher = disp
 
 	// Initialize Handlers
 	healthHandler := handler.NewHealthHandler(s.db, s.nats, s.minio)
 	sessionHandler := handler.NewSessionHandler(sessionSvc, lifecycleSvc, chatwootRepo)
 	messageHandler := handler.NewMessageHandler(messageSvc)
+	statusHandler := handler.NewStatusHandler(statusSvc)
 	contactHandler := handler.NewContactHandler(contactSvc)
 	groupHandler := handler.NewGroupHandler(groupSvc)
 	webhookHandler := handler.NewWebhookHandler(webhookSvc)
@@ -191,14 +204,19 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/messages/presence", messageHandler.SetPresence)
 	sess.Post("/messages/button", messageHandler.SendButton)
 	sess.Post("/messages/list", messageHandler.SendList)
-	sess.Post("/messages/status/text", messageHandler.SendStatusText)
-	sess.Post("/messages/status/image", messageHandler.SendStatusImage)
-	sess.Post("/messages/status/video", messageHandler.SendStatusVideo)
 	sess.Post("/messages/forward", messageHandler.ForwardMessage)
 
 	// 3.1. Media & History
+	sess.Get("/media", historyHandler.ListMedia)
 	sess.Get("/media/:messageId", mediaHandler.GetMedia)
 	sess.Get("/messages", historyHandler.ListMessages)
+
+	// 3.2. Status (WhatsApp Stories)
+	sess.Post("/status/text", statusHandler.SendText)
+	sess.Post("/status/image", statusHandler.SendImage)
+	sess.Post("/status/video", statusHandler.SendVideo)
+	sess.Get("/status", statusHandler.ListStatus)
+	sess.Get("/status/:senderJid", statusHandler.ListContactStatus)
 
 	// 4. Contacts
 	sess.Get("/contacts", contactHandler.List)

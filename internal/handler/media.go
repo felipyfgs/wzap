@@ -13,10 +13,10 @@ import (
 
 type MediaHandler struct {
 	mediaSvc    *service.MediaService
-	messageRepo *repo.MessageRepository
+	messageRepo repo.MessageRepo
 }
 
-func NewMediaHandler(mediaSvc *service.MediaService, messageRepo *repo.MessageRepository) *MediaHandler {
+func NewMediaHandler(mediaSvc *service.MediaService, messageRepo repo.MessageRepo) *MediaHandler {
 	return &MediaHandler{mediaSvc: mediaSvc, messageRepo: messageRepo}
 }
 
@@ -48,6 +48,7 @@ func (h *MediaHandler) GetMedia(c *fiber.Ctx) error {
 		key = storage.MediaObjectKey(storage.MediaKeyParams{
 			SessionID: msg.SessionID,
 			ChatJID:   msg.ChatJID,
+			SenderJID: msg.SenderJID,
 			FromMe:    msg.FromMe,
 			MessageID: msg.ID,
 			MimeType:  msg.MediaType,

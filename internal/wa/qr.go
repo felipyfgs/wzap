@@ -6,9 +6,10 @@ import (
 	"os"
 	"time"
 
+	"wzap/internal/logger"
+
 	"github.com/mdp/qrterminal/v3"
 	"go.mau.fi/whatsmeow"
-	"wzap/internal/logger"
 )
 
 // GetQRCode reads the latest QR code from the database.
@@ -30,8 +31,9 @@ func (m *Manager) consumeQRChannel(sessionID string, qrChan <-chan whatsmeow.QRC
 
 			if err := m.sessionRepo.UpdateQRCode(opCtx, sessionID, evt.Code); err != nil {
 				logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to save QR code to database")
+			} else {
+				logger.Info().Str("component", "wa").Str("session", sessionID).Msg("QR code saved to database")
 			}
-			logger.Info().Str("component", "wa").Str("session", sessionID).Msg("QR code saved to database")
 
 		case "timeout":
 			logger.Warn().Str("component", "wa").Str("session", sessionID).Msg("QR code timed out")

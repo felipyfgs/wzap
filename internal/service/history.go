@@ -132,6 +132,11 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 		chunkOrder := int(syncEvent.Data.GetChunkOrder())
 
 		for _, conversation := range syncEvent.Data.GetConversations() {
+			chatJID := resolveConversationChatJID(conversation, aliases)
+			if strings.HasPrefix(chatJID, "status@") {
+				continue
+			}
+
 			chat := buildHistoryChatUpsert(sessionID, conversation, aliases, syncType, chunkOrder)
 			if chat != nil && s.chatRepo != nil {
 				if err := s.chatRepo.Upsert(ctx, chat); err != nil {
@@ -160,13 +165,18 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 							dlCancel()
 							if err != nil {
 								if s.retryRequester != nil && isExpiredMediaError(err) {
-									logger.Debug().Str("component", "service").Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media retry: aguardando rate limit")
-									time.Sleep(mediaRetryInterval)
-									if retryErr := s.retryRequester.RequestMediaRetry(ctx, sessionID, msg.ID, msg.ChatJID, msg.SenderJID, msg.FromMe, msg.MediaType, msg.Timestamp, encFileHash, fileHash, mediaKey, fileLength); retryErr != nil {
-										logger.Warn().Str("component", "service").Err(retryErr).Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media: falha ao solicitar retry")
-									} else {
-										logger.Debug().Str("component", "service").Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media: retry solicitado ao celular")
-									}
+									logger.Debug().Str("component", "service").Str("session", sessionID).Str("mid", msg.ID).Msg("History sync media retry: agendando retry")
+									requester := s.retryRequester
+									sessID, msgID, chatJID2, senderJID2 := sessionID, msg.ID, msg.ChatJID, msg.SenderJID
+									fromMe2, mediaType2, ts2 := msg.FromMe, msg.MediaType, msg.Timestamp
+									encHash, fHash, mKey, fLen := encFileHash, fileHash, mediaKey, fileLength
+									time.AfterFunc(mediaRetryInterval, func() {
+										if retryErr := requester.RequestMediaRetry(context.Background(), sessID, msgID, chatJID2, senderJID2, fromMe2, mediaType2, ts2, encHash, fHash, mKey, fLen); retryErr != nil {
+											logger.Warn().Str("component", "service").Err(retryErr).Str("session", sessID).Str("mid", msgID).Msg("History sync media: falha ao solicitar retry")
+										} else {
+											logger.Debug().Str("component", "service").Str("session", sessID).Str("mid", msgID).Msg("History sync media: retry solicitado ao celular")
+										}
+									})
 								} else {
 									logger.Debug().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", msg.ID).Str("mediaType", msg.MediaType).Msg("History sync media expired or unavailable, skipping")
 								}

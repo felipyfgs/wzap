@@ -22,6 +22,7 @@ type StatusRepo interface {
 	Save(ctx context.Context, status *model.Status) error
 	FindBySession(ctx context.Context, sessionID string, limit, offset int) ([]model.Status, error)
 	FindBySender(ctx context.Context, sessionID, senderJID string) ([]model.Status, error)
+	UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error
 	DeleteExpired(ctx context.Context, before time.Time) (int64, error)
 	DeleteBySender(ctx context.Context, sessionID, senderJID string) error
 }
@@ -124,6 +125,16 @@ func (r *StatusRepository) FindBySender(ctx context.Context, sessionID, senderJI
 		statuses = append(statuses, s)
 	}
 	return statuses, rows.Err()
+}
+
+func (r *StatusRepository) UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE wz_statuses SET media_url = $1 WHERE id = $2 AND session_id = $3`,
+		mediaURL, msgID, sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to update status media url: %w", err)
+	}
+	return nil
 }
 
 func (r *StatusRepository) DeleteExpired(ctx context.Context, before time.Time) (int64, error) {

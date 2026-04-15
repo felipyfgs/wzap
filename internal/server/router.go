@@ -103,7 +103,9 @@ func (s *Server) SetupRoutes() error {
 	disp.AddListener(chatwootSvc)
 
 	mediaSvc.SetMessageRepo(messageRepo)
+	mediaSvc.SetStatusRepo(statusRepo)
 	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
+	engine.SetStatusMediaAutoUpload(mediaSvc.AutoUploadStatusMedia)
 	engine.SetMediaRetry(mediaSvc.RetryMediaUpload)
 	engine.SetMessagePersist(historySvc.PersistMessage)
 	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)

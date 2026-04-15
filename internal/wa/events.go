@@ -79,6 +79,18 @@ func (m *Manager) handleEvent(sessionID string, evt any) {
 					msgType, body, mediaType := extractMessageContent(v.Message)
 					m.OnStatusReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
 				}
+				if m.OnStatusMediaReceived != nil && v.Message != nil {
+					chatJID := v.Info.Chat.String()
+					senderJID := v.Info.Sender.String()
+					fromMe := v.Info.IsFromMe
+					ts := v.Info.Timestamp
+					switch {
+					case v.Message.GetImageMessage() != nil:
+						m.OnStatusMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetImageMessage().GetMimetype(), fromMe, ts, v.Message.GetImageMessage())
+					case v.Message.GetVideoMessage() != nil:
+						m.OnStatusMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetVideoMessage().GetMimetype(), fromMe, ts, v.Message.GetVideoMessage())
+					}
+				}
 				return
 			}
 

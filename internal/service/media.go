@@ -28,9 +28,11 @@ type MediaService struct {
 	pool            *async.Pool
 	runtimeResolver *RuntimeResolver
 	msgRepo         mediaKeyPersister
+	statusRepo      mediaKeyPersister
 }
 
 func (s *MediaService) SetMessageRepo(r mediaKeyPersister) { s.msgRepo = r }
+func (s *MediaService) SetStatusRepo(r mediaKeyPersister)  { s.statusRepo = r }
 
 func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository, pool *async.Pool, runtimeResolver *RuntimeResolver) *MediaService {
 	if runtimeResolver == nil {
@@ -91,6 +93,54 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, senderJID,
 		})
 		if err != nil {
 			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Auto-upload: failed to get client")
+		}
+	})
+}
+
+func (s *MediaService) AutoUploadStatusMedia(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
+	if s.minio == nil {
+		return
+	}
+
+	_ = s.pool.Submit(func(ctx context.Context) {
+		runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
+		if err != nil {
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Status auto-upload: media download not supported")
+			return
+		}
+
+		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
+			data, err := client.Download(ctx, downloadable)
+			if err != nil {
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: failed to download media")
+				return struct{}{}, nil
+			}
+
+			key := storage.MediaObjectKey(storage.MediaKeyParams{
+				SessionID: session.ID,
+				ChatJID:   chatJID,
+				SenderJID: senderJID,
+				FromMe:    fromMe,
+				MessageID: messageID,
+				MimeType:  mimeType,
+				Timestamp: timestamp,
+			})
+			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: failed to upload to S3")
+				return struct{}{}, nil
+			}
+
+			if s.statusRepo != nil {
+				if err := s.statusRepo.UpdateMediaURL(ctx, session.ID, messageID, key); err != nil {
+					logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: failed to persist media key")
+				}
+			}
+
+			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: media stored in S3")
+			return struct{}{}, nil
+		})
+		if err != nil {
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Status auto-upload: failed to get client")
 		}
 	})
 }

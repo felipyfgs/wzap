@@ -83,8 +83,9 @@ type Manager struct {
 	OnMediaRetry          MediaRetryFunc
 	OnMessageReceived     MessagePersistFunc
 	OnHistorySyncReceived HistorySyncPersistFunc
-	OnStatusReceived     StatusReceivedFunc
-	ShouldIgnoreStatus   ShouldIgnoreStatusFunc
+	OnStatusReceived      StatusReceivedFunc
+	OnStatusMediaReceived MediaAutoUploadFunc
+	ShouldIgnoreStatus    ShouldIgnoreStatusFunc
 	mediaRetryCache       sync.Map
 	stopGC                chan struct{}
 }
@@ -184,6 +185,10 @@ func (m *Manager) SetHistorySyncPersist(fn HistorySyncPersistFunc) {
 
 func (m *Manager) SetStatusReceived(fn StatusReceivedFunc) {
 	m.OnStatusReceived = fn
+}
+
+func (m *Manager) SetStatusMediaAutoUpload(fn MediaAutoUploadFunc) {
+	m.OnStatusMediaReceived = fn
 }
 
 func (m *Manager) SetShouldIgnoreStatus(fn ShouldIgnoreStatusFunc) {

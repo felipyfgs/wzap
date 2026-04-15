@@ -319,9 +319,12 @@ func (m *Manager) GetContactName(ctx context.Context, sessionID, jid string) str
 		return ""
 	}
 
-	contact, err := client.Store.Contacts.GetContact(ctx, parsedJID)
-	if err != nil {
-		return ""
+	contact, _ := client.Store.Contacts.GetContact(ctx, parsedJID)
+
+	if contact.FullName == "" && contact.FirstName == "" && contact.PushName == "" && contact.BusinessName == "" {
+		if parsedJID.Device > 0 {
+			contact, _ = client.Store.Contacts.GetContact(ctx, parsedJID.ToNonAD())
+		}
 	}
 
 	if contact.FullName != "" {
@@ -332,6 +335,9 @@ func (m *Manager) GetContactName(ctx context.Context, sessionID, jid string) str
 	}
 	if contact.PushName != "" {
 		return contact.PushName
+	}
+	if contact.BusinessName != "" {
+		return contact.BusinessName
 	}
 	return ""
 }

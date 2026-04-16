@@ -20,12 +20,12 @@ type Client interface {
 	SearchContacts(ctx context.Context, q string) ([]Contact, error)
 	CreateContact(ctx context.Context, req CreateContactReq) (*Contact, error)
 	UpdateContact(ctx context.Context, id int, req UpdateContactReq) error
-	ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error)
-	CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error)
-	UpdateConversationStatus(ctx context.Context, convID int, status string) error
+	ListConversations(ctx context.Context, contactID int) ([]Conversation, error)
+	CreateConversation(ctx context.Context, req ConvReq) (*Conversation, error)
+	UpdateConvStatus(ctx context.Context, convID int, status string) error
 	MergeContacts(ctx context.Context, baseID, mergeeID int) error
 	CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error)
-	CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error)
+	CreateAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error)
 	DeleteMessage(ctx context.Context, convID, msgID int) error
 	UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error
 	ListInboxes(ctx context.Context) ([]Inbox, error)
@@ -211,7 +211,7 @@ type Conversation struct {
 	Messages  []Message `json:"messages,omitempty"`
 }
 
-func (c *HTTPClient) ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error) {
+func (c *HTTPClient) ListConversations(ctx context.Context, contactID int) ([]Conversation, error) {
 	var result struct {
 		Payload []Conversation `json:"payload"`
 	}
@@ -222,14 +222,14 @@ func (c *HTTPClient) ListContactConversations(ctx context.Context, contactID int
 	return result.Payload, nil
 }
 
-type CreateConversationReq struct {
+type ConvReq struct {
 	InboxID   int    `json:"inbox_id"`
 	SourceID  string `json:"source_id,omitempty"`
 	ContactID int    `json:"contact_id,omitempty"`
 	Status    string `json:"status,omitempty"`
 }
 
-func (c *HTTPClient) CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error) {
+func (c *HTTPClient) CreateConversation(ctx context.Context, req ConvReq) (*Conversation, error) {
 	var result Conversation
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations", c.accountID)
 	data, err := json.Marshal(req)
@@ -242,7 +242,7 @@ func (c *HTTPClient) CreateConversation(ctx context.Context, req CreateConversat
 	return &result, nil
 }
 
-func (c *HTTPClient) UpdateConversationStatus(ctx context.Context, convID int, status string) error {
+func (c *HTTPClient) UpdateConvStatus(ctx context.Context, convID int, status string) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/toggle_status", c.accountID, convID)
 	body := map[string]string{"status": status}
 	data, err := json.Marshal(body)
@@ -330,7 +330,7 @@ func (c *HTTPClient) CreateMessage(ctx context.Context, convID int, req MessageR
 	return &result, nil
 }
 
-func (c *HTTPClient) CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error) {
+func (c *HTTPClient) CreateAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error) {
 	var result Message
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
 

@@ -18,7 +18,7 @@ func NewChatRepository(db *pgxpool.Pool) *ChatRepository {
 	return &ChatRepository{db: db}
 }
 
-func (r *ChatRepository) Upsert(ctx context.Context, chat *model.ChatUpsert) error {
+func (r *ChatRepository) Upsert(ctx context.Context, chat *model.ChatUpdate) error {
 	rawJSON, _ := json.Marshal(chat.Raw)
 	_, err := r.db.Exec(ctx, `INSERT INTO wz_chats (
 		session_id, chat_jid, name, display_name, chat_type, archived, pinned, read_only,
@@ -71,14 +71,14 @@ func (r *ChatRepository) Upsert(ctx context.Context, chat *model.ChatUpsert) err
 		chat.UnreadMentionCount,
 		chat.LastMessageID,
 		chat.LastMessageAt,
-		chat.ConversationTimestamp,
+		chat.ConvTimestamp,
 		chat.PnJID,
 		chat.LidJID,
 		chat.Username,
 		chat.AccountLID,
 		chat.Source,
-		chat.SourceSyncType,
-		chat.HistoryChunkOrder,
+		chat.SyncType,
+		chat.ChunkOrder,
 		rawJSON,
 	)
 	if err != nil {
@@ -112,14 +112,14 @@ func (r *ChatRepository) FindBySessionAndChat(ctx context.Context, sessionID, ch
 		&chat.UnreadMentionCount,
 		&chat.LastMessageID,
 		&chat.LastMessageAt,
-		&chat.ConversationTimestamp,
+		&chat.ConvTimestamp,
 		&chat.PnJID,
 		&chat.LidJID,
 		&chat.Username,
 		&chat.AccountLID,
 		&chat.Source,
-		&chat.SourceSyncType,
-		&chat.HistoryChunkOrder,
+		&chat.SyncType,
+		&chat.ChunkOrder,
 		&raw,
 		&chat.CreatedAt,
 		&chat.UpdatedAt,
@@ -169,14 +169,14 @@ func (r *ChatRepository) ListBySession(ctx context.Context, sessionID string, li
 			&chat.UnreadMentionCount,
 			&chat.LastMessageID,
 			&chat.LastMessageAt,
-			&chat.ConversationTimestamp,
+			&chat.ConvTimestamp,
 			&chat.PnJID,
 			&chat.LidJID,
 			&chat.Username,
 			&chat.AccountLID,
 			&chat.Source,
-			&chat.SourceSyncType,
-			&chat.HistoryChunkOrder,
+			&chat.SyncType,
+			&chat.ChunkOrder,
 			&raw,
 			&chat.CreatedAt,
 			&chat.UpdatedAt,

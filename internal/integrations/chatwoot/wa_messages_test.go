@@ -21,7 +21,7 @@ func TestHandleMessage_FileTooBig(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 	svc := newTestService(client)
-	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60, TimeoutLargeSeconds: 300}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, MediaTimeout: 60, LargeTimeout: 300}
 
 	msg := map[string]any{
 		"imageMessage": map[string]any{
@@ -443,7 +443,7 @@ func TestHandleViewOnce_V2_DownloadSuccess(t *testing.T) {
 	}
 	svc := newTestService(client)
 	svc.mediaDownloader = &mockMediaDownloader{data: []byte("fake-image-data")}
-	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, MediaTimeout: 60}
 
 	vonce := map[string]any{
 		"message": map[string]any{
@@ -472,7 +472,7 @@ func TestHandleViewOnce_V2_DownloadFail_FallsBackToText(t *testing.T) {
 	}
 	svc := newTestService(client)
 	svc.mediaDownloader = &mockMediaDownloader{err: fmt.Errorf("download failed")}
-	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, TimeoutMediaSeconds: 60}
+	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, MediaTimeout: 60}
 
 	vonce := map[string]any{
 		"message": map[string]any{

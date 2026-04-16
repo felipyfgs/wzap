@@ -34,7 +34,7 @@ type UserInfoResp struct {
 	Devices []string `json:"devices"`
 }
 
-type SetProfilePictureReq struct {
+type UpdateAvatarReq struct {
 	Image string `json:"image" validate:"required"`
 }
 
@@ -47,6 +47,6 @@ type SetPrivacyReq struct {
 	Value   string `json:"value" validate:"required"`
 }
 
-type SetStatusMessageReq struct {
+type UpdateStatusReq struct {
 	Status string `json:"status" validate:"required"`
 }

@@ -144,19 +144,19 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 		}
 	}
 
-	conversations, err := client.ListContactConversations(ctx, contactID)
+	conversations, err := client.ListConversations(ctx, contactID)
 	if err != nil {
 		return 0, fmt.Errorf("failed to list conversations: %w", err)
 	}
 
 	for _, conv := range conversations {
 		if conv.InboxID == cfg.InboxID {
-			if conv.Status == "resolved" && cfg.ReopenConversation {
+			if conv.Status == "resolved" && cfg.ReopenConv {
 				reopenStatus := "open"
-				if cfg.ConversationPending {
+				if cfg.PendingConv {
 					reopenStatus = "pending"
 				}
-				if err := client.UpdateConversationStatus(ctx, conv.ID, reopenStatus); err != nil {
+				if err := client.UpdateConvStatus(ctx, conv.ID, reopenStatus); err != nil {
 					logger.Warn().Str("component", "chatwoot").Err(err).Int("convID", conv.ID).Msg("Failed to reopen conversation")
 				}
 				s.cache.SetConv(ctx, cfg.SessionID, chatJID, conv.ID, contactID)
@@ -173,12 +173,12 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 	if !isGroup {
 		sourceID = extractPhone(chatJID)
 	}
-	req := CreateConversationReq{
+	req := ConvReq{
 		InboxID:   cfg.InboxID,
 		SourceID:  sourceID,
 		ContactID: contactID,
 	}
-	if cfg.ConversationPending {
+	if cfg.PendingConv {
 		req.Status = "pending"
 	}
 
@@ -198,7 +198,7 @@ func (s *Service) ensureBotConv(ctx context.Context, cfg *Config) (int, error) {
 	}
 
 	client := s.clientFn(cfg)
-	conversations, err := client.ListContactConversations(ctx, contactID)
+	conversations, err := client.ListConversations(ctx, contactID)
 	if err != nil {
 		return 0, err
 	}
@@ -209,7 +209,7 @@ func (s *Service) ensureBotConv(ctx context.Context, cfg *Config) (int, error) {
 		}
 	}
 
-	conv, err := client.CreateConversation(ctx, CreateConversationReq{
+	conv, err := client.CreateConversation(ctx, ConvReq{
 		InboxID:   cfg.InboxID,
 		ContactID: contactID,
 	})
@@ -227,7 +227,7 @@ func (s *Service) findOpenBotConversation(ctx context.Context, cfg *Config) (int
 	}
 
 	client := s.clientFn(cfg)
-	conversations, err := client.ListContactConversations(ctx, contactID)
+	conversations, err := client.ListConversations(ctx, contactID)
 	if err != nil {
 		return 0, false
 	}

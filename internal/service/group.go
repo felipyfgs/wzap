@@ -164,7 +164,7 @@ func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID s
 	isAdmin := false
 	ownJID := client.Store.ID
 	ownLID := client.Store.GetLID()
-	participants := make([]dto.GroupParticipantResp, 0, len(info.Participants))
+	participants := make([]dto.GroupMemberResp, 0, len(info.Participants))
 	for _, part := range info.Participants {
 		if ownJID != nil && isOwnParticipant(part, ownJID, ownLID) && (part.IsAdmin || part.IsSuperAdmin) {
 			isAdmin = true
@@ -196,7 +196,7 @@ func (s *GroupService) GetInfo(ctx context.Context, sessionID string, groupJID s
 			lid = part.LID.String()
 		}
 
-		participants = append(participants, dto.GroupParticipantResp{
+		participants = append(participants, dto.GroupMemberResp{
 			JID:          part.JID.String(),
 			PhoneNumber:  phoneNumber,
 			LID:          lid,

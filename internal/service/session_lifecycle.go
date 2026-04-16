@@ -15,7 +15,7 @@ import (
 	"wzap/internal/wa"
 )
 
-type lifecycleManager interface {
+type sessionManager interface {
 	Connect(ctx context.Context, sessionID string) (*whatsmeow.Client, <-chan whatsmeow.QRChannelItem, error)
 	Disconnect(ctx context.Context, sessionID string) error
 	Logout(ctx context.Context, sessionID string) error
@@ -24,14 +24,14 @@ type lifecycleManager interface {
 	PairPhone(ctx context.Context, sessionID, phone string) (string, error)
 }
 
-type sessionReader interface {
+type sessionGetter interface {
 	Get(ctx context.Context, id string) (*dto.SessionResp, error)
 }
 
-type LifecycleOrchestrator struct {
+type SessionLifecycle struct {
 	runtimeResolver *RuntimeResolver
-	manager         lifecycleManager
-	sessions        sessionReader
+	manager         sessionManager
+	sessions        sessionGetter
 }
 
 type ConnectResult struct {
@@ -66,49 +66,49 @@ type PairResult struct {
 	Support     model.CapabilitySupport
 }
 
-type LifecycleConflictError struct {
+type ConflictError struct {
 	Message string
 	Cause   error
 }
 
-func (e *LifecycleConflictError) Error() string {
+func (e *ConflictError) Error() string {
 	if e == nil {
 		return ""
 	}
 	return e.Message
 }
 
-func (e *LifecycleConflictError) Unwrap() error {
+func (e *ConflictError) Unwrap() error {
 	if e == nil {
 		return nil
 	}
 	return e.Cause
 }
 
-type LifecycleNotFoundError struct {
+type NotFoundError struct {
 	Message string
 }
 
-func (e *LifecycleNotFoundError) Error() string {
+func (e *NotFoundError) Error() string {
 	if e == nil {
 		return ""
 	}
 	return e.Message
 }
 
-func NewLifecycleOrchestrator(runtimeResolver *RuntimeResolver, manager *wa.Manager, sessions *SessionService) *LifecycleOrchestrator {
-	return newLifecycleOrchestrator(runtimeResolver, manager, sessions)
+func NewSessionLifecycle(runtimeResolver *RuntimeResolver, manager *wa.Manager, sessions *SessionService) *SessionLifecycle {
+	return newSessionLifecycle(runtimeResolver, manager, sessions)
 }
 
-func newLifecycleOrchestrator(runtimeResolver *RuntimeResolver, manager lifecycleManager, sessions sessionReader) *LifecycleOrchestrator {
-	return &LifecycleOrchestrator{
+func newSessionLifecycle(runtimeResolver *RuntimeResolver, manager sessionManager, sessions sessionGetter) *SessionLifecycle {
+	return &SessionLifecycle{
 		runtimeResolver: runtimeResolver,
 		manager:         manager,
 		sessions:        sessions,
 	}
 }
 
-func (o *LifecycleOrchestrator) Connect(ctx context.Context, sessionID string) (*ConnectResult, error) {
+func (o *SessionLifecycle) Connect(ctx context.Context, sessionID string) (*ConnectResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionConnect)
 	if err != nil {
 		return nil, err
@@ -120,7 +120,7 @@ func (o *LifecycleOrchestrator) Connect(ctx context.Context, sessionID string) (
 	client, qrChan, err := o.manager.Connect(runtime.WithContext(ctx), runtime.Session().ID)
 	if err != nil {
 		if errors.Is(err, whatsmeow.ErrQRStoreContainsID) {
-			return nil, &LifecycleConflictError{
+			return nil, &ConflictError{
 				Message: "A QR code connection is already pending for this session",
 				Cause:   err,
 			}
@@ -141,7 +141,7 @@ func (o *LifecycleOrchestrator) Connect(ctx context.Context, sessionID string) (
 	return &ConnectResult{Status: status, Support: support}, nil
 }
 
-func (o *LifecycleOrchestrator) Disconnect(ctx context.Context, sessionID string) (*DisconnectResult, error) {
+func (o *SessionLifecycle) Disconnect(ctx context.Context, sessionID string) (*DisconnectResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionDisconnect)
 	if err != nil {
 		return nil, err
@@ -156,7 +156,7 @@ func (o *LifecycleOrchestrator) Disconnect(ctx context.Context, sessionID string
 	return &DisconnectResult{Support: support}, nil
 }
 
-func (o *LifecycleOrchestrator) Logout(ctx context.Context, sessionID string) (*LogoutResult, error) {
+func (o *SessionLifecycle) Logout(ctx context.Context, sessionID string) (*LogoutResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionLogout)
 	if err != nil {
 		return nil, err
@@ -170,7 +170,7 @@ func (o *LifecycleOrchestrator) Logout(ctx context.Context, sessionID string) (*
 	return &LogoutResult{Support: support}, nil
 }
 
-func (o *LifecycleOrchestrator) Reconnect(ctx context.Context, sessionID string) (*ReconnectResult, error) {
+func (o *SessionLifecycle) Reconnect(ctx context.Context, sessionID string) (*ReconnectResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionReconnect)
 	if err != nil {
 		return nil, err
@@ -184,7 +184,7 @@ func (o *LifecycleOrchestrator) Reconnect(ctx context.Context, sessionID string)
 	return &ReconnectResult{Support: support}, nil
 }
 
-func (o *LifecycleOrchestrator) Restart(ctx context.Context, sessionID string) (*RestartResult, error) {
+func (o *SessionLifecycle) Restart(ctx context.Context, sessionID string) (*RestartResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionRestart)
 	if err != nil {
 		return nil, err
@@ -206,12 +206,12 @@ func (o *LifecycleOrchestrator) Restart(ctx context.Context, sessionID string) (
 
 	session, err := o.sessions.Get(ctx, runtime.Session().ID)
 	if err != nil {
-		return nil, normalizeLifecycleError(err)
+		return nil, normalizeError(err)
 	}
 	return &RestartResult{Session: session, Support: support}, nil
 }
 
-func (o *LifecycleOrchestrator) QR(ctx context.Context, sessionID string) (*QRResult, error) {
+func (o *SessionLifecycle) QR(ctx context.Context, sessionID string) (*QRResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionQR)
 	if err != nil {
 		return nil, err
@@ -222,15 +222,15 @@ func (o *LifecycleOrchestrator) QR(ctx context.Context, sessionID string) (*QRRe
 
 	qrCode, err := o.manager.GetQRCode(runtime.WithContext(ctx), runtime.Session().ID)
 	if err != nil {
-		return nil, normalizeLifecycleError(err)
+		return nil, normalizeError(err)
 	}
 	if qrCode == "" {
-		return nil, &LifecycleNotFoundError{Message: "No QR code available. Call connect first, then poll this endpoint."}
+		return nil, &NotFoundError{Message: "No QR code available. Call connect first, then poll this endpoint."}
 	}
 	return &QRResult{QRCode: qrCode, Support: support}, nil
 }
 
-func (o *LifecycleOrchestrator) Pair(ctx context.Context, sessionID, phone string) (*PairResult, error) {
+func (o *SessionLifecycle) Pair(ctx context.Context, sessionID, phone string) (*PairResult, error) {
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionPair)
 	if err != nil {
 		return nil, err
@@ -241,19 +241,19 @@ func (o *LifecycleOrchestrator) Pair(ctx context.Context, sessionID, phone strin
 
 	code, err := o.manager.PairPhone(runtime.WithContext(ctx), runtime.Session().ID, phone)
 	if err != nil {
-		return nil, normalizeLifecycleError(err)
+		return nil, normalizeError(err)
 	}
 	return &PairResult{PairingCode: code, Support: support}, nil
 }
 
-func (o *LifecycleOrchestrator) resolveCapability(ctx context.Context, sessionID string, capability model.EngineCapability) (*SessionRuntime, model.CapabilitySupport, error) {
+func (o *SessionLifecycle) resolveCapability(ctx context.Context, sessionID string, capability model.EngineCapability) (*SessionRuntime, model.CapabilitySupport, error) {
 	if o == nil || o.runtimeResolver == nil {
 		return nil, model.SupportUnavailable, fmt.Errorf("session lifecycle orchestrator is nil")
 	}
 
 	runtime, err := o.runtimeResolver.Resolve(ctx, sessionID)
 	if err != nil {
-		return nil, model.SupportUnavailable, normalizeLifecycleError(err)
+		return nil, model.SupportUnavailable, normalizeError(err)
 	}
 	support, err := runtime.RequireCapability(capability)
 	if err != nil {
@@ -262,7 +262,7 @@ func (o *LifecycleOrchestrator) resolveCapability(ctx context.Context, sessionID
 	return runtime, support, nil
 }
 
-func normalizeLifecycleError(err error) error {
+func normalizeError(err error) error {
 	if err == nil {
 		return nil
 	}
@@ -270,16 +270,16 @@ func normalizeLifecycleError(err error) error {
 	if errors.As(err, &capabilityErr) {
 		return err
 	}
-	var conflictErr *LifecycleConflictError
+	var conflictErr *ConflictError
 	if errors.As(err, &conflictErr) {
 		return err
 	}
-	var notFoundErr *LifecycleNotFoundError
+	var notFoundErr *NotFoundError
 	if errors.As(err, &notFoundErr) {
 		return err
 	}
 	if errors.Is(err, repo.ErrSessionNotFound) {
-		return &LifecycleNotFoundError{Message: err.Error()}
+		return &NotFoundError{Message: err.Error()}
 	}
 	return err
 }

@@ -71,13 +71,13 @@ func handleLifecycleError(c *fiber.Ctx, err error) bool {
 		return true
 	}
 
-	var conflictErr *service.LifecycleConflictError
+	var conflictErr *service.ConflictError
 	if errors.As(err, &conflictErr) {
 		_ = c.Status(fiber.StatusConflict).JSON(dto.ErrorResp("Conflict", conflictErr.Error()))
 		return true
 	}
 
-	var notFoundErr *service.LifecycleNotFoundError
+	var notFoundErr *service.NotFoundError
 	if errors.As(err, &notFoundErr) {
 		_ = c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", notFoundErr.Error()))
 		return true

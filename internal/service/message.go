@@ -23,7 +23,7 @@ import (
 
 type MessageService struct {
 	runtimeResolver *RuntimeResolver
-	persistFn       wa.MessagePersistFunc
+	persistFn       wa.PersistFunc
 }
 
 func NewMessageService(engine *wa.Manager, sessRepo *repo.SessionRepository, runtimeResolver *RuntimeResolver) *MessageService {
@@ -33,7 +33,7 @@ func NewMessageService(engine *wa.Manager, sessRepo *repo.SessionRepository, run
 	return &MessageService{runtimeResolver: runtimeResolver}
 }
 
-func (s *MessageService) SetMessagePersist(fn wa.MessagePersistFunc) {
+func (s *MessageService) SetOnMessagePersist(fn wa.PersistFunc) {
 	s.persistFn = fn
 }
 
@@ -45,7 +45,11 @@ func (s *MessageService) persistSent(sessionID, messageID, chatJID, msgType, bod
 	if client.Store.ID != nil {
 		senderJID = client.Store.ID.String()
 	}
-	s.persistFn(sessionID, messageID, chatJID, senderJID, true, msgType, body, mediaType, time.Now().Unix(), nil)
+	s.persistFn(wa.PersistInput{
+		SessionID: sessionID, MessageID: messageID, ChatJID: chatJID,
+		SenderJID: senderJID, FromMe: true, MsgType: msgType,
+		Body: body, MediaType: mediaType, Timestamp: time.Now().Unix(),
+	})
 	metrics.MessagesSent.Inc()
 }
 

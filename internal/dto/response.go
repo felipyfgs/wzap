@@ -12,8 +12,8 @@ type APIError struct {
 	Message string `json:"message,omitempty"`
 }
 
-type MidResp struct {
-	Mid string `json:"messageId"`
+type MessageIDResp struct {
+	MessageID string `json:"messageId"`
 }
 
 type ConnectResp struct {

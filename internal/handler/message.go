@@ -34,7 +34,7 @@ func (h *MessageHandler) respondMessageError(c *fiber.Ctx, err error, sessionID,
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendTextReq true "Message payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -54,7 +54,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 		return h.respondMessageError(c, err, id, "failed to send text message")
 	}
 
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendImage godoc
@@ -65,7 +65,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendMediaReq true "Media payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -82,7 +82,7 @@ func (h *MessageHandler) SendImage(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendMediaReq true "Media payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -99,7 +99,7 @@ func (h *MessageHandler) SendVideo(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendMediaReq true "Media payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -116,7 +116,7 @@ func (h *MessageHandler) SendDocument(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendMediaReq true "Media payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -144,7 +144,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 		return h.respondMessageError(c, err, id, "failed to send media")
 	}
 
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendContact godoc
@@ -155,7 +155,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendContactReq true "Contact payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -173,7 +173,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to send contact")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendLocation godoc
@@ -184,7 +184,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendLocationReq true "Location payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -202,7 +202,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to send location")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendPoll godoc
@@ -213,7 +213,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendPollReq true "Poll payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -231,7 +231,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to send poll")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendSticker godoc
@@ -242,7 +242,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendStickerReq true "Sticker payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -260,7 +260,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to send sticker")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendLink godoc
@@ -271,7 +271,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendLinkReq true "Link payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -289,7 +289,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to send link")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // EditMessage godoc
@@ -300,7 +300,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.EditMessageReq true "Edit payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -318,7 +318,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to edit message")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // DeleteMessage godoc
@@ -329,7 +329,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.DeleteMessageReq true "Delete payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -347,7 +347,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to delete message")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // ReactMessage godoc
@@ -358,7 +358,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.ReactMessageReq true "Reaction payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -376,7 +376,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return h.respondMessageError(c, err, id, "failed to react to message")
 	}
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // MarkRead godoc
@@ -443,7 +443,7 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendButtonReq true "Button message payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -463,7 +463,7 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 		return h.respondMessageError(c, err, id, "failed to send button")
 	}
 
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendList godoc
@@ -474,7 +474,7 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.SendListReq true "List message payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -494,7 +494,7 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 		return h.respondMessageError(c, err, id, "failed to send list")
 	}
 
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // ForwardMessage godoc
@@ -505,7 +505,7 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.ForwardMessageReq true "Forward message payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -525,5 +525,5 @@ func (h *MessageHandler) ForwardMessage(c *fiber.Ctx) error {
 		return h.respondMessageError(c, err, id, "failed to forward message")
 	}
 
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }

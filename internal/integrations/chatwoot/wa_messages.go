@@ -31,13 +31,13 @@ func (s *Service) processMediaMessage(ctx context.Context, cfg *Config, convID i
 		return
 	}
 
-	timeout := time.Duration(cfg.TimeoutMediaSeconds) * time.Second
-	if cfg.TimeoutMediaSeconds == 0 {
+	timeout := time.Duration(cfg.MediaTimeout) * time.Second
+	if cfg.MediaTimeout == 0 {
 		timeout = 60 * time.Second
 	}
 	if info.FileLength > 10*1024*1024 {
-		timeout = time.Duration(cfg.TimeoutLargeSeconds) * time.Second
-		if cfg.TimeoutLargeSeconds == 0 {
+		timeout = time.Duration(cfg.LargeTimeout) * time.Second
+		if cfg.LargeTimeout == 0 {
 			timeout = 300 * time.Second
 		}
 	}
@@ -71,7 +71,7 @@ func (s *Service) processMediaMessage(ctx context.Context, cfg *Config, convID i
 		caption = "[GIF]"
 	}
 
-	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, caption, filename, data, mimeType, p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
+	cwMsg, err := client.CreateAttachment(ctx, convID, caption, filename, data, mimeType, p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to upload media to Chatwoot")
 		return
@@ -101,7 +101,7 @@ func (s *Service) processStickerMessage(ctx context.Context, cfg *Config, convID
 	if len(data) > 0 && len(data) <= 1024*1024 {
 		pngData, err := imgutil.ConvertWebPToPNG(data)
 		if err == nil {
-			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.png", pngData, "image/png", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
+			cwMsg, err := client.CreateAttachment(ctx, convID, "", "sticker.png", pngData, "image/png", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 			if err == nil && msgID != "" {
 				_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 				return
@@ -109,7 +109,7 @@ func (s *Service) processStickerMessage(ctx context.Context, cfg *Config, convID
 		}
 		gifData, err := imgutil.ConvertWebPToGIF(data)
 		if err == nil {
-			cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.gif", gifData, "image/gif", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
+			cwMsg, err := client.CreateAttachment(ctx, convID, "", "sticker.gif", gifData, "image/gif", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 			if err == nil && msgID != "" {
 				_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
 				return
@@ -117,7 +117,7 @@ func (s *Service) processStickerMessage(ctx context.Context, cfg *Config, convID
 		}
 	}
 
-	cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", "sticker.webp", data, "image/webp", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
+	cwMsg, err := client.CreateAttachment(ctx, convID, "", "sticker.webp", data, "image/webp", p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to upload sticker fallback")
 		return
@@ -167,7 +167,7 @@ func (s *Service) processPollUpdate(ctx context.Context, cfg *Config, pollUpdate
 	}
 
 	origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, pollMsgID)
-	if err != nil || origMsg.CWMessageID == nil || origMsg.CWConversationID == nil {
+	if err != nil || origMsg.CWMessageID == nil || origMsg.CWConvID == nil {
 		return
 	}
 
@@ -185,7 +185,7 @@ func (s *Service) processPollUpdate(ctx context.Context, cfg *Config, pollUpdate
 	}
 
 	client := s.clientFn(cfg)
-	_, _ = client.CreateMessage(ctx, *origMsg.CWConversationID, MessageReq{
+	_, _ = client.CreateMessage(ctx, *origMsg.CWConvID, MessageReq{
 		Content:           sb.String(),
 		MessageType:       "incoming",
 		SourceReplyID:     *origMsg.CWMessageID,
@@ -211,10 +211,10 @@ func (s *Service) processReaction(ctx context.Context, cfg *Config, convID int, 
 	p := newCWMsgParams(fromMe, "", "", 0)
 
 	if emoji == "" {
-		if origMsg.CWConversationID != nil {
+		if origMsg.CWConvID != nil {
 			cwReact, err := s.msgRepo.FindByID(ctx, cfg.SessionID, msgID)
-			if err == nil && cwReact.CWMessageID != nil && cwReact.CWConversationID != nil {
-				_ = client.DeleteMessage(ctx, *cwReact.CWConversationID, *cwReact.CWMessageID)
+			if err == nil && cwReact.CWMessageID != nil && cwReact.CWConvID != nil {
+				_ = client.DeleteMessage(ctx, *cwReact.CWConvID, *cwReact.CWMessageID)
 			}
 		}
 		return
@@ -340,8 +340,8 @@ func (s *Service) processViewOnce(ctx context.Context, cfg *Config, convID int, 
 		if innerMsg := getMapField(vonce, "message"); innerMsg != nil && s.mediaDownloader != nil {
 			info := extractMediaInfo(innerMsg)
 			if info != nil {
-				timeout := time.Duration(cfg.TimeoutMediaSeconds) * time.Second
-				if cfg.TimeoutMediaSeconds == 0 {
+				timeout := time.Duration(cfg.MediaTimeout) * time.Second
+				if cfg.MediaTimeout == 0 {
 					timeout = 60 * time.Second
 				}
 				mediaCtx, cancel := context.WithTimeout(ctx, timeout)
@@ -359,7 +359,7 @@ func (s *Service) processViewOnce(ctx context.Context, cfg *Config, convID int, 
 						filename = info.MediaType + ext
 					}
 
-					cwMsg, err := client.CreateMessageWithAttachment(ctx, convID, "", filename, data, mimeType, p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
+					cwMsg, err := client.CreateAttachment(ctx, convID, "", filename, data, mimeType, p.MessageType, p.SourceID, cwReplyID, p.ContentAttrs)
 					if err == nil {
 						if msgID != "" {
 							_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
@@ -399,7 +399,7 @@ func (s *Service) processEditedMessage(ctx context.Context, cfg *Config, editMsg
 	}
 
 	origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, targetMsgID)
-	if err != nil || origMsg.CWMessageID == nil || origMsg.CWConversationID == nil {
+	if err != nil || origMsg.CWMessageID == nil || origMsg.CWConvID == nil {
 		return
 	}
 
@@ -414,7 +414,7 @@ func (s *Service) processEditedMessage(ctx context.Context, cfg *Config, editMsg
 	client := s.clientFn(cfg)
 	p := newCWMsgParams(origMsg.FromMe, "", "", 0)
 
-	_, _ = client.CreateMessage(ctx, *origMsg.CWConversationID, MessageReq{
+	_, _ = client.CreateMessage(ctx, *origMsg.CWConvID, MessageReq{
 		Content:           "✏️ *Mensagem editada:*\n" + newText,
 		MessageType:       p.MessageType,
 		Private:           true,

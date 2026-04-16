@@ -8,15 +8,15 @@ import (
 	"wzap/internal/wa"
 )
 
-type repoSessionPhoneGetter struct {
+type sessionPhoneGetter struct {
 	sessRepo *repo.SessionRepository
 }
 
 func NewSessionPhoneGetter(sessRepo *repo.SessionRepository) SessionPhoneGetter {
-	return &repoSessionPhoneGetter{sessRepo: sessRepo}
+	return &sessionPhoneGetter{sessRepo: sessRepo}
 }
 
-func (g *repoSessionPhoneGetter) GetSessionPhone(ctx context.Context, sessionID string) string {
+func (g *sessionPhoneGetter) GetSessionPhone(ctx context.Context, sessionID string) string {
 	sess, err := g.sessRepo.FindByID(ctx, sessionID)
 	if err != nil || sess == nil || sess.JID == "" {
 		return ""

@@ -209,7 +209,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/SessionCreatedResp"
+                                            "$ref": "#/definitions/SessionWithTokenResp"
                                         }
                                     }
                                 }
@@ -1001,7 +1001,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CommunityParticipantReq"
+                            "$ref": "#/definitions/CommunityMembersReq"
                         }
                     }
                 ],
@@ -1059,7 +1059,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CommunityParticipantReq"
+                            "$ref": "#/definitions/CommunityMembersReq"
                         }
                     }
                 ],
@@ -1668,7 +1668,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/SetProfilePictureReq"
+                            "$ref": "#/definitions/UpdateAvatarReq"
                         }
                     }
                 ],
@@ -1738,7 +1738,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/SetStatusMessageReq"
+                            "$ref": "#/definitions/UpdateStatusReq"
                         }
                     }
                 ],
@@ -2892,7 +2892,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/GroupRequestActionReq"
+                            "$ref": "#/definitions/GroupJoinActionReq"
                         }
                     }
                 ],
@@ -2994,7 +2994,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ChatwootConfigReq"
+                            "$ref": "#/definitions/CWConfigReq"
                         }
                     }
                 ],
@@ -3095,7 +3095,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ImportHistoryReq"
+                            "$ref": "#/definitions/CWImportReq"
                         }
                     }
                 ],
@@ -3582,7 +3582,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -3652,7 +3652,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -3722,7 +3722,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -3792,7 +3792,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -3862,7 +3862,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -3932,7 +3932,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4002,7 +4002,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4072,7 +4072,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4142,7 +4142,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4212,7 +4212,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4282,7 +4282,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4352,7 +4352,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4480,7 +4480,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4608,7 +4608,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4678,7 +4678,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -4748,7 +4748,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -5296,7 +5296,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/NewsletterMarkViewedReq"
+                            "$ref": "#/definitions/NewsletterViewReq"
                         }
                     }
                 ],
@@ -5818,7 +5818,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -5888,7 +5888,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -5958,7 +5958,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "Data": {
-                                            "$ref": "#/definitions/MidResp"
+                                            "$ref": "#/definitions/MessageIDResp"
                                         }
                                     }
                                 }
@@ -6421,6 +6421,109 @@ const docTemplate = `{
                 }
             }
         },
+        "CWConfigReq": {
+            "type": "object",
+            "required": [
+                "accountId",
+                "token",
+                "url"
+            ],
+            "properties": {
+                "accountId": {
+                    "type": "integer"
+                },
+                "databaseUri": {
+                    "type": "string"
+                },
+                "ignoreGroups": {
+                    "type": "boolean"
+                },
+                "ignoreJids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "importOnConnect": {
+                    "type": "boolean"
+                },
+                "importPeriod": {
+                    "type": "string"
+                },
+                "inboxId": {
+                    "type": "integer"
+                },
+                "inboxName": {
+                    "type": "string"
+                },
+                "inboxType": {
+                    "type": "string",
+                    "enum": [
+                        "api",
+                        "cloud"
+                    ]
+                },
+                "largeTimeout": {
+                    "type": "integer"
+                },
+                "mediaTimeout": {
+                    "type": "integer"
+                },
+                "mergeBrContacts": {
+                    "type": "boolean"
+                },
+                "messageRead": {
+                    "type": "boolean"
+                },
+                "pendingConv": {
+                    "type": "boolean"
+                },
+                "redisUrl": {
+                    "type": "string"
+                },
+                "reopenConv": {
+                    "type": "boolean"
+                },
+                "signDelimiter": {
+                    "type": "string"
+                },
+                "signMsg": {
+                    "type": "boolean"
+                },
+                "textTimeout": {
+                    "type": "integer"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "webhookToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "CWImportReq": {
+            "type": "object",
+            "required": [
+                "period"
+            ],
+            "properties": {
+                "customDays": {
+                    "type": "integer"
+                },
+                "period": {
+                    "type": "string",
+                    "enum": [
+                        "24h",
+                        "7d",
+                        "30d",
+                        "custom"
+                    ]
+                }
+            }
+        },
         "ChatActionReq": {
             "type": "object",
             "required": [
@@ -6461,89 +6564,6 @@ const docTemplate = `{
                 }
             }
         },
-        "ChatwootConfigReq": {
-            "type": "object",
-            "required": [
-                "accountId",
-                "token",
-                "url"
-            ],
-            "properties": {
-                "accountId": {
-                    "type": "integer"
-                },
-                "conversationPending": {
-                    "type": "boolean"
-                },
-                "databaseUri": {
-                    "type": "string"
-                },
-                "ignoreGroups": {
-                    "type": "boolean"
-                },
-                "ignoreJids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "importOnConnect": {
-                    "type": "boolean"
-                },
-                "importPeriod": {
-                    "type": "string"
-                },
-                "inboxId": {
-                    "type": "integer"
-                },
-                "inboxName": {
-                    "type": "string"
-                },
-                "inboxType": {
-                    "type": "string",
-                    "enum": [
-                        "api",
-                        "cloud"
-                    ]
-                },
-                "mergeBrContacts": {
-                    "type": "boolean"
-                },
-                "messageRead": {
-                    "type": "boolean"
-                },
-                "redisUrl": {
-                    "type": "string"
-                },
-                "reopenConversation": {
-                    "type": "boolean"
-                },
-                "signDelimiter": {
-                    "type": "string"
-                },
-                "signMsg": {
-                    "type": "boolean"
-                },
-                "timeoutLargeSeconds": {
-                    "type": "integer"
-                },
-                "timeoutMediaSeconds": {
-                    "type": "integer"
-                },
-                "timeoutTextSeconds": {
-                    "type": "integer"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                },
-                "webhookToken": {
-                    "type": "string"
-                }
-            }
-        },
         "CheckContactReq": {
             "type": "object",
             "required": [
@@ -6558,7 +6578,7 @@ const docTemplate = `{
                 }
             }
         },
-        "CommunityParticipantReq": {
+        "CommunityMembersReq": {
             "type": "object",
             "required": [
                 "communityJid",
@@ -6807,6 +6827,32 @@ const docTemplate = `{
                 }
             }
         },
+        "GroupJoinActionReq": {
+            "type": "object",
+            "required": [
+                "action",
+                "groupJid",
+                "participants"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "example": "approve"
+                },
+                "groupJid": {
+                    "type": "string"
+                },
+                "participants": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "5511999999999"
+                    ]
+                }
+            }
+        },
         "GroupJoinReq": {
             "type": "object",
             "required": [
@@ -6859,32 +6905,6 @@ const docTemplate = `{
                 }
             }
         },
-        "GroupRequestActionReq": {
-            "type": "object",
-            "required": [
-                "action",
-                "groupJid",
-                "participants"
-            ],
-            "properties": {
-                "action": {
-                    "type": "string",
-                    "example": "approve"
-                },
-                "groupJid": {
-                    "type": "string"
-                },
-                "participants": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "5511999999999"
-                    ]
-                }
-            }
-        },
         "GroupSettingReq": {
             "type": "object",
             "required": [
@@ -6911,26 +6931,6 @@ const docTemplate = `{
                 },
                 "text": {
                     "type": "string"
-                }
-            }
-        },
-        "ImportHistoryReq": {
-            "type": "object",
-            "required": [
-                "period"
-            ],
-            "properties": {
-                "customDays": {
-                    "type": "integer"
-                },
-                "period": {
-                    "type": "string",
-                    "enum": [
-                        "24h",
-                        "7d",
-                        "30d",
-                        "custom"
-                    ]
                 }
             }
         },
@@ -7019,29 +7019,11 @@ const docTemplate = `{
                 }
             }
         },
-        "MidResp": {
+        "MessageIDResp": {
             "type": "object",
             "properties": {
                 "messageId": {
                     "type": "string"
-                }
-            }
-        },
-        "NewsletterMarkViewedReq": {
-            "type": "object",
-            "required": [
-                "newsletterJid",
-                "serverIds"
-            ],
-            "properties": {
-                "newsletterJid": {
-                    "type": "string"
-                },
-                "serverIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
                 }
             }
         },
@@ -7107,6 +7089,24 @@ const docTemplate = `{
             "properties": {
                 "newsletterJid": {
                     "type": "string"
+                }
+            }
+        },
+        "NewsletterViewReq": {
+            "type": "object",
+            "required": [
+                "newsletterJid",
+                "serverIds"
+            ],
+            "properties": {
+                "newsletterJid": {
+                    "type": "string"
+                },
+                "serverIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -7488,53 +7488,6 @@ const docTemplate = `{
                 }
             }
         },
-        "SessionCreatedResp": {
-            "type": "object",
-            "properties": {
-                "businessAccountId": {
-                    "type": "string"
-                },
-                "connected": {
-                    "type": "integer"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "engine": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "jid": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
-                    "type": "string"
-                },
-                "proxy": {
-                    "$ref": "#/definitions/SessionProxy"
-                },
-                "settings": {
-                    "$ref": "#/definitions/SessionSettings"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "token": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "webhook": {
-                    "$ref": "#/definitions/WebhookResp"
-                }
-            }
-        },
         "SessionProfileResp": {
             "type": "object",
             "properties": {
@@ -7640,14 +7593,14 @@ const docTemplate = `{
                 "ignoreStatus": {
                     "type": "boolean"
                 },
-                "msgRejectCall": {
-                    "type": "string"
-                },
                 "readMessages": {
                     "type": "boolean"
                 },
                 "rejectCall": {
                     "type": "boolean"
+                },
+                "rejectCallMsg": {
+                    "type": "string"
                 }
             }
         },
@@ -7706,6 +7659,53 @@ const docTemplate = `{
                 }
             }
         },
+        "SessionWithTokenResp": {
+            "type": "object",
+            "properties": {
+                "businessAccountId": {
+                    "type": "string"
+                },
+                "connected": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "engine": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "jid": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phoneNumberId": {
+                    "type": "string"
+                },
+                "proxy": {
+                    "$ref": "#/definitions/SessionProxy"
+                },
+                "settings": {
+                    "$ref": "#/definitions/SessionSettings"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "webhook": {
+                    "$ref": "#/definitions/WebhookResp"
+                }
+            }
+        },
         "SetPresenceReq": {
             "type": "object",
             "required": [
@@ -7737,28 +7737,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "SetProfilePictureReq": {
-            "type": "object",
-            "required": [
-                "image"
-            ],
-            "properties": {
-                "image": {
-                    "type": "string"
-                }
-            }
-        },
-        "SetStatusMessageReq": {
-            "type": "object",
-            "required": [
-                "status"
-            ],
-            "properties": {
-                "status": {
                     "type": "string"
                 }
             }
@@ -7855,6 +7833,17 @@ const docTemplate = `{
                 }
             }
         },
+        "UpdateAvatarReq": {
+            "type": "object",
+            "required": [
+                "image"
+            ],
+            "properties": {
+                "image": {
+                    "type": "string"
+                }
+            }
+        },
         "UpdateProfileNameReq": {
             "type": "object",
             "required": [
@@ -7862,6 +7851,17 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "UpdateStatusReq": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
                     "type": "string"
                 }
             }

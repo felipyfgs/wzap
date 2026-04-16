@@ -49,10 +49,10 @@ func (m *mockCloudWAPresigner) GetPresignedURL(_ context.Context, key string) (s
 	return "https://minio.example.com/bucket/" + key, nil
 }
 
-func newCloudWAAPIApp(repo chatwoot.Repo, presigner CloudWAAPIPresigner) *fiber.App {
+func newCloudWAAPIApp(repo chatwoot.Repo, presigner CloudPresigner) *fiber.App {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 	app.Use(recover.New())
-	h := NewCloudWAAPIHandler(repo, nil, presigner, nil)
+	h := NewCloudAPIHandler(repo, nil, presigner, nil)
 	app.Get("/:version/:phone/messages", h.VerifyWebhook)
 	app.Post("/:version/:phone/messages", h.SendMessage)
 	app.Get("/:version/:phone/:media_id", h.GetMedia)
@@ -172,7 +172,7 @@ func TestSendMessage_InvalidAuth(t *testing.T) {
 	}
 
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
-	h := NewCloudWAAPIHandler(repo, nil, nil, nil)
+	h := NewCloudAPIHandler(repo, nil, nil, nil)
 	app.Post("/:version/:phone/messages", h.SendMessage)
 
 	body, _ := json.Marshal(dto.CloudAPIMessageReq{

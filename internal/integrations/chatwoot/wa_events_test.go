@@ -11,11 +11,11 @@ import (
 	"wzap/internal/model"
 )
 
-type mockContactNameGetter struct {
+type mockNameGetter struct {
 	names map[string]string
 }
 
-func (m *mockContactNameGetter) GetContactName(_ context.Context, _, jid string) string {
+func (m *mockNameGetter) GetContactName(_ context.Context, _, jid string) string {
 	return m.names[jid]
 }
 
@@ -25,7 +25,7 @@ func TestContactNameHierarchy_AgendaNameOverPushName(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	nameGetter := &mockContactNameGetter{
+	nameGetter := &mockNameGetter{
 		names: map[string]string{
 			"5511999900001@s.whatsapp.net": "João Silva",
 		},
@@ -69,7 +69,7 @@ func TestContactNameHierarchy_PushNameFallback(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	nameGetter := &mockContactNameGetter{
+	nameGetter := &mockNameGetter{
 		names: map[string]string{},
 	}
 
@@ -108,7 +108,7 @@ func TestHandlePushName_DoesNotOverwriteAgendaName(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	nameGetter := &mockContactNameGetter{
+	nameGetter := &mockNameGetter{
 		names: map[string]string{
 			"5511999900003@s.whatsapp.net": "Carlos Agenda",
 		},
@@ -151,7 +151,7 @@ func TestHandlePushName_UpdatesWhenNameIsPhone(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	nameGetter := &mockContactNameGetter{
+	nameGetter := &mockNameGetter{
 		names: map[string]string{
 			"5511999900004@s.whatsapp.net": "5511999900004",
 		},
@@ -200,7 +200,7 @@ func TestImportHistory_UsesContactName(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	nameGetter := &mockContactNameGetter{
+	nameGetter := &mockNameGetter{
 		names: map[string]string{
 			"5511999900005@s.whatsapp.net": "Pedro Agenda",
 		},

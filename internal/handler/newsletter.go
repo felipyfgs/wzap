@@ -280,7 +280,7 @@ func (h *NewsletterHandler) React(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.NewsletterMarkViewedReq true "Mark viewed payload"
+// @Param       body body dto.NewsletterViewReq true "Mark viewed payload"
 // @Success     200 {object} dto.APIResponse
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
@@ -291,7 +291,7 @@ func (h *NewsletterHandler) MarkViewed(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	var req dto.NewsletterMarkViewedReq
+	var req dto.NewsletterViewReq
 	if err := parseAndValidate(c, &req); err != nil {
 		return err
 	}

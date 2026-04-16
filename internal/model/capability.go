@@ -40,11 +40,11 @@ const (
 	CapabilityMediaDownload      EngineCapability = "media.download"
 )
 
-type CapabilityContract struct {
+type CapabilityMap struct {
 	support map[string]map[EngineCapability]CapabilitySupport
 }
 
-var DefaultCapabilities = CapabilityContract{
+var DefaultCapabilities = CapabilityMap{
 	support: map[string]map[EngineCapability]CapabilitySupport{
 		"whatsmeow": {
 			CapabilityMessageText:        SupportComplete,
@@ -78,7 +78,7 @@ var DefaultCapabilities = CapabilityContract{
 	},
 }
 
-func (c CapabilityContract) Support(engine string, capability EngineCapability) CapabilitySupport {
+func (c CapabilityMap) Support(engine string, capability EngineCapability) CapabilitySupport {
 	engineSupport, ok := c.support[engine]
 	if !ok {
 		return SupportUnavailable

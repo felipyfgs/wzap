@@ -76,7 +76,7 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 	mediaInfo := extractMediaInfo(msg)
 	if mediaInfo != nil {
 		mediaType := cloudMediaType(mediaInfo.MediaType)
-		link, err := h.svc.downloadAndUploadCloudMedia(ctx, cfg, mediaInfo, msgID)
+		link, err := h.svc.uploadCloudMedia(ctx, cfg, mediaInfo, msgID)
 		if err != nil {
 			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("mid", msgID).Msg("cloud inbound: failed to upload media, sending caption only")
 			caption := extractText(msg)
@@ -372,8 +372,8 @@ func (s *Service) postToChatwootCloud(ctx context.Context, cfg *Config, sessionP
 
 	url := strings.TrimRight(cfg.URL, "/") + "/webhooks/whatsapp/+" + sessionPhone
 
-	timeout := time.Duration(cfg.TimeoutTextSeconds) * time.Second
-	if cfg.TimeoutTextSeconds == 0 {
+	timeout := time.Duration(cfg.TextTimeout) * time.Second
+	if cfg.TextTimeout == 0 {
 		timeout = 10 * time.Second
 	}
 	postCtx, cancel := context.WithTimeout(ctx, timeout)
@@ -403,7 +403,7 @@ func (s *Service) postToChatwootCloud(ctx context.Context, cfg *Config, sessionP
 	return nil
 }
 
-func (s *Service) downloadAndUploadCloudMedia(ctx context.Context, cfg *Config, info *mediaInfo, msgID string) (string, error) {
+func (s *Service) uploadCloudMedia(ctx context.Context, cfg *Config, info *mediaInfo, msgID string) (string, error) {
 	if s.mediaDownloader == nil {
 		return "", fmt.Errorf("media downloader not configured")
 	}
@@ -411,8 +411,8 @@ func (s *Service) downloadAndUploadCloudMedia(ctx context.Context, cfg *Config, 
 		return "", fmt.Errorf("MinIO not configured, cannot upload media for cloud mode")
 	}
 
-	timeout := time.Duration(cfg.TimeoutMediaSeconds) * time.Second
-	if cfg.TimeoutMediaSeconds == 0 {
+	timeout := time.Duration(cfg.MediaTimeout) * time.Second
+	if cfg.MediaTimeout == 0 {
 		timeout = 60 * time.Second
 	}
 	mediaCtx, cancel := context.WithTimeout(ctx, timeout)
@@ -437,7 +437,7 @@ func (s *Service) downloadAndUploadCloudMedia(ctx context.Context, cfg *Config, 
 		filename = info.MediaType + ext
 	}
 
-	url, err := s.uploadCloudMedia(ctx, cfg, mediaData, cfg.SessionID, msgID, filename, mimeType)
+	url, err := s.uploadRawMedia(ctx, cfg, mediaData, cfg.SessionID, msgID, filename, mimeType)
 	if err != nil {
 		return "", err
 	}
@@ -445,7 +445,7 @@ func (s *Service) downloadAndUploadCloudMedia(ctx context.Context, cfg *Config, 
 	return url, nil
 }
 
-func (s *Service) uploadCloudMedia(ctx context.Context, _ *Config, data []byte, sessionID, msgID, _, mimeType string) (string, error) {
+func (s *Service) uploadRawMedia(ctx context.Context, _ *Config, data []byte, sessionID, msgID, _, mimeType string) (string, error) {
 	if s.mediaPresigner == nil {
 		return "", fmt.Errorf("MinIO not configured, cannot upload media for cloud mode")
 	}

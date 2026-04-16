@@ -17,15 +17,16 @@ import (
 	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/storage"
+	"wzap/internal/wa"
 	"wzap/internal/wautil"
 )
 
-type messageHistoryRepository interface {
+type messageRepo interface {
 	Save(ctx context.Context, msg *model.Message) error
 }
 
-type chatHistoryRepository interface {
-	Upsert(ctx context.Context, chat *model.ChatUpsert) error
+type chatRepo interface {
+	Upsert(ctx context.Context, chat *model.ChatUpdate) error
 }
 
 type MediaDownloader interface {
@@ -49,21 +50,21 @@ type jidAliasMaps struct {
 const mediaRetryInterval = 3 * time.Second
 
 type HistoryService struct {
-	messageRepo    messageHistoryRepository
-	chatRepo       chatHistoryRepository
+	messageRepo    messageRepo
+	chatRepo       chatRepo
 	pool           *async.Pool
 	downloader     MediaDownloader
 	storage        MediaStorage
 	retryRequester MediaRetryRequester
 }
 
-func NewHistoryService(messageRepo messageHistoryRepository, chatRepo chatHistoryRepository, pool *async.Pool) *HistoryService {
+func NewHistoryService(messageRepo messageRepo, chatRepo chatRepo, pool *async.Pool) *HistoryService {
 	return &HistoryService{messageRepo: messageRepo, chatRepo: chatRepo, pool: pool}
 }
 
-func (s *HistoryService) SetMediaDownloader(d MediaDownloader)         { s.downloader = d }
-func (s *HistoryService) SetMediaStorage(ms MediaStorage)              { s.storage = ms }
-func (s *HistoryService) SetMediaRetryRequester(r MediaRetryRequester) { s.retryRequester = r }
+func (s *HistoryService) SetMediaDownloader(d MediaDownloader)    { s.downloader = d }
+func (s *HistoryService) SetMediaStorage(ms MediaStorage)         { s.storage = ms }
+func (s *HistoryService) SetRetryRequester(r MediaRetryRequester) { s.retryRequester = r }
 
 func NewMinioMediaStorage(m *storage.Minio) MediaStorage {
 	return &minioMediaStorage{minio: m}
@@ -89,33 +90,33 @@ func (m *minioMediaStorage) Upload(ctx context.Context, sessionID, messageID, ch
 	return key, nil
 }
 
-func (s *HistoryService) PersistMessage(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any) {
+func (s *HistoryService) PersistMessage(input wa.PersistInput) {
 	_ = s.pool.Submit(func(ctx context.Context) {
 		msg := &model.Message{
-			ID:        messageID,
-			SessionID: sessionID,
-			ChatJID:   chatJID,
-			SenderJID: senderJID,
-			FromMe:    fromMe,
-			MsgType:   msgType,
-			Body:      body,
-			MediaType: mediaType,
+			ID:        input.MessageID,
+			SessionID: input.SessionID,
+			ChatJID:   input.ChatJID,
+			SenderJID: input.SenderJID,
+			FromMe:    input.FromMe,
+			MsgType:   input.MsgType,
+			Body:      input.Body,
+			MediaType: input.MediaType,
 			Source:    "live",
-			Raw:       raw,
-			Timestamp: time.Unix(timestamp, 0),
+			Raw:       input.Raw,
+			Timestamp: time.Unix(input.Timestamp, 0),
 		}
 
 		if err := s.messageRepo.Save(ctx, msg); err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Failed to persist message")
+			logger.Warn().Str("component", "service").Err(err).Str("session", input.SessionID).Str("mid", input.MessageID).Msg("Failed to persist message")
 		}
 
-		if s.chatRepo == nil || chatJID == "" {
+		if s.chatRepo == nil || input.ChatJID == "" {
 			return
 		}
 
-		chat := buildLiveChatUpsert(sessionID, chatJID, messageID, timestamp)
+		chat := buildLiveChatUpdate(input.SessionID, input.ChatJID, input.MessageID, input.Timestamp)
 		if err := s.chatRepo.Upsert(ctx, chat); err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("chat", chatJID).Msg("Failed to persist canonical chat from live message")
+			logger.Warn().Str("component", "service").Err(err).Str("session", input.SessionID).Str("chat", input.ChatJID).Msg("Failed to persist canonical chat from live message")
 		}
 	})
 }
@@ -136,7 +137,7 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 				continue
 			}
 
-			chat := buildHistoryChatUpsert(sessionID, conversation, aliases, syncType, chunkOrder)
+			chat := buildHistoryChatUpdate(sessionID, conversation, aliases, syncType, chunkOrder)
 			if chat != nil && s.chatRepo != nil {
 				if err := s.chatRepo.Upsert(ctx, chat); err != nil {
 					logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("chat", chat.ChatJID).Msg("Failed to persist canonical chat from history sync")
@@ -202,11 +203,11 @@ func (s *HistoryService) PersistHistorySync(sessionID string, syncEvent *events.
 	})
 }
 
-func buildLiveChatUpsert(sessionID, chatJID, lastMessageID string, timestamp int64) *model.ChatUpsert {
+func buildLiveChatUpdate(sessionID, chatJID, lastMessageID string, timestamp int64) *model.ChatUpdate {
 	chatType := wautil.InferChatType(chatJID)
 	lastMessageAt := time.Unix(timestamp, 0)
 
-	return &model.ChatUpsert{
+	return &model.ChatUpdate{
 		SessionID:     sessionID,
 		ChatJID:       chatJID,
 		ChatType:      &chatType,
@@ -216,7 +217,7 @@ func buildLiveChatUpsert(sessionID, chatJID, lastMessageID string, timestamp int
 	}
 }
 
-func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conversation, aliases jidAliasMaps, syncType string, chunkOrder int) *model.ChatUpsert {
+func buildHistoryChatUpdate(sessionID string, conversation *waHistorySync.Conversation, aliases jidAliasMaps, syncType string, chunkOrder int) *model.ChatUpdate {
 	if conversation == nil {
 		return nil
 	}
@@ -252,29 +253,29 @@ func buildHistoryChatUpsert(sessionID string, conversation *waHistorySync.Conver
 		"ephemeralExpiration":  conversation.GetEphemeralExpiration(),
 	}
 
-	return &model.ChatUpsert{
-		SessionID:             sessionID,
-		ChatJID:               chatJID,
-		Name:                  wautil.StringPtr(name),
-		DisplayName:           wautil.StringPtr(displayName),
-		ChatType:              &chatType,
-		Archived:              &archived,
-		Pinned:                &pinned,
-		ReadOnly:              &readOnly,
-		MarkedAsUnread:        &markedAsUnread,
-		UnreadCount:           &unreadCount,
-		UnreadMentionCount:    &unreadMentionCount,
-		LastMessageID:         wautil.StringPtr(lastMessageID),
-		LastMessageAt:         lastMessageAt,
-		ConversationTimestamp: conversationTimestamp,
-		PnJID:                 wautil.StringPtr(pnJID),
-		LidJID:                wautil.StringPtr(lidJID),
-		Username:              wautil.StringPtr(username),
-		AccountLID:            wautil.StringPtr(accountLID),
-		Source:                "history_sync",
-		SourceSyncType:        wautil.StringPtr(syncType),
-		HistoryChunkOrder:     wautil.IntPtr(chunkOrder),
-		Raw:                   raw,
+	return &model.ChatUpdate{
+		SessionID:          sessionID,
+		ChatJID:            chatJID,
+		Name:               wautil.StringPtr(name),
+		DisplayName:        wautil.StringPtr(displayName),
+		ChatType:           &chatType,
+		Archived:           &archived,
+		Pinned:             &pinned,
+		ReadOnly:           &readOnly,
+		MarkedAsUnread:     &markedAsUnread,
+		UnreadCount:        &unreadCount,
+		UnreadMentionCount: &unreadMentionCount,
+		LastMessageID:      wautil.StringPtr(lastMessageID),
+		LastMessageAt:      lastMessageAt,
+		ConvTimestamp:      conversationTimestamp,
+		PnJID:              wautil.StringPtr(pnJID),
+		LidJID:             wautil.StringPtr(lidJID),
+		Username:           wautil.StringPtr(username),
+		AccountLID:         wautil.StringPtr(accountLID),
+		Source:             "history_sync",
+		SyncType:           wautil.StringPtr(syncType),
+		ChunkOrder:         wautil.IntPtr(chunkOrder),
+		Raw:                raw,
 	}
 }
 
@@ -333,20 +334,20 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 	}
 
 	return &model.Message{
-		ID:                  messageID,
-		SessionID:           sessionID,
-		ChatJID:             chatJID,
-		SenderJID:           senderJID,
-		FromMe:              key.GetFromMe(),
-		MsgType:             msgType,
-		Body:                body,
-		MediaType:           mediaType,
-		Source:              "history_sync",
-		SourceSyncType:      syncType,
-		HistoryChunkOrder:   wautil.IntPtr(chunkOrder),
-		HistoryMessageOrder: messageOrder,
-		Raw:                 info,
-		Timestamp:           time.Unix(timestamp, 0),
+		ID:         messageID,
+		SessionID:  sessionID,
+		ChatJID:    chatJID,
+		SenderJID:  senderJID,
+		FromMe:     key.GetFromMe(),
+		MsgType:    msgType,
+		Body:       body,
+		MediaType:  mediaType,
+		Source:     "history_sync",
+		SyncType:   syncType,
+		ChunkOrder: wautil.IntPtr(chunkOrder),
+		MsgOrder:   messageOrder,
+		Raw:        info,
+		Timestamp:  time.Unix(timestamp, 0),
 	}
 }
 

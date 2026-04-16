@@ -80,7 +80,7 @@ func newSessionLifecycleApp(lifecycle *stubLifecycleService) *fiber.App {
 
 func TestSessionConnect_Conflict(t *testing.T) {
 	app := newSessionLifecycleApp(&stubLifecycleService{
-		connectErr: &service.LifecycleConflictError{Message: "A QR code connection is already pending for this session"},
+		connectErr: &service.ConflictError{Message: "A QR code connection is already pending for this session"},
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/sessions/sess1/connect", nil)
@@ -95,7 +95,7 @@ func TestSessionConnect_Conflict(t *testing.T) {
 
 func TestSessionQR_NotFound(t *testing.T) {
 	app := newSessionLifecycleApp(&stubLifecycleService{
-		qrErr: &service.LifecycleNotFoundError{Message: "No QR code available. Call connect first, then poll this endpoint."},
+		qrErr: &service.NotFoundError{Message: "No QR code available. Call connect first, then poll this endpoint."},
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/sessions/sess1/qr", nil)

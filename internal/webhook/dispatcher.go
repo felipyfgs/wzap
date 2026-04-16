@@ -102,7 +102,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	webhooks, err := d.webhookRepo.FindActiveBySessionAndEvent(ctx, sessionID, string(eventType))
+	webhooks, err := d.webhookRepo.FindActive(ctx, sessionID, string(eventType))
 	if err != nil {
 		logger.Error().Str("component", "webhook").Err(err).Str("session", sessionID).Str("event", string(eventType)).Msg("Failed to fetch webhooks for dispatch")
 		return

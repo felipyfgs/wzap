@@ -203,7 +203,7 @@ func (s *ContactService) GetPrivacySettings(ctx context.Context, sessionID strin
 	return settings, nil
 }
 
-func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string, req dto.SetProfilePictureReq) (string, error) {
+func (s *ContactService) SetProfilePicture(ctx context.Context, sessionID string, req dto.UpdateAvatarReq) (string, error) {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return "", err
@@ -249,7 +249,7 @@ func (s *ContactService) SetPrivacy(ctx context.Context, sessionID string, req d
 	return client.SetPrivacySetting(ctx, types.PrivacySettingType(req.Setting), types.PrivacySetting(req.Value))
 }
 
-func (s *ContactService) SetStatusMessage(ctx context.Context, sessionID string, req dto.SetStatusMessageReq) error {
+func (s *ContactService) SetStatusMessage(ctx context.Context, sessionID string, req dto.UpdateStatusReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err

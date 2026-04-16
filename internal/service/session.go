@@ -39,7 +39,7 @@ func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepos
 	}
 }
 
-func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (*dto.SessionCreatedResp, error) {
+func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (*dto.SessionWithTokenResp, error) {
 	if req.Name == "" {
 		return nil, fmt.Errorf("name is required")
 	}
@@ -82,7 +82,7 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 
 	proxy := req.Proxy
 	proxy.Password = ""
-	resp := &dto.SessionCreatedResp{
+	resp := &dto.SessionWithTokenResp{
 		ID:                session.ID,
 		Name:              session.Name,
 		Token:             session.Token,

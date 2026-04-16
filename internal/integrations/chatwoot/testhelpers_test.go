@@ -56,18 +56,18 @@ func (m *mockClient) UpdateContact(_ context.Context, _ int, req UpdateContactRe
 	return nil
 }
 
-func (m *mockClient) ListContactConversations(_ context.Context, _ int) ([]Conversation, error) {
+func (m *mockClient) ListConversations(_ context.Context, _ int) ([]Conversation, error) {
 	return m.conversations, nil
 }
 
-func (m *mockClient) CreateConversation(_ context.Context, _ CreateConversationReq) (*Conversation, error) {
+func (m *mockClient) CreateConversation(_ context.Context, _ ConvReq) (*Conversation, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.createConversationCalls++
 	return &Conversation{ID: 1}, nil
 }
 
-func (m *mockClient) UpdateConversationStatus(_ context.Context, _ int, _ string) error {
+func (m *mockClient) UpdateConvStatus(_ context.Context, _ int, _ string) error {
 	return nil
 }
 
@@ -79,7 +79,7 @@ func (m *mockClient) CreateMessage(_ context.Context, _ int, req MessageReq) (*M
 	return &Message{ID: 1, SourceID: "src-1"}, nil
 }
 
-func (m *mockClient) CreateMessageWithAttachment(_ context.Context, _ int, _ string, filename string, _ []byte, _ string, _ string, _ string, _ int, _ map[string]any) (*Message, error) {
+func (m *mockClient) CreateAttachment(_ context.Context, _ int, _ string, filename string, _ []byte, _ string, _ string, _ string, _ int, _ map[string]any) (*Message, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.attachments = append(m.attachments, filename)
@@ -200,11 +200,11 @@ func (m *mockMsgRepo) FindByBodyAndChatAny(_ context.Context, _, _, _ string, _ 
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepo) FindByTimestampWindow(_ context.Context, _, _ string, _ int64, _ int64) (*model.Message, error) {
+func (m *mockMsgRepo) FindByTimestamp(_ context.Context, _ string, _ string, _ int64, _ int64) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepo) FindLastReceivedByChat(_ context.Context, _, _ string) (*model.Message, error) {
+func (m *mockMsgRepo) FindLastReceived(_ context.Context, _, _ string) (*model.Message, error) {
 	return nil, fmt.Errorf("not found")
 }
 
@@ -212,7 +212,7 @@ func (m *mockMsgRepo) FindUnimportedHistory(_ context.Context, _ string, _ time.
 	return []model.Message{}, nil
 }
 
-func (m *mockMsgRepo) MarkImportedToChatwoot(_ context.Context, _, _ string) error {
+func (m *mockMsgRepo) MarkImported(_ context.Context, _, _ string) error {
 	return nil
 }
 
@@ -228,88 +228,88 @@ func (m *mockMsgRepo) FindMedia(_ context.Context, _ string, _ repo.MediaFilter)
 	return []model.Message{}, 0, nil
 }
 
-type mockMsgRepoWithDuplicates struct {
+type mockDupMsgRepo struct {
 	existingSourceIDs map[string]bool
 }
 
-func (m *mockMsgRepoWithDuplicates) Save(_ context.Context, _ *model.Message) error {
+func (m *mockDupMsgRepo) Save(_ context.Context, _ *model.Message) error {
 	return nil
 }
 
-func (m *mockMsgRepoWithDuplicates) FindByChat(_ context.Context, _, _ string, _, _ int) ([]model.Message, error) {
+func (m *mockDupMsgRepo) FindByChat(_ context.Context, _, _ string, _, _ int) ([]model.Message, error) {
 	return nil, nil
 }
 
-func (m *mockMsgRepoWithDuplicates) FindByID(_ context.Context, sessionID, msgID string) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindByID(_ context.Context, sessionID, msgID string) (*model.Message, error) {
 	return &model.Message{ID: msgID, SessionID: sessionID}, nil
 }
 
-func (m *mockMsgRepoWithDuplicates) FindByCWMessageID(_ context.Context, _ string, _ int) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindByCWMessageID(_ context.Context, _ string, _ int) (*model.Message, error) {
 	return nil, nil
 }
 
-func (m *mockMsgRepoWithDuplicates) FindAllByCWMessageID(_ context.Context, _ string, _ int) ([]model.Message, error) {
+func (m *mockDupMsgRepo) FindAllByCWMessageID(_ context.Context, _ string, _ int) ([]model.Message, error) {
 	return nil, nil
 }
 
-func (m *mockMsgRepoWithDuplicates) UpdateChatwootRef(_ context.Context, _, _ string, _, _ int, _ string) error {
+func (m *mockDupMsgRepo) UpdateChatwootRef(_ context.Context, _, _ string, _, _ int, _ string) error {
 	return nil
 }
 
-func (m *mockMsgRepoWithDuplicates) ExistsBySourceID(_ context.Context, sessionID, sourceID string) (bool, error) {
+func (m *mockDupMsgRepo) ExistsBySourceID(_ context.Context, sessionID, sourceID string) (bool, error) {
 	return m.existingSourceIDs[sessionID+":"+sourceID], nil
 }
 
-func (m *mockMsgRepoWithDuplicates) FindBySourceID(_ context.Context, _, _ string) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindBySourceID(_ context.Context, _, _ string) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepoWithDuplicates) FindBySourceIDPrefix(_ context.Context, _, _ string) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindBySourceIDPrefix(_ context.Context, _, _ string) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepoWithDuplicates) FindByBody(_ context.Context, _, _ string, _ bool) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindByBody(_ context.Context, _, _ string, _ bool) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepoWithDuplicates) FindByBodyAndChat(_ context.Context, _, _, _ string, _ bool) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindByBodyAndChat(_ context.Context, _, _, _ string, _ bool) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepoWithDuplicates) FindByBodyAndChatAny(_ context.Context, _, _, _ string, _ bool) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindByBodyAndChatAny(_ context.Context, _, _, _ string, _ bool) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepoWithDuplicates) FindByTimestampWindow(_ context.Context, _, _ string, _ int64, _ int64) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindByTimestamp(_ context.Context, _ string, _ string, _ int64, _ int64) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (m *mockMsgRepoWithDuplicates) FindLastReceivedByChat(_ context.Context, _, _ string) (*model.Message, error) {
+func (m *mockDupMsgRepo) FindLastReceived(_ context.Context, _, _ string) (*model.Message, error) {
 	return nil, fmt.Errorf("not found")
 }
 
-func (m *mockMsgRepoWithDuplicates) FindUnimportedHistory(_ context.Context, _ string, _ time.Time, _, _ int) ([]model.Message, error) {
+func (m *mockDupMsgRepo) FindUnimportedHistory(_ context.Context, _ string, _ time.Time, _, _ int) ([]model.Message, error) {
 	return []model.Message{}, nil
 }
 
-func (m *mockMsgRepoWithDuplicates) MarkImportedToChatwoot(_ context.Context, _, _ string) error {
+func (m *mockDupMsgRepo) MarkImported(_ context.Context, _, _ string) error {
 	return nil
 }
 
-func (m *mockMsgRepoWithDuplicates) UpdateMediaURL(_ context.Context, _, _, _ string) error {
+func (m *mockDupMsgRepo) UpdateMediaURL(_ context.Context, _, _, _ string) error {
 	return nil
 }
 
-func (m *mockMsgRepoWithDuplicates) FindBySession(_ context.Context, _ string, _, _ int) ([]model.Message, error) {
+func (m *mockDupMsgRepo) FindBySession(_ context.Context, _ string, _, _ int) ([]model.Message, error) {
 	return []model.Message{}, nil
 }
 
-func (m *mockMsgRepoWithDuplicates) FindMedia(_ context.Context, _ string, _ repo.MediaFilter) ([]model.Message, int, error) {
+func (m *mockDupMsgRepo) FindMedia(_ context.Context, _ string, _ repo.MediaFilter) ([]model.Message, int, error) {
 	return []model.Message{}, 0, nil
 }
 
 type mockMsgRepoFixed struct {
-	mockMsgRepoWithDuplicates
+	mockDupMsgRepo
 	cwMsgID  *int
 	cwConvID *int
 }
@@ -320,7 +320,7 @@ func (m *mockMsgRepoFixed) FindByID(_ context.Context, sessionID, msgID string) 
 		msg.CWMessageID = m.cwMsgID
 	}
 	if m.cwConvID != nil {
-		msg.CWConversationID = m.cwConvID
+		msg.CWConvID = m.cwConvID
 	}
 	return msg, nil
 }
@@ -332,7 +332,7 @@ func (m *mockMsgRepoFixed) FindByCWMessageID(ctx context.Context, sessionID stri
 func newTestService(client *mockClient) *Service {
 	return &Service{
 		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo:    &mockMsgRepoWithDuplicates{existingSourceIDs: map[string]bool{}},
+		msgRepo:    &mockDupMsgRepo{existingSourceIDs: map[string]bool{}},
 		clientFn:   func(_ *Config) Client { return client },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},

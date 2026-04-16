@@ -320,7 +320,7 @@ func (c *Consumer) processOutbound(ctx context.Context, msg jetstream.Msg) {
 	}
 
 	start := time.Now()
-	if err := c.service.processOutboundWebhook(spanCtx, env.SessionID, env.Payload); err != nil {
+	if err := c.service.processOutbound(spanCtx, env.SessionID, env.Payload); err != nil {
 		if ctx.Err() != nil {
 			logger.Debug().Str("component", "chatwoot").Str("session", env.SessionID).Msg("outbound processing interrupted by shutdown, will redeliver on restart")
 			_ = msg.Nak()

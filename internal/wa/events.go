@@ -82,7 +82,7 @@ func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, boo
 
 			// Route status (WhatsApp Stories) messages separately
 			if v.Info.Chat.Server == types.BroadcastServer {
-				if m.ShouldIgnoreStatus != nil && m.ShouldIgnoreStatus(sessionID) {
+				if m.IgnoreStatusFn != nil && m.IgnoreStatusFn(sessionID) {
 					logger.Debug().
 						Str("component", "wa").
 						Str("session", sessionID).
@@ -90,20 +90,25 @@ func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, boo
 						Msg("Status message ignored (IgnoreStatus enabled)")
 					return "", false
 				}
-				if m.OnStatusReceived != nil {
+				if m.OnStatusPersist != nil {
 					msgType, body, mediaType := wautil.ExtractMessageContent(v.Message)
-					m.OnStatusReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
+					m.OnStatusPersist(PersistInput{
+						SessionID: sessionID, MessageID: v.Info.ID, ChatJID: v.Info.Chat.String(),
+						SenderJID: v.Info.Sender.String(), FromMe: v.Info.IsFromMe,
+						MsgType: msgType, Body: body, MediaType: mediaType,
+						Timestamp: v.Info.Timestamp.Unix(), Raw: v.Message,
+					})
 				}
-				if m.OnStatusMediaReceived != nil && v.Message != nil {
+				if m.OnStatusMedia != nil && v.Message != nil {
 					chatJID := v.Info.Chat.String()
 					senderJID := v.Info.Sender.String()
 					fromMe := v.Info.IsFromMe
 					ts := v.Info.Timestamp
 					switch {
 					case v.Message.GetImageMessage() != nil:
-						m.OnStatusMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetImageMessage().GetMimetype(), fromMe, ts, v.Message.GetImageMessage())
+						m.OnStatusMedia(MediaUploadInput{SessionID: sessionID, MessageID: v.Info.ID, ChatJID: chatJID, SenderJID: senderJID, MimeType: v.Message.GetImageMessage().GetMimetype(), FromMe: fromMe, Timestamp: ts, Downloadable: v.Message.GetImageMessage()})
 					case v.Message.GetVideoMessage() != nil:
-						m.OnStatusMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetVideoMessage().GetMimetype(), fromMe, ts, v.Message.GetVideoMessage())
+						m.OnStatusMedia(MediaUploadInput{SessionID: sessionID, MessageID: v.Info.ID, ChatJID: chatJID, SenderJID: senderJID, MimeType: v.Message.GetVideoMessage().GetMimetype(), FromMe: fromMe, Timestamp: ts, Downloadable: v.Message.GetVideoMessage()})
 					}
 				}
 				return "", false
@@ -132,28 +137,33 @@ func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, boo
 				}
 			}
 
-			if m.OnMediaReceived != nil && v.Message != nil {
+			if m.OnMediaUpload != nil && v.Message != nil {
 				chatJID := v.Info.Chat.String()
 				senderJID := v.Info.Sender.String()
 				fromMe := v.Info.IsFromMe
 				ts := v.Info.Timestamp
 				switch {
 				case v.Message.GetImageMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetImageMessage().GetMimetype(), fromMe, ts, v.Message.GetImageMessage())
+					m.OnMediaUpload(MediaUploadInput{SessionID: sessionID, MessageID: v.Info.ID, ChatJID: chatJID, SenderJID: senderJID, MimeType: v.Message.GetImageMessage().GetMimetype(), FromMe: fromMe, Timestamp: ts, Downloadable: v.Message.GetImageMessage()})
 				case v.Message.GetVideoMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetVideoMessage().GetMimetype(), fromMe, ts, v.Message.GetVideoMessage())
+					m.OnMediaUpload(MediaUploadInput{SessionID: sessionID, MessageID: v.Info.ID, ChatJID: chatJID, SenderJID: senderJID, MimeType: v.Message.GetVideoMessage().GetMimetype(), FromMe: fromMe, Timestamp: ts, Downloadable: v.Message.GetVideoMessage()})
 				case v.Message.GetAudioMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetAudioMessage().GetMimetype(), fromMe, ts, v.Message.GetAudioMessage())
+					m.OnMediaUpload(MediaUploadInput{SessionID: sessionID, MessageID: v.Info.ID, ChatJID: chatJID, SenderJID: senderJID, MimeType: v.Message.GetAudioMessage().GetMimetype(), FromMe: fromMe, Timestamp: ts, Downloadable: v.Message.GetAudioMessage()})
 				case v.Message.GetDocumentMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetDocumentMessage().GetMimetype(), fromMe, ts, v.Message.GetDocumentMessage())
+					m.OnMediaUpload(MediaUploadInput{SessionID: sessionID, MessageID: v.Info.ID, ChatJID: chatJID, SenderJID: senderJID, MimeType: v.Message.GetDocumentMessage().GetMimetype(), FromMe: fromMe, Timestamp: ts, Downloadable: v.Message.GetDocumentMessage()})
 				case v.Message.GetStickerMessage() != nil:
-					m.OnMediaReceived(sessionID, v.Info.ID, chatJID, senderJID, v.Message.GetStickerMessage().GetMimetype(), fromMe, ts, v.Message.GetStickerMessage())
+					m.OnMediaUpload(MediaUploadInput{SessionID: sessionID, MessageID: v.Info.ID, ChatJID: chatJID, SenderJID: senderJID, MimeType: v.Message.GetStickerMessage().GetMimetype(), FromMe: fromMe, Timestamp: ts, Downloadable: v.Message.GetStickerMessage()})
 				}
 			}
 
-			if m.OnMessageReceived != nil {
+			if m.OnMessagePersist != nil {
 				msgType, body, mediaType := wautil.ExtractMessageContent(v.Message)
-				m.OnMessageReceived(sessionID, v.Info.ID, v.Info.Chat.String(), v.Info.Sender.String(), v.Info.IsFromMe, msgType, body, mediaType, v.Info.Timestamp.Unix(), v.Message)
+				m.OnMessagePersist(PersistInput{
+					SessionID: sessionID, MessageID: v.Info.ID, ChatJID: v.Info.Chat.String(),
+					SenderJID: v.Info.Sender.String(), FromMe: v.Info.IsFromMe,
+					MsgType: msgType, Body: body, MediaType: mediaType,
+					Timestamp: v.Info.Timestamp.Unix(), Raw: v.Message,
+				})
 			}
 		}
 
@@ -411,8 +421,8 @@ func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, boo
 	case *events.HistorySync:
 		eventType = model.EventHistorySync
 		logger.Info().Str("component", "wa").Str("session", sessionID).Msg("History sync received")
-		if m.OnHistorySyncReceived != nil {
-			m.OnHistorySyncReceived(sessionID, v)
+		if m.OnHistorySync != nil {
+			m.OnHistorySync(sessionID, v)
 		}
 
 	case *events.AppState:
@@ -583,9 +593,11 @@ func (m *Manager) handleMediaRetry(v *events.MediaRetry) {
 	}
 
 	logger.Debug().Str("component", "wa").Str("session", entry.sessionID).Str("mid", mid).Msg("Media retry: sucesso, re-enviando para upload")
-	m.OnMediaRetry(
-		entry.sessionID, mid, entry.chatJID, entry.senderJID,
-		entry.fromMe, entry.mimeType, entry.timestamp,
-		retryData.GetDirectPath(), entry.encFileHash, entry.fileHash, entry.mediaKey, entry.fileLength,
-	)
+	m.OnMediaRetry(MediaRetryInput{
+		SessionID: entry.sessionID, MessageID: mid, ChatJID: entry.chatJID,
+		SenderJID: entry.senderJID, FromMe: entry.fromMe, MimeType: entry.mimeType,
+		Timestamp: entry.timestamp, DirectPath: retryData.GetDirectPath(),
+		EncFileHash: entry.encFileHash, FileHash: entry.fileHash,
+		MediaKey: entry.mediaKey, FileLength: entry.fileLength,
+	})
 }

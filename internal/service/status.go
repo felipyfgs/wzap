@@ -30,7 +30,7 @@ type ContactNameGetter interface {
 type StatusService struct {
 	runtimeResolver *RuntimeResolver
 	statusRepo      repo.StatusRepo
-	mediaDownloader wa.MediaAutoUploadFunc
+	mediaDownloader wa.MediaUploadFunc
 	presigner       MediaPresigner
 	nameGetter      ContactNameGetter
 }
@@ -52,7 +52,7 @@ func (s *StatusService) enrichStatuses(ctx context.Context, sessionID string, st
 	return statuses
 }
 
-func (s *StatusService) SetMediaDownloader(fn wa.MediaAutoUploadFunc) {
+func (s *StatusService) SetMediaDownloader(fn wa.MediaUploadFunc) {
 	s.mediaDownloader = fn
 }
 
@@ -81,9 +81,9 @@ func (s *StatusService) RetryMissingMedia(ctx context.Context, sessionID string)
 		const statusChat = "status@broadcast"
 		switch {
 		case msg.GetImageMessage() != nil:
-			s.mediaDownloader(sessionID, st.ID, statusChat, st.SenderJID, msg.GetImageMessage().GetMimetype(), st.FromMe, st.Timestamp, msg.GetImageMessage())
+			s.mediaDownloader(wa.MediaUploadInput{SessionID: sessionID, MessageID: st.ID, ChatJID: statusChat, SenderJID: st.SenderJID, MimeType: msg.GetImageMessage().GetMimetype(), FromMe: st.FromMe, Timestamp: st.Timestamp, Downloadable: msg.GetImageMessage()})
 		case msg.GetVideoMessage() != nil:
-			s.mediaDownloader(sessionID, st.ID, statusChat, st.SenderJID, msg.GetVideoMessage().GetMimetype(), st.FromMe, st.Timestamp, msg.GetVideoMessage())
+			s.mediaDownloader(wa.MediaUploadInput{SessionID: sessionID, MessageID: st.ID, ChatJID: statusChat, SenderJID: st.SenderJID, MimeType: msg.GetVideoMessage().GetMimetype(), FromMe: st.FromMe, Timestamp: st.Timestamp, Downloadable: msg.GetVideoMessage()})
 		}
 	}
 
@@ -117,21 +117,21 @@ func (s *StatusService) persistStatus(sessionID, messageID, senderJID, statusTyp
 	}
 }
 
-func (s *StatusService) PersistStatusReceived(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any) {
+func (s *StatusService) PersistStatus(input wa.PersistInput) {
 	if s.statusRepo == nil {
 		return
 	}
 	_ = s.statusRepo.Save(context.Background(), &model.Status{
-		ID:         messageID,
-		SessionID:  sessionID,
-		SenderJID:  senderJID,
-		FromMe:     fromMe,
-		StatusType: msgType,
-		Body:       body,
-		MediaType:  mediaType,
-		Timestamp:  time.Unix(timestamp, 0),
-		ExpiresAt:  time.Unix(timestamp, 0).Add(24 * time.Hour),
-		Raw:        raw,
+		ID:         input.MessageID,
+		SessionID:  input.SessionID,
+		SenderJID:  input.SenderJID,
+		FromMe:     input.FromMe,
+		StatusType: input.MsgType,
+		Body:       input.Body,
+		MediaType:  input.MediaType,
+		Timestamp:  time.Unix(input.Timestamp, 0),
+		ExpiresAt:  time.Unix(input.Timestamp, 0).Add(24 * time.Hour),
+		Raw:        input.Raw,
 		CreatedAt:  time.Now(),
 	})
 }

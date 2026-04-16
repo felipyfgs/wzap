@@ -174,7 +174,7 @@ func TestConcurrentMigrationSafety(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if err := db.recordMigrationIfNotExists(ctx, "test_concurrent.up.sql"); err != nil {
+			if err := db.recordMigration(ctx, "test_concurrent.up.sql"); err != nil {
 				errCh <- err
 			}
 		}()
@@ -207,9 +207,9 @@ func TestMigrationIdempotency(t *testing.T) {
 
 	_ = db.ensureMigrationTable(ctx)
 
-	_ = db.recordMigrationIfNotExists(ctx, "test_idempotent.up.sql")
-	_ = db.recordMigrationIfNotExists(ctx, "test_idempotent.up.sql")
-	_ = db.recordMigrationIfNotExists(ctx, "test_idempotent.up.sql")
+	_ = db.recordMigration(ctx, "test_idempotent.up.sql")
+	_ = db.recordMigration(ctx, "test_idempotent.up.sql")
+	_ = db.recordMigration(ctx, "test_idempotent.up.sql")
 
 	var count int
 	err := db.Pool.QueryRow(ctx, "SELECT COUNT(*) FROM wz_migrations WHERE file_name = 'test_idempotent.up.sql'").Scan(&count)

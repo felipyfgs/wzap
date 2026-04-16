@@ -132,7 +132,7 @@ func newTestManager() *Manager {
 func TestHandleEventFiltersSenderKeyDistributionStandalone(t *testing.T) {
 	called := false
 	mgr := newTestManager()
-	mgr.OnMessageReceived = func(_, _, _, _ string, _ bool, _, _, _ string, _ int64, _ any) {
+	mgr.OnMessagePersist = func(input PersistInput) {
 		called = true
 	}
 
@@ -163,10 +163,10 @@ func TestHandleEventFiltersSenderKeyDistributionStandalone(t *testing.T) {
 func TestHandleEventAllowsSenderKeyDistributionWithRealContent(t *testing.T) {
 	called := false
 	mgr := newTestManager()
-	mgr.OnMessageReceived = func(_, _, _, _ string, _ bool, msgType, _, _ string, _ int64, _ any) {
+	mgr.OnMessagePersist = func(input PersistInput) {
 		called = true
-		if msgType != "text" {
-			t.Fatalf("expected msgType text, got %q", msgType)
+		if input.MsgType != "text" {
+			t.Fatalf("expected msgType text, got %q", input.MsgType)
 		}
 	}
 

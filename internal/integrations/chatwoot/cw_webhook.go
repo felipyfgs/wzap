@@ -17,7 +17,7 @@ import (
 
 const maxMediaBytes int64 = 256 * 1024 * 1024
 
-func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, body dto.ChatwootWebhookPayload) error {
+func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, body dto.CWWebhookPayload) error {
 	cfg, err := s.repo.FindBySessionID(ctx, sessionID)
 	if err != nil {
 		return fmt.Errorf("failed to load chatwoot config: %w", err)
@@ -58,7 +58,7 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 	return nil
 }
 
-func (s *Service) isOutboundDuplicate(ctx context.Context, sessionID string, msg *dto.ChatwootWebhookMessage) bool {
+func (s *Service) isOutboundDuplicate(ctx context.Context, sessionID string, msg *dto.CWWebhookMsg) bool {
 	if sourceID := msg.SourceID; sourceID != "" {
 		if exists, err := s.msgRepo.ExistsBySourceID(ctx, sessionID, sourceID); err == nil && exists {
 			logger.Debug().Str("component", "chatwoot").Str("sourceID", sourceID).Msg("outbound already processed, skipping (idempotency)")
@@ -78,7 +78,7 @@ func (s *Service) isOutboundDuplicate(ctx context.Context, sessionID string, msg
 	return false
 }
 
-func (s *Service) processOutgoingMessage(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processOutgoingMessage(ctx context.Context, cfg *Config, body dto.CWWebhookPayload) error {
 	msg := body.GetMessage()
 	if msg == nil || body.Conversation == nil {
 		return nil
@@ -155,7 +155,7 @@ func (s *Service) processOutgoingMessage(ctx context.Context, cfg *Config, body 
 			if i == 0 {
 				caption = firstCaption
 			}
-			waMsgID, err := s.sendAttachmentToWhatsApp(ctx, cfg, chatJID, attURL, caption, att.FileType, replyTo)
+			waMsgID, err := s.sendAttachment(ctx, cfg, chatJID, attURL, caption, att.FileType, replyTo)
 			if err != nil {
 				logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to send attachment from Chatwoot to WhatsApp")
 				s.sendErrorToAgent(ctx, cfg, cwConvID, err)
@@ -201,7 +201,7 @@ func (s *Service) processOutgoingMessage(ctx context.Context, cfg *Config, body 
 	return nil
 }
 
-func (s *Service) processMessageEdited(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processMessageEdited(ctx context.Context, cfg *Config, body dto.CWWebhookPayload) error {
 	msg := body.GetMessage()
 	if msg == nil || msg.Content == "" {
 		return nil
@@ -243,7 +243,7 @@ func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *Config, chatJID,
 	return nil
 }
 
-func (s *Service) processMessageUpdated(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processMessageUpdated(ctx context.Context, cfg *Config, body dto.CWWebhookPayload) error {
 	webhookMsg := body.GetMessage()
 	if webhookMsg == nil {
 		return nil
@@ -273,7 +273,7 @@ func (s *Service) processMessageUpdated(ctx context.Context, cfg *Config, body d
 	return nil
 }
 
-func (s *Service) processStatusChanged(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processStatusChanged(ctx context.Context, cfg *Config, body dto.CWWebhookPayload) error {
 	if body.Conversation == nil {
 		return nil
 	}
@@ -327,15 +327,15 @@ func filenameFromURL(rawURL string) string {
 	return ""
 }
 
-func (s *Service) sendAttachmentToWhatsApp(ctx context.Context, cfg *Config, chatJID, attachmentURL, caption, fileType string, replyTo *dto.ReplyContext) (string, error) {
+func (s *Service) sendAttachment(ctx context.Context, cfg *Config, chatJID, attachmentURL, caption, fileType string, replyTo *dto.ReplyContext) (string, error) {
 	var timeout time.Duration
 	if fileType == "video" {
-		timeout = time.Duration(cfg.TimeoutLargeSeconds) * time.Second
+		timeout = time.Duration(cfg.LargeTimeout) * time.Second
 		if timeout == 0 {
 			timeout = 300 * time.Second
 		}
 	} else {
-		timeout = time.Duration(cfg.TimeoutMediaSeconds) * time.Second
+		timeout = time.Duration(cfg.MediaTimeout) * time.Second
 		if timeout == 0 {
 			timeout = 60 * time.Second
 		}
@@ -448,7 +448,7 @@ func (s *Service) markReadIfEnabled(ctx context.Context, cfg *Config, chatJID st
 	if !cfg.MessageRead {
 		return
 	}
-	lastMsg, err := s.msgRepo.FindLastReceivedByChat(ctx, cfg.SessionID, chatJID)
+	lastMsg, err := s.msgRepo.FindLastReceived(ctx, cfg.SessionID, chatJID)
 	if err != nil {
 		return
 	}

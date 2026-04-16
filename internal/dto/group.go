@@ -19,7 +19,7 @@ type GroupParticipantReq struct {
 	Action       string   `json:"action" validate:"required" example:"add"`
 }
 
-type GroupRequestActionReq struct {
+type GroupJoinActionReq struct {
 	GroupJID     string   `json:"groupJid" validate:"required"`
 	Participants []string `json:"participants" validate:"required" example:"5511999999999"`
 	Action       string   `json:"action" validate:"required" example:"approve"`
@@ -49,7 +49,7 @@ type GroupEphemeralReq struct {
 	Duration int    `json:"duration" validate:"required"`
 }
 
-type GroupParticipantResp struct {
+type GroupMemberResp struct {
 	JID          string `json:"jid"`
 	PhoneNumber  string `json:"phoneNumber,omitempty"`
 	LID          string `json:"lid,omitempty"`
@@ -74,7 +74,7 @@ type GroupDetailResp struct {
 	JoinApproval   bool                   `json:"joinApproval"`
 	IsEphemeral    bool                   `json:"isEphemeral"`
 	EphemeralTimer uint32                 `json:"ephemeralTimer"`
-	Participants   []GroupParticipantResp `json:"participants"`
+	Participants   []GroupMemberResp `json:"participants"`
 	Subgroups      []SubgroupResp         `json:"subgroups,omitempty"`
 	CreatedAt      string                 `json:"createdAt,omitempty"`
 }

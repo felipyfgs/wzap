@@ -37,7 +37,7 @@ func (h *StatusHandler) respondStatusError(c *fiber.Ctx, err error, sessionID, l
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.StatusTextReq true "Status text payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -57,7 +57,7 @@ func (h *StatusHandler) SendText(c *fiber.Ctx) error {
 		return h.respondStatusError(c, err, id, "failed to send status text")
 	}
 
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // SendImage godoc
@@ -68,7 +68,7 @@ func (h *StatusHandler) SendText(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.StatusMediaReq true "Status image payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -85,7 +85,7 @@ func (h *StatusHandler) SendImage(c *fiber.Ctx) error {
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
 // @Param       body body dto.StatusMediaReq true "Status video payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MidResp}
+// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
 // @Security    Authorization
@@ -113,7 +113,7 @@ func (h *StatusHandler) sendStatusMedia(c *fiber.Ctx, mediaType whatsmeow.MediaT
 		return h.respondStatusError(c, err, id, "failed to send status media")
 	}
 
-	return c.JSON(dto.SuccessResp(dto.MidResp{Mid: msgID}))
+	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
 
 // ListStatus godoc

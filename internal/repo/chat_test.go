@@ -28,30 +28,30 @@ func TestChatRepositoryUpsertAndListBySession(t *testing.T) {
 	lastMessageID := "history-msg-1"
 	syncType := "INITIAL_BOOTSTRAP"
 
-	if err := repository.Upsert(context.Background(), &model.ChatUpsert{
-		SessionID:             sessionID,
-		ChatJID:               chatJID,
-		Name:                  &name,
-		DisplayName:           &displayName,
-		ChatType:              &chatType,
-		Archived:              &archived,
-		UnreadCount:           &unreadCount,
-		LastMessageID:         &lastMessageID,
-		LastMessageAt:         &lastMessageAt,
-		ConversationTimestamp: &conversationTimestamp,
-		PnJID:                 &pnJID,
-		LidJID:                &lidJID,
-		Source:                "history_sync",
-		SourceSyncType:        &syncType,
-		HistoryChunkOrder:     &chunkOrder,
-		Raw:                   map[string]any{"source": "history"},
+	if err := repository.Upsert(context.Background(), &model.ChatUpdate{
+		SessionID:     sessionID,
+		ChatJID:       chatJID,
+		Name:          &name,
+		DisplayName:   &displayName,
+		ChatType:      &chatType,
+		Archived:      &archived,
+		UnreadCount:   &unreadCount,
+		LastMessageID: &lastMessageID,
+		LastMessageAt: &lastMessageAt,
+		ConvTimestamp: &conversationTimestamp,
+		PnJID:         &pnJID,
+		LidJID:        &lidJID,
+		Source:        "history_sync",
+		SyncType:      &syncType,
+		ChunkOrder:    &chunkOrder,
+		Raw:           map[string]any{"source": "history"},
 	}); err != nil {
 		t.Fatalf("failed to upsert history chat: %v", err)
 	}
 
 	liveMessageID := "live-msg-1"
 	liveAt := time.Unix(1712600000, 0).UTC()
-	if err := repository.Upsert(context.Background(), &model.ChatUpsert{
+	if err := repository.Upsert(context.Background(), &model.ChatUpdate{
 		SessionID:     sessionID,
 		ChatJID:       chatJID,
 		ChatType:      &chatType,
@@ -75,8 +75,8 @@ func TestChatRepositoryUpsertAndListBySession(t *testing.T) {
 	if chat.Source != "live" {
 		t.Fatalf("expected source live, got %q", chat.Source)
 	}
-	if chat.SourceSyncType != syncType {
-		t.Fatalf("expected source sync type %q, got %q", syncType, chat.SourceSyncType)
+	if chat.SyncType != syncType {
+		t.Fatalf("expected source sync type %q, got %q", syncType, chat.SyncType)
 	}
 	if chat.LastMessageID != liveMessageID {
 		t.Fatalf("expected last message ID %q, got %q", liveMessageID, chat.LastMessageID)
@@ -84,8 +84,8 @@ func TestChatRepositoryUpsertAndListBySession(t *testing.T) {
 	if chat.LastMessageAt == nil || !chat.LastMessageAt.Equal(liveAt) {
 		t.Fatalf("expected last message timestamp %v, got %v", liveAt, chat.LastMessageAt)
 	}
-	if chat.HistoryChunkOrder == nil || *chat.HistoryChunkOrder != chunkOrder {
-		t.Fatalf("expected chunk order %d, got %v", chunkOrder, chat.HistoryChunkOrder)
+	if chat.ChunkOrder == nil || *chat.ChunkOrder != chunkOrder {
+		t.Fatalf("expected chunk order %d, got %v", chunkOrder, chat.ChunkOrder)
 	}
 	if chat.PnJID != pnJID || chat.LidJID != lidJID {
 		t.Fatalf("expected pn/lid aliases to be preserved, got pn=%q lid=%q", chat.PnJID, chat.LidJID)

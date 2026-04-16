@@ -28,9 +28,9 @@ func TestMessageRepositorySavePreservesBestDataAcrossHistoryAndLive(t *testing.T
 		MsgType:             "text",
 		Body:                "texto histórico",
 		Source:              "history_sync",
-		SourceSyncType:      "INITIAL_BOOTSTRAP",
-		HistoryChunkOrder:   &chunkOrder,
-		HistoryMessageOrder: &messageOrder,
+		SyncType:      "INITIAL_BOOTSTRAP",
+		ChunkOrder:   &chunkOrder,
+		MsgOrder: &messageOrder,
 		Raw:                 map[string]any{"origin": "history"},
 		Timestamp:           historyTimestamp,
 	}
@@ -63,14 +63,14 @@ func TestMessageRepositorySavePreservesBestDataAcrossHistoryAndLive(t *testing.T
 	if stored.Source != "live" {
 		t.Fatalf("expected source live after reconciliation, got %q", stored.Source)
 	}
-	if stored.SourceSyncType != "INITIAL_BOOTSTRAP" {
-		t.Fatalf("expected sync type to be preserved, got %q", stored.SourceSyncType)
+	if stored.SyncType != "INITIAL_BOOTSTRAP" {
+		t.Fatalf("expected sync type to be preserved, got %q", stored.SyncType)
 	}
-	if stored.HistoryChunkOrder == nil || *stored.HistoryChunkOrder != chunkOrder {
-		t.Fatalf("expected chunk order %d, got %v", chunkOrder, stored.HistoryChunkOrder)
+	if stored.ChunkOrder == nil || *stored.ChunkOrder != chunkOrder {
+		t.Fatalf("expected chunk order %d, got %v", chunkOrder, stored.ChunkOrder)
 	}
-	if stored.HistoryMessageOrder == nil || *stored.HistoryMessageOrder != messageOrder {
-		t.Fatalf("expected message order %d, got %v", messageOrder, stored.HistoryMessageOrder)
+	if stored.MsgOrder == nil || *stored.MsgOrder != messageOrder {
+		t.Fatalf("expected message order %d, got %v", messageOrder, stored.MsgOrder)
 	}
 	if stored.Body != "texto histórico" {
 		t.Fatalf("expected history body to be preserved, got %q", stored.Body)
@@ -159,8 +159,8 @@ func TestFindUnimportedHistory(t *testing.T) {
 		t.Fatalf("expected second message to be hist-msg-2, got %s", msgs[1].ID)
 	}
 
-	if err := repository.MarkImportedToChatwoot(context.Background(), sessionID, "hist-msg-1"); err != nil {
-		t.Fatalf("MarkImportedToChatwoot failed: %v", err)
+	if err := repository.MarkImported(context.Background(), sessionID, "hist-msg-1"); err != nil {
+		t.Fatalf("MarkImported failed: %v", err)
 	}
 
 	msgs, err = repository.FindUnimportedHistory(context.Background(), sessionID, since, 100, 0)
@@ -175,7 +175,7 @@ func TestFindUnimportedHistory(t *testing.T) {
 	}
 }
 
-func TestMarkImportedToChatwoot(t *testing.T) {
+func TestMarkImported(t *testing.T) {
 	db := openTestDB(t)
 	sessionID := insertTestSession(t, db, "mark-imported")
 	repository := repo.NewMessageRepository(db.Pool)
@@ -202,19 +202,19 @@ func TestMarkImportedToChatwoot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to find message: %v", err)
 	}
-	if stored.ImportedToChatwootAt != nil {
-		t.Fatalf("expected imported_to_chatwoot_at to be nil before mark, got %v", stored.ImportedToChatwootAt)
+	if stored.CWImportedAt != nil {
+		t.Fatalf("expected imported_to_chatwoot_at to be nil before mark, got %v", stored.CWImportedAt)
 	}
 
-	if err := repository.MarkImportedToChatwoot(context.Background(), sessionID, "import-mark-msg"); err != nil {
-		t.Fatalf("MarkImportedToChatwoot failed: %v", err)
+	if err := repository.MarkImported(context.Background(), sessionID, "import-mark-msg"); err != nil {
+		t.Fatalf("MarkImported failed: %v", err)
 	}
 
 	stored, err = repository.FindByID(context.Background(), sessionID, "import-mark-msg")
 	if err != nil {
 		t.Fatalf("failed to find message after mark: %v", err)
 	}
-	if stored.ImportedToChatwootAt == nil {
+	if stored.CWImportedAt == nil {
 		t.Fatal("expected imported_to_chatwoot_at to be set after mark")
 	}
 }

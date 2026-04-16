@@ -5,7 +5,7 @@ type CreateCommunityReq struct {
 	Description string `json:"description"`
 }
 
-type CommunityParticipantReq struct {
+type CommunityMembersReq struct {
 	CommunityJID string   `json:"communityJid" validate:"required"`
 	Participants []string `json:"participants" validate:"required"`
 }

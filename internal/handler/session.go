@@ -13,7 +13,7 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-type lifecycleService interface {
+type sessionLifecycle interface {
 	Connect(ctx context.Context, sessionID string) (*service.ConnectResult, error)
 	Disconnect(ctx context.Context, sessionID string) (*service.DisconnectResult, error)
 	QR(ctx context.Context, sessionID string) (*service.QRResult, error)
@@ -25,11 +25,11 @@ type lifecycleService interface {
 
 type SessionHandler struct {
 	sessionSvc   *service.SessionService
-	lifecycleSvc lifecycleService
+	lifecycleSvc sessionLifecycle
 	chatwootRepo *chatwoot.Repository
 }
 
-func NewSessionHandler(sessionSvc *service.SessionService, lifecycleSvc lifecycleService, chatwootRepo *chatwoot.Repository) *SessionHandler {
+func NewSessionHandler(sessionSvc *service.SessionService, lifecycleSvc sessionLifecycle, chatwootRepo *chatwoot.Repository) *SessionHandler {
 	return &SessionHandler{
 		sessionSvc:   sessionSvc,
 		lifecycleSvc: lifecycleSvc,
@@ -44,7 +44,7 @@ func NewSessionHandler(sessionSvc *service.SessionService, lifecycleSvc lifecycl
 // @Accept      json
 // @Produce     json
 // @Param       body body dto.SessionCreateReq true "Session data"
-// @Success     201 {object} dto.APIResponse{Data=dto.SessionCreatedResp}
+// @Success     201 {object} dto.APIResponse{Data=dto.SessionWithTokenResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     403 {object} dto.APIError
 // @Security    Authorization

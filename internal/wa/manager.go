@@ -19,12 +19,50 @@ import (
 	"wzap/internal/webhook"
 )
 
-type MediaAutoUploadFunc func(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage)
-type MediaRetryFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, mimeType string, timestamp time.Time, directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int)
-type MessagePersistFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any)
-type HistorySyncPersistFunc func(sessionID string, sync *events.HistorySync)
-type StatusReceivedFunc func(sessionID, messageID, chatJID, senderJID string, fromMe bool, msgType, body, mediaType string, timestamp int64, raw any)
-type ShouldIgnoreStatusFunc func(sessionID string) bool
+type MediaUploadInput struct {
+	SessionID    string
+	MessageID    string
+	ChatJID      string
+	SenderJID    string
+	MimeType     string
+	FromMe       bool
+	Timestamp    time.Time
+	Downloadable whatsmeow.DownloadableMessage
+}
+
+type MediaRetryInput struct {
+	SessionID   string
+	MessageID   string
+	ChatJID     string
+	SenderJID   string
+	FromMe      bool
+	MimeType    string
+	Timestamp   time.Time
+	DirectPath  string
+	EncFileHash []byte
+	FileHash    []byte
+	MediaKey    []byte
+	FileLength  int
+}
+
+type PersistInput struct {
+	SessionID string
+	MessageID string
+	ChatJID   string
+	SenderJID string
+	FromMe    bool
+	MsgType   string
+	Body      string
+	MediaType string
+	Timestamp int64
+	Raw       any
+}
+
+type MediaUploadFunc func(MediaUploadInput)
+type MediaRetryFunc func(MediaRetryInput)
+type PersistFunc func(PersistInput)
+type HistorySyncFunc func(sessionID string, sync *events.HistorySync)
+type IgnoreStatusFunc func(sessionID string) bool
 
 type mediaRetryCacheEntry struct {
 	sessionID   string
@@ -73,21 +111,21 @@ type Manager struct {
 	sessionNames map[string]string // cache de sessionID -> name
 	mu           sync.RWMutex
 
-	sessionRepo           *repo.SessionRepository
-	container             *sqlstore.Container
-	nats                  *broker.NATS
-	dispatcher            *webhook.Dispatcher
-	cfg                   *config.Config
-	waLog                 waLog.Logger
-	OnMediaReceived       MediaAutoUploadFunc
-	OnMediaRetry          MediaRetryFunc
-	OnMessageReceived     MessagePersistFunc
-	OnHistorySyncReceived HistorySyncPersistFunc
-	OnStatusReceived      StatusReceivedFunc
-	OnStatusMediaReceived MediaAutoUploadFunc
-	ShouldIgnoreStatus    ShouldIgnoreStatusFunc
-	mediaRetryCache       sync.Map
-	stopGC                chan struct{}
+	sessionRepo      *repo.SessionRepository
+	container        *sqlstore.Container
+	nats             *broker.NATS
+	dispatcher       *webhook.Dispatcher
+	cfg              *config.Config
+	waLog            waLog.Logger
+	OnMediaUpload    MediaUploadFunc
+	OnMediaRetry     MediaRetryFunc
+	OnMessagePersist PersistFunc
+	OnHistorySync    HistorySyncFunc
+	OnStatusPersist  PersistFunc
+	OnStatusMedia    MediaUploadFunc
+	IgnoreStatusFn   IgnoreStatusFunc
+	mediaRetryCache  sync.Map
+	stopGC           chan struct{}
 }
 
 func (m *Manager) StartCacheGC() {
@@ -118,11 +156,11 @@ func (m *Manager) StopCacheGC() {
 	}
 }
 
-func (m *Manager) SetMediaAutoUpload(fn MediaAutoUploadFunc) {
-	m.OnMediaReceived = fn
+func (m *Manager) SetOnMediaUpload(fn MediaUploadFunc) {
+	m.OnMediaUpload = fn
 }
 
-func (m *Manager) SetMediaRetry(fn MediaRetryFunc) {
+func (m *Manager) SetOnMediaRetry(fn MediaRetryFunc) {
 	m.OnMediaRetry = fn
 }
 
@@ -175,24 +213,24 @@ func (m *Manager) RequestMediaRetry(ctx context.Context, sessionID, messageID, c
 	return nil
 }
 
-func (m *Manager) SetMessagePersist(fn MessagePersistFunc) {
-	m.OnMessageReceived = fn
+func (m *Manager) SetOnMessagePersist(fn PersistFunc) {
+	m.OnMessagePersist = fn
 }
 
-func (m *Manager) SetHistorySyncPersist(fn HistorySyncPersistFunc) {
-	m.OnHistorySyncReceived = fn
+func (m *Manager) SetOnHistorySync(fn HistorySyncFunc) {
+	m.OnHistorySync = fn
 }
 
-func (m *Manager) SetStatusReceived(fn StatusReceivedFunc) {
-	m.OnStatusReceived = fn
+func (m *Manager) SetOnStatusPersist(fn PersistFunc) {
+	m.OnStatusPersist = fn
 }
 
-func (m *Manager) SetStatusMediaAutoUpload(fn MediaAutoUploadFunc) {
-	m.OnStatusMediaReceived = fn
+func (m *Manager) SetOnStatusMedia(fn MediaUploadFunc) {
+	m.OnStatusMedia = fn
 }
 
-func (m *Manager) SetShouldIgnoreStatus(fn ShouldIgnoreStatusFunc) {
-	m.ShouldIgnoreStatus = fn
+func (m *Manager) SetIgnoreStatus(fn IgnoreStatusFunc) {
+	m.IgnoreStatusFn = fn
 }
 
 func (m *Manager) GetPNForLID(ctx context.Context, sessionID, lidJID string) string {

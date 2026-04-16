@@ -17,7 +17,7 @@ func TestIdempotency_DuplicateSkipped(t *testing.T) {
 
 	svc := &Service{
 		repo: &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo: &mockMsgRepoWithDuplicates{
+		msgRepo: &mockDupMsgRepo{
 			existingSourceIDs: map[string]bool{"sess:WAID:dup-msg": true},
 		},
 		clientFn:   func(cfg *Config) Client { return mockClient },
@@ -41,7 +41,7 @@ func TestIdempotency_NewMessageProcessed(t *testing.T) {
 
 	svc := &Service{
 		repo: &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo: &mockMsgRepoWithDuplicates{
+		msgRepo: &mockDupMsgRepo{
 			existingSourceIDs: map[string]bool{},
 		},
 		clientFn:   func(cfg *Config) Client { return mockClient },
@@ -67,7 +67,7 @@ func TestIdempotency_CacheHitSkipDB(t *testing.T) {
 
 	svc := &Service{
 		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo:    &mockMsgRepoWithDuplicates{existingSourceIDs: map[string]bool{}},
+		msgRepo:    &mockDupMsgRepo{existingSourceIDs: map[string]bool{}},
 		clientFn:   func(cfg *Config) Client { return mockClient },
 		cache:      cache,
 		httpClient: &http.Client{Timeout: 30 * time.Second},

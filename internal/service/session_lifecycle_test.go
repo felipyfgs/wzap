@@ -77,7 +77,7 @@ func TestLifecycleOrchestratorConnectWhatsmeowPairing(t *testing.T) {
 		session: &model.Session{ID: "sess-wa", Engine: "whatsmeow", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	manager := &stubLifecycleManager{connectQR: make(chan whatsmeow.QRChannelItem)}
-	orchestrator := newLifecycleOrchestrator(&RuntimeResolver{repo: repo}, manager, nil)
+	orchestrator := newSessionLifecycle(&RuntimeResolver{repo: repo}, manager, nil)
 
 	result, err := orchestrator.Connect(context.Background(), "sess-wa")
 	if err != nil {
@@ -98,7 +98,7 @@ func TestLifecycleOrchestratorQR(t *testing.T) {
 	repo := &stubSessionLookup{
 		session: &model.Session{ID: "sess-wa", Engine: "whatsmeow", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
-	orchestrator := newLifecycleOrchestrator(&RuntimeResolver{repo: repo}, &stubLifecycleManager{qrCode: "qr-code"}, nil)
+	orchestrator := newSessionLifecycle(&RuntimeResolver{repo: repo}, &stubLifecycleManager{qrCode: "qr-code"}, nil)
 
 	result, err := orchestrator.QR(context.Background(), "sess-wa")
 	if err != nil {
@@ -114,7 +114,7 @@ func TestLifecycleOrchestratorPair(t *testing.T) {
 		session: &model.Session{ID: "sess-wa", Engine: "whatsmeow", CreatedAt: time.Now(), UpdatedAt: time.Now()},
 	}
 	manager := &stubLifecycleManager{pairCode: "123-456"}
-	orchestrator := newLifecycleOrchestrator(&RuntimeResolver{repo: repo}, manager, nil)
+	orchestrator := newSessionLifecycle(&RuntimeResolver{repo: repo}, manager, nil)
 
 	result, err := orchestrator.Pair(context.Background(), "sess-wa", "5511999999999")
 	if err != nil {
@@ -134,7 +134,7 @@ func TestLifecycleOrchestratorRestart(t *testing.T) {
 	}
 	reader := &stubSessionReader{resp: &dto.SessionResp{ID: "sess-wa", Engine: "whatsmeow"}}
 	manager := &stubLifecycleManager{}
-	orchestrator := newLifecycleOrchestrator(&RuntimeResolver{repo: repo}, manager, reader)
+	orchestrator := newSessionLifecycle(&RuntimeResolver{repo: repo}, manager, reader)
 
 	result, err := orchestrator.Restart(context.Background(), "sess-wa")
 	if err != nil {

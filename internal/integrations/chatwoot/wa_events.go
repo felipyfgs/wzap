@@ -30,12 +30,12 @@ func (s *Service) processReceipt(ctx context.Context, cfg *Config, payload []byt
 			continue
 		}
 
-		if msg.CWConversationID == nil || *msg.CWConversationID == 0 {
+		if msg.CWConvID == nil || *msg.CWConvID == 0 {
 			continue
 		}
 
-		if msg.CWSourceID != nil {
-			_ = client.UpdateLastSeen(ctx, fmt.Sprintf("%d", cfg.InboxID), *msg.CWSourceID, *msg.CWConversationID)
+		if msg.CWSrcID != nil {
+			_ = client.UpdateLastSeen(ctx, fmt.Sprintf("%d", cfg.InboxID), *msg.CWSrcID, *msg.CWConvID)
 		}
 	}
 }
@@ -56,12 +56,12 @@ func (s *Service) processDelete(ctx context.Context, cfg *Config, payload []byte
 		return
 	}
 
-	if msg.CWMessageID == nil || msg.CWConversationID == nil {
+	if msg.CWMessageID == nil || msg.CWConvID == nil {
 		return
 	}
 
 	client := s.clientFn(cfg)
-	if err := client.DeleteMessage(ctx, *msg.CWConversationID, *msg.CWMessageID); err != nil {
+	if err := client.DeleteMessage(ctx, *msg.CWConvID, *msg.CWMessageID); err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to delete Chatwoot message")
 	}
 }
@@ -93,13 +93,13 @@ func (s *Service) processRevoke(ctx context.Context, cfg *Config, payload []byte
 		return
 	}
 
-	if msg.CWMessageID == nil || msg.CWConversationID == nil {
+	if msg.CWMessageID == nil || msg.CWConvID == nil {
 		logger.Warn().Str("component", "chatwoot").Str("revokedMsgID", revokedMsgID).Msg("revoke: CW refs not available after retry")
 		return
 	}
 
 	client := s.clientFn(cfg)
-	if err := client.DeleteMessage(ctx, *msg.CWConversationID, *msg.CWMessageID); err != nil {
+	if err := client.DeleteMessage(ctx, *msg.CWConvID, *msg.CWMessageID); err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Str("revokedMsgID", revokedMsgID).Msg("failed to delete Chatwoot message on revoke")
 	} else {
 		logger.Debug().Str("component", "chatwoot").Str("revokedMsgID", revokedMsgID).Int("cwMsgID", *msg.CWMessageID).Msg("successfully deleted Chatwoot message on revoke")
@@ -143,12 +143,12 @@ func (s *Service) processEdit(ctx context.Context, cfg *Config, payload []byte) 
 		return
 	}
 
-	if msg.CWMessageID == nil || msg.CWConversationID == nil {
+	if msg.CWMessageID == nil || msg.CWConvID == nil {
 		logger.Warn().Str("component", "chatwoot").Str("editedMsgID", editedMsgID).Msg("edit: CW refs not available after retry")
 		return
 	}
 
-	logger.Debug().Str("component", "chatwoot").Str("editedMsgID", editedMsgID).Int("cwMsgID", *msg.CWMessageID).Int("cwConvID", *msg.CWConversationID).Msg("creating edit notification in Chatwoot")
+	logger.Debug().Str("component", "chatwoot").Str("editedMsgID", editedMsgID).Int("cwMsgID", *msg.CWMessageID).Int("cwConvID", *msg.CWConvID).Msg("creating edit notification in Chatwoot")
 
 	client := s.clientFn(cfg)
 
@@ -158,7 +158,7 @@ func (s *Service) processEdit(ctx context.Context, cfg *Config, payload []byte) 
 	}
 
 	editedContent := "✏️ *Mensagem editada:*\n" + newText
-	_, err = client.CreateMessage(ctx, *msg.CWConversationID, MessageReq{
+	_, err = client.CreateMessage(ctx, *msg.CWConvID, MessageReq{
 		Content:           editedContent,
 		MessageType:       messageType,
 		Private:           true,
@@ -188,7 +188,7 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 		return nil, err
 	}
 
-	if msg.CWMessageID != nil && msg.CWConversationID != nil {
+	if msg.CWMessageID != nil && msg.CWConvID != nil {
 		return msg, nil
 	}
 
@@ -206,7 +206,7 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 			return nil, err
 		}
 
-		if msg.CWMessageID != nil && msg.CWConversationID != nil {
+		if msg.CWMessageID != nil && msg.CWConvID != nil {
 			logger.Debug().Str("component", "chatwoot").Str("msgID", msgID).Int("attempt", i+2).Msg("CW refs available after retry")
 			return msg, nil
 		}
@@ -294,7 +294,7 @@ func (s *Service) processQR(ctx context.Context, cfg *Config, payload []byte) {
 		caption += fmt.Sprintf("\n\n*Código de pareamento:* %s", data.PairingCode)
 	}
 
-	_, _ = client.CreateMessageWithAttachment(ctx, convID, caption, "qrcode.png", qrPNG, "image/png", "incoming", "", 0, nil)
+	_, _ = client.CreateAttachment(ctx, convID, caption, "qrcode.png", qrPNG, "image/png", "incoming", "", 0, nil)
 }
 
 func (s *Service) processContact(ctx context.Context, cfg *Config, payload []byte) {

@@ -244,7 +244,7 @@ func (h *ContactHandler) GetPrivacySettings(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.SetProfilePictureReq true "Base64 image payload"
+// @Param       body body dto.UpdateAvatarReq true "Base64 image payload"
 // @Success     200 {object} dto.APIResponse{Data=dto.PictureIDResp}
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
@@ -255,7 +255,7 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	var req dto.SetProfilePictureReq
+	var req dto.UpdateAvatarReq
 	if err := parseAndValidate(c, &req); err != nil {
 		return err
 	}
@@ -333,7 +333,7 @@ func (h *ContactHandler) SetPrivacy(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.SetStatusMessageReq true "Status message"
+// @Param       body body dto.UpdateStatusReq true "Status message"
 // @Success     200 {object} dto.APIResponse
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
@@ -344,7 +344,7 @@ func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	var req dto.SetStatusMessageReq
+	var req dto.UpdateStatusReq
 	if err := parseAndValidate(c, &req); err != nil {
 		return err
 	}

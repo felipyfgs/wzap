@@ -28,7 +28,7 @@ type NewsletterReactReq struct {
 	Reaction  string `json:"reaction" validate:"required"`
 }
 
-type NewsletterMarkViewedReq struct {
+type NewsletterViewReq struct {
 	JID       string `json:"newsletterJid" validate:"required"`
 	ServerIDs []int  `json:"serverIds" validate:"required"`
 }

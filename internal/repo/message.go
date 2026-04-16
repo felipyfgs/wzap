@@ -34,12 +34,12 @@ type MessageRepo interface {
 	FindByBody(ctx context.Context, sessionID, body string, fromMe bool) (*model.Message, error)
 	FindByBodyAndChat(ctx context.Context, sessionID, chatJID, body string, fromMe bool) (*model.Message, error)
 	FindByBodyAndChatAny(ctx context.Context, sessionID, chatJID, body string, fromMe bool) (*model.Message, error)
-	FindByTimestampWindow(ctx context.Context, sessionID, chatJID string, timestamp int64, windowSeconds int64) (*model.Message, error)
-	FindLastReceivedByChat(ctx context.Context, sessionID, chatJID string) (*model.Message, error)
+	FindByTimestamp(ctx context.Context, sessionID, chatJID string, timestamp int64, windowSeconds int64) (*model.Message, error)
+	FindLastReceived(ctx context.Context, sessionID, chatJID string) (*model.Message, error)
 	UpdateChatwootRef(ctx context.Context, sessionID, msgID string, cwMsgID, cwConvID int, cwSourceID string) error
 	ExistsBySourceID(ctx context.Context, sessionID, sourceID string) (bool, error)
 	FindUnimportedHistory(ctx context.Context, sessionID string, since time.Time, limit, offset int) ([]model.Message, error)
-	MarkImportedToChatwoot(ctx context.Context, sessionID, msgID string) error
+	MarkImported(ctx context.Context, sessionID, msgID string) error
 	UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error
 	FindMedia(ctx context.Context, sessionID string, f MediaFilter) ([]model.Message, int, error)
 }
@@ -77,7 +77,7 @@ func (r *MessageRepository) Save(ctx context.Context, msg *model.Message) error 
 		   imported_to_chatwoot_at = COALESCE(EXCLUDED.imported_to_chatwoot_at, wz_messages.imported_to_chatwoot_at),
 		   timestamp = LEAST(wz_messages.timestamp, EXCLUDED.timestamp)`,
 		msg.ID, msg.SessionID, msg.ChatJID, msg.SenderJID, msg.FromMe, msg.MsgType, msg.Body, msg.MediaType, msg.MediaURL,
-		msg.Source, msg.SourceSyncType, msg.HistoryChunkOrder, msg.HistoryMessageOrder, rawJSON, msg.Timestamp, msg.ImportedToChatwootAt)
+		msg.Source, msg.SyncType, msg.ChunkOrder, msg.MsgOrder, rawJSON, msg.Timestamp, msg.CWImportedAt)
 	if err != nil {
 		return fmt.Errorf("failed to save message: %w", err)
 	}
@@ -97,16 +97,16 @@ func scanMessage(scanner messageScanner, m *model.Message) error {
 		&m.MediaType,
 		&m.MediaURL,
 		&m.Source,
-		&m.SourceSyncType,
-		&m.HistoryChunkOrder,
-		&m.HistoryMessageOrder,
+		&m.SyncType,
+		&m.ChunkOrder,
+		&m.MsgOrder,
 		&raw,
 		&m.Timestamp,
 		&m.CreatedAt,
 		&m.CWMessageID,
-		&m.CWConversationID,
-		&m.CWSourceID,
-		&m.ImportedToChatwootAt,
+		&m.CWConvID,
+		&m.CWSrcID,
+		&m.CWImportedAt,
 	); err != nil {
 		return err
 	}
@@ -425,7 +425,7 @@ func (r *MessageRepository) FindByBodyAndChatAny(ctx context.Context, sessionID,
 	return &m, nil
 }
 
-func (r *MessageRepository) FindByTimestampWindow(ctx context.Context, sessionID, chatJID string, timestamp int64, windowSeconds int64) (*model.Message, error) {
+func (r *MessageRepository) FindByTimestamp(ctx context.Context, sessionID, chatJID string, timestamp int64, windowSeconds int64) (*model.Message, error) {
 	var m model.Message
 	tLow := time.Unix(timestamp-windowSeconds, 0)
 	tHigh := time.Unix(timestamp+windowSeconds, 0)
@@ -442,7 +442,7 @@ func (r *MessageRepository) FindByTimestampWindow(ctx context.Context, sessionID
 	return &m, nil
 }
 
-func (r *MessageRepository) FindLastReceivedByChat(ctx context.Context, sessionID, chatJID string) (*model.Message, error) {
+func (r *MessageRepository) FindLastReceived(ctx context.Context, sessionID, chatJID string) (*model.Message, error) {
 	var m model.Message
 	err := scanMessage(r.db.QueryRow(ctx,
 		`SELECT `+messageSelectColumns+` FROM wz_messages
@@ -482,7 +482,7 @@ func (r *MessageRepository) FindUnimportedHistory(ctx context.Context, sessionID
 	return msgs, rows.Err()
 }
 
-func (r *MessageRepository) MarkImportedToChatwoot(ctx context.Context, sessionID, msgID string) error {
+func (r *MessageRepository) MarkImported(ctx context.Context, sessionID, msgID string) error {
 	_, err := r.db.Exec(ctx,
 		`UPDATE wz_messages SET imported_to_chatwoot_at = NOW() WHERE id = $1 AND session_id = $2`,
 		msgID, sessionID)

@@ -33,8 +33,8 @@ func (s *Service) resolveInboundReply(ctx context.Context, sessionID, chatJID, s
 	}
 
 	if timestamp > 0 {
-		if msg, err := s.msgRepo.FindByTimestampWindow(ctx, sessionID, chatJID, timestamp, 60); err == nil && hasCWMessageID(msg) {
-			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindByTimestampWindow")
+		if msg, err := s.msgRepo.FindByTimestamp(ctx, sessionID, chatJID, timestamp, 60); err == nil && hasCWMessageID(msg) {
+			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindByTimestamp")
 			return *msg.CWMessageID
 		}
 	}

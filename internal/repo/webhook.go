@@ -49,7 +49,7 @@ func (r *WebhookRepository) FindBySessionID(ctx context.Context, sessionID strin
 	return webhooks, rows.Err()
 }
 
-func (r *WebhookRepository) FindActiveBySessionAndEvent(ctx context.Context, sessionID string, eventType string) ([]model.Webhook, error) {
+func (r *WebhookRepository) FindActive(ctx context.Context, sessionID string, eventType string) ([]model.Webhook, error) {
 	query := `SELECT id, session_id, url, COALESCE(secret, ''), events, enabled, nats_enabled, created_at, updated_at
 		FROM wz_webhooks
 		WHERE session_id = $1

@@ -13,7 +13,7 @@ type SessionProxy struct {
 type SessionSettings struct {
 	AlwaysOnline  bool   `json:"alwaysOnline"`
 	RejectCall    bool   `json:"rejectCall"`
-	MsgRejectCall string `json:"msgRejectCall,omitempty"`
+	RejectCallMsg string `json:"rejectCallMsg,omitempty"`
 	ReadMessages  bool   `json:"readMessages"`
 	IgnoreGroups  bool   `json:"ignoreGroups"`
 	IgnoreStatus  bool   `json:"ignoreStatus"`

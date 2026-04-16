@@ -90,7 +90,7 @@ type Service struct {
 	lastBotNotify     sync.Map
 	httpClient        *http.Client
 	js                jetstream.JetStream
-	cb                *circuitBreakerManager
+	cb                *cbManager
 	convFlight        singleflight.Group
 	importFlight      singleflight.Group
 	missingConfig     sync.Map
@@ -118,10 +118,10 @@ func (s *Service) SetNumberChecker(n NumberChecker)           { s.numberChecker 
 func (s *Service) SetServerURL(url string)                    { s.serverURL = url }
 func (s *Service) SetJetStream(js jetstream.JetStream)        { s.js = js }
 func (s *Service) SetCache(c Cache)                           { s.cache = c }
-func (s *Service) SetContactNameGetter(g ContactNameGetter)   { s.contactNameGetter = g }
+func (s *Service) SetNameGetter(g ContactNameGetter)   { s.contactNameGetter = g }
 func (s *Service) SetMediaPresigner(p MediaPresigner)         { s.mediaPresigner = p }
 func (s *Service) SetMediaStorage(st MediaStorage)            { s.mediaStorage = st }
-func (s *Service) SetSessionPhoneGetter(g SessionPhoneGetter) { s.sessionPhoneGet = g }
+func (s *Service) SetPhoneGetter(g SessionPhoneGetter) { s.sessionPhoneGet = g }
 func (s *Service) ClearConfigCache(sessionID string) {
 	s.missingConfig.Delete(sessionID)
 }
@@ -210,8 +210,8 @@ func (s *Service) processInboundEvent(ctx context.Context, sessionID string, eve
 	return nil
 }
 
-func (s *Service) processOutboundWebhook(ctx context.Context, sessionID string, rawPayload json.RawMessage) error {
-	var body dto.ChatwootWebhookPayload
+func (s *Service) processOutbound(ctx context.Context, sessionID string, rawPayload json.RawMessage) error {
+	var body dto.CWWebhookPayload
 	if err := json.Unmarshal(rawPayload, &body); err != nil {
 		return fmt.Errorf("unmarshal outbound webhook: %w", err)
 	}
@@ -276,7 +276,7 @@ func (s *Service) importHistory(ctx context.Context, sessionID, period string, c
 				failedCount++
 				logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("failed to import history message")
 			} else {
-				if err := s.msgRepo.MarkImportedToChatwoot(ctx, sessionID, msg.ID); err != nil {
+				if err := s.msgRepo.MarkImported(ctx, sessionID, msg.ID); err != nil {
 					failedCount++
 					logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("mid", msg.ID).Msg("failed to mark message as imported")
 				}
@@ -392,9 +392,9 @@ func (s *Service) importMediaMessage(ctx context.Context, _ *Config, client Clie
 
 	caption := msg.Body
 
-	_, err = client.CreateMessageWithAttachment(ctx, convID, caption, filename, data, mimeType, messageType, sourceID, 0, nil)
+	_, err = client.CreateAttachment(ctx, convID, caption, filename, data, mimeType, messageType, sourceID, 0, nil)
 	if err != nil {
-		return fmt.Errorf("CreateMessageWithAttachment: %w", err)
+		return fmt.Errorf("CreateAttachment: %w", err)
 	}
 
 	return nil

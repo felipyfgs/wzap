@@ -54,7 +54,7 @@ func newChatwootApp() (*fiber.App, *mockRepo, *mockClient) {
 func TestConfigure_ValidationMissingURL(t *testing.T) {
 	app, _, _ := newChatwootApp()
 
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		AccountID: 1,
 		Token:     "test-token",
 	})
@@ -73,7 +73,7 @@ func TestConfigure_ValidationMissingURL(t *testing.T) {
 func TestConfigure_ValidationMissingToken(t *testing.T) {
 	app, _, _ := newChatwootApp()
 
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		URL:       "https://app.chatwoot.com",
 		AccountID: 1,
 	})
@@ -92,7 +92,7 @@ func TestConfigure_ValidationMissingToken(t *testing.T) {
 func TestConfigure_ValidationMissingAccountID(t *testing.T) {
 	app, _, _ := newChatwootApp()
 
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		URL:   "https://app.chatwoot.com",
 		Token: "test-token",
 	})
@@ -111,7 +111,7 @@ func TestConfigure_ValidationMissingAccountID(t *testing.T) {
 func TestConfigure_InvalidURL(t *testing.T) {
 	app, _, _ := newChatwootApp()
 
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		URL:       "not-a-url",
 		AccountID: 1,
 		Token:     "test-token",
@@ -131,7 +131,7 @@ func TestConfigure_InvalidURL(t *testing.T) {
 func TestConfigure_SuccessEnvelope(t *testing.T) {
 	app, _, _ := newChatwootApp()
 
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		URL:       "https://app.chatwoot.com",
 		AccountID: 1,
 		Token:     "test-token",
@@ -247,7 +247,7 @@ func TestConfigure_IgnoreGroupsCompatibilityWrite(t *testing.T) {
 	app, repo, _ := newChatwootApp()
 
 	ignoreGroups := true
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		URL:          "https://app.chatwoot.com",
 		AccountID:    1,
 		Token:        "test-token",
@@ -284,7 +284,7 @@ func TestConfigure_IgnoreGroupsAlreadyInJIDs(t *testing.T) {
 	app, repo, _ := newChatwootApp()
 
 	ignoreGroups := true
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		URL:          "https://app.chatwoot.com",
 		AccountID:    1,
 		Token:        "test-token",
@@ -344,7 +344,7 @@ func TestDeleteConfig_Success(t *testing.T) {
 func TestConfigure_ResponseUsesSuccessEnvelope(t *testing.T) {
 	app, _, _ := newChatwootApp()
 
-	body, _ := json.Marshal(dto.ChatwootConfigReq{
+	body, _ := json.Marshal(dto.CWConfigReq{
 		URL:       "https://app.chatwoot.com",
 		AccountID: 1,
 		Token:     "test-token",

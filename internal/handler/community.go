@@ -52,7 +52,7 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.CommunityParticipantReq true "Community participant payload"
+// @Param       body body dto.CommunityMembersReq true "Community participant payload"
 // @Success     200 {object} dto.APIResponse
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
@@ -63,7 +63,7 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	var req dto.CommunityParticipantReq
+	var req dto.CommunityMembersReq
 	if err := parseAndValidate(c, &req); err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.CommunityParticipantReq true "Community participant payload"
+// @Param       body body dto.CommunityMembersReq true "Community participant payload"
 // @Success     200 {object} dto.APIResponse
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
@@ -93,7 +93,7 @@ func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	var req dto.CommunityParticipantReq
+	var req dto.CommunityMembersReq
 	if err := parseAndValidate(c, &req); err != nil {
 		return err
 	}

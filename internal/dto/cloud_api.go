@@ -92,38 +92,38 @@ type CloudAPIContext struct {
 
 type CloudAPITemplate struct {
 	Name       string                      `json:"name"`
-	Language   CloudAPITemplateLanguage    `json:"language"`
-	Components []CloudAPITemplateComponent `json:"components,omitempty"`
+	Language   TemplateLang    `json:"language"`
+	Components []TemplateComponent `json:"components,omitempty"`
 }
 
-type CloudAPITemplateLanguage struct {
+type TemplateLang struct {
 	Policy string `json:"policy,omitempty"`
 	Code   string `json:"code"`
 }
 
-type CloudAPITemplateComponent struct {
+type TemplateComponent struct {
 	Type       string                      `json:"type"`
 	SubType    string                      `json:"sub_type,omitempty"`
-	Parameters []CloudAPITemplateParameter `json:"parameters,omitempty"`
+	Parameters []TemplateParam `json:"parameters,omitempty"`
 }
 
-type CloudAPITemplateParameter struct {
+type TemplateParam struct {
 	Type string `json:"type"`
 	Text string `json:"text,omitempty"`
 }
 
 type CloudAPIMessageResp struct {
 	MessagingProduct string                `json:"messaging_product"`
-	Contacts         []CloudAPIRespContact `json:"contacts"`
-	Messages         []CloudAPIRespMessage `json:"messages"`
+	Contacts         []CloudAPIContactRef `json:"contacts"`
+	Messages         []CloudAPIMsgRef `json:"messages"`
 }
 
-type CloudAPIRespContact struct {
+type CloudAPIContactRef struct {
 	Input string `json:"input"`
 	WaID  string `json:"wa_id"`
 }
 
-type CloudAPIRespMessage struct {
+type CloudAPIMsgRef struct {
 	ID string `json:"id"`
 }
 

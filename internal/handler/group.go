@@ -316,7 +316,7 @@ func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 // @Accept      json
 // @Produce     json
 // @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.GroupRequestActionReq true "Participants and action (approve/reject)"
+// @Param       body body dto.GroupJoinActionReq true "Participants and action (approve/reject)"
 // @Success     200 {object} dto.APIResponse
 // @Failure     400 {object} dto.APIError
 // @Failure     500 {object} dto.APIError
@@ -328,7 +328,7 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 		return err
 	}
 
-	var req dto.GroupRequestActionReq
+	var req dto.GroupJoinActionReq
 	if err := parseAndValidate(c, &req); err != nil {
 		return err
 	}

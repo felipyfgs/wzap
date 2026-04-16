@@ -51,7 +51,7 @@ func (s *Server) SetupRoutes() error {
 
 	// Initialize Services
 	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, runtimeResolver)
-	lifecycleSvc := service.NewLifecycleOrchestrator(runtimeResolver, engine, sessionSvc)
+	lifecycleSvc := service.NewSessionLifecycle(runtimeResolver, engine, sessionSvc)
 	messageSvc := service.NewMessageService(engine, sessionRepo, runtimeResolver)
 	statusSvc := service.NewStatusService(runtimeResolver, statusRepo)
 	contactSvc := service.NewContactService(engine)
@@ -77,12 +77,12 @@ func (s *Server) SetupRoutes() error {
 	chatwootSvc.SetSessionConnector(chatwoot.NewSessionConnector(engine))
 	chatwootSvc.SetAvatarGetter(engine)
 	chatwootSvc.SetNumberChecker(engine)
-	chatwootSvc.SetContactNameGetter(engine)
+	chatwootSvc.SetNameGetter(engine)
 	if s.minio != nil {
 		chatwootSvc.SetMediaPresigner(mediaSvc)
 		chatwootSvc.SetMediaStorage(s.minio)
 	}
-	chatwootSvc.SetSessionPhoneGetter(chatwoot.NewSessionPhoneGetter(sessionRepo))
+	chatwootSvc.SetPhoneGetter(chatwoot.NewSessionPhoneGetter(sessionRepo))
 	chatwootSvc.SetServerURL(s.Config.ServerURL)
 	chatwootSvc.SetCache(chatwoot.NewCache(s.ctx, s.Config.RedisURL))
 	if s.nats != nil {
@@ -99,23 +99,23 @@ func (s *Server) SetupRoutes() error {
 	chatwootHandler := chatwoot.NewHandler(chatwootSvc, chatwootRepo)
 	disp.AddListener(chatwootSvc)
 
-	cloudWAAPIHandler := handler.NewCloudWAAPIHandler(chatwootRepo, messageSvc, mediaSvc, messageRepo)
+	cloudAPIHandler := handler.NewCloudAPIHandler(chatwootRepo, messageSvc, mediaSvc, messageRepo)
 
 	mediaSvc.SetMessageRepo(messageRepo)
 	mediaSvc.SetStatusRepo(statusRepo)
-	engine.SetMediaAutoUpload(mediaSvc.AutoUploadMedia)
-	engine.SetStatusMediaAutoUpload(mediaSvc.AutoUploadStatusMedia)
-	engine.SetMediaRetry(mediaSvc.RetryMediaUpload)
-	engine.SetMessagePersist(historySvc.PersistMessage)
-	engine.SetHistorySyncPersist(historySvc.PersistHistorySync)
-	historySvc.SetMediaRetryRequester(engine)
-	messageSvc.SetMessagePersist(historySvc.PersistMessage)
-	statusSvc.SetMediaDownloader(mediaSvc.AutoUploadStatusMedia)
+	engine.SetOnMediaUpload(mediaSvc.OnMediaReceived)
+	engine.SetOnStatusMedia(mediaSvc.OnStatusMediaReceived)
+	engine.SetOnMediaRetry(mediaSvc.RetryMediaUpload)
+	engine.SetOnMessagePersist(historySvc.PersistMessage)
+	engine.SetOnHistorySync(historySvc.PersistHistorySync)
+	historySvc.SetRetryRequester(engine)
+	messageSvc.SetOnMessagePersist(historySvc.PersistMessage)
+	statusSvc.SetMediaDownloader(mediaSvc.OnStatusMediaReceived)
 	statusSvc.SetContactNameGetter(engine)
 	if s.minio != nil {
 		statusSvc.SetMediaPresigner(mediaSvc)
 	}
-	engine.SetStatusReceived(statusSvc.PersistStatusReceived)
+	engine.SetOnStatusPersist(statusSvc.PersistStatus)
 
 	go func() {
 		sessions, err := sessionRepo.FindAll(context.Background())
@@ -126,7 +126,7 @@ func (s *Server) SetupRoutes() error {
 			statusSvc.RetryMissingMedia(context.Background(), sess.ID)
 		}
 	}()
-	engine.SetShouldIgnoreStatus(func(sessionID string) bool {
+	engine.SetIgnoreStatus(func(sessionID string) bool {
 		sess, err := sessionRepo.FindByID(context.Background(), sessionID)
 		if err != nil || sess == nil {
 			return false
@@ -174,15 +174,15 @@ func (s *Server) SetupRoutes() error {
 
 	// Cloud API simulation (for Chatwoot WhatsApp Cloud inbox) — registered BEFORE auth group to avoid being intercepted
 	// Static routes must come BEFORE dynamic /:version/:phone routes to avoid being captured by the wildcard
-	s.App.Get("/:version/debug_token", cloudWAAPIHandler.DebugToken)
-	s.App.Get("/:version/:phone", cloudWAAPIHandler.PhoneStatus)
-	s.App.Post("/:version/:phone/register", cloudWAAPIHandler.RegisterPhone)
-	s.App.Post("/:version/:phone/subscribed_apps", cloudWAAPIHandler.SubscribeApps)
-	s.App.Get("/:version/:phone/messages", cloudWAAPIHandler.VerifyWebhook)
-	s.App.Post("/:version/:phone/messages", cloudWAAPIHandler.SendMessage)
-	s.App.Get("/:version/:phone/message_templates", cloudWAAPIHandler.MessageTemplates)
-	s.App.Get("/:version/:phone/phone_numbers", cloudWAAPIHandler.PhoneNumbers)
-	s.App.Get("/:version/:phone/:media_id", cloudWAAPIHandler.GetMedia)
+	s.App.Get("/:version/debug_token", cloudAPIHandler.DebugToken)
+	s.App.Get("/:version/:phone", cloudAPIHandler.PhoneStatus)
+	s.App.Post("/:version/:phone/register", cloudAPIHandler.RegisterPhone)
+	s.App.Post("/:version/:phone/subscribed_apps", cloudAPIHandler.SubscribeApps)
+	s.App.Get("/:version/:phone/messages", cloudAPIHandler.VerifyWebhook)
+	s.App.Post("/:version/:phone/messages", cloudAPIHandler.SendMessage)
+	s.App.Get("/:version/:phone/message_templates", cloudAPIHandler.MessageTemplates)
+	s.App.Get("/:version/:phone/phone_numbers", cloudAPIHandler.PhoneNumbers)
+	s.App.Get("/:version/:phone/:media_id", cloudAPIHandler.GetMedia)
 
 	// API Group with Auth (admin token or session token)
 	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))

@@ -7,32 +7,32 @@ import (
 )
 
 type Config struct {
-	SessionID           string    `json:"sessionId"`
-	URL                 string    `json:"url"`
-	AccountID           int       `json:"accountId"`
-	Token               string    `json:"token"`
-	WebhookToken        string    `json:"webhookToken"`
-	InboxID             int       `json:"inboxId"`
-	InboxName           string    `json:"inboxName"`
-	InboxType           string    `json:"inboxType"`
-	SignMsg             bool      `json:"signMsg"`
-	SignDelimiter       string    `json:"signDelimiter"`
-	ReopenConversation  bool      `json:"reopenConversation"`
-	MergeBRContacts     bool      `json:"mergeBrContacts"`
-	IgnoreGroups        bool      `json:"ignoreGroups"`
-	IgnoreJIDs          []string  `json:"ignoreJids"`
-	ConversationPending bool      `json:"conversationPending"`
-	Enabled             bool      `json:"enabled"`
-	ImportOnConnect     bool      `json:"importOnConnect"`
-	ImportPeriod        string    `json:"importPeriod"`
-	TimeoutTextSeconds  int       `json:"timeoutTextSeconds"`
-	TimeoutMediaSeconds int       `json:"timeoutMediaSeconds"`
-	TimeoutLargeSeconds int       `json:"timeoutLargeSeconds"`
-	MessageRead         bool      `json:"messageRead"`
-	DatabaseURI         string    `json:"databaseUri"`
-	RedisURL            string    `json:"redisUrl"`
-	CreatedAt           time.Time `json:"createdAt"`
-	UpdatedAt           time.Time `json:"updatedAt"`
+	SessionID       string    `json:"sessionId"`
+	URL             string    `json:"url"`
+	AccountID       int       `json:"accountId"`
+	Token           string    `json:"token"`
+	WebhookToken    string    `json:"webhookToken"`
+	InboxID         int       `json:"inboxId"`
+	InboxName       string    `json:"inboxName"`
+	InboxType       string    `json:"inboxType"`
+	SignMsg         bool      `json:"signMsg"`
+	SignDelimiter   string    `json:"signDelimiter"`
+	ReopenConv      bool      `json:"reopenConv"`
+	MergeBRContacts bool      `json:"mergeBrContacts"`
+	IgnoreGroups    bool      `json:"ignoreGroups"`
+	IgnoreJIDs      []string  `json:"ignoreJids"`
+	PendingConv     bool      `json:"pendingConv"`
+	Enabled         bool      `json:"enabled"`
+	ImportOnConnect bool      `json:"importOnConnect"`
+	ImportPeriod    string    `json:"importPeriod"`
+	TextTimeout     int       `json:"textTimeout"`
+	MediaTimeout    int       `json:"mediaTimeout"`
+	LargeTimeout    int       `json:"largeTimeout"`
+	MessageRead     bool      `json:"messageRead"`
+	DatabaseURI     string    `json:"databaseUri"`
+	RedisURL        string    `json:"redisUrl"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
 }
 
 func maskURL(rawURL string) string {

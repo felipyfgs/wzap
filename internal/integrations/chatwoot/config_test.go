@@ -8,9 +8,9 @@ func TestChatwootConfigNewFields(t *testing.T) {
 	cfg := &Config{
 		ImportOnConnect:     true,
 		ImportPeriod:        "7d",
-		TimeoutTextSeconds:  10,
-		TimeoutMediaSeconds: 60,
-		TimeoutLargeSeconds: 300,
+		TextTimeout:  10,
+		MediaTimeout: 60,
+		LargeTimeout: 300,
 		RedisURL:            "redis://localhost:6379",
 	}
 
@@ -20,14 +20,14 @@ func TestChatwootConfigNewFields(t *testing.T) {
 	if cfg.ImportPeriod != "7d" {
 		t.Errorf("expected ImportPeriod = 7d, got %s", cfg.ImportPeriod)
 	}
-	if cfg.TimeoutTextSeconds != 10 {
-		t.Errorf("expected TimeoutTextSeconds = 10, got %d", cfg.TimeoutTextSeconds)
+	if cfg.TextTimeout != 10 {
+		t.Errorf("expected TextTimeout = 10, got %d", cfg.TextTimeout)
 	}
-	if cfg.TimeoutMediaSeconds != 60 {
-		t.Errorf("expected TimeoutMediaSeconds = 60, got %d", cfg.TimeoutMediaSeconds)
+	if cfg.MediaTimeout != 60 {
+		t.Errorf("expected MediaTimeout = 60, got %d", cfg.MediaTimeout)
 	}
-	if cfg.TimeoutLargeSeconds != 300 {
-		t.Errorf("expected TimeoutLargeSeconds = 300, got %d", cfg.TimeoutLargeSeconds)
+	if cfg.LargeTimeout != 300 {
+		t.Errorf("expected LargeTimeout = 300, got %d", cfg.LargeTimeout)
 	}
 	if cfg.RedisURL != "redis://localhost:6379" {
 		t.Errorf("expected RedisURL = redis://localhost:6379, got %s", cfg.RedisURL)

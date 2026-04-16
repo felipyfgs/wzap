@@ -19,7 +19,7 @@ import (
 	"wzap/internal/wautil"
 )
 
-type mediaKeyPersister interface {
+type urlPersister interface {
 	UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error
 }
 
@@ -27,12 +27,12 @@ type MediaService struct {
 	minio           *storage.Minio
 	pool            *async.Pool
 	runtimeResolver *RuntimeResolver
-	msgRepo         mediaKeyPersister
-	statusRepo      mediaKeyPersister
+	msgRepo         urlPersister
+	statusRepo      urlPersister
 }
 
-func (s *MediaService) SetMessageRepo(r mediaKeyPersister) { s.msgRepo = r }
-func (s *MediaService) SetStatusRepo(r mediaKeyPersister)  { s.statusRepo = r }
+func (s *MediaService) SetMessageRepo(r urlPersister) { s.msgRepo = r }
+func (s *MediaService) SetStatusRepo(r urlPersister)  { s.statusRepo = r }
 
 func NewMediaService(engine *wa.Manager, minio *storage.Minio, sessRepo *repo.SessionRepository, pool *async.Pool, runtimeResolver *RuntimeResolver) *MediaService {
 	if runtimeResolver == nil {
@@ -49,7 +49,7 @@ func (s *MediaService) GetPresignedURL(ctx context.Context, key string) (string,
 	return url, nil
 }
 
-func (s *MediaService) autoUploadGeneric(ctx context.Context, sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage, persister mediaKeyPersister, logPrefix string) {
+func (s *MediaService) autoUploadGeneric(ctx context.Context, sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage, persister urlPersister, logPrefix string) {
 	if s.minio == nil {
 		return
 	}
@@ -95,62 +95,62 @@ func (s *MediaService) autoUploadGeneric(ctx context.Context, sessionID, message
 	}
 }
 
-func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
+func (s *MediaService) OnMediaReceived(input wa.MediaUploadInput) {
 	_ = s.pool.Submit(func(ctx context.Context) {
-		s.autoUploadGeneric(ctx, sessionID, messageID, chatJID, senderJID, mimeType, fromMe, timestamp, downloadable, s.msgRepo, "Auto-upload")
+		s.autoUploadGeneric(ctx, input.SessionID, input.MessageID, input.ChatJID, input.SenderJID, input.MimeType, input.FromMe, input.Timestamp, input.Downloadable, s.msgRepo, "Auto-upload")
 	})
 }
 
-func (s *MediaService) AutoUploadStatusMedia(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
+func (s *MediaService) OnStatusMediaReceived(input wa.MediaUploadInput) {
 	_ = s.pool.Submit(func(ctx context.Context) {
-		s.autoUploadGeneric(ctx, sessionID, messageID, chatJID, senderJID, mimeType, fromMe, timestamp, downloadable, s.statusRepo, "Status auto-upload")
+		s.autoUploadGeneric(ctx, input.SessionID, input.MessageID, input.ChatJID, input.SenderJID, input.MimeType, input.FromMe, input.Timestamp, input.Downloadable, s.statusRepo, "Status auto-upload")
 	})
 }
 
-func (s *MediaService) RetryMediaUpload(sessionID, messageID, chatJID, senderJID string, fromMe bool, mimeType string, timestamp time.Time, directPath string, encFileHash, fileHash, mediaKey []byte, fileLength int) {
+func (s *MediaService) RetryMediaUpload(input wa.MediaRetryInput) {
 	if s.minio == nil {
 		return
 	}
 
 	_ = s.pool.Submit(func(ctx context.Context) {
-		runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
+		runtime, err := s.runtimeResolver.ResolveMedia(ctx, input.SessionID, model.CapabilityMediaDownload)
 		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Media retry upload: engine not available")
+			logger.Warn().Str("component", "service").Err(err).Str("session", input.SessionID).Str("mid", input.MessageID).Msg("Media retry upload: engine not available")
 			return
 		}
 
 		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
-			data, err := client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, fileLength, wautil.MimeTypeToMediaType(mimeType), "")
+			data, err := client.DownloadMediaWithPath(ctx, input.DirectPath, input.EncFileHash, input.FileHash, input.MediaKey, input.FileLength, wautil.MimeTypeToMediaType(input.MimeType), "")
 			if err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: failed to download media")
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", input.MessageID).Msg("Media retry upload: failed to download media")
 				return struct{}{}, nil
 			}
 
 			key := storage.MediaObjectKey(storage.MediaKeyParams{
 				SessionID: session.ID,
-				ChatJID:   chatJID,
-				SenderJID: senderJID,
-				FromMe:    fromMe,
-				MessageID: messageID,
-				MimeType:  mimeType,
-				Timestamp: timestamp,
+				ChatJID:   input.ChatJID,
+				SenderJID: input.SenderJID,
+				FromMe:    input.FromMe,
+				MessageID: input.MessageID,
+				MimeType:  input.MimeType,
+				Timestamp: input.Timestamp,
 			})
-			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: failed to upload to S3")
+			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), input.MimeType); err != nil {
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", input.MessageID).Msg("Media retry upload: failed to upload to S3")
 				return struct{}{}, nil
 			}
 
 			if s.msgRepo != nil {
-				if err := s.msgRepo.UpdateMediaURL(ctx, session.ID, messageID, key); err != nil {
-					logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: failed to persist media key")
+				if err := s.msgRepo.UpdateMediaURL(ctx, session.ID, input.MessageID, key); err != nil {
+					logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", input.MessageID).Msg("Media retry upload: failed to persist media key")
 				}
 			}
 
-			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: media stored in S3")
+			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", input.MessageID).Msg("Media retry upload: media stored in S3")
 			return struct{}{}, nil
 		})
 		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Media retry upload: runtime error")
+			logger.Warn().Str("component", "service").Err(err).Str("session", input.SessionID).Str("mid", input.MessageID).Msg("Media retry upload: runtime error")
 		}
 	})
 }

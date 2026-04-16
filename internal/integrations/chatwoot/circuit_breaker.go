@@ -69,16 +69,16 @@ func (cb *circuitBreaker) State() cbState {
 	return cb.state
 }
 
-type circuitBreakerManager struct {
+type cbManager struct {
 	mu  sync.RWMutex
 	cbs map[string]*circuitBreaker
 }
 
-func newCircuitBreakerManager() *circuitBreakerManager {
-	return &circuitBreakerManager{cbs: make(map[string]*circuitBreaker)}
+func newCircuitBreakerManager() *cbManager {
+	return &cbManager{cbs: make(map[string]*circuitBreaker)}
 }
 
-func (m *circuitBreakerManager) get(sessionID string) *circuitBreaker {
+func (m *cbManager) get(sessionID string) *circuitBreaker {
 	m.mu.RLock()
 	cb, ok := m.cbs[sessionID]
 	m.mu.RUnlock()
@@ -95,14 +95,14 @@ func (m *circuitBreakerManager) get(sessionID string) *circuitBreaker {
 	return cb
 }
 
-func (m *circuitBreakerManager) Allow(sessionID string) bool {
+func (m *cbManager) Allow(sessionID string) bool {
 	return m.get(sessionID).Allow()
 }
 
-func (m *circuitBreakerManager) RecordSuccess(sessionID string) {
+func (m *cbManager) RecordSuccess(sessionID string) {
 	m.get(sessionID).RecordSuccess()
 }
 
-func (m *circuitBreakerManager) RecordFailure(sessionID string) {
+func (m *cbManager) RecordFailure(sessionID string) {
 	m.get(sessionID).RecordFailure()
 }

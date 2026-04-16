@@ -22,11 +22,11 @@ func TestSendAttachmentToWhatsApp_ContentLengthTooLarge(t *testing.T) {
 	}
 	cfg := &Config{
 		SessionID:           "sess",
-		TimeoutMediaSeconds: 2,
-		TimeoutLargeSeconds: 2,
+		MediaTimeout: 2,
+		LargeTimeout: 2,
 	}
 
-	_, err := svc.sendAttachmentToWhatsApp(context.Background(), cfg, "5511999999999@s.whatsapp.net", server.URL+"/file.bin", "", "file", nil)
+	_, err := svc.sendAttachment(context.Background(), cfg, "5511999999999@s.whatsapp.net", server.URL+"/file.bin", "", "file", nil)
 	if err == nil {
 		t.Fatal("expected attachment too large error")
 	}

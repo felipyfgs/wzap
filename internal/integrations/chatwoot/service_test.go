@@ -130,7 +130,7 @@ func newTestServiceWithErr(createMsgErr error) *Service {
 	}
 	return &Service{
 		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},
-		msgRepo:    &mockMsgRepoWithDuplicates{existingSourceIDs: map[string]bool{}},
+		msgRepo:    &mockDupMsgRepo{existingSourceIDs: map[string]bool{}},
 		clientFn:   func(_ *Config) Client { return client },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},

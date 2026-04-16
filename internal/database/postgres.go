@@ -81,7 +81,7 @@ func (db *DB) Migrate(ctx context.Context) error {
 	sort.Strings(pending)
 
 	for _, name := range pending {
-		if err := db.applyMigrationWithLock(ctx, name); err != nil {
+		if err := db.applyMigration(ctx, name); err != nil {
 			return fmt.Errorf("failed to apply migration %s: %w", name, err)
 		}
 		logger.Info().Str("component", "db").Str("file", name).Msg("Migration applied")
@@ -120,7 +120,7 @@ func (db *DB) getAppliedMigrations(ctx context.Context) (map[string]bool, error)
 	return applied, rows.Err()
 }
 
-func (db *DB) applyMigrationWithLock(ctx context.Context, fileName string) error {
+func (db *DB) applyMigration(ctx context.Context, fileName string) error {
 	tx, err := db.Pool.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -183,7 +183,7 @@ func (db *DB) BootstrapBaseline(ctx context.Context) error {
 		if !contains(existingTables, tm.table) {
 			continue
 		}
-		if err := db.recordMigrationIfNotExists(ctx, tm.migration); err != nil {
+		if err := db.recordMigration(ctx, tm.migration); err != nil {
 			return fmt.Errorf("failed to record baseline migration %s: %w", tm.migration, err)
 		}
 		logger.Info().Str("component", "db").Str("file", tm.migration).Msg("Baseline migration recorded")
@@ -230,7 +230,7 @@ func (db *DB) getExistingTables(ctx context.Context) ([]string, error) {
 	return tables, rows.Err()
 }
 
-func (db *DB) recordMigrationIfNotExists(ctx context.Context, fileName string) error {
+func (db *DB) recordMigration(ctx context.Context, fileName string) error {
 	var exists bool
 	if err := db.Pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM wz_migrations WHERE file_name = $1)", fileName).Scan(&exists); err != nil {
 		return err

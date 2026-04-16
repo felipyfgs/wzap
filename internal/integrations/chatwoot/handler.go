@@ -51,7 +51,7 @@ func validateReq(c *fiber.Ctx, req any) error {
 	return nil
 }
 
-func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
+func configToResp(cfg *Config, webhookURL string) dto.CWConfigResp {
 	ignoreGroups := false
 	for _, jid := range cfg.IgnoreJIDs {
 		if jid == "@g.us" {
@@ -60,7 +60,7 @@ func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 		}
 	}
 
-	return dto.ChatwootConfigResp{
+	return dto.CWConfigResp{
 		SessionID:           cfg.SessionID,
 		URL:                 cfg.URL,
 		AccountID:           cfg.AccountID,
@@ -69,18 +69,18 @@ func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 		InboxType:           cfg.InboxType,
 		SignMsg:             cfg.SignMsg,
 		SignDelimiter:       cfg.SignDelimiter,
-		ReopenConversation:  cfg.ReopenConversation,
+		ReopenConv:  cfg.ReopenConv,
 		MergeBRContacts:     cfg.MergeBRContacts,
 		IgnoreGroups:        ignoreGroups,
 		IgnoreJIDs:          cfg.IgnoreJIDs,
-		ConversationPending: cfg.ConversationPending,
+		PendingConv: cfg.PendingConv,
 		Enabled:             cfg.Enabled,
 		WebhookURL:          webhookURL,
 		ImportOnConnect:     cfg.ImportOnConnect,
 		ImportPeriod:        cfg.ImportPeriod,
-		TimeoutTextSeconds:  cfg.TimeoutTextSeconds,
-		TimeoutMediaSeconds: cfg.TimeoutMediaSeconds,
-		TimeoutLargeSeconds: cfg.TimeoutLargeSeconds,
+		TextTimeout:  cfg.TextTimeout,
+		MediaTimeout: cfg.MediaTimeout,
+		LargeTimeout: cfg.LargeTimeout,
 		MessageRead:         cfg.MessageRead,
 		DatabaseURI:         maskURL(cfg.DatabaseURI),
 		RedisURL:            maskURL(cfg.RedisURL),
@@ -94,7 +94,7 @@ func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 // @Accept json
 // @Produce json
 // @Param sessionId path string true "Session ID or name"
-// @Param body body dto.ChatwootConfigReq true "Chatwoot configuration"
+// @Param body body dto.CWConfigReq true "Chatwoot configuration"
 // @Success 200 {object} dto.APIResponse
 // @Security Authorization
 // @Failure 400 {object} dto.APIError
@@ -104,22 +104,22 @@ func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 func (h *Handler) Configure(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)
 
-	var req dto.ChatwootConfigReq
+	var req dto.CWConfigReq
 	if err := validateReq(c, &req); err != nil {
 		return nil
 	}
 
 	timeoutText := 10
-	if req.TimeoutTextSeconds != nil {
-		timeoutText = *req.TimeoutTextSeconds
+	if req.TextTimeout != nil {
+		timeoutText = *req.TextTimeout
 	}
 	timeoutMedia := 60
-	if req.TimeoutMediaSeconds != nil {
-		timeoutMedia = *req.TimeoutMediaSeconds
+	if req.MediaTimeout != nil {
+		timeoutMedia = *req.MediaTimeout
 	}
 	timeoutLarge := 300
-	if req.TimeoutLargeSeconds != nil {
-		timeoutLarge = *req.TimeoutLargeSeconds
+	if req.LargeTimeout != nil {
+		timeoutLarge = *req.LargeTimeout
 	}
 	importPeriod := "7d"
 	if req.ImportPeriod != "" {
@@ -137,14 +137,14 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 		InboxType:           "api",
 		SignMsg:             req.SignMsg != nil && *req.SignMsg,
 		SignDelimiter:       req.SignDelimiter,
-		ReopenConversation:  req.ReopenConversation == nil || *req.ReopenConversation,
+		ReopenConv:  req.ReopenConv == nil || *req.ReopenConv,
 		MergeBRContacts:     req.MergeBRContacts == nil || *req.MergeBRContacts,
-		ConversationPending: req.ConversationPending != nil && *req.ConversationPending,
+		PendingConv: req.PendingConv != nil && *req.PendingConv,
 		ImportOnConnect:     req.ImportOnConnect != nil && *req.ImportOnConnect,
 		ImportPeriod:        importPeriod,
-		TimeoutTextSeconds:  timeoutText,
-		TimeoutMediaSeconds: timeoutMedia,
-		TimeoutLargeSeconds: timeoutLarge,
+		TextTimeout:  timeoutText,
+		MediaTimeout: timeoutMedia,
+		LargeTimeout: timeoutLarge,
 		MessageRead:         req.MessageRead != nil && *req.MessageRead,
 		DatabaseURI:         req.DatabaseURI,
 		RedisURL:            req.RedisURL,
@@ -257,7 +257,7 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 		}
 	}
 
-	var body dto.ChatwootWebhookPayload
+	var body dto.CWWebhookPayload
 	rawBody := c.Body()
 	if err := json.Unmarshal(rawBody, &body); err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("contentType", c.Get("Content-Type")).Msg("failed to parse webhook payload")
@@ -297,7 +297,7 @@ func (h *Handler) IncomingWebhook(c *fiber.Ctx) error {
 // @Accept json
 // @Produce json
 // @Param sessionId path string true "Session ID"
-// @Param body body dto.ImportHistoryReq true "Import configuration"
+// @Param body body dto.CWImportReq true "Import configuration"
 // @Success 202 {object} dto.APIResponse
 // @Failure 400 {object} dto.APIError
 // @Security Authorization
@@ -312,14 +312,14 @@ func (h *Handler) ImportHistory(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "Chatwoot integration not configured for this session"))
 	}
 
-	var req dto.ImportHistoryReq
+	var req dto.CWImportReq
 	if err := validateReq(c, &req); err != nil {
 		return nil
 	}
 
 	go h.service.ImportHistoryAsync(context.Background(), sessionID, req.Period, req.CustomDays)
 
-	return c.Status(fiber.StatusAccepted).JSON(dto.SuccessResp(dto.ImportHistoryResp{
+	return c.Status(fiber.StatusAccepted).JSON(dto.SuccessResp(dto.CWImportResp{
 		SessionID: sessionID,
 		Period:    req.Period,
 		Status:    "importing",

@@ -21,19 +21,19 @@ import (
 // return HTTP 401 — this prevents Chatwoot from setting the
 // reauthorization_required flag and marking the channel as inactive.
 
-type CloudWAAPIPresigner interface {
+type CloudPresigner interface {
 	GetPresignedURL(ctx context.Context, key string) (string, error)
 }
 
-type CloudWAAPIHandler struct {
+type CloudAPIHandler struct {
 	chatwootRepo   chatwoot.Repo
 	messageSvc     *service.MessageService
-	mediaPresigner CloudWAAPIPresigner
+	mediaPresigner CloudPresigner
 	msgRepo        repo.MessageRepo
 }
 
-func NewCloudWAAPIHandler(chatwootRepo chatwoot.Repo, messageSvc *service.MessageService, mediaPresigner CloudWAAPIPresigner, msgRepo repo.MessageRepo) *CloudWAAPIHandler {
-	return &CloudWAAPIHandler{
+func NewCloudAPIHandler(chatwootRepo chatwoot.Repo, messageSvc *service.MessageService, mediaPresigner CloudPresigner, msgRepo repo.MessageRepo) *CloudAPIHandler {
+	return &CloudAPIHandler{
 		chatwootRepo:   chatwootRepo,
 		messageSvc:     messageSvc,
 		mediaPresigner: mediaPresigner,
@@ -44,7 +44,7 @@ func NewCloudWAAPIHandler(chatwootRepo chatwoot.Repo, messageSvc *service.Messag
 // DebugToken returns a fake valid token response to make Chatwoot believe the
 // WhatsApp Cloud API channel is authenticated.
 // GET /{version}/debug_token
-func (h *CloudWAAPIHandler) DebugToken(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) DebugToken(c *fiber.Ctx) error {
 	_ = c.Query("access_token") // consumed but ignored
 	return c.JSON(fiber.Map{
 		"data": fiber.Map{
@@ -62,7 +62,7 @@ func (h *CloudWAAPIHandler) DebugToken(c *fiber.Ctx) error {
 
 // PhoneNumbers lists the phone numbers associated with the session.
 // GET /{version}/{phone}/phone_numbers
-func (h *CloudWAAPIHandler) PhoneNumbers(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) PhoneNumbers(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
@@ -84,7 +84,7 @@ func (h *CloudWAAPIHandler) PhoneNumbers(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CloudWAAPIHandler) MessageTemplates(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) MessageTemplates(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 	accessToken := c.Query("access_token")
 
@@ -122,7 +122,7 @@ func (h *CloudWAAPIHandler) MessageTemplates(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CloudWAAPIHandler) VerifyWebhook(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) VerifyWebhook(c *fiber.Ctx) error {
 	mode := c.Query("hub.mode")
 	token := c.Query("hub.verify_token")
 	challenge := c.Query("hub.challenge")
@@ -145,7 +145,7 @@ func (h *CloudWAAPIHandler) VerifyWebhook(c *fiber.Ctx) error {
 	return c.SendString(challenge)
 }
 
-func (h *CloudWAAPIHandler) PhoneStatus(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) PhoneStatus(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
@@ -175,7 +175,7 @@ func (h *CloudWAAPIHandler) PhoneStatus(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CloudWAAPIHandler) RegisterPhone(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) RegisterPhone(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
@@ -190,7 +190,7 @@ func (h *CloudWAAPIHandler) RegisterPhone(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CloudWAAPIHandler) SubscribeApps(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) SubscribeApps(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
@@ -205,7 +205,7 @@ func (h *CloudWAAPIHandler) SubscribeApps(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CloudWAAPIHandler) SendMessage(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) SendMessage(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
@@ -254,7 +254,7 @@ func (h *CloudWAAPIHandler) SendMessage(c *fiber.Ctx) error {
 	}
 }
 
-func (h *CloudWAAPIHandler) GetMedia(c *fiber.Ctx) error {
+func (h *CloudAPIHandler) GetMedia(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 	mediaID := c.Params("media_id")
 
@@ -286,7 +286,7 @@ func (h *CloudWAAPIHandler) GetMedia(c *fiber.Ctx) error {
 	})
 }
 
-func (h *CloudWAAPIHandler) handleTextSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
+func (h *CloudAPIHandler) handleTextSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
 	if req.Text == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'text' field", "OAuthException", 131000))
 	}
@@ -310,7 +310,7 @@ func (h *CloudWAAPIHandler) handleTextSend(c *fiber.Ctx, cfg *chatwoot.Config, r
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
-func (h *CloudWAAPIHandler) handleMediaSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to, mediaType string) error {
+func (h *CloudAPIHandler) handleMediaSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to, mediaType string) error {
 	var media *dto.CloudAPIMedia
 	switch mediaType {
 	case "image":
@@ -357,7 +357,7 @@ func (h *CloudWAAPIHandler) handleMediaSend(c *fiber.Ctx, cfg *chatwoot.Config, 
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
-func (h *CloudWAAPIHandler) handleDocumentSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
+func (h *CloudAPIHandler) handleDocumentSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
 	if req.Document == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'document' field", "OAuthException", 131000))
 	}
@@ -385,7 +385,7 @@ func (h *CloudWAAPIHandler) handleDocumentSend(c *fiber.Ctx, cfg *chatwoot.Confi
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
-func (h *CloudWAAPIHandler) handleLocationSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
+func (h *CloudAPIHandler) handleLocationSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
 	if req.Location == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'location' field", "OAuthException", 131000))
 	}
@@ -409,7 +409,7 @@ func (h *CloudWAAPIHandler) handleLocationSend(c *fiber.Ctx, cfg *chatwoot.Confi
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
-func (h *CloudWAAPIHandler) handleContactSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
+func (h *CloudAPIHandler) handleContactSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
 	if len(req.Contacts) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'contacts' field", "OAuthException", 131000))
 	}
@@ -436,7 +436,7 @@ func (h *CloudWAAPIHandler) handleContactSend(c *fiber.Ctx, cfg *chatwoot.Config
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), ""))
 }
 
-func (h *CloudWAAPIHandler) handleReactionSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
+func (h *CloudAPIHandler) handleReactionSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
 	if req.Reaction == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'reaction' field", "OAuthException", 131000))
 	}
@@ -458,7 +458,7 @@ func (h *CloudWAAPIHandler) handleReactionSend(c *fiber.Ctx, cfg *chatwoot.Confi
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
-func (h *CloudWAAPIHandler) handleTemplateSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
+func (h *CloudAPIHandler) handleTemplateSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
 	if req.Template == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'template' field", "OAuthException", 131000))
 	}
@@ -494,7 +494,7 @@ func (h *CloudWAAPIHandler) handleTemplateSend(c *fiber.Ctx, cfg *chatwoot.Confi
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
-func (h *CloudWAAPIHandler) handleMarkRead(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq) error {
+func (h *CloudAPIHandler) handleMarkRead(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq) error {
 	sessionID := resolveSessionIDFromConfig(cfg)
 
 	phone := ""
@@ -521,7 +521,7 @@ func (h *CloudWAAPIHandler) handleMarkRead(c *fiber.Ctx, cfg *chatwoot.Config, r
 	return c.JSON(fiber.Map{"success": true})
 }
 
-func (h *CloudWAAPIHandler) warnTokenMismatch(c *fiber.Ctx, expectedToken string) {
+func (h *CloudAPIHandler) warnTokenMismatch(c *fiber.Ctx, expectedToken string) {
 	authHeader := c.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 	if token == authHeader {
@@ -533,7 +533,7 @@ func (h *CloudWAAPIHandler) warnTokenMismatch(c *fiber.Ctx, expectedToken string
 	}
 }
 
-func (h *CloudWAAPIHandler) resolveConfigByPhone(ctx context.Context, phone string) (*chatwoot.Config, error) {
+func (h *CloudAPIHandler) resolveConfigByPhone(ctx context.Context, phone string) (*chatwoot.Config, error) {
 	normalized := normalizePhone(phone)
 	cfg, err := h.chatwootRepo.FindByPhoneAndInboxType(ctx, normalized, "cloud")
 	if err != nil {
@@ -600,13 +600,13 @@ func cloudAPIError(message, errType string, code int) dto.CloudAPIErrorResp {
 func cloudAPISuccess(to, msgID string) dto.CloudAPIMessageResp {
 	resp := dto.CloudAPIMessageResp{
 		MessagingProduct: "whatsapp",
-		Contacts: []dto.CloudAPIRespContact{
+		Contacts: []dto.CloudAPIContactRef{
 			{Input: to, WaID: to},
 		},
-		Messages: []dto.CloudAPIRespMessage{},
+		Messages: []dto.CloudAPIMsgRef{},
 	}
 	if msgID != "" {
-		resp.Messages = append(resp.Messages, dto.CloudAPIRespMessage{ID: msgID})
+		resp.Messages = append(resp.Messages, dto.CloudAPIMsgRef{ID: msgID})
 	}
 	return resp
 }

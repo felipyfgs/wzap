@@ -150,7 +150,7 @@ func (s *NewsletterService) React(ctx context.Context, sessionID string, req dto
 	return client.NewsletterSendReaction(ctx, jid, types.MessageServerID(req.ServerID), req.Reaction, types.MessageID(req.MessageID))
 }
 
-func (s *NewsletterService) MarkViewed(ctx context.Context, sessionID string, req dto.NewsletterMarkViewedReq) error {
+func (s *NewsletterService) MarkViewed(ctx context.Context, sessionID string, req dto.NewsletterViewReq) error {
 	client, err := s.engine.GetClient(sessionID)
 	if err != nil {
 		return err

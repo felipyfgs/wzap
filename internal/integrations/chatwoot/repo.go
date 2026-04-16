@@ -50,10 +50,10 @@ func (r *Repository) Upsert(ctx context.Context, cfg *Config) error {
 			redis_url = EXCLUDED.redis_url, updated_at = NOW()`,
 		cfg.SessionID, cfg.URL, cfg.AccountID, cfg.Token, cfg.WebhookToken,
 		cfg.InboxID, cfg.InboxName, cfg.InboxType, cfg.Enabled,
-		cfg.SignMsg, cfg.SignDelimiter, cfg.ReopenConversation, cfg.ConversationPending,
+		cfg.SignMsg, cfg.SignDelimiter, cfg.ReopenConv, cfg.PendingConv,
 		cfg.MergeBRContacts, cfg.IgnoreGroups, cfg.IgnoreJIDs,
 		cfg.ImportOnConnect, cfg.ImportPeriod,
-		cfg.TimeoutTextSeconds, cfg.TimeoutMediaSeconds, cfg.TimeoutLargeSeconds,
+		cfg.TextTimeout, cfg.MediaTimeout, cfg.LargeTimeout,
 		cfg.MessageRead, cfg.DatabaseURI, cfg.RedisURL)
 	if err != nil {
 		return fmt.Errorf("failed to upsert chatwoot config: %w", err)
@@ -76,10 +76,10 @@ func (r *Repository) FindBySessionID(ctx context.Context, sessionID string) (*Co
 		sessionID).Scan(
 		&cfg.SessionID, &cfg.URL, &cfg.AccountID, &cfg.Token, &cfg.WebhookToken,
 		&cfg.InboxID, &cfg.InboxName, &cfg.InboxType,
-		&cfg.SignMsg, &cfg.SignDelimiter, &cfg.ReopenConversation, &cfg.ConversationPending,
+		&cfg.SignMsg, &cfg.SignDelimiter, &cfg.ReopenConv, &cfg.PendingConv,
 		&cfg.MergeBRContacts, &cfg.IgnoreGroups, &cfg.IgnoreJIDs,
 		&cfg.ImportOnConnect, &cfg.ImportPeriod,
-		&cfg.TimeoutTextSeconds, &cfg.TimeoutMediaSeconds, &cfg.TimeoutLargeSeconds,
+		&cfg.TextTimeout, &cfg.MediaTimeout, &cfg.LargeTimeout,
 		&cfg.MessageRead, &cfg.DatabaseURI,
 		&cfg.RedisURL, &cfg.Enabled, &cfg.CreatedAt, &cfg.UpdatedAt)
 	if err != nil {
@@ -106,10 +106,10 @@ func (r *Repository) FindByPhoneAndInboxType(ctx context.Context, phone, inboxTy
 		inboxType, phone).Scan(
 		&cfg.SessionID, &cfg.URL, &cfg.AccountID, &cfg.Token, &cfg.WebhookToken,
 		&cfg.InboxID, &cfg.InboxName, &cfg.InboxType,
-		&cfg.SignMsg, &cfg.SignDelimiter, &cfg.ReopenConversation, &cfg.ConversationPending,
+		&cfg.SignMsg, &cfg.SignDelimiter, &cfg.ReopenConv, &cfg.PendingConv,
 		&cfg.MergeBRContacts, &cfg.IgnoreGroups, &cfg.IgnoreJIDs,
 		&cfg.ImportOnConnect, &cfg.ImportPeriod,
-		&cfg.TimeoutTextSeconds, &cfg.TimeoutMediaSeconds, &cfg.TimeoutLargeSeconds,
+		&cfg.TextTimeout, &cfg.MediaTimeout, &cfg.LargeTimeout,
 		&cfg.MessageRead, &cfg.DatabaseURI,
 		&cfg.RedisURL, &cfg.Enabled, &cfg.CreatedAt, &cfg.UpdatedAt)
 	if err != nil {

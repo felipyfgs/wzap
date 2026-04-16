@@ -35,10 +35,10 @@ func (r *messageRepoStub) Save(_ context.Context, msg *model.Message) error {
 
 type chatRepoStub struct {
 	mu    sync.Mutex
-	chats []*model.ChatUpsert
+	chats []*model.ChatUpdate
 }
 
-func (r *chatRepoStub) Upsert(_ context.Context, chat *model.ChatUpsert) error {
+func (r *chatRepoStub) Upsert(_ context.Context, chat *model.ChatUpdate) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	clone := *chat
@@ -88,8 +88,8 @@ func TestHistoryServicePersistHistorySyncHandlesMultipleConversationsAndChunkMet
 	if firstChat.Source != "history_sync" {
 		t.Fatalf("expected chat source history_sync, got %q", firstChat.Source)
 	}
-	if firstChat.HistoryChunkOrder == nil || *firstChat.HistoryChunkOrder != 2 {
-		t.Fatalf("expected first chunk order 2, got %v", firstChat.HistoryChunkOrder)
+	if firstChat.ChunkOrder == nil || *firstChat.ChunkOrder != 2 {
+		t.Fatalf("expected first chunk order 2, got %v", firstChat.ChunkOrder)
 	}
 	if firstChat.ChatJID != "5511999999999@s.whatsapp.net" {
 		t.Fatalf("expected PN chat jid to be canonicalized, got %q", firstChat.ChatJID)
@@ -102,19 +102,19 @@ func TestHistoryServicePersistHistorySyncHandlesMultipleConversationsAndChunkMet
 	}
 
 	groupMessage := messageRepo.messages[1]
-	if groupMessage.HistoryChunkOrder == nil || *groupMessage.HistoryChunkOrder != 2 {
-		t.Fatalf("expected group message chunk order 2, got %v", groupMessage.HistoryChunkOrder)
+	if groupMessage.ChunkOrder == nil || *groupMessage.ChunkOrder != 2 {
+		t.Fatalf("expected group message chunk order 2, got %v", groupMessage.ChunkOrder)
 	}
-	if groupMessage.SourceSyncType != "INITIAL_BOOTSTRAP" {
-		t.Fatalf("expected sync type INITIAL_BOOTSTRAP, got %q", groupMessage.SourceSyncType)
+	if groupMessage.SyncType != "INITIAL_BOOTSTRAP" {
+		t.Fatalf("expected sync type INITIAL_BOOTSTRAP, got %q", groupMessage.SyncType)
 	}
 	if groupMessage.ChatJID != "120363040000000000@g.us" {
 		t.Fatalf("expected group chat jid, got %q", groupMessage.ChatJID)
 	}
 
 	olderMessage := messageRepo.messages[2]
-	if olderMessage.HistoryChunkOrder == nil || *olderMessage.HistoryChunkOrder != 1 {
-		t.Fatalf("expected older chunk order 1, got %v", olderMessage.HistoryChunkOrder)
+	if olderMessage.ChunkOrder == nil || *olderMessage.ChunkOrder != 1 {
+		t.Fatalf("expected older chunk order 1, got %v", olderMessage.ChunkOrder)
 	}
 	if olderMessage.ChatJID != "5511888888888@s.whatsapp.net" {
 		t.Fatalf("expected older message PN chat jid, got %q", olderMessage.ChatJID)
@@ -348,7 +348,7 @@ func TestHistoryServiceMediaRetryRateLimit(t *testing.T) {
 	historySvc := service.NewHistoryService(messageRepo, chatRepo, pool)
 	historySvc.SetMediaDownloader(&expiredDownloaderStub{})
 	historySvc.SetMediaStorage(&noopStorageStub{})
-	historySvc.SetMediaRetryRequester(retryRecorder)
+	historySvc.SetRetryRequester(retryRecorder)
 
 	const retryCount = 3
 	msgs := make([]*waHistorySync.HistorySyncMsg, retryCount)

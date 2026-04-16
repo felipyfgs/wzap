@@ -68,7 +68,7 @@ func TestImportHistory_TriggerOnConnect(t *testing.T) {
 			ImportOnConnect: true,
 			ImportPeriod:    "7d",
 		}},
-		msgRepo:    &mockMsgRepoWithDuplicates{existingSourceIDs: map[string]bool{}},
+		msgRepo:    &mockDupMsgRepo{existingSourceIDs: map[string]bool{}},
 		clientFn:   func(cfg *Config) Client { return client },
 		cache:      newMemoryCache(context.Background()),
 		httpClient: &http.Client{Timeout: 30 * time.Second},
@@ -99,7 +99,7 @@ func (m *importTestMsgRepo) FindUnimportedHistory(_ context.Context, _ string, _
 	return []model.Message{}, nil
 }
 
-func (m *importTestMsgRepo) MarkImportedToChatwoot(_ context.Context, _, msgID string) error {
+func (m *importTestMsgRepo) MarkImported(_ context.Context, _, msgID string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.markedMsgs = append(m.markedMsgs, msgID)
@@ -179,13 +179,13 @@ func TestImportHistory_MediaMessages(t *testing.T) {
 	}
 }
 
-type singleflightTestMsgRepo struct {
+type sfTestMsgRepo struct {
 	mockMsgRepo
 	mu        sync.Mutex
 	findCalls int
 }
 
-func (m *singleflightTestMsgRepo) FindUnimportedHistory(_ context.Context, _ string, _ time.Time, _, _ int) ([]model.Message, error) {
+func (m *sfTestMsgRepo) FindUnimportedHistory(_ context.Context, _ string, _ time.Time, _, _ int) ([]model.Message, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.findCalls++
@@ -199,7 +199,7 @@ func TestImportHistory_SingleflightPreventsConcurrent(t *testing.T) {
 		conversations: []Conversation{{ID: 1, InboxID: 1, Status: "open"}},
 	}
 
-	mr := &singleflightTestMsgRepo{}
+	mr := &sfTestMsgRepo{}
 
 	svc := &Service{
 		repo:       &mockRepo{cfg: &Config{SessionID: "sess", Enabled: true, InboxID: 1}},

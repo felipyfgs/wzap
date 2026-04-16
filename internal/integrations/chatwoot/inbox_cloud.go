@@ -76,7 +76,7 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 	mediaInfo := extractMediaInfo(msg)
 	if mediaInfo != nil {
 		mediaType := cloudMediaType(mediaInfo.MediaType)
-		link, err := h.svc.downloadAndUploadCloudMedia(ctx, cfg, data, mediaInfo, msgID)
+		link, err := h.svc.downloadAndUploadCloudMedia(ctx, cfg, mediaInfo, msgID)
 		if err != nil {
 			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("mid", msgID).Msg("cloud inbound: failed to upload media, sending caption only")
 			caption := extractText(msg)
@@ -177,7 +177,7 @@ type cloudWebhookMetadata struct {
 	PhoneNumberID      string `json:"phone_number_id"`
 }
 
-func buildCloudWebhookEnvelope(sessionPhone, senderPhone, msgID, timestamp string, pushName string, msg map[string]any, contact map[string]any) *cloudWebhookEnvelope {
+func buildCloudWebhookEnvelope(sessionPhone string, _, _, _, _ string, msg map[string]any, contact map[string]any) *cloudWebhookEnvelope {
 	if msg == nil {
 		return nil
 	}
@@ -403,7 +403,7 @@ func (s *Service) postToChatwootCloud(ctx context.Context, cfg *Config, sessionP
 	return nil
 }
 
-func (s *Service) downloadAndUploadCloudMedia(ctx context.Context, cfg *Config, data *waMessagePayload, info *mediaInfo, msgID string) (string, error) {
+func (s *Service) downloadAndUploadCloudMedia(ctx context.Context, cfg *Config, info *mediaInfo, msgID string) (string, error) {
 	if s.mediaDownloader == nil {
 		return "", fmt.Errorf("media downloader not configured")
 	}
@@ -445,7 +445,7 @@ func (s *Service) downloadAndUploadCloudMedia(ctx context.Context, cfg *Config, 
 	return url, nil
 }
 
-func (s *Service) uploadCloudMedia(ctx context.Context, cfg *Config, data []byte, sessionID, msgID, filename, mimeType string) (string, error) {
+func (s *Service) uploadCloudMedia(ctx context.Context, _ *Config, data []byte, sessionID, msgID, _, mimeType string) (string, error) {
 	if s.mediaPresigner == nil {
 		return "", fmt.Errorf("MinIO not configured, cannot upload media for cloud mode")
 	}

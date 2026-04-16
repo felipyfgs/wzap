@@ -1,11 +1,14 @@
 # AGENTS.md — wzap
 
+## Idioma
+
+- Sempre se comunique em Português do Brasil
+- Sempre responda em Português do Brasil
+
 ## Project overview
 
 **wzap** is a WhatsApp multi-session gateway with a Go REST API backend and a Nuxt 4 SPA dashboard.
 It manages multiple WhatsApp sessions via [whatsmeow](https://github.com/tulir/whatsmeow), exposing messaging, contacts, groups, newsletters, labels, media, and webhook/WebSocket event delivery through a unified HTTP API.
-
-> **Sub-project docs**: the frontend has its own `web/AGENTS.md` with Nuxt-specific conventions.
 
 ## Tech stack
 
@@ -13,7 +16,7 @@ It manages multiple WhatsApp sessions via [whatsmeow](https://github.com/tulir/w
 | ------------- | -------------------------------------------------------------- |
 | Language      | **Go 1.25** (module `wzap`)                                    |
 | HTTP          | Fiber v2 (`gofiber/fiber`)                                     |
-| WhatsApp      | whatsmeow (`go.mau.fi/whatsmeow`) + Cloud API provider        |
+| WhatsApp      | whatsmeow (`go.mau.fi/whatsmeow`) + Cloud API emulator handler |
 | Database      | PostgreSQL 16 via pgx v5 (`jackc/pgx`)                         |
 | Migrations    | Embedded SQL files (`migrations/`) applied at startup           |
 | Object store  | MinIO (`minio/minio-go`)                                       |
@@ -22,7 +25,7 @@ It manages multiple WhatsApp sessions via [whatsmeow](https://github.com/tulir/w
 | Logging       | zerolog (`rs/zerolog`)                                         |
 | Validation    | go-playground/validator v10                                    |
 | Docs          | Swagger via swaggo (`/swagger/*`)                              |
-| Frontend      | Nuxt 4 SPA — see `web/AGENTS.md`                              |
+| Frontend      | Nuxt 4 SPA (`pnpm`, `ssr: false`)                              |
 
 ## Build, lint & test commands
 
@@ -54,22 +57,25 @@ internal/
   database/               # pgxpool + embedded migration runner
   dto/                    # Request/response DTOs with validation tags
   handler/                # Fiber HTTP handlers (one file per domain)
-  integrations/chatwoot/  # Chatwoot two-way integration
+  imgutil/                # Image conversion utilities (WebP→PNG/GIF)
+  integrations/chatwoot/  # Chatwoot two-way integration (see below)
   logger/                 # zerolog singleton
-  middleware/              # Auth, rate-limit, recovery, logger, session resolver
+  metrics/                # Prometheus metrics definitions
+  middleware/              # Auth, rate-limit, recovery, logger, session, validate
   model/                  # Domain models (Session, Message, Webhook, Event envelopes)
-  provider/               # WhatsApp Cloud API provider
   repo/                   # PostgreSQL repositories
   server/                 # Fiber app setup (server.go) + route registration (router.go)
   service/                # Business logic (one file per domain)
   storage/                # MinIO client wrapper
   testutil/               # Shared test helpers
   wa/                     # whatsmeow Manager — session lifecycle, events, QR, connect
+  wautil/                 # WhatsApp protocol utilities (message extraction, etc.)
   webhook/                # Webhook dispatcher (HTTP + NATS + WebSocket broadcast)
   websocket/              # WebSocket hub for real-time events
 migrations/               # Numbered SQL migrations (embedded via //go:embed)
 docs/                     # Generated Swagger JSON/YAML
-web/                      # Nuxt 4 frontend (see web/AGENTS.md)
+docker/                   # Docker Compose files (base, dev, prod) + chatwoot stack
+web/                      # Nuxt 4 SPA frontend
 ```
 
 ## Code style & conventions
@@ -78,15 +84,20 @@ web/                      # Nuxt 4 frontend (see web/AGENTS.md)
 
 - **Layered**: handler → service → repo. Handlers parse HTTP, services hold business logic, repos talk to the DB.
 - **Dependency injection**: `server.New(cfg, db, nats, minio)` → `SetupRoutes()` wires repos → services → handlers. No DI framework, no global state besides the logger.
-- **Router structure**: public routes (health, metrics, swagger, WS) have no auth. All `/sessions` routes require auth, with session-scoped routes nested under `/sessions/:sessionId`.
+- **Router structure**: public routes (health, metrics, swagger, WS, Cloud API) have no auth. All `/sessions` routes require auth, with session-scoped routes nested under `/sessions/:sessionId`.
 
 ### Imports
 
-Grouped with blank-line separators: (1) standard library, (2) external packages, (3) internal `wzap/internal/...` packages. Use aliases for disambiguation: `cloudWA "wzap/internal/provider/whatsapp"`, `mw "wzap/internal/middleware"`.
+Grouped with blank-line separators: (1) standard library, (2) external packages, (3) internal `wzap/internal/...` packages. Use aliases for disambiguation.
 
 ### Naming
 
 Go standard — `MixedCaps`, short receiver names (1-2 chars), no `Get` prefix on getters. DTOs use `Req`/`Resp` suffixes (`SendTextReq`, `SessionResp`). Comments may be in Portuguese or English — preserve the original language when editing.
+
+### Handler vs Service function naming
+
+- **`Handle*`** (exported) = Fiber HTTP handlers (e.g., `HandleIncomingWebhook`)
+- **`process*`** (unexported) = Service-layer business logic (e.g., `processMessage`, `processGroupInfo`, `processReaction`)
 
 ### Error handling
 
@@ -160,10 +171,43 @@ logger.Info().Str("component", "server").Str("addr", addr).Msg("Starting API ser
 - **Session tokens**: each session has its own API key. `middleware.Auth` checks admin first, then session token lookup.
 - **Roles**: `admin` (full access) or `session` (scoped to one session via `RequiredSession` middleware).
 - **WebSocket auth**: token via query param or `Authorization` header (configurable via `WS_AUTH_MODE`).
+- **Cloud API paths** (`/v\d+\.\d+/...`) are skipped by auth middleware — these routes are public by design (registered before the auth group in router.go).
+
+## Cloud API emulator
+
+`internal/handler/cloud_wa_api.go` emulates the Facebook WhatsApp Cloud API for Chatwoot's Cloud inbox mode. Routes are registered **before** the auth group:
+
+- `GET /:version/debug_token` — fake token validation
+- `GET /:version/:phone` — phone status
+- `POST /:version/:phone/register` — register phone
+- `POST /:version/:phone/subscribed_apps` — subscribe
+- `GET /:version/:phone/messages` — webhook verification
+- `POST /:version/:phone/messages` — send messages (text, media, contacts, reaction, template)
+- `GET /:version/:phone/message_templates` — list templates
+- `GET /:version/:phone/phone_numbers` — list phone numbers
+- `GET /:version/:phone/:media_id` — get media
+
+Never returns HTTP 401 to prevent Chatwoot from setting `reauthorization_required`. `warnTokenMismatch` logs mismatches but proceeds.
+
+## Chatwoot integration
+
+`internal/integrations/chatwoot/` — two-way Chatwoot sync with two inbox modes.
+
+### File naming convention
+
+| Prefix | Origin | Purpose |
+|--------|--------|---------|
+| `wa_*` | WhatsApp inbound | Event processors (`wa_events.go`), message type processors (`wa_messages.go`), utilities (`wa_helpers.go`) |
+| `cw_*` | Chatwoot-specific | Webhook handler (`cw_webhook.go`), conversation mgmt (`cw_conversation.go`), bot commands (`cw_bot.go`), labels (`cw_labels.go`) |
+| `inbox_*` | Inbox mode | Interface + router (`inbox.go`), API mode (`inbox_api.go`), Cloud mode (`inbox_cloud.go`) |
+
+### InboxHandler interface
+
+`InboxHandler` in `inbox.go` — `HandleMessage(ctx, cfg, payload)` + `UnlockWindow(ctx, cfg, chatJID)`. The `processMessage` router on Service delegates to `apiInboxHandler` (REST API) or `cloudInboxHandler` (Cloud webhook) based on `cfg.InboxType`.
 
 ## Swagger docs
 
-Every exported handler has godoc/Swagger annotations. Regenerate with `make docs`. The swag command scans `cmd/wzap,internal/handler,internal/dto,internal/model,internal/service,internal/repo` with `--parseInternal --useStructName`.
+Every exported handler has godoc/Swagger annotations. Regenerate with `make docs`. The swag command scans `cmd/wzap,internal` with `--parseInternal --useStructName`.
 
 ## Testing
 
@@ -171,6 +215,14 @@ Every exported handler has godoc/Swagger annotations. Regenerate with `make docs
 - Tests needing a DB use `DATABASE_URL` env var pointing to a test Postgres instance.
 - Test helpers are in `internal/testutil/`.
 - DTO validation tests create `validator.New()` directly.
+
+## Docker
+
+- `docker-compose.yml` — base infrastructure (Postgres, Redis, MinIO, NATS)
+- `docker-compose.dev.yml` — dev mode with hot reload (air + nuxt dev)
+- `docker-compose.prod.yml` — production build
+- `docker/chatwoot/docker-compose.yml` — Chatwoot stack
+- Makefile targets: `make docker-dev`, `make docker-prod`, `make docker-build`, `make chatwoot-up`
 
 ## Security
 

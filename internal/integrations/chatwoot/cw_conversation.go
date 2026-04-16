@@ -169,9 +169,13 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 		}
 	}
 
+	sourceID := chatJID
+	if !isGroup {
+		sourceID = extractPhone(chatJID)
+	}
 	req := CreateConversationReq{
 		InboxID:   cfg.InboxID,
-		SourceID:  chatJID,
+		SourceID:  sourceID,
 		ContactID: contactID,
 	}
 	if cfg.ConversationPending {

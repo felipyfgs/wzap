@@ -7,7 +7,7 @@ import (
 	"wzap/internal/logger"
 )
 
-func (s *Service) handleBotCommand(ctx context.Context, cfg *Config, content string) error {
+func (s *Service) processBotCommand(ctx context.Context, cfg *Config, content string) error {
 	command := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(content), "/"))
 	command = strings.ToLower(command)
 

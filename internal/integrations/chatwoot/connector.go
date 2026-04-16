@@ -21,7 +21,7 @@ func (g *repoSessionPhoneGetter) GetSessionPhone(ctx context.Context, sessionID 
 	if err != nil || sess == nil || sess.JID == "" {
 		return ""
 	}
-	return strings.Split(sess.JID, "@")[0]
+	return strings.Split(strings.Split(sess.JID, "@")[0], ":")[0]
 }
 
 type managerConnector struct {

@@ -31,7 +31,7 @@ func TestHandleMessage_FileTooBig(t *testing.T) {
 			"mimetype":   "image/jpeg",
 		},
 	}
-	svc.handleMediaMessage(context.Background(), cfg, 1, "msg1", false, msg, "", 0)
+	svc.processMediaMessage(context.Background(), cfg, 1, "msg1", false, msg, "", 0)
 
 	if len(client.messages) == 0 {
 		t.Error("expected warning message created for oversized file")
@@ -96,7 +96,7 @@ func TestHandlePollCreation(t *testing.T) {
 			map[string]any{"optionName": "Verde"},
 		},
 	}
-	svc.handlePollCreation(context.Background(), cfg, 1, "poll-msg", false, poll)
+	svc.processPollCreation(context.Background(), cfg, 1, "poll-msg", false, poll)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected poll message to be created")
@@ -124,7 +124,7 @@ func TestHandleReaction_Add(t *testing.T) {
 		"key":  map[string]any{"ID": "target-msg"},
 		"text": "👍",
 	}
-	svc.handleReaction(context.Background(), cfg, convID, "react-msg", false, reactMsg)
+	svc.processReaction(context.Background(), cfg, convID, "react-msg", false, reactMsg)
 
 	if len(client.messages) == 0 {
 		t.Error("expected reaction message to be created")
@@ -149,7 +149,7 @@ func TestHandleReaction_Remove(t *testing.T) {
 		"key":  map[string]any{"ID": "target-msg"},
 		"text": "",
 	}
-	svc.handleReaction(context.Background(), cfg, convID, "react-msg", false, reactMsg)
+	svc.processReaction(context.Background(), cfg, convID, "react-msg", false, reactMsg)
 	// Should call DeleteMessage (no panic)
 }
 
@@ -281,7 +281,7 @@ func TestHandleGroupInfo_ParticipantAdd(t *testing.T) {
 	}
 	payload := buildPayload(t, "sess", model.EventGroupInfo, data)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
-	_ = svc.handleGroupInfo(context.Background(), cfg, payload)
+	_ = svc.processGroupInfo(context.Background(), cfg, payload)
 
 	if len(client.messages) == 0 {
 		t.Error("expected group notification message")
@@ -306,7 +306,7 @@ func TestHandleGroupInfo_SubjectChange(t *testing.T) {
 	}
 	payload := buildPayload(t, "sess", model.EventGroupInfo, data)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
-	_ = svc.handleGroupInfo(context.Background(), cfg, payload)
+	_ = svc.processGroupInfo(context.Background(), cfg, payload)
 
 	if len(client.messages) == 0 {
 		t.Error("expected subject change notification")
@@ -330,7 +330,7 @@ func TestHandleButtonResponse(t *testing.T) {
 		"selectedDisplayText": "Confirmar",
 		"selectedButtonId":    "btn_1",
 	}
-	svc.handleButtonResponse(context.Background(), cfg, 1, "btn-msg", false, map[string]any{}, btnResp)
+	svc.processButtonResponse(context.Background(), cfg, 1, "btn-msg", false, map[string]any{}, btnResp)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected button response message")
@@ -354,7 +354,7 @@ func TestHandleListResponse(t *testing.T) {
 			"description": "Descrição da opção A",
 		},
 	}
-	svc.handleListResponse(context.Background(), cfg, 1, "list-msg", false, map[string]any{}, listResp)
+	svc.processListResponse(context.Background(), cfg, 1, "list-msg", false, map[string]any{}, listResp)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected list response message")
@@ -373,7 +373,7 @@ func TestHandleTemplateButtonReply(t *testing.T) {
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	tmpl := map[string]any{"selectedDisplayText": "Sim, quero"}
-	svc.handleTemplateReply(context.Background(), cfg, 1, "tmpl-msg", false, map[string]any{}, tmpl)
+	svc.processTemplateReply(context.Background(), cfg, 1, "tmpl-msg", false, map[string]any{}, tmpl)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected template reply message")
@@ -397,7 +397,7 @@ func TestHandleButtonResponse_WithStanzaID(t *testing.T) {
 		"contextInfo": map[string]any{"stanzaId": "stanza-abc"},
 	}
 	btnResp := map[string]any{"selectedDisplayText": "OK"}
-	svc.handleButtonResponse(context.Background(), cfg, 1, "btn2", false, msg, btnResp)
+	svc.processButtonResponse(context.Background(), cfg, 1, "btn2", false, msg, btnResp)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected button response message")
@@ -449,7 +449,7 @@ func TestHandleViewOnce_V2_DownloadSuccess(t *testing.T) {
 			},
 		},
 	}
-	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true, "", 0)
+	svc.processViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true, "", 0)
 
 	if len(client.attachments) == 0 {
 		t.Error("expected attachment to be uploaded for viewOnce v2 with successful download")
@@ -478,7 +478,7 @@ func TestHandleViewOnce_V2_DownloadFail_FallsBackToText(t *testing.T) {
 			},
 		},
 	}
-	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true, "", 0)
+	svc.processViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, true, "", 0)
 
 	if len(client.attachments) > 0 {
 		t.Error("expected no attachment when download fails")
@@ -509,7 +509,7 @@ func TestHandleViewOnce_V1_AlwaysText(t *testing.T) {
 			},
 		},
 	}
-	svc.handleViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, false, "", 0)
+	svc.processViewOnce(context.Background(), cfg, 1, "vo-msg", false, vonce, false, "", 0)
 
 	if len(client.attachments) > 0 {
 		t.Error("expected no attachment for viewOnce v1")

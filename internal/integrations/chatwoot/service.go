@@ -171,41 +171,41 @@ func (s *Service) processInboundEvent(ctx context.Context, sessionID string, eve
 
 	switch event {
 	case model.EventMessage:
-		if err := s.handleMessage(ctx, cfg, payload); err != nil {
+		if err := s.processMessage(ctx, cfg, payload); err != nil {
 			if isRetryableError(err) {
 				return err
 			}
-			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("permanent error in handleMessage, dropping")
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("permanent error in processMessage, dropping")
 		}
 	case model.EventGroupInfo:
-		if err := s.handleGroupInfo(ctx, cfg, payload); err != nil {
+		if err := s.processGroupInfo(ctx, cfg, payload); err != nil {
 			if isRetryableError(err) {
 				return err
 			}
-			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("permanent error in handleGroupInfo, dropping")
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("permanent error in processGroupInfo, dropping")
 		}
 	case model.EventReceipt:
-		s.handleReceipt(ctx, cfg, payload)
+		s.processReceipt(ctx, cfg, payload)
 	case model.EventDeleteForMe:
-		s.handleDelete(ctx, cfg, payload)
+		s.processDelete(ctx, cfg, payload)
 	case model.EventMessageRevoke:
-		s.handleRevoke(ctx, cfg, payload)
+		s.processRevoke(ctx, cfg, payload)
 	case model.EventMessageEdit:
-		s.handleEdit(ctx, cfg, payload)
+		s.processEdit(ctx, cfg, payload)
 	case model.EventConnected:
-		s.handleConnected(ctx, cfg, payload)
+		s.processConnected(ctx, cfg, payload)
 	case model.EventDisconnected:
-		s.handleDisconnected(ctx, cfg, payload)
+		s.processDisconnected(ctx, cfg, payload)
 	case model.EventQR:
-		s.handleQR(ctx, cfg, payload)
+		s.processQR(ctx, cfg, payload)
 	case model.EventContact:
-		s.handleContact(ctx, cfg, payload)
+		s.processContact(ctx, cfg, payload)
 	case model.EventPushName:
-		s.handlePushName(ctx, cfg, payload)
+		s.processPushName(ctx, cfg, payload)
 	case model.EventPicture:
-		s.handlePicture(ctx, cfg, payload)
+		s.processPicture(ctx, cfg, payload)
 	case model.EventHistorySync:
-		s.handleHistorySync(ctx, cfg, payload)
+		s.processHistorySync(ctx, cfg, payload)
 	}
 	return nil
 }

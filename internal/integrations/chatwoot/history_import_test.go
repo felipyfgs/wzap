@@ -76,7 +76,7 @@ func TestImportHistory_TriggerOnConnect(t *testing.T) {
 	}
 
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1, ImportOnConnect: true, ImportPeriod: "7d"}
-	svc.handleConnected(context.Background(), cfg, nil)
+	svc.processConnected(context.Background(), cfg, nil)
 
 	time.Sleep(50 * time.Millisecond)
 }

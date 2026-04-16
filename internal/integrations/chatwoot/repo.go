@@ -102,7 +102,7 @@ func (r *Repository) FindByPhoneAndInboxType(ctx context.Context, phone, inboxTy
 		 FROM wz_chatwoot c
 		 JOIN wz_sessions s ON c.session_id = s.id
 		 WHERE c.inbox_type = $1
-		 AND (split_part(s.jid, '@', 1) = $2 OR s.phone_number_id = $2)`,
+		 AND (split_part(split_part(s.jid, '@', 1), ':', 1) = $2 OR s.phone_number_id = $2)`,
 		inboxType, phone).Scan(
 		&cfg.SessionID, &cfg.URL, &cfg.AccountID, &cfg.Token, &cfg.WebhookToken,
 		&cfg.InboxID, &cfg.InboxName, &cfg.InboxType,

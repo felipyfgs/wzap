@@ -46,20 +46,20 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 
 	if eventType == "message_updated" && msg != nil {
 		if deleted, _ := msg.ContentAttributes["deleted"].(bool); deleted {
-			return s.handleMessageUpdated(ctx, cfg, body)
+			return s.processMessageUpdated(ctx, cfg, body)
 		}
-		return s.handleMessageEdited(ctx, cfg, body)
+		return s.processMessageEdited(ctx, cfg, body)
 	}
 
 	if eventType == "conversation_status_changed" && body.Conversation != nil {
-		return s.handleStatusChanged(ctx, cfg, body)
+		return s.processStatusChanged(ctx, cfg, body)
 	}
 
 	if msg != nil && msg.IsOutgoing() {
 		if s.isOutboundDuplicate(ctx, sessionID, msg) {
 			return nil
 		}
-		return s.handleOutgoingMessage(ctx, cfg, body)
+		return s.processOutgoingMessage(ctx, cfg, body)
 	}
 
 	return nil
@@ -85,7 +85,7 @@ func (s *Service) isOutboundDuplicate(ctx context.Context, sessionID string, msg
 	return false
 }
 
-func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processOutgoingMessage(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	msg := body.GetMessage()
 	if msg == nil || body.Conversation == nil {
 		return nil
@@ -110,7 +110,7 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *Config, body d
 	}
 
 	if strings.HasPrefix(chatJID, "bot@") {
-		return s.handleBotCommand(ctx, cfg, msg.Content)
+		return s.processBotCommand(ctx, cfg, msg.Content)
 	}
 
 	if !isValidWhatsAppJID(chatJID) {
@@ -208,7 +208,7 @@ func (s *Service) handleOutgoingMessage(ctx context.Context, cfg *Config, body d
 	return nil
 }
 
-func (s *Service) handleMessageEdited(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processMessageEdited(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	msg := body.GetMessage()
 	if msg == nil || msg.Content == "" {
 		return nil
@@ -216,7 +216,7 @@ func (s *Service) handleMessageEdited(ctx context.Context, cfg *Config, body dto
 
 	storedMsgs, err := s.msgRepo.FindAllByCWMessageID(ctx, cfg.SessionID, msg.ID)
 	if err != nil || len(storedMsgs) == 0 {
-		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", msg.ID).Msg("handleMessageEdited: message not found in store")
+		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", msg.ID).Msg("processMessageEdited: message not found in store")
 		return nil
 	}
 
@@ -226,7 +226,7 @@ func (s *Service) handleMessageEdited(ctx context.Context, cfg *Config, body dto
 			MessageID: storedMsg.ID,
 			Body:      msg.Content,
 		}); err != nil {
-			logger.Warn().Str("component", "chatwoot").Err(err).Str("msgID", storedMsg.ID).Msg("handleMessageEdited: failed to edit WA message")
+			logger.Warn().Str("component", "chatwoot").Err(err).Str("msgID", storedMsg.ID).Msg("processMessageEdited: failed to edit WA message")
 		}
 	}
 	return nil
@@ -296,7 +296,7 @@ func extractVCardName(vcard string) string {
 	return ""
 }
 
-func (s *Service) handleMessageUpdated(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processMessageUpdated(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	webhookMsg := body.GetMessage()
 	if webhookMsg == nil {
 		return nil
@@ -305,7 +305,7 @@ func (s *Service) handleMessageUpdated(ctx context.Context, cfg *Config, body dt
 	cwMsgID := webhookMsg.ID
 	storedMsgs, err := s.msgRepo.FindAllByCWMessageID(ctx, cfg.SessionID, cwMsgID)
 	if err != nil || len(storedMsgs) == 0 {
-		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", cwMsgID).Msg("handleMessageUpdated: message not found in store")
+		logger.Warn().Str("component", "chatwoot").Err(err).Int("cwMsgID", cwMsgID).Msg("processMessageUpdated: message not found in store")
 		return nil
 	}
 
@@ -326,7 +326,7 @@ func (s *Service) handleMessageUpdated(ctx context.Context, cfg *Config, body dt
 	return nil
 }
 
-func (s *Service) handleStatusChanged(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
+func (s *Service) processStatusChanged(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {
 	if body.Conversation == nil {
 		return nil
 	}

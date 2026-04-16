@@ -9,7 +9,7 @@ import (
 	"wzap/internal/model"
 )
 
-func (s *Service) handleReceipt(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processReceipt(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseReceiptPayload(payload)
 	if err != nil {
 		return
@@ -40,7 +40,7 @@ func (s *Service) handleReceipt(ctx context.Context, cfg *Config, payload []byte
 	}
 }
 
-func (s *Service) handleDelete(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processDelete(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseDeletePayload(payload)
 	if err != nil {
 		return
@@ -66,7 +66,7 @@ func (s *Service) handleDelete(ctx context.Context, cfg *Config, payload []byte)
 	}
 }
 
-func (s *Service) handleRevoke(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processRevoke(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseMessagePayload(payload)
 	if err != nil {
 		return
@@ -106,7 +106,7 @@ func (s *Service) handleRevoke(ctx context.Context, cfg *Config, payload []byte)
 	}
 }
 
-func (s *Service) handleEdit(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processEdit(ctx context.Context, cfg *Config, payload []byte) {
 	data, err := parseMessagePayload(payload)
 	if err != nil {
 		return
@@ -215,7 +215,7 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 	return msg, nil
 }
 
-func (s *Service) handleConnected(ctx context.Context, cfg *Config, _ []byte) {
+func (s *Service) processConnected(ctx context.Context, cfg *Config, _ []byte) {
 	now := time.Now()
 	if v, ok := s.lastBotNotify.Load(cfg.SessionID); ok {
 		if lastTime, valid := v.(time.Time); valid && now.Sub(lastTime) < 30*time.Second {
@@ -246,7 +246,7 @@ func (s *Service) handleConnected(ctx context.Context, cfg *Config, _ []byte) {
 	}
 }
 
-func (s *Service) handleDisconnected(ctx context.Context, cfg *Config, _ []byte) {
+func (s *Service) processDisconnected(ctx context.Context, cfg *Config, _ []byte) {
 	convID, ok := s.findOpenBotConversation(ctx, cfg)
 	if !ok {
 		return
@@ -259,7 +259,7 @@ func (s *Service) handleDisconnected(ctx context.Context, cfg *Config, _ []byte)
 	})
 }
 
-func (s *Service) handleQR(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processQR(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		Codes       []string `json:"Codes"`
 		PairingCode string   `json:"PairingCode"`
@@ -297,7 +297,7 @@ func (s *Service) handleQR(ctx context.Context, cfg *Config, payload []byte) {
 	_, _ = client.CreateMessageWithAttachment(ctx, convID, caption, "qrcode.png", qrPNG, "image/png", "incoming", "", 0, nil)
 }
 
-func (s *Service) handleContact(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processContact(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		JID    string `json:"JID"`
 		Action struct {
@@ -342,7 +342,7 @@ func (s *Service) handleContact(ctx context.Context, cfg *Config, payload []byte
 	_ = client.UpdateContact(ctx, contacts[0].ID, UpdateContactReq{Name: name})
 }
 
-func (s *Service) handlePushName(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processPushName(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		JID         string `json:"JID"`
 		JIDAlt      string `json:"JIDAlt"`
@@ -376,7 +376,7 @@ func (s *Service) handlePushName(ctx context.Context, cfg *Config, payload []byt
 	_ = client.UpdateContact(ctx, contacts[0].ID, UpdateContactReq{Name: data.NewPushName})
 }
 
-func (s *Service) handlePicture(ctx context.Context, cfg *Config, payload []byte) {
+func (s *Service) processPicture(ctx context.Context, cfg *Config, payload []byte) {
 	var data struct {
 		JID       string `json:"JID"`
 		PictureID string `json:"PictureID"`
@@ -416,7 +416,7 @@ func (s *Service) handlePicture(ctx context.Context, cfg *Config, payload []byte
 	})
 }
 
-func (s *Service) handleGroupInfo(ctx context.Context, cfg *Config, payload []byte) error {
+func (s *Service) processGroupInfo(ctx context.Context, cfg *Config, payload []byte) error {
 	var data struct {
 		JID      string  `json:"JID"`
 		Sender   *string `json:"Sender"`
@@ -524,6 +524,6 @@ func (s *Service) handleGroupInfo(ctx context.Context, cfg *Config, payload []by
 	return nil
 }
 
-func (s *Service) handleHistorySync(_ context.Context, cfg *Config, _ []byte) {
+func (s *Service) processHistorySync(_ context.Context, cfg *Config, _ []byte) {
 	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Msg("HistorySync received (no-op until import triggered)")
 }

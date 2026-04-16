@@ -372,6 +372,15 @@ func TestConfigure_ResponseUsesSuccessEnvelope(t *testing.T) {
 	}
 }
 
+func jidsContainGroup(ignoreJIDs []string) bool {
+	for _, jid := range ignoreJIDs {
+		if jid == "@g.us" {
+			return true
+		}
+	}
+	return false
+}
+
 func TestJIDsContainGroup(t *testing.T) {
 	if jidsContainGroup([]string{"5511@s.whatsapp.net"}) {
 		t.Error("should not contain group marker")

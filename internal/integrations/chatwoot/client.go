@@ -23,12 +23,10 @@ type Client interface {
 	ListContactConversations(ctx context.Context, contactID int) ([]Conversation, error)
 	CreateConversation(ctx context.Context, req CreateConversationReq) (*Conversation, error)
 	UpdateConversationStatus(ctx context.Context, convID int, status string) error
-	GetConversation(ctx context.Context, convID int) (*Conversation, error)
 	MergeContacts(ctx context.Context, baseID, mergeeID int) error
 	CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error)
 	CreateMessageWithAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error)
 	DeleteMessage(ctx context.Context, convID, msgID int) error
-	UpdateMessage(ctx context.Context, convID, msgID int, content string) error
 	UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error
 	ListInboxes(ctx context.Context) ([]Inbox, error)
 	CreateInbox(ctx context.Context, name, webhookURL string) (*Inbox, error)
@@ -254,15 +252,6 @@ func (c *HTTPClient) UpdateConversationStatus(ctx context.Context, convID int, s
 	return c.do(ctx, http.MethodPost, path, data, nil, "")
 }
 
-func (c *HTTPClient) GetConversation(ctx context.Context, convID int) (*Conversation, error) {
-	var result Conversation
-	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d", c.accountID, convID)
-	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
-
 func (c *HTTPClient) MergeContacts(ctx context.Context, baseID, mergeeID int) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/actions/contact_merge", c.accountID)
 	body := map[string]int{
@@ -385,16 +374,6 @@ func (c *HTTPClient) CreateMessageWithAttachment(ctx context.Context, convID int
 func (c *HTTPClient) DeleteMessage(ctx context.Context, convID, msgID int) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages/%d", c.accountID, convID, msgID)
 	return c.do(ctx, http.MethodDelete, path, nil, nil, "")
-}
-
-func (c *HTTPClient) UpdateMessage(ctx context.Context, convID, msgID int, content string) error {
-	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages/%d", c.accountID, convID, msgID)
-	body := map[string]string{"content": content}
-	data, err := json.Marshal(body)
-	if err != nil {
-		return err
-	}
-	return c.do(ctx, http.MethodPatch, path, data, nil, "")
 }
 
 type Inbox struct {

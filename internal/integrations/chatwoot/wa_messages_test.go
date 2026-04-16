@@ -326,11 +326,13 @@ func TestHandleButtonResponse(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	btnResp := map[string]any{
-		"selectedDisplayText": "Confirmar",
-		"selectedButtonId":    "btn_1",
+	msg := map[string]any{
+		"buttonsResponseMessage": map[string]any{
+			"selectedDisplayText": "Confirmar",
+			"selectedButtonId":    "btn_1",
+		},
 	}
-	svc.processButtonResponse(context.Background(), cfg, 1, "btn-msg", false, map[string]any{}, btnResp)
+	svc.processButtonResponse(context.Background(), cfg, 1, "btn-msg", false, msg, nil)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected button response message")
@@ -348,13 +350,15 @@ func TestHandleListResponse(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	listResp := map[string]any{
-		"singleSelectReply": map[string]any{
-			"title":       "Opção A",
-			"description": "Descrição da opção A",
+	msg := map[string]any{
+		"listResponseMessage": map[string]any{
+			"singleSelectReply": map[string]any{
+				"title":       "Opção A",
+				"description": "Descrição da opção A",
+			},
 		},
 	}
-	svc.processListResponse(context.Background(), cfg, 1, "list-msg", false, map[string]any{}, listResp)
+	svc.processListResponse(context.Background(), cfg, 1, "list-msg", false, msg, nil)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected list response message")
@@ -372,8 +376,10 @@ func TestHandleTemplateButtonReply(t *testing.T) {
 	svc := newTestService(client)
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
-	tmpl := map[string]any{"selectedDisplayText": "Sim, quero"}
-	svc.processTemplateReply(context.Background(), cfg, 1, "tmpl-msg", false, map[string]any{}, tmpl)
+	msg := map[string]any{
+		"templateButtonReplyMessage": map[string]any{"selectedDisplayText": "Sim, quero"},
+	}
+	svc.processTemplateReply(context.Background(), cfg, 1, "tmpl-msg", false, msg, nil)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected template reply message")
@@ -394,10 +400,10 @@ func TestHandleButtonResponse_WithStanzaID(t *testing.T) {
 	cfg := &Config{SessionID: "sess", Enabled: true, InboxID: 1}
 
 	msg := map[string]any{
-		"contextInfo": map[string]any{"stanzaId": "stanza-abc"},
+		"contextInfo":            map[string]any{"stanzaId": "stanza-abc"},
+		"buttonsResponseMessage": map[string]any{"selectedDisplayText": "OK"},
 	}
-	btnResp := map[string]any{"selectedDisplayText": "OK"}
-	svc.processButtonResponse(context.Background(), cfg, 1, "btn2", false, msg, btnResp)
+	svc.processButtonResponse(context.Background(), cfg, 1, "btn2", false, msg, nil)
 
 	if len(client.messages) == 0 {
 		t.Fatal("expected button response message")

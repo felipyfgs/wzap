@@ -19,8 +19,8 @@ type SendMediaReq struct {
 	MimeType      string        `json:"mimeType" validate:"required"`
 	Caption       string        `json:"caption"`
 	FileName      string        `json:"fileName"`
-	Base64        string        `json:"base64"`
-	URL           string        `json:"url,omitempty"`
+	Base64        string        `json:"base64" validate:"required_without=URL"`
+	URL           string        `json:"url,omitempty" validate:"required_without=Base64"`
 	CustomID      string        `json:"customId,omitempty"`
 	ReplyTo       *ReplyContext `json:"replyTo,omitempty"`
 	MentionedJIDs []string      `json:"mentionedJids,omitempty"`
@@ -122,7 +122,7 @@ type MarkReadReq struct {
 
 type SetPresenceReq struct {
 	Phone string `json:"phone" validate:"required"`
-	State string `json:"state" validate:"required"`
+	State string `json:"state" validate:"required,oneof=typing recording paused"`
 }
 
 type ForwardMessageReq struct {

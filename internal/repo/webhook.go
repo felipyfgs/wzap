@@ -101,5 +101,8 @@ func (r *WebhookRepository) Delete(ctx context.Context, sessionID, webhookID str
 	_, err := r.db.Exec(ctx,
 		`DELETE FROM wz_webhooks WHERE id = $1 AND session_id = $2`,
 		webhookID, sessionID)
-	return err
+	if err != nil {
+		return fmt.Errorf("failed to delete webhook: %w", err)
+	}
+	return nil
 }

@@ -3,7 +3,6 @@ package config
 import (
 	"os"
 	"strconv"
-	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -29,8 +28,6 @@ type Config struct {
 	WALogLevel       string
 	GlobalWebhookURL string
 	ServerURL        string
-
-	HTTPTimeout time.Duration
 
 	WSAuthMode string
 }
@@ -60,8 +57,6 @@ func Load() *Config {
 		GlobalWebhookURL: getEnv("GLOBAL_WEBHOOK_URL", ""),
 		ServerURL:        getEnv("SERVER_URL", "http://localhost:8080"),
 
-		HTTPTimeout: getEnvAsDuration("HTTP_TIMEOUT", 30*time.Second),
-
 		WSAuthMode: getEnv("WS_AUTH_MODE", "token"),
 	}
 }
@@ -77,15 +72,6 @@ func getEnvAsBool(key string, fallback bool) bool {
 	if value := os.Getenv(key); value != "" {
 		if boolValue, err := strconv.ParseBool(value); err == nil {
 			return boolValue
-		}
-	}
-	return fallback
-}
-
-func getEnvAsDuration(key string, fallback time.Duration) time.Duration {
-	if value := os.Getenv(key); value != "" {
-		if d, err := time.ParseDuration(value); err == nil {
-			return d
 		}
 	}
 	return fallback

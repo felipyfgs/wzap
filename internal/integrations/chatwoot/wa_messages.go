@@ -236,12 +236,11 @@ func (s *Service) processReaction(ctx context.Context, cfg *Config, convID int, 
 	}
 }
 
-func (s *Service) processButtonResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, btnResp map[string]any) {
-	text := getStringField(btnResp, "selectedDisplayText")
-	if text == "" {
-		text = getStringField(btnResp, "selectedButtonId")
+func (s *Service) processInteractiveReply(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, extractFn func(map[string]any) string, prefix string) {
+	content := extractFn(msg)
+	if content == "" {
+		return
 	}
-	content := fmt.Sprintf("[Botão] %s", text)
 
 	p := newCWMsgParams(fromMe, msgID, "", 0)
 	msgReq := MessageReq{Content: content, MessageType: p.MessageType, SourceID: p.SourceID}
@@ -258,7 +257,7 @@ func (s *Service) processButtonResponse(ctx context.Context, cfg *Config, convID
 	client := s.clientFn(cfg)
 	cwMsg, err := client.CreateMessage(ctx, convID, msgReq)
 	if err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create button response message")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("prefix", prefix).Msg("failed to create interactive reply message")
 		return
 	}
 	if msgID != "" {
@@ -266,7 +265,26 @@ func (s *Service) processButtonResponse(ctx context.Context, cfg *Config, convID
 	}
 }
 
-func (s *Service) processListResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, listResp map[string]any) {
+func extractButtonText(msg map[string]any) string {
+	btnResp := getMapField(msg, "buttonsResponseMessage")
+	if btnResp == nil {
+		return ""
+	}
+	text := getStringField(btnResp, "selectedDisplayText")
+	if text == "" {
+		text = getStringField(btnResp, "selectedButtonId")
+	}
+	if text == "" {
+		return ""
+	}
+	return fmt.Sprintf("[Botão] %s", text)
+}
+
+func extractListText(msg map[string]any) string {
+	listResp := getMapField(msg, "listResponseMessage")
+	if listResp == nil {
+		return ""
+	}
 	selection := getMapField(listResp, "singleSelectReply")
 	title := ""
 	description := ""
@@ -277,60 +295,41 @@ func (s *Service) processListResponse(ctx context.Context, cfg *Config, convID i
 	if title == "" {
 		title = getStringField(listResp, "title")
 	}
-
+	if title == "" {
+		return ""
+	}
 	content := fmt.Sprintf("[Lista] %s", title)
 	if description != "" {
 		content += ": " + description
 	}
-
-	p := newCWMsgParams(fromMe, msgID, "", 0)
-	msgReq := MessageReq{Content: content, MessageType: p.MessageType, SourceID: p.SourceID}
-	if stanzaID := extractStanzaID(msg); stanzaID != "" {
-		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
-			msgReq.SourceReplyID = *origMsg.CWMessageID
-			msgReq.ContentAttributes = map[string]any{
-				"in_reply_to":     *origMsg.CWMessageID,
-				"reply_source_id": "WAID:" + stanzaID,
-			}
-		}
-	}
-
-	client := s.clientFn(cfg)
-	cwMsg, err := client.CreateMessage(ctx, convID, msgReq)
-	if err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create list response message")
-		return
-	}
-	if msgID != "" {
-		_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
-	}
+	return content
 }
 
-func (s *Service) processTemplateReply(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, tmpl map[string]any) {
+func extractTemplateText(msg map[string]any) string {
+	tmpl := getMapField(msg, "templateButtonReplyMessage")
+	if tmpl == nil {
+		return ""
+	}
 	text := getStringField(tmpl, "selectedDisplayText")
-	content := fmt.Sprintf("[Template] %s", text)
+	if text == "" {
+		text = getStringField(tmpl, "hydratedContentText")
+	}
+	if text == "" {
+		return ""
+	}
+	return fmt.Sprintf("[Template] %s", text)
+}
 
-	p := newCWMsgParams(fromMe, msgID, "", 0)
-	msgReq := MessageReq{Content: content, MessageType: p.MessageType, SourceID: p.SourceID}
-	if stanzaID := extractStanzaID(msg); stanzaID != "" {
-		if origMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, stanzaID); err == nil && origMsg.CWMessageID != nil {
-			msgReq.SourceReplyID = *origMsg.CWMessageID
-			msgReq.ContentAttributes = map[string]any{
-				"in_reply_to":     *origMsg.CWMessageID,
-				"reply_source_id": "WAID:" + stanzaID,
-			}
-		}
-	}
+func (s *Service) processButtonResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, _ map[string]any) {
+	s.processInteractiveReply(ctx, cfg, convID, msgID, fromMe, msg, extractButtonText, "button")
+}
 
-	client := s.clientFn(cfg)
-	cwMsg, err := client.CreateMessage(ctx, convID, msgReq)
-	if err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Msg("failed to create template reply message")
-		return
-	}
-	if msgID != "" {
-		_ = s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, msgID, cwMsg.ID, convID, cwMsg.SourceID)
-	}
+func (s *Service) processListResponse(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, _ map[string]any) {
+	s.processInteractiveReply(ctx, cfg, convID, msgID, fromMe, msg, extractListText, "list")
+}
+
+func (s *Service) processTemplateReply(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, msg map[string]any, _ map[string]any) {
+	s.processInteractiveReply(ctx, cfg, convID, msgID, fromMe, msg, extractTemplateText, "template")
 }
 
 func (s *Service) processViewOnce(ctx context.Context, cfg *Config, convID int, msgID string, fromMe bool, vonce map[string]any, tryDownload bool, stanzaID string, cwReplyID int) {

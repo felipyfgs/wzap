@@ -8,51 +8,6 @@ import (
 	"testing"
 )
 
-func TestClient_GetConversation(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			t.Errorf("expected GET, got %s", r.Method)
-		}
-		expected := "/api/v1/accounts/1/conversations/42"
-		if r.URL.Path != expected {
-			t.Errorf("expected path %s, got %s", expected, r.URL.Path)
-		}
-		if r.Header.Get("api_access_token") != "test-token" {
-			t.Errorf("expected api_access_token=test-token, got %s", r.Header.Get("api_access_token"))
-		}
-		w.Header().Set("Content-Type", "application/json")
-		resp := Conversation{ID: 42, InboxID: 1, Status: "open"}
-		_ = json.NewEncoder(w).Encode(resp)
-	}))
-	defer server.Close()
-
-	client := NewClient(server.URL, 1, "test-token", server.Client())
-	conv, err := client.GetConversation(context.Background(), 42)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if conv.ID != 42 {
-		t.Errorf("expected conv ID=42, got %d", conv.ID)
-	}
-	if conv.Status != "open" {
-		t.Errorf("expected status=open, got %s", conv.Status)
-	}
-}
-
-func TestClient_GetConversation_NotFound(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-		_, _ = w.Write([]byte(`{"error":"not found"}`))
-	}))
-	defer server.Close()
-
-	client := NewClient(server.URL, 1, "test-token", server.Client())
-	_, err := client.GetConversation(context.Background(), 999)
-	if err == nil {
-		t.Fatal("expected error for 404 response")
-	}
-}
-
 func TestClient_MergeContacts(t *testing.T) {
 	var receivedBody map[string]int
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

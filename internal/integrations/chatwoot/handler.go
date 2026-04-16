@@ -82,8 +82,8 @@ func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 		TimeoutMediaSeconds: cfg.TimeoutMediaSeconds,
 		TimeoutLargeSeconds: cfg.TimeoutLargeSeconds,
 		MessageRead:         cfg.MessageRead,
-		DatabaseURI:         maskDatabaseURI(cfg.DatabaseURI),
-		RedisURL:            maskRedisURL(cfg.RedisURL),
+		DatabaseURI:         maskURL(cfg.DatabaseURI),
+		RedisURL:            maskURL(cfg.RedisURL),
 	}
 }
 

@@ -16,6 +16,7 @@ import (
 	"wzap/internal/repo"
 	"wzap/internal/storage"
 	"wzap/internal/wa"
+	"wzap/internal/wautil"
 )
 
 type mediaKeyPersister interface {
@@ -48,99 +49,61 @@ func (s *MediaService) GetPresignedURL(ctx context.Context, key string) (string,
 	return url, nil
 }
 
-func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
+func (s *MediaService) autoUploadGeneric(ctx context.Context, sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage, persister mediaKeyPersister, logPrefix string) {
 	if s.minio == nil {
 		return
 	}
 
-	_ = s.pool.Submit(func(ctx context.Context) {
-		runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
+	runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
+	if err != nil {
+		logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg(logPrefix + ": media download not supported for engine")
+		return
+	}
+
+	_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
+		data, err := client.Download(ctx, downloadable)
 		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Auto-upload: media download not supported for engine")
-			return
-		}
-
-		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
-			data, err := client.Download(ctx, downloadable)
-			if err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to download media")
-				return struct{}{}, nil
-			}
-
-			key := storage.MediaObjectKey(storage.MediaKeyParams{
-				SessionID: session.ID,
-				ChatJID:   chatJID,
-				SenderJID: senderJID,
-				FromMe:    fromMe,
-				MessageID: messageID,
-				MimeType:  mimeType,
-				Timestamp: timestamp,
-			})
-			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to upload to S3")
-				return struct{}{}, nil
-			}
-
-			if s.msgRepo != nil {
-				if err := s.msgRepo.UpdateMediaURL(ctx, session.ID, messageID, key); err != nil {
-					logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to persist media key")
-				}
-			}
-
-			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: media stored in S3")
+			logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg(logPrefix + ": failed to download media")
 			return struct{}{}, nil
-		})
-		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Auto-upload: failed to get client")
 		}
+
+		key := storage.MediaObjectKey(storage.MediaKeyParams{
+			SessionID: session.ID,
+			ChatJID:   chatJID,
+			SenderJID: senderJID,
+			FromMe:    fromMe,
+			MessageID: messageID,
+			MimeType:  mimeType,
+			Timestamp: timestamp,
+		})
+		if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
+			logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg(logPrefix + ": failed to upload to S3")
+			return struct{}{}, nil
+		}
+
+		if persister != nil {
+			if err := persister.UpdateMediaURL(ctx, session.ID, messageID, key); err != nil {
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg(logPrefix + ": failed to persist media key")
+			}
+		}
+
+		logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg(logPrefix + ": media stored in S3")
+		return struct{}{}, nil
+	})
+	if err != nil {
+		logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg(logPrefix + ": failed to get client")
+	}
+}
+
+func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
+	_ = s.pool.Submit(func(ctx context.Context) {
+		s.autoUploadGeneric(ctx, sessionID, messageID, chatJID, senderJID, mimeType, fromMe, timestamp, downloadable, s.msgRepo, "Auto-upload")
 	})
 }
 
 func (s *MediaService) AutoUploadStatusMedia(sessionID, messageID, chatJID, senderJID, mimeType string, fromMe bool, timestamp time.Time, downloadable whatsmeow.DownloadableMessage) {
-	if s.minio == nil {
-		return
-	}
-
 	_ = s.pool.Submit(func(ctx context.Context) {
-		runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
-		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Status auto-upload: media download not supported")
-			return
-		}
-
-		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
-			data, err := client.Download(ctx, downloadable)
-			if err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: failed to download media")
-				return struct{}{}, nil
-			}
-
-			key := storage.MediaObjectKey(storage.MediaKeyParams{
-				SessionID: session.ID,
-				ChatJID:   chatJID,
-				SenderJID: senderJID,
-				FromMe:    fromMe,
-				MessageID: messageID,
-				MimeType:  mimeType,
-				Timestamp: timestamp,
-			})
-			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: failed to upload to S3")
-				return struct{}{}, nil
-			}
-
-			if s.statusRepo != nil {
-				if err := s.statusRepo.UpdateMediaURL(ctx, session.ID, messageID, key); err != nil {
-					logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: failed to persist media key")
-				}
-			}
-
-			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: media stored in S3")
-			return struct{}{}, nil
-		})
-		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("Status auto-upload: failed to get client")
-		}
+		s.autoUploadGeneric(ctx, sessionID, messageID, chatJID, senderJID, mimeType, fromMe, timestamp, downloadable, s.statusRepo, "Status auto-upload")
 	})
 }
 
@@ -152,14 +115,14 @@ func (s *MediaService) RetryMediaUpload(sessionID, messageID, chatJID, senderJID
 	_ = s.pool.Submit(func(ctx context.Context) {
 		runtime, err := s.runtimeResolver.ResolveMedia(ctx, sessionID, model.CapabilityMediaDownload)
 		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Media retry upload: engine não disponível")
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Media retry upload: engine not available")
 			return
 		}
 
 		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
-			data, err := client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, fileLength, mimeTypeToMediaType(mimeType), "")
+			data, err := client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, fileLength, wautil.MimeTypeToMediaType(mimeType), "")
 			if err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: falha ao baixar mídia")
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: failed to download media")
 				return struct{}{}, nil
 			}
 
@@ -173,36 +136,23 @@ func (s *MediaService) RetryMediaUpload(sessionID, messageID, chatJID, senderJID
 				Timestamp: timestamp,
 			})
 			if err := s.minio.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
-				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: falha ao enviar para S3")
+				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: failed to upload to S3")
 				return struct{}{}, nil
 			}
 
 			if s.msgRepo != nil {
 				if err := s.msgRepo.UpdateMediaURL(ctx, session.ID, messageID, key); err != nil {
-					logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: falha ao persistir chave S3")
+					logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: failed to persist media key")
 				}
 			}
 
-			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: mídia armazenada no S3")
+			logger.Debug().Str("component", "service").Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: media stored in S3")
 			return struct{}{}, nil
 		})
 		if err != nil {
-			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Media retry upload: erro de runtime")
+			logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Str("mid", messageID).Msg("Media retry upload: runtime error")
 		}
 	})
-}
-
-func mimeTypeToMediaType(mimeType string) whatsmeow.MediaType {
-	switch {
-	case strings.HasPrefix(mimeType, "image/"):
-		return whatsmeow.MediaImage
-	case strings.HasPrefix(mimeType, "audio/"):
-		return whatsmeow.MediaAudio
-	case strings.HasPrefix(mimeType, "video/"):
-		return whatsmeow.MediaVideo
-	default:
-		return whatsmeow.MediaDocument
-	}
 }
 
 func convertToOGG(input []byte) ([]byte, error) {

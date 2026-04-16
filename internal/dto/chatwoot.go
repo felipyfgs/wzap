@@ -15,7 +15,6 @@ type ChatwootConfigReq struct {
 	IgnoreGroups        *bool    `json:"ignoreGroups,omitempty"`
 	IgnoreJIDs          []string `json:"ignoreJids,omitempty"`
 	ConversationPending *bool    `json:"conversationPending,omitempty"`
-	AutoCreateInbox     *bool    `json:"autoCreateInbox,omitempty"`
 	ImportOnConnect     *bool    `json:"importOnConnect,omitempty"`
 	ImportPeriod        string   `json:"importPeriod,omitempty"`
 	TimeoutTextSeconds  *int     `json:"timeoutTextSeconds,omitempty"`

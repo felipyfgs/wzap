@@ -90,10 +90,6 @@ func (m *mockClient) DeleteMessage(_ context.Context, _, _ int) error {
 	return nil
 }
 
-func (m *mockClient) UpdateMessage(_ context.Context, _, _ int, _ string) error {
-	return nil
-}
-
 func (m *mockClient) UpdateLastSeen(_ context.Context, _, _ string, _ int) error {
 	return nil
 }
@@ -108,10 +104,6 @@ func (m *mockClient) CreateInbox(_ context.Context, _ string, _ string) (*Inbox,
 
 func (m *mockClient) UpdateInboxWebhook(_ context.Context, _ int, _ string) error {
 	return nil
-}
-
-func (m *mockClient) GetConversation(_ context.Context, convID int) (*Conversation, error) {
-	return &Conversation{ID: convID}, nil
 }
 
 func (m *mockClient) MergeContacts(_ context.Context, _, _ int) error {

@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/url"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,11 +16,6 @@ import (
 )
 
 const maxMediaBytes int64 = 256 * 1024 * 1024
-
-var (
-	googleMapsRegex = regexp.MustCompile(`[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)`)
-	coordRegex      = regexp.MustCompile(`(-?\d+\.\d+),\s*(-?\d+\.\d+)`)
-)
 
 func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, body dto.ChatwootWebhookPayload) error {
 	cfg, err := s.repo.FindBySessionID(ctx, sessionID)
@@ -232,28 +225,6 @@ func (s *Service) processMessageEdited(ctx context.Context, cfg *Config, body dt
 	return nil
 }
 
-func extractLocationFromText(text string) (lat, lng float64, ok bool) {
-	if m := googleMapsRegex.FindStringSubmatch(text); m != nil {
-		la, err1 := strconv.ParseFloat(m[1], 64)
-		ln, err2 := strconv.ParseFloat(m[2], 64)
-		if err1 == nil && err2 == nil {
-			return la, ln, true
-		}
-	}
-	if m := coordRegex.FindStringSubmatch(text); m != nil {
-		la, err1 := strconv.ParseFloat(m[1], 64)
-		ln, err2 := strconv.ParseFloat(m[2], 64)
-		if err1 == nil && err2 == nil {
-			return la, ln, true
-		}
-	}
-	return 0, 0, false
-}
-
-func isVCardContent(content string) bool {
-	return strings.HasPrefix(strings.TrimSpace(content), "BEGIN:VCARD")
-}
-
 func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *Config, chatJID, content string, _ *dto.ReplyContext) error {
 	vcards := splitVCards(content)
 	for _, vcard := range vcards {
@@ -270,30 +241,6 @@ func (s *Service) sendVCardToWhatsApp(ctx context.Context, cfg *Config, chatJID,
 		}
 	}
 	return nil
-}
-
-func splitVCards(content string) []string {
-	var vcards []string
-	lines := strings.Split(content, "\n")
-	var current strings.Builder
-	for _, line := range lines {
-		current.WriteString(line)
-		current.WriteString("\n")
-		if strings.TrimSpace(line) == "END:VCARD" {
-			vcards = append(vcards, current.String())
-			current.Reset()
-		}
-	}
-	return vcards
-}
-
-func extractVCardName(vcard string) string {
-	for _, line := range strings.Split(vcard, "\n") {
-		if strings.HasPrefix(line, "FN:") {
-			return strings.TrimPrefix(strings.TrimSpace(line), "FN:")
-		}
-	}
-	return ""
 }
 
 func (s *Service) processMessageUpdated(ctx context.Context, cfg *Config, body dto.ChatwootWebhookPayload) error {

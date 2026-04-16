@@ -2,8 +2,24 @@ package wautil
 
 import (
 	"math"
+	"strings"
 	"time"
+
+	"go.mau.fi/whatsmeow"
 )
+
+func MimeTypeToMediaType(mimeType string) whatsmeow.MediaType {
+	switch {
+	case strings.HasPrefix(mimeType, "image/"):
+		return whatsmeow.MediaImage
+	case strings.HasPrefix(mimeType, "audio/"):
+		return whatsmeow.MediaAudio
+	case strings.HasPrefix(mimeType, "video/"):
+		return whatsmeow.MediaVideo
+	default:
+		return whatsmeow.MediaDocument
+	}
+}
 
 // StringPtr returns a pointer to s, or nil if s is empty.
 func StringPtr(value string) *string {

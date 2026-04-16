@@ -6472,9 +6472,6 @@ const docTemplate = `{
                 "accountId": {
                     "type": "integer"
                 },
-                "autoCreateInbox": {
-                    "type": "boolean"
-                },
                 "conversationPending": {
                     "type": "boolean"
                 },
@@ -6603,13 +6600,19 @@ const docTemplate = `{
         },
         "CreateGroupReq": {
             "type": "object",
+            "required": [
+                "name",
+                "participants"
+            ],
             "properties": {
                 "name": {
                     "type": "string",
+                    "minLength": 1,
                     "example": "My Awesome Group"
                 },
                 "participants": {
                     "type": "array",
+                    "minItems": 1,
                     "items": {
                         "type": "string"
                     },
@@ -7714,7 +7717,12 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "state": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "typing",
+                        "recording",
+                        "paused"
+                    ]
                 }
             }
         },

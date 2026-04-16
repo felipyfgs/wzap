@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"wzap/internal/dto"
 )
 
 type MetricsHandler struct{}
@@ -40,8 +39,4 @@ func (h *MetricsHandler) Serve(c *fiber.Ctx) error {
 	_, _ = io.Copy(c.Response().BodyWriter(), resp.Body)
 
 	return nil
-}
-
-func (h *MetricsHandler) ErrorHandler(c *fiber.Ctx, err error) error {
-	return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Metrics Error", "failed to collect metrics"))
 }

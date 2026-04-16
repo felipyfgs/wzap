@@ -35,15 +35,6 @@ func shouldIgnoreJID(chatJID string, ignoreGroups bool, ignoreJIDs []string) boo
 	return false
 }
 
-func jidsContainGroup(ignoreJIDs []string) bool {
-	for _, jid := range ignoreJIDs {
-		if jid == "@g.us" {
-			return true
-		}
-	}
-	return false
-}
-
 func isValidWhatsAppJID(jid string) bool {
 	return strings.HasSuffix(jid, "@s.whatsapp.net") ||
 		strings.HasSuffix(jid, "@g.us") ||

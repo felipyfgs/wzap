@@ -4,10 +4,17 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"wzap/internal/model"
+)
+
+var (
+	googleMapsRegex = regexp.MustCompile(`[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)`)
+	coordRegex      = regexp.MustCompile(`(-?\d+\.\d+),\s*(-?\d+\.\d+)`)
 )
 
 type flexTimestamp int64
@@ -482,5 +489,51 @@ func extractQuoteText(msg map[string]any) string {
 		}
 	}
 
+	return ""
+}
+
+func extractLocationFromText(text string) (lat, lng float64, ok bool) {
+	if m := googleMapsRegex.FindStringSubmatch(text); m != nil {
+		la, err1 := strconv.ParseFloat(m[1], 64)
+		ln, err2 := strconv.ParseFloat(m[2], 64)
+		if err1 == nil && err2 == nil {
+			return la, ln, true
+		}
+	}
+	if m := coordRegex.FindStringSubmatch(text); m != nil {
+		la, err1 := strconv.ParseFloat(m[1], 64)
+		ln, err2 := strconv.ParseFloat(m[2], 64)
+		if err1 == nil && err2 == nil {
+			return la, ln, true
+		}
+	}
+	return 0, 0, false
+}
+
+func isVCardContent(content string) bool {
+	return strings.HasPrefix(strings.TrimSpace(content), "BEGIN:VCARD")
+}
+
+func splitVCards(content string) []string {
+	var vcards []string
+	lines := strings.Split(content, "\n")
+	var current strings.Builder
+	for _, line := range lines {
+		current.WriteString(line)
+		current.WriteString("\n")
+		if strings.TrimSpace(line) == "END:VCARD" {
+			vcards = append(vcards, current.String())
+			current.Reset()
+		}
+	}
+	return vcards
+}
+
+func extractVCardName(vcard string) string {
+	for _, line := range strings.Split(vcard, "\n") {
+		if strings.HasPrefix(line, "FN:") {
+			return strings.TrimPrefix(strings.TrimSpace(line), "FN:")
+		}
+	}
 	return ""
 }

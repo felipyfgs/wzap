@@ -2,28 +2,7 @@ package model
 
 type EventType string
 
-type EventCategory string
-
 const EventAll EventType = "All"
-
-const (
-	CategoryMessages         EventCategory = "Messages"
-	CategoryConnection       EventCategory = "Connection"
-	CategoryPairing          EventCategory = "Pairing"
-	CategoryConnectionErrors EventCategory = "Connection Errors"
-	CategoryContacts         EventCategory = "Contacts"
-	CategoryProfileIdentity  EventCategory = "Profile & Identity"
-	CategoryGroups           EventCategory = "Groups"
-	CategoryPresence         EventCategory = "Presence"
-	CategoryChatState        EventCategory = "Chat State"
-	CategoryLabels           EventCategory = "Labels"
-	CategoryCalls            EventCategory = "Calls"
-	CategoryNewsletter       EventCategory = "Newsletter"
-	CategorySync             EventCategory = "Sync"
-	CategoryPrivacySettings  EventCategory = "Privacy & Settings"
-	CategoryFBMetaBridge     EventCategory = "FB/Meta Bridge"
-	CategorySpecial          EventCategory = "Special"
-)
 
 // Messages
 const (
@@ -202,48 +181,4 @@ var ValidEventTypes = func() map[EventType]bool {
 
 func IsValidEventType(e EventType) bool {
 	return ValidEventTypes[e]
-}
-
-func CategoryFor(e EventType) EventCategory {
-	switch e {
-	case EventAll:
-		return CategorySpecial
-	case EventMessage, EventMessageRevoke, EventMessageEdit, EventUndecryptableMessage, EventMediaRetry, EventReceipt, EventDeleteForMe:
-		return CategoryMessages
-	case EventConnected, EventDisconnected, EventManualLoginReconnect:
-		return CategoryConnection
-	case EventQR, EventQRScannedWithoutMultidevice, EventPairSuccess, EventPairError:
-		return CategoryPairing
-	case EventConnectFailure, EventLoggedOut, EventStreamError, EventStreamReplaced,
-		EventKeepAliveTimeout, EventKeepAliveRestored, EventClientOutdated,
-		EventTemporaryBan, EventCATRefreshError:
-		return CategoryConnectionErrors
-	case EventContact, EventPushName, EventBusinessName:
-		return CategoryContacts
-	case EventPicture, EventIdentityChange, EventUserAbout:
-		return CategoryProfileIdentity
-	case EventGroupInfo, EventJoinedGroup:
-		return CategoryGroups
-	case EventPresence, EventChatPresence:
-		return CategoryPresence
-	case EventArchive, EventMute, EventPin, EventStar, EventClearChat,
-		EventDeleteChat, EventMarkChatAsRead, EventUnarchiveChatsSetting:
-		return CategoryChatState
-	case EventLabelEdit, EventLabelAssociationChat, EventLabelAssociationMessage:
-		return CategoryLabels
-	case EventCallOffer, EventCallAccept, EventCallTerminate, EventCallOfferNotice,
-		EventCallRelayLatency, EventCallPreAccept, EventCallReject, EventCallTransport, EventUnknownCallEvent:
-		return CategoryCalls
-	case EventNewsletterJoin, EventNewsletterLeave, EventNewsletterMuteChange, EventNewsletterLiveUpdate:
-		return CategoryNewsletter
-	case EventHistorySync, EventAppState, EventAppStateSyncComplete, EventAppStateSyncError,
-		EventOfflineSyncCompleted, EventOfflineSyncPreview:
-		return CategorySync
-	case EventPrivacySettings, EventPushNameSetting, EventUserStatusMute, EventBlocklistChange, EventBlocklist:
-		return CategoryPrivacySettings
-	case EventFBMessage:
-		return CategoryFBMetaBridge
-	default:
-		return ""
-	}
 }

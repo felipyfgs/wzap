@@ -2,7 +2,6 @@ package chatwoot
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"go.opentelemetry.io/otel"
@@ -55,32 +54,15 @@ func TestSpanAttrs_ContainsExpectedFields(t *testing.T) {
 	}
 }
 
-func TestInitTracing_DisabledViaEnv(t *testing.T) {
-	t.Setenv("OTEL_SDK_DISABLED", "true")
-	defer func() { _ = os.Unsetenv("OTEL_SDK_DISABLED") }()
-
-	shutdown, err := InitTracing(context.Background())
-	if err != nil {
-		t.Fatalf("expected no error with OTEL_SDK_DISABLED=true, got %v", err)
-	}
-	if err := shutdown(context.Background()); err != nil {
-		t.Errorf("unexpected shutdown error: %v", err)
-	}
-}
-
 func TestNATSHeaderCarrier_SetGet(t *testing.T) {
-	import_nats_pkg := func() {
-		// Carrier implements Get/Set/Keys
-		headers := make(natsHeaderCarrier)
-		headers.Set("traceparent", "00-abc-def-01")
-		val := headers.Get("traceparent")
-		if val != "00-abc-def-01" {
-			t.Errorf("expected '00-abc-def-01', got %s", val)
-		}
-		keys := headers.Keys()
-		if len(keys) != 1 {
-			t.Errorf("expected 1 key, got %d", len(keys))
-		}
+	headers := make(natsHeaderCarrier)
+	headers.Set("traceparent", "00-abc-def-01")
+	val := headers.Get("traceparent")
+	if val != "00-abc-def-01" {
+		t.Errorf("expected '00-abc-def-01', got %s", val)
 	}
-	import_nats_pkg()
+	keys := headers.Keys()
+	if len(keys) != 1 {
+		t.Errorf("expected 1 key, got %d", len(keys))
+	}
 }

@@ -1,166 +1,303 @@
 package chatwoot
 
 import (
+	"encoding/json"
 	"testing"
+
+	"wzap/internal/model"
 )
 
-func TestFormatLocation_Full(t *testing.T) {
-	locMsg := map[string]any{
-		"degreesLatitude":  -23.5505,
-		"degreesLongitude": -46.6333,
-		"name":             "Praça da Sé",
-		"address":          "São Paulo, SP",
+func TestParseMessagePayload(t *testing.T) {
+	envelope := model.EventEnvelope{
+		Event:     "Message",
+		EventID:   "test-event-id",
+		Timestamp: "2024-01-01T00:00:00Z",
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
-	result := formatLocation(locMsg)
 
-	checks := []string{
-		"*Localização:*",
-		"_Latitude:_ -23.550500",
-		"_Longitude:_ -46.633300",
-		"_Nome:_ Praça da Sé",
-		"_Endereço:_ São Paulo, SP",
-		"_URL:_ https://www.google.com/maps/search/?api=1&query=-23.550500,-46.633300",
+	info := waMessageInfo{
+		Chat:     "5511999999999@s.whatsapp.net",
+		Sender:   "5511999999999@s.whatsapp.net",
+		IsFromMe: false,
+		IsGroup:  false,
+		ID:       "msg-id-123",
+		PushName: "Test User",
 	}
-	for _, c := range checks {
-		if !containsStr(result, c) {
-			t.Errorf("expected %q in result, got:\n%s", c, result)
-		}
+
+	msgPayload := waMessagePayload{
+		Info:    info,
+		Message: map[string]any{"conversation": "Hello World"},
+	}
+
+	envelope.Data, _ = json.Marshal(msgPayload)
+	payload, _ := json.Marshal(envelope)
+
+	data, err := parseMessagePayload(payload)
+	if err != nil {
+		t.Fatalf("parseMessagePayload returned error: %v", err)
+	}
+
+	if data.Info.Chat != "5511999999999@s.whatsapp.net" {
+		t.Errorf("expected Chat = 5511999999999@s.whatsapp.net, got %s", data.Info.Chat)
+	}
+	if data.Info.ID != "msg-id-123" {
+		t.Errorf("expected ID = msg-id-123, got %s", data.Info.ID)
+	}
+	if data.Info.IsFromMe {
+		t.Error("expected IsFromMe = false")
+	}
+	if data.Info.PushName != "Test User" {
+		t.Errorf("expected PushName = Test User, got %s", data.Info.PushName)
 	}
 }
 
-func TestFormatLocation_NoNameNoAddress(t *testing.T) {
-	locMsg := map[string]any{
-		"degreesLatitude":  -15.7801,
-		"degreesLongitude": -47.9292,
+func TestParseMessagePayload_GroupMessage(t *testing.T) {
+	envelope := model.EventEnvelope{
+		Event:     "Message",
+		EventID:   "test-event-id",
+		Timestamp: "2024-01-01T00:00:00Z",
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
-	result := formatLocation(locMsg)
 
-	if containsStr(result, "_Nome:_") {
-		t.Error("expected no nome field in output")
+	info := waMessageInfo{
+		Chat:     "5511999999999-123456789@g.us",
+		Sender:   "5511888888888@s.whatsapp.net",
+		IsFromMe: false,
+		IsGroup:  true,
+		ID:       "msg-id-456",
+		PushName: "Group Participant",
 	}
-	if containsStr(result, "_Endereço:_") {
-		t.Error("expected no endereço field in output")
+
+	msgPayload := waMessagePayload{
+		Info:    info,
+		Message: map[string]any{"conversation": "Group message"},
 	}
-	if !containsStr(result, "_Latitude:_ -15.780100") {
-		t.Errorf("expected latitude in result, got:\n%s", result)
+
+	envelope.Data, _ = json.Marshal(msgPayload)
+	payload, _ := json.Marshal(envelope)
+
+	data, err := parseMessagePayload(payload)
+	if err != nil {
+		t.Fatalf("parseMessagePayload returned error: %v", err)
 	}
-	if !containsStr(result, "_URL:_ https://www.google.com/maps/search/?api=1&query=-15.780100,-47.929200") {
-		t.Errorf("expected URL in result, got:\n%s", result)
+
+	if !data.Info.IsGroup {
+		t.Error("expected IsGroup = true")
+	}
+	if data.Info.Chat != "5511999999999-123456789@g.us" {
+		t.Errorf("expected Chat = group JID, got %s", data.Info.Chat)
 	}
 }
 
-func TestFormatVCard_WithPhones(t *testing.T) {
-	vcard := "BEGIN:VCARD\nFN:Maria Silva\nTEL;TYPE=CELL:+5511999998888\nTEL;TYPE=HOME:+551133334444\nEND:VCARD"
-	result := formatVCard(vcard)
-
-	checks := []string{
-		"*Contato:*",
-		"_Nome:_ Maria Silva",
-		"_Número (1):_ +5511999998888",
-		"_Número (2):_ +551133334444",
+func TestParseReceiptPayload(t *testing.T) {
+	envelope := model.EventEnvelope{
+		Event:     "Receipt",
+		EventID:   "test-event-id",
+		Timestamp: "2024-01-01T00:00:00Z",
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
 	}
-	for _, c := range checks {
-		if !containsStr(result, c) {
-			t.Errorf("expected %q in result, got:\n%s", c, result)
-		}
-	}
-}
 
-func TestFormatVCard_NoName(t *testing.T) {
-	vcard := "BEGIN:VCARD\nTEL:+5511999998888\nEND:VCARD"
-	result := formatVCard(vcard)
-	if result != vcard {
-		t.Errorf("expected raw vcard when no FN, got:\n%s", result)
+	receiptData := waReceiptPayload{
+		Type:       "read",
+		MessageIDs: []string{"msg-1", "msg-2", "msg-3"},
 	}
-}
 
-func TestFormatVCardWithName_OverridesFN(t *testing.T) {
-	vcard := "BEGIN:VCARD\nFN:Original Name\nTEL:+5511999998888\nEND:VCARD"
-	result := formatVCardWithName(vcard, "Override Name")
+	envelope.Data, _ = json.Marshal(receiptData)
+	payload, _ := json.Marshal(envelope)
 
-	if !containsStr(result, "_Nome:_ Override Name") {
-		t.Errorf("expected override name, got:\n%s", result)
+	data, err := parseReceiptPayload(payload)
+	if err != nil {
+		t.Fatalf("parseReceiptPayload returned error: %v", err)
 	}
-	if containsStr(result, "Original Name") {
-		t.Error("expected FN to be overridden")
+
+	if data.Type != "read" {
+		t.Errorf("expected Type = read, got %s", data.Type)
+	}
+	if len(data.MessageIDs) != 3 {
+		t.Errorf("expected 3 MessageIDs, got %d", len(data.MessageIDs))
 	}
 }
 
-func TestFormatVCardWithName_EmptyDisplayNameUsesFN(t *testing.T) {
-	vcard := "BEGIN:VCARD\nFN:John Doe\nTEL:+5511999998888\nEND:VCARD"
-	result := formatVCardWithName(vcard, "")
+func TestParseDeletePayload(t *testing.T) {
+	envelope := model.EventEnvelope{
+		Event:     "DeleteForMe",
+		EventID:   "test-event-id",
+		Timestamp: "2024-01-01T00:00:00Z",
+		Session:   model.SessionInfo{ID: "test-session", Name: "Test Session"},
+	}
 
-	if !containsStr(result, "_Nome:_ John Doe") {
-		t.Errorf("expected FN name, got:\n%s", result)
+	deleteData := waDeletePayload{
+		MessageID: "msg-to-delete-123",
+		Chat:      "5511999999999@s.whatsapp.net",
+	}
+
+	envelope.Data, _ = json.Marshal(deleteData)
+	payload, _ := json.Marshal(envelope)
+
+	data, err := parseDeletePayload(payload)
+	if err != nil {
+		t.Fatalf("parseDeletePayload returned error: %v", err)
+	}
+
+	if data.MessageID != "msg-to-delete-123" {
+		t.Errorf("expected MessageID = msg-to-delete-123, got %s", data.MessageID)
 	}
 }
 
-func TestExtractTextFromMessage_ContactsArray_WithDisplayName(t *testing.T) {
-	msg := map[string]any{
-		"contactsArrayMessage": map[string]any{
-			"contacts": []any{
-				map[string]any{
-					"displayName": "Alice Override",
-					"vcard":       "BEGIN:VCARD\nFN:Alice Original\nTEL:+5511111111111\nEND:VCARD",
-				},
-				map[string]any{
-					"displayName": "",
-					"vcard":       "BEGIN:VCARD\nFN:Bob Original\nTEL:+5522222222222\nEND:VCARD",
-				},
-			},
+func TestConvertWAToCWMarkdown(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "bold conversion",
+			input:    "This is *bold* text",
+			expected: "This is **bold** text",
+		},
+		{
+			name:     "italic conversion",
+			input:    "This is _italic_ text",
+			expected: "This is *italic* text",
+		},
+		{
+			name:     "strikethrough conversion",
+			input:    "This is ~strikethrough~ text",
+			expected: "This is ~~strikethrough~~ text",
+		},
+		{
+			name:     "multiple formats",
+			input:    "*bold* and _italic_ and ~strike~",
+			expected: "**bold** and *italic* and ~~strike~~",
+		},
+		{
+			name:     "no formatting",
+			input:    "Plain text without formatting",
+			expected: "Plain text without formatting",
+		},
+		{
+			name:     "multiline with formatting",
+			input:    "Line 1 with *bold*\nLine 2 with _italic_",
+			expected: "Line 1 with **bold**\nLine 2 with *italic*",
 		},
 	}
-	result := extractText(msg)
 
-	if !containsStr(result, "_Nome:_ Alice Override") {
-		t.Errorf("expected displayName override for Alice, got:\n%s", result)
-	}
-	if containsStr(result, "Alice Original") {
-		t.Error("expected Alice's FN to be overridden by displayName")
-	}
-	if !containsStr(result, "_Nome:_ Bob Original") {
-		t.Errorf("expected FN fallback for Bob, got:\n%s", result)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := convertWAToCWMarkdown(tt.input)
+			if result != tt.expected {
+				t.Errorf("convertWAToCWMarkdown(%q) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
 	}
 }
 
-func TestExtractTextFromMessage_ContactsArray_NoGlobalPrefix(t *testing.T) {
-	msg := map[string]any{
-		"contactsArrayMessage": map[string]any{
-			"contacts": []any{
-				map[string]any{
-					"displayName": "Test",
-					"vcard":       "BEGIN:VCARD\nFN:Test\nTEL:+5500000000000\nEND:VCARD",
-				},
-			},
+func TestConvertCWToWAMarkdown(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "bold conversion",
+			input:    "This is **bold** text",
+			expected: "This is *bold* text",
+		},
+		{
+			name:     "italic conversion",
+			input:    "This is *italic* text",
+			expected: "This is _italic_ text",
+		},
+		{
+			name:     "strikethrough conversion",
+			input:    "This is ~~strikethrough~~ text",
+			expected: "This is ~strikethrough~ text",
+		},
+		{
+			name:     "multiple formats",
+			input:    "**bold** and *italic* and ~~strike~~",
+			expected: "*bold* and _italic_ and ~strike~",
+		},
+		{
+			name:     "no formatting",
+			input:    "Plain text without formatting",
+			expected: "Plain text without formatting",
+		},
+		{
+			name:     "italic multi-word",
+			input:    "This is *italic text* here",
+			expected: "This is _italic text_ here",
 		},
 	}
-	result := extractText(msg)
 
-	if containsStr(result, "Contatos:") {
-		t.Errorf("expected no global 'Contatos:' prefix, got:\n%s", result)
-	}
-	if !containsStr(result, "*Contato:*") {
-		t.Errorf("expected '*Contato:*' per item, got:\n%s", result)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := convertCWToWAMarkdown(tt.input)
+			if result != tt.expected {
+				t.Errorf("convertCWToWAMarkdown(%q) = %q, expected %q", tt.input, result, tt.expected)
+			}
+		})
 	}
 }
 
-func TestExtractTextFromMessage_LocationRichFormat(t *testing.T) {
-	msg := map[string]any{
-		"locationMessage": map[string]any{
-			"degreesLatitude":  -23.5505,
-			"degreesLongitude": -46.6333,
-			"name":             "Test Place",
+func TestShouldIgnoreJID(t *testing.T) {
+	tests := []struct {
+		name         string
+		chatJID      string
+		ignoreGroups bool
+		ignoreJIDs   []string
+		expected     bool
+	}{
+		{
+			name:         "no ignore - individual chat",
+			chatJID:      "5511999999999@s.whatsapp.net",
+			ignoreGroups: false,
+			ignoreJIDs:   nil,
+			expected:     false,
+		},
+		{
+			name:         "ignore groups - group chat",
+			chatJID:      "5511999999999-123456@g.us",
+			ignoreGroups: true,
+			ignoreJIDs:   nil,
+			expected:     true,
+		},
+		{
+			name:         "ignore specific JID",
+			chatJID:      "5511888888888@s.whatsapp.net",
+			ignoreGroups: false,
+			ignoreJIDs:   []string{"5511888888888@s.whatsapp.net"},
+			expected:     true,
+		},
+		{
+			name:         "ignore all groups via ignoreJIDs",
+			chatJID:      "5511999999999-123456@g.us",
+			ignoreGroups: false,
+			ignoreJIDs:   []string{"@g.us"},
+			expected:     true,
+		},
+		{
+			name:         "ignore all contacts via ignoreJIDs",
+			chatJID:      "5511999999999@s.whatsapp.net",
+			ignoreGroups: false,
+			ignoreJIDs:   []string{"@s.whatsapp.net"},
+			expected:     true,
+		},
+		{
+			name:         "no match in ignoreJIDs",
+			chatJID:      "5511999999999@s.whatsapp.net",
+			ignoreGroups: false,
+			ignoreJIDs:   []string{"5511888888888@s.whatsapp.net"},
+			expected:     false,
 		},
 	}
-	result := extractText(msg)
 
-	if !containsStr(result, "*Localização:*") {
-		t.Errorf("expected rich location header, got:\n%s", result)
-	}
-	if !containsStr(result, "_Nome:_ Test Place") {
-		t.Errorf("expected name in location, got:\n%s", result)
-	}
-	if !containsStr(result, "google.com/maps") {
-		t.Errorf("expected Google Maps URL, got:\n%s", result)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := shouldIgnoreJID(tt.chatJID, tt.ignoreGroups, tt.ignoreJIDs)
+			if result != tt.expected {
+				t.Errorf("shouldIgnoreJID(%q, %v, %v) = %v, expected %v", tt.chatJID, tt.ignoreGroups, tt.ignoreJIDs, result, tt.expected)
+			}
+		})
 	}
 }

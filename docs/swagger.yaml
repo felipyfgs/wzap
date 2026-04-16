@@ -63,8 +63,6 @@ definitions:
     properties:
       accountId:
         type: integer
-      autoCreateInbox:
-        type: boolean
       conversationPending:
         type: boolean
       databaseUri:
@@ -156,6 +154,7 @@ definitions:
     properties:
       name:
         example: My Awesome Group
+        minLength: 1
         type: string
       participants:
         example:
@@ -163,7 +162,11 @@ definitions:
         - "5511888888888"
         items:
           type: string
+        minItems: 1
         type: array
+    required:
+    - name
+    - participants
     type: object
   CreateNewsletterReq:
     properties:
@@ -891,6 +894,10 @@ definitions:
       phone:
         type: string
       state:
+        enum:
+        - typing
+        - recording
+        - paused
         type: string
     required:
     - phone

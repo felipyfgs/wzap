@@ -1,8 +1,8 @@
 package dto
 
 type CreateGroupReq struct {
-	Name         string   `json:"name" example:"My Awesome Group"`
-	Participants []string `json:"participants" example:"5511999999999,5511888888888"`
+	Name         string   `json:"name" validate:"required,min=1" example:"My Awesome Group"`
+	Participants []string `json:"participants" validate:"required,min=1" example:"5511999999999,5511888888888"`
 }
 
 type GroupInviteLinkResp struct {

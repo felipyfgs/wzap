@@ -91,7 +91,3 @@ func (c CapabilityContract) Support(engine string, capability EngineCapability) 
 
 	return support
 }
-
-func (c CapabilityContract) Supports(engine string, capability EngineCapability) bool {
-	return c.Support(engine, capability) != SupportUnavailable
-}

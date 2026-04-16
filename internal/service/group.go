@@ -13,6 +13,18 @@ import (
 	"wzap/internal/wa"
 )
 
+func parseParticipantJIDs(participants []string) []types.JID {
+	var jids []types.JID
+	for _, p := range participants {
+		if p != "" {
+			if jid, err := types.ParseJID(wa.EnsureJIDSuffix(p)); err == nil {
+				jids = append(jids, jid)
+			}
+		}
+	}
+	return jids
+}
+
 func bestContactName(c types.ContactInfo) string {
 	if !c.Found {
 		return ""
@@ -98,19 +110,9 @@ func (s *GroupService) CreateGroup(ctx context.Context, sessionID string, req dt
 		return nil, fmt.Errorf("client not connected")
 	}
 
-	var jids []types.JID
-	for _, p := range req.Participants {
-		if p != "" {
-			jid, err := types.ParseJID(wa.EnsureJIDSuffix(p))
-			if err == nil {
-				jids = append(jids, jid)
-			}
-		}
-	}
-
 	groupReq := whatsmeow.ReqCreateGroup{
 		Name:         req.Name,
-		Participants: jids,
+		Participants: parseParticipantJIDs(req.Participants),
 	}
 
 	info, err := client.CreateGroup(ctx, groupReq)
@@ -350,17 +352,7 @@ func (s *GroupService) UpdateParticipants(ctx context.Context, sessionID, groupJ
 		return nil, fmt.Errorf("invalid action, must be add, remove, promote or demote")
 	}
 
-	var jids []types.JID
-	for _, p := range participants {
-		if p != "" {
-			pj, err := types.ParseJID(wa.EnsureJIDSuffix(p))
-			if err == nil {
-				jids = append(jids, pj)
-			}
-		}
-	}
-
-	return client.UpdateGroupParticipants(ctx, jid, jids, act)
+	return client.UpdateGroupParticipants(ctx, jid, parseParticipantJIDs(participants), act)
 }
 
 func (s *GroupService) GetRequestParticipants(ctx context.Context, sessionID, groupJID string) ([]types.GroupParticipantRequest, error) {
@@ -404,17 +396,7 @@ func (s *GroupService) UpdateRequestParticipants(ctx context.Context, sessionID,
 		return nil, fmt.Errorf("invalid action, must be approve or reject")
 	}
 
-	var jids []types.JID
-	for _, p := range participants {
-		if p != "" {
-			pj, err := types.ParseJID(wa.EnsureJIDSuffix(p))
-			if err == nil {
-				jids = append(jids, pj)
-			}
-		}
-	}
-
-	return client.UpdateGroupRequestParticipants(ctx, jid, jids, act)
+	return client.UpdateGroupRequestParticipants(ctx, jid, parseParticipantJIDs(participants), act)
 }
 
 func (s *GroupService) UpdateName(ctx context.Context, sessionID, groupJID, name string) error {

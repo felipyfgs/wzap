@@ -113,7 +113,7 @@ func (s *StatusService) persistStatus(sessionID, messageID, senderJID, statusTyp
 		CreatedAt:  time.Now(),
 	}
 	if err := s.statusRepo.Save(context.Background(), status); err != nil {
-		_ = err
+		logger.Warn().Str("component", "service").Err(err).Str("session", sessionID).Msg("failed to persist status")
 	}
 }
 

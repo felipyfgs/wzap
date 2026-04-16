@@ -55,25 +55,25 @@ func TestImportPeriodToDays(t *testing.T) {
 	}
 }
 
-func TestMaskRedisURL_WithPassword(t *testing.T) {
+func TestMaskURL_WithPassword(t *testing.T) {
 	raw := "redis://:mysecretpass@redis.host:6379/0"
-	got := maskRedisURL(raw)
+	got := maskURL(raw)
 	want := "redis://***@redis.host:6379/0"
 	if got != want {
-		t.Errorf("maskRedisURL(%q) = %q, want %q", raw, got, want)
+		t.Errorf("maskURL(%q) = %q, want %q", raw, got, want)
 	}
 }
 
-func TestMaskRedisURL_WithoutPassword(t *testing.T) {
+func TestMaskURL_WithoutPassword(t *testing.T) {
 	raw := "redis://redis.host:6379/0"
-	got := maskRedisURL(raw)
+	got := maskURL(raw)
 	if got != raw {
-		t.Errorf("maskRedisURL(%q) = %q, want %q", raw, got, raw)
+		t.Errorf("maskURL(%q) = %q, want %q", raw, got, raw)
 	}
 }
 
-func TestMaskRedisURL_Empty(t *testing.T) {
-	if got := maskRedisURL(""); got != "" {
-		t.Errorf("maskRedisURL(empty) = %q, want empty", got)
+func TestMaskURL_Empty(t *testing.T) {
+	if got := maskURL(""); got != "" {
+		t.Errorf("maskURL(empty) = %q, want empty", got)
 	}
 }

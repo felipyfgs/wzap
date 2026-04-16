@@ -246,10 +246,6 @@ func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionSta
 	}, nil
 }
 
-func (s *SessionService) SetStatus(ctx context.Context, id string, status string) error {
-	return s.repo.UpdateStatus(ctx, id, status)
-}
-
 func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionProfileResp, error) {
 	runtime, err := s.runtimeResolver.ResolveProfile(ctx, id)
 	if err != nil {
@@ -287,28 +283,5 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 		}
 	}
 
-	return resp, nil
-}
-
-func (s *SessionService) Restart(ctx context.Context, id string) (*dto.SessionResp, error) {
-	runtime, err := s.runtimeResolver.Resolve(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-	support, err := runtime.RequireCapability(model.CapabilitySessionRestart)
-	if err != nil {
-		return nil, err
-	}
-	_ = support
-
-	_ = s.engine.Disconnect(ctx, id)
-	time.Sleep(1 * time.Second)
-	if _, _, err := s.engine.Connect(ctx, id); err != nil {
-		return nil, fmt.Errorf("failed to restart session: %w", err)
-	}
-	resp, err := s.Get(ctx, id)
-	if err != nil {
-		return nil, err
-	}
 	return resp, nil
 }

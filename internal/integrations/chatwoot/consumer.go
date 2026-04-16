@@ -151,12 +151,12 @@ func (c *Consumer) Start(ctx context.Context) error {
 
 	for i := 0; i < workerCount; i++ {
 		c.wg.Add(1)
-		go c.inboundWorker(consCtx, inboundCons)
+		go c.worker(consCtx, inboundCons, c.processInboundWorker)
 	}
 
 	for i := 0; i < workerCount; i++ {
 		c.wg.Add(1)
-		go c.outboundWorker(consCtx, outboundCons)
+		go c.worker(consCtx, outboundCons, c.processOutboundWorker)
 	}
 
 	c.startQueueDepthPoller(consCtx)
@@ -180,7 +180,7 @@ func (c *Consumer) Stop() {
 	}
 }
 
-func (c *Consumer) inboundWorker(ctx context.Context, cons jetstream.Consumer) {
+func (c *Consumer) worker(ctx context.Context, cons jetstream.Consumer, processFn func(context.Context, jetstream.Msg)) {
 	defer c.wg.Done()
 	for {
 		select {
@@ -200,34 +200,17 @@ func (c *Consumer) inboundWorker(ctx context.Context, cons jetstream.Consumer) {
 				return
 			default:
 			}
-			c.processInbound(ctx, msg)
+			processFn(ctx, msg)
 		}
 	}
 }
 
-func (c *Consumer) outboundWorker(ctx context.Context, cons jetstream.Consumer) {
-	defer c.wg.Done()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-		}
+func (c *Consumer) processInboundWorker(ctx context.Context, msg jetstream.Msg) {
+	c.processInbound(ctx, msg)
+}
 
-		msgs, err := cons.Fetch(1, jetstream.FetchMaxWait(2*time.Second))
-		if err != nil {
-			continue
-		}
-		for msg := range msgs.Messages() {
-			select {
-			case <-ctx.Done():
-				_ = msg.Nak()
-				return
-			default:
-			}
-			c.processOutbound(ctx, msg)
-		}
-	}
+func (c *Consumer) processOutboundWorker(ctx context.Context, msg jetstream.Msg) {
+	c.processOutbound(ctx, msg)
 }
 
 type inboundEnvelope struct {

@@ -6,7 +6,7 @@ type Contact struct {
 	PushName     string `json:"pushName,omitempty"`
 	BusinessName string `json:"businessName,omitempty"`
 	Picture      string `json:"picture,omitempty"`
-	IsBusiness   bool   `json:"isBusiness"`
+	IsBusiness   bool   `json:"isBusiness,omitempty"`
 }
 
 type Group struct {

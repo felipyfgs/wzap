@@ -142,7 +142,7 @@ func (s *StatusService) SendStatusText(ctx context.Context, sessionID string, re
 		return "", err
 	}
 
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		msg := &waE2E.Message{
 			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 				Text: proto.String(req.Text),
@@ -171,7 +171,7 @@ func (s *StatusService) SendStatusMedia(ctx context.Context, sessionID string, r
 		return "", err
 	}
 
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		var data []byte
 		if req.Base64 != "" {
 			data, err = base64.StdEncoding.DecodeString(req.Base64)

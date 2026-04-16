@@ -14,6 +14,7 @@ type Config struct {
 	WebhookToken        string    `json:"webhookToken"`
 	InboxID             int       `json:"inboxId"`
 	InboxName           string    `json:"inboxName"`
+	InboxType           string    `json:"inboxType"`
 	SignMsg             bool      `json:"signMsg"`
 	SignDelimiter       string    `json:"signDelimiter"`
 	ReopenConversation  bool      `json:"reopenConversation"`

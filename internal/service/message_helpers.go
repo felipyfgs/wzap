@@ -13,7 +13,6 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"wzap/internal/dto"
-	cloudWA "wzap/internal/provider/whatsapp"
 )
 
 func parseJID(target string) (types.JID, error) {
@@ -56,17 +55,6 @@ func buildSendOpts(customID string) []whatsmeow.SendRequestExtra {
 		return nil
 	}
 	return []whatsmeow.SendRequestExtra{{ID: customID}}
-}
-
-func buildSendOptsCloud(customID string, reply *dto.ReplyContext) []cloudWA.SendOption {
-	var opts []cloudWA.SendOption
-	if customID != "" {
-		opts = append(opts, cloudWA.WithCustomID(customID))
-	}
-	if reply != nil && reply.MessageID != "" {
-		opts = append(opts, cloudWA.WithReplyTo(reply.MessageID))
-	}
-	return opts
 }
 
 var defaultHTTPClient = &net_http.Client{Timeout: 60 * time.Second}

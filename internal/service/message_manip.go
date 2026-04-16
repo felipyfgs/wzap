@@ -11,7 +11,6 @@ import (
 
 	"wzap/internal/dto"
 	"wzap/internal/model"
-	cloudWA "wzap/internal/provider/whatsapp"
 )
 
 func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req dto.EditMessageReq) (string, error) {
@@ -20,7 +19,7 @@ func (s *MessageService) EditMessage(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -49,7 +48,7 @@ func (s *MessageService) DeleteMessage(ctx context.Context, sessionID string, re
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -72,13 +71,7 @@ func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		resp, err := provider.SendReaction(ctx, session.ID, req.Phone, req.MessageID, req.Reaction)
-		if err != nil {
-			return "", fmt.Errorf("failed to react via cloud api: %w", err)
-		}
-		return resp.MessageID, nil
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -101,7 +94,7 @@ func (s *MessageService) ForwardMessage(ctx context.Context, sessionID string, r
 		return "", err
 	}
 
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		destJID, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -136,22 +129,7 @@ func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req 
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		data, err := base64.StdEncoding.DecodeString(req.Base64)
-		if err != nil {
-			return "", fmt.Errorf("invalid base64: %w", err)
-		}
-		uploadResp, err := provider.UploadMedia(ctx, session.ID, "sticker.webp", req.MimeType, data)
-		if err != nil {
-			return "", fmt.Errorf("failed to upload sticker to cloud api: %w", err)
-		}
-		media := &cloudWA.MediaIDOrURL{ID: uploadResp.ID}
-		resp, err := provider.SendSticker(ctx, session.ID, req.Phone, media)
-		if err != nil {
-			return "", fmt.Errorf("failed to send sticker via cloud api: %w", err)
-		}
-		return resp.MessageID, nil
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err

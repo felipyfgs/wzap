@@ -2,9 +2,27 @@ package chatwoot
 
 import (
 	"context"
+	"strings"
 
+	"wzap/internal/repo"
 	"wzap/internal/wa"
 )
+
+type repoSessionPhoneGetter struct {
+	sessRepo *repo.SessionRepository
+}
+
+func NewSessionPhoneGetter(sessRepo *repo.SessionRepository) SessionPhoneGetter {
+	return &repoSessionPhoneGetter{sessRepo: sessRepo}
+}
+
+func (g *repoSessionPhoneGetter) GetSessionPhone(ctx context.Context, sessionID string) string {
+	sess, err := g.sessRepo.FindByID(ctx, sessionID)
+	if err != nil || sess == nil || sess.JID == "" {
+		return ""
+	}
+	return strings.Split(sess.JID, "@")[0]
+}
 
 type managerConnector struct {
 	engine *wa.Manager

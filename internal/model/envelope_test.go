@@ -145,7 +145,7 @@ func TestEnvelopeParity_BothEnginesProduceSameTopLevel(t *testing.T) {
 
 	topLevelFields := []string{"event", "eventId", "session", "timestamp", "data"}
 
-	for label, raw := range map[string][]byte{"whatsmeow": waBytes, "cloud_api": cloudBytes} {
+	for label, raw := range map[string][]byte{"whatsmeow": waBytes, "custom": cloudBytes} {
 		var m map[string]any
 		if err := json.Unmarshal(raw, &m); err != nil {
 			t.Fatalf("unmarshal %s envelope: %v", label, err)

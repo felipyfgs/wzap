@@ -7,6 +7,7 @@ type ChatwootConfigReq struct {
 	WebhookToken        string   `json:"webhookToken,omitempty"`
 	InboxID             int      `json:"inboxId,omitempty"`
 	InboxName           string   `json:"inboxName,omitempty"`
+	InboxType           *string  `json:"inboxType,omitempty" validate:"omitempty,oneof=api cloud"`
 	SignMsg             *bool    `json:"signMsg,omitempty"`
 	SignDelimiter       string   `json:"signDelimiter,omitempty"`
 	ReopenConversation  *bool    `json:"reopenConversation,omitempty"`
@@ -31,6 +32,7 @@ type ChatwootConfigResp struct {
 	AccountID           int      `json:"accountId"`
 	InboxID             int      `json:"inboxId"`
 	InboxName           string   `json:"inboxName"`
+	InboxType           string   `json:"inboxType"`
 	SignMsg             bool     `json:"signMsg"`
 	SignDelimiter       string   `json:"signDelimiter"`
 	ReopenConversation  bool     `json:"reopenConversation"`

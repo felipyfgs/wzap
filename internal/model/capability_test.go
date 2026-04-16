@@ -20,15 +20,9 @@ func TestDefaultCapabilitiesSupport(t *testing.T) {
 			want:       model.SupportComplete,
 		},
 		{
-			name:       "cloud partial",
-			engine:     "cloud_api",
-			capability: model.CapabilitySessionProfile,
-			want:       model.SupportPartial,
-		},
-		{
-			name:       "cloud unavailable",
-			engine:     "cloud_api",
-			capability: model.CapabilityMessagePoll,
+			name:       "unknown engine unavailable",
+			engine:     "unknown",
+			capability: model.CapabilityMessageText,
 			want:       model.SupportUnavailable,
 		},
 	}

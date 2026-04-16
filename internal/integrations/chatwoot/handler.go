@@ -66,6 +66,7 @@ func configToResp(cfg *Config, webhookURL string) dto.ChatwootConfigResp {
 		AccountID:           cfg.AccountID,
 		InboxID:             cfg.InboxID,
 		InboxName:           cfg.InboxName,
+		InboxType:           cfg.InboxType,
 		SignMsg:             cfg.SignMsg,
 		SignDelimiter:       cfg.SignDelimiter,
 		ReopenConversation:  cfg.ReopenConversation,
@@ -133,6 +134,7 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 		WebhookToken:        req.WebhookToken,
 		InboxID:             req.InboxID,
 		InboxName:           req.InboxName,
+		InboxType:           "api",
 		SignMsg:             req.SignMsg != nil && *req.SignMsg,
 		SignDelimiter:       req.SignDelimiter,
 		ReopenConversation:  req.ReopenConversation == nil || *req.ReopenConversation,
@@ -163,6 +165,10 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 		}
 	}
 	cfg.IgnoreJIDs = ignoreJIDs
+
+	if req.InboxType != nil {
+		cfg.InboxType = *req.InboxType
+	}
 
 	if err := h.service.Configure(c.Context(), cfg); err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("Failed to configure Chatwoot")

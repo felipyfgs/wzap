@@ -83,6 +83,11 @@ definitions:
         type: integer
       inboxName:
         type: string
+      inboxType:
+        enum:
+        - api
+        - cloud
+        type: string
       mergeBrContacts:
         type: boolean
       messageRead:
@@ -720,7 +725,6 @@ definitions:
       engine:
         enum:
         - whatsmeow
-        - cloud_api
         type: string
       name:
         type: string
@@ -5039,88 +5043,6 @@ paths:
       summary: Update a webhook
       tags:
       - Webhooks
-  /webhooks/cloud/{sessionId}:
-    get:
-      description: Verifies the webhook subscription from WhatsApp Cloud API
-      parameters:
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Webhook mode (subscribe)
-        in: query
-        name: hub.mode
-        required: true
-        type: string
-      - description: Verification token
-        in: query
-        name: hub.verify_token
-        required: true
-        type: string
-      - description: Challenge string
-        in: query
-        name: hub.challenge
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Challenge string
-          schema:
-            type: string
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIError'
-      summary: Verify Cloud API webhook
-      tags:
-      - Cloud Webhooks
-    post:
-      consumes:
-      - application/json
-      description: Receives and processes webhooks from WhatsApp Cloud API
-      parameters:
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: HMAC signature
-        in: header
-        name: X-Hub-Signature-256
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/APIError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/APIError'
-      summary: Receive Cloud API webhook
-      tags:
-      - Cloud Webhooks
 securityDefinitions:
   Authorization:
     description: Session or admin token (without Bearer prefix)

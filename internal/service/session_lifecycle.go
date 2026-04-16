@@ -113,9 +113,6 @@ func (o *LifecycleOrchestrator) Connect(ctx context.Context, sessionID string) (
 	if err != nil {
 		return nil, err
 	}
-	if support == model.SupportPartial {
-		return &ConnectResult{Status: "CONNECTED", Support: support}, nil
-	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
 	}
@@ -149,9 +146,6 @@ func (o *LifecycleOrchestrator) Disconnect(ctx context.Context, sessionID string
 	if err != nil {
 		return nil, err
 	}
-	if support == model.SupportPartial {
-		return &DisconnectResult{Support: support}, nil
-	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
 	}
@@ -167,9 +161,6 @@ func (o *LifecycleOrchestrator) Logout(ctx context.Context, sessionID string) (*
 	if err != nil {
 		return nil, err
 	}
-	if support == model.SupportPartial {
-		return &LogoutResult{Support: support}, nil
-	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
 	}
@@ -183,9 +174,6 @@ func (o *LifecycleOrchestrator) Reconnect(ctx context.Context, sessionID string)
 	runtime, support, err := o.resolveCapability(ctx, sessionID, model.CapabilitySessionReconnect)
 	if err != nil {
 		return nil, err
-	}
-	if support == model.SupportPartial {
-		return &ReconnectResult{Support: support}, nil
 	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")
@@ -203,13 +191,6 @@ func (o *LifecycleOrchestrator) Restart(ctx context.Context, sessionID string) (
 	}
 	if o.sessions == nil {
 		return nil, fmt.Errorf("session reader is nil")
-	}
-	if support == model.SupportPartial {
-		session, err := o.sessions.Get(ctx, runtime.Session().ID)
-		if err != nil {
-			return nil, normalizeLifecycleError(err)
-		}
-		return &RestartResult{Session: session, Support: support}, nil
 	}
 	if o.manager == nil {
 		return nil, fmt.Errorf("session lifecycle manager is nil")

@@ -15,8 +15,6 @@ import (
 	"wzap/internal/repo"
 	"wzap/internal/wa"
 
-	cloudWA "wzap/internal/provider/whatsapp"
-
 	"github.com/google/uuid"
 )
 
@@ -26,19 +24,17 @@ type SessionService struct {
 	repo            *repo.SessionRepository
 	webhookRepo     *repo.WebhookRepository
 	engine          *wa.Manager
-	provider        *cloudWA.Client
 	runtimeResolver *RuntimeResolver
 }
 
-func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager, provider *cloudWA.Client, runtimeResolver *RuntimeResolver) *SessionService {
+func NewSessionService(r *repo.SessionRepository, webhookRepo *repo.WebhookRepository, engine *wa.Manager, runtimeResolver *RuntimeResolver) *SessionService {
 	if runtimeResolver == nil {
-		runtimeResolver = NewRuntimeResolver(r, engine, provider)
+		runtimeResolver = NewRuntimeResolver(r, engine)
 	}
 	return &SessionService{
 		repo:            r,
 		webhookRepo:     webhookRepo,
 		engine:          engine,
-		provider:        provider,
 		runtimeResolver: runtimeResolver,
 	}
 }
@@ -233,21 +229,11 @@ func (s *SessionService) Status(ctx context.Context, id string) (*dto.SessionSta
 	var loggedIn, connected bool
 	session := runtime.Session()
 
-	if runtime.Support() == model.SupportPartial {
-		if runtime.Provider() != nil && session.PhoneNumberID != "" {
-			pn, err := runtime.Provider().GetPhoneNumber(ctx, session.ID, session.PhoneNumberID)
-			if err == nil && pn != nil {
-				connected = true
-				loggedIn = pn.Status == "connected"
-			}
-		}
-	} else {
-		loggedIn = session.JID != ""
-		connected = session.Connected == 1
-		if client, cErr := runtime.Client(); cErr == nil {
-			connected = client.IsConnected()
-			loggedIn = client.Store.ID != nil
-		}
+	loggedIn = session.JID != ""
+	connected = session.Connected == 1
+	if client, cErr := runtime.Client(); cErr == nil {
+		connected = client.IsConnected()
+		loggedIn = client.Store.ID != nil
 	}
 
 	return &dto.SessionStatusResp{
@@ -270,21 +256,6 @@ func (s *SessionService) Profile(ctx context.Context, id string) (*dto.SessionPr
 		return nil, err
 	}
 	session := runtime.Session()
-
-	if runtime.Support() == model.SupportPartial {
-		if runtime.Provider() != nil && session.PhoneNumberID != "" {
-			pn, err := runtime.Provider().GetPhoneNumber(ctx, session.ID, session.PhoneNumberID)
-			if err != nil {
-				return nil, fmt.Errorf("failed to get phone number: %w", err)
-			}
-			return &dto.SessionProfileResp{
-				PushName:     pn.VerifiedName,
-				BusinessName: "",
-				Platform:     pn.PlatformType,
-			}, nil
-		}
-		return &dto.SessionProfileResp{}, nil
-	}
 
 	client, err := runtime.Client()
 	if err != nil {
@@ -328,9 +299,7 @@ func (s *SessionService) Restart(ctx context.Context, id string) (*dto.SessionRe
 	if err != nil {
 		return nil, err
 	}
-	if support == model.SupportPartial {
-		return s.Get(ctx, id)
-	}
+	_ = support
 
 	_ = s.engine.Disconnect(ctx, id)
 	time.Sleep(1 * time.Second)

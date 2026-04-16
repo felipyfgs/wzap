@@ -13,7 +13,6 @@ import (
 	"wzap/internal/async"
 	"wzap/internal/logger"
 	"wzap/internal/model"
-	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/storage"
 	"wzap/internal/wa"
@@ -34,9 +33,9 @@ type MediaService struct {
 func (s *MediaService) SetMessageRepo(r mediaKeyPersister) { s.msgRepo = r }
 func (s *MediaService) SetStatusRepo(r mediaKeyPersister)  { s.statusRepo = r }
 
-func NewMediaService(engine *wa.Manager, minio *storage.Minio, provider *cloudWA.Client, sessRepo *repo.SessionRepository, pool *async.Pool, runtimeResolver *RuntimeResolver) *MediaService {
+func NewMediaService(engine *wa.Manager, minio *storage.Minio, sessRepo *repo.SessionRepository, pool *async.Pool, runtimeResolver *RuntimeResolver) *MediaService {
 	if runtimeResolver == nil {
-		runtimeResolver = NewRuntimeResolver(sessRepo, engine, provider)
+		runtimeResolver = NewRuntimeResolver(sessRepo, engine)
 	}
 	return &MediaService{minio: minio, pool: pool, runtimeResolver: runtimeResolver}
 }
@@ -61,7 +60,7 @@ func (s *MediaService) AutoUploadMedia(sessionID, messageID, chatJID, senderJID,
 			return
 		}
 
-		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
+		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
 			data, err := client.Download(ctx, downloadable)
 			if err != nil {
 				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Auto-upload: failed to download media")
@@ -109,7 +108,7 @@ func (s *MediaService) AutoUploadStatusMedia(sessionID, messageID, chatJID, send
 			return
 		}
 
-		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
+		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
 			data, err := client.Download(ctx, downloadable)
 			if err != nil {
 				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Status auto-upload: failed to download media")
@@ -157,7 +156,7 @@ func (s *MediaService) RetryMediaUpload(sessionID, messageID, chatJID, senderJID
 			return
 		}
 
-		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
+		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
 			data, err := client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, fileLength, mimeTypeToMediaType(mimeType), "")
 			if err != nil {
 				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", messageID).Msg("Media retry upload: falha ao baixar mídia")

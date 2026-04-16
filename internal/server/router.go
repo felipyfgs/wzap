@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"net/http"
 
 	ws "github.com/gofiber/contrib/websocket"
 	"github.com/gofiber/swagger"
@@ -13,7 +12,6 @@ import (
 	"wzap/internal/integrations/chatwoot"
 	"wzap/internal/logger"
 	"wzap/internal/middleware"
-	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/service"
 	"wzap/internal/wa"
@@ -48,16 +46,13 @@ func (s *Server) SetupRoutes() error {
 	chatRepo := repo.NewChatRepository(s.db.Pool)
 	statusRepo := repo.NewStatusRepository(s.db.Pool)
 
-	// Initialize Cloud API Provider
-	runtimeResolver := service.NewRuntimeResolver(sessionRepo, engine, nil)
-	configReader := service.NewSessionConfigReader(runtimeResolver)
-	cloudProvider := cloudWA.NewClient(&http.Client{Timeout: s.Config.HTTPTimeout}, configReader)
-	runtimeResolver.SetProvider(cloudProvider)
+	// Initialize Runtime Resolver
+	runtimeResolver := service.NewRuntimeResolver(sessionRepo, engine)
 
 	// Initialize Services
-	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, cloudProvider, runtimeResolver)
+	sessionSvc := service.NewSessionService(sessionRepo, webhookRepo, engine, runtimeResolver)
 	lifecycleSvc := service.NewLifecycleOrchestrator(runtimeResolver, engine, sessionSvc)
-	messageSvc := service.NewMessageService(engine, cloudProvider, sessionRepo, runtimeResolver)
+	messageSvc := service.NewMessageService(engine, sessionRepo, runtimeResolver)
 	statusSvc := service.NewStatusService(runtimeResolver, statusRepo)
 	contactSvc := service.NewContactService(engine)
 	groupSvc := service.NewGroupService(engine)
@@ -67,7 +62,7 @@ func (s *Server) SetupRoutes() error {
 	communitySvc := service.NewCommunityService(engine)
 	chatSvc := service.NewChatService(engine)
 	mediaPool := s.async.AddPool("media", 4, 50)
-	mediaSvc := service.NewMediaService(engine, s.minio, cloudProvider, sessionRepo, mediaPool, runtimeResolver)
+	mediaSvc := service.NewMediaService(engine, s.minio, sessionRepo, mediaPool, runtimeResolver)
 	historyPool := s.async.AddPool("history", 2, 100)
 	historySvc := service.NewHistoryService(messageRepo, chatRepo, historyPool)
 	historySvc.SetMediaDownloader(engine)
@@ -85,7 +80,9 @@ func (s *Server) SetupRoutes() error {
 	chatwootSvc.SetContactNameGetter(engine)
 	if s.minio != nil {
 		chatwootSvc.SetMediaPresigner(mediaSvc)
+		chatwootSvc.SetMediaStorage(s.minio)
 	}
+	chatwootSvc.SetSessionPhoneGetter(chatwoot.NewSessionPhoneGetter(sessionRepo))
 	chatwootSvc.SetServerURL(s.Config.ServerURL)
 	chatwootSvc.SetCache(chatwoot.NewCache(s.ctx, s.Config.RedisURL))
 	if s.nats != nil {
@@ -101,6 +98,8 @@ func (s *Server) SetupRoutes() error {
 	}
 	chatwootHandler := chatwoot.NewHandler(chatwootSvc, chatwootRepo)
 	disp.AddListener(chatwootSvc)
+
+	cloudWAAPIHandler := handler.NewCloudWAAPIHandler(chatwootRepo, messageSvc, mediaSvc, messageRepo)
 
 	mediaSvc.SetMessageRepo(messageRepo)
 	mediaSvc.SetStatusRepo(statusRepo)
@@ -154,7 +153,6 @@ func (s *Server) SetupRoutes() error {
 	historyHandler := handler.NewHistoryHandler(messageRepo)
 
 	wsHandler := handler.NewWebSocketHandler(hub, s.Config)
-	cloudWebhookHandler := handler.NewCloudWebhookHandler(sessionRepo, cloudProvider, disp)
 
 	// Swagger UI (No Auth)
 	s.App.Get("/swagger/*", swagger.HandlerDefault)
@@ -173,10 +171,6 @@ func (s *Server) SetupRoutes() error {
 
 	// Chatwoot Webhook (No Auth - validated via HMAC signature)
 	s.App.Post("/chatwoot/webhook/:sessionId", chatwootHandler.IncomingWebhook)
-
-	// Cloud API Webhooks (No Auth - validated via HMAC signature)
-	s.App.Post("/webhooks/cloud/:sessionId", cloudWebhookHandler.Handle)
-	s.App.Get("/webhooks/cloud/:sessionId", cloudWebhookHandler.Verify)
 
 	// API Group with Auth (admin token or session token)
 	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))
@@ -316,6 +310,11 @@ func (s *Server) SetupRoutes() error {
 	sess.Get("/integrations/chatwoot", chatwootHandler.GetConfig)
 	sess.Delete("/integrations/chatwoot", chatwootHandler.DeleteConfig)
 	sess.Post("/integrations/chatwoot/import", chatwootHandler.ImportHistory)
+
+	// Cloud API simulation (for Chatwoot WhatsApp Cloud inbox) — registered last to avoid route conflicts
+	s.App.Get("/:version/:phone/messages", cloudWAAPIHandler.VerifyWebhook)
+	s.App.Post("/:version/:phone/messages", cloudWAAPIHandler.SendMessage)
+	s.App.Get("/:version/:phone/:media_id", cloudWAAPIHandler.GetMedia)
 
 	return nil
 }

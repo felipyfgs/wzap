@@ -13,6 +13,10 @@ import (
 )
 
 func (s *Service) handleMessage(ctx context.Context, cfg *Config, payload []byte) error {
+	if cfg.InboxType == "cloud" {
+		return s.handleMessageCloud(ctx, cfg, payload)
+	}
+
 	data, err := parseMessagePayload(payload)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to parse message payload")

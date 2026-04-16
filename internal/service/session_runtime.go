@@ -7,7 +7,6 @@ import (
 	"go.mau.fi/whatsmeow"
 
 	"wzap/internal/model"
-	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/wa"
 )
@@ -19,16 +18,13 @@ type sessionLookup interface {
 type runtimeCtxKey struct{}
 
 type RuntimeResolver struct {
-	repo     sessionLookup
-	engine   *wa.Manager
-	provider *cloudWA.Client
+	repo   sessionLookup
+	engine *wa.Manager
 }
 
 type SessionRuntime struct {
-	session     *model.Session
-	engine      *wa.Manager
-	provider    *cloudWA.Client
-	cloudConfig *cloudWA.Config
+	session *model.Session
+	engine  *wa.Manager
 }
 
 type MessageRuntime struct {
@@ -51,16 +47,8 @@ type ProfileRuntime struct {
 	support model.CapabilitySupport
 }
 
-func NewRuntimeResolver(repo *repo.SessionRepository, engine *wa.Manager, provider *cloudWA.Client) *RuntimeResolver {
-	return newRuntimeResolver(repo, engine, provider)
-}
-
-func newRuntimeResolver(repo sessionLookup, engine *wa.Manager, provider *cloudWA.Client) *RuntimeResolver {
-	return &RuntimeResolver{repo: repo, engine: engine, provider: provider}
-}
-
-func (r *RuntimeResolver) SetProvider(provider *cloudWA.Client) {
-	r.provider = provider
+func NewRuntimeResolver(repo *repo.SessionRepository, engine *wa.Manager) *RuntimeResolver {
+	return &RuntimeResolver{repo: repo, engine: engine}
 }
 
 func (r *RuntimeResolver) Resolve(ctx context.Context, sessionID string) (*SessionRuntime, error) {
@@ -77,12 +65,8 @@ func (r *RuntimeResolver) Resolve(ctx context.Context, sessionID string) (*Sessi
 	}
 
 	runtime := &SessionRuntime{
-		session:  session,
+		session: session,
 		engine:   r.engine,
-		provider: r.provider,
-	}
-	if session.Engine == "cloud_api" {
-		runtime.cloudConfig = buildCloudConfig(session)
 	}
 
 	return runtime, nil
@@ -145,37 +129,13 @@ func (r *SessionRuntime) Engine() string {
 	return r.session.Engine
 }
 
-func (r *SessionRuntime) IsCloudAPI() bool {
-	return r.Engine() == "cloud_api"
-}
-
-func (r *SessionRuntime) Provider() *cloudWA.Client {
-	return r.provider
-}
-
 func (r *SessionRuntime) WithContext(ctx context.Context) context.Context {
 	return context.WithValue(ctx, runtimeCtxKey{}, r)
-}
-
-func (r *SessionRuntime) CloudConfig() (*cloudWA.Config, error) {
-	if r.session == nil {
-		return nil, fmt.Errorf("session runtime is nil")
-	}
-	if !r.IsCloudAPI() {
-		return nil, fmt.Errorf("session %s engine is %s, not cloud_api", r.session.ID, r.session.Engine)
-	}
-	if r.cloudConfig == nil {
-		return nil, fmt.Errorf("cloud config unavailable for session %s", r.session.ID)
-	}
-	return r.cloudConfig, nil
 }
 
 func (r *SessionRuntime) Client() (*whatsmeow.Client, error) {
 	if r.session == nil {
 		return nil, fmt.Errorf("session runtime is nil")
-	}
-	if r.IsCloudAPI() {
-		return nil, fmt.Errorf("session %s engine is %s, not whatsmeow", r.session.ID, r.session.Engine)
 	}
 	if r.engine == nil {
 		return nil, fmt.Errorf("whatsmeow manager unavailable")
@@ -231,38 +191,14 @@ func sessionRuntimeFromContext(ctx context.Context, sessionID string) (*SessionR
 	return runtime, true
 }
 
-func buildCloudConfig(session *model.Session) *cloudWA.Config {
-	if session == nil {
-		return nil
-	}
-	cfg := &cloudWA.Config{
-		AccessToken:        session.AccessToken,
-		PhoneNumberID:      session.PhoneNumberID,
-		BusinessAccountID:  session.BusinessAccountID,
-		AppSecret:          session.AppSecret,
-		WebhookVerifyToken: session.WebhookVerifyToken,
-	}
-	cfg.ApplyDefaults()
-	return cfg
-}
-
 type clientResolver func() (*whatsmeow.Client, error)
 
-func runClientRuntime[T any](ctx context.Context, runtime *SessionRuntime, resolveClient clientResolver, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
+func runClientRuntime[T any](ctx context.Context, runtime *SessionRuntime, resolveClient clientResolver, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
 	var zero T
 	if runtime == nil || runtime.session == nil {
 		return zero, fmt.Errorf("session runtime is nil")
 	}
 	ctx = runtime.WithContext(ctx)
-	if runtime.IsCloudAPI() {
-		if cloud == nil {
-			return zero, fmt.Errorf("cloud runtime handler is nil")
-		}
-		if runtime.provider == nil {
-			return zero, fmt.Errorf("cloud provider unavailable")
-		}
-		return cloud(ctx, runtime.session, runtime.provider)
-	}
 	if whatsmeowFn == nil {
 		return zero, fmt.Errorf("whatsmeow runtime handler is nil")
 	}
@@ -273,18 +209,16 @@ func runClientRuntime[T any](ctx context.Context, runtime *SessionRuntime, resol
 	return whatsmeowFn(ctx, runtime.session, client)
 }
 
-func runSessionRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
-	return runClientRuntime(ctx, runtime, runtime.Client, cloud, whatsmeowFn)
+func runSessionRuntime[T any](ctx context.Context, runtime *SessionRuntime, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
+	return runClientRuntime(ctx, runtime, runtime.Client, whatsmeowFn)
 }
 
-func runConnectedRuntime[T any](ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) (T, error), whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
-	return runClientRuntime(ctx, runtime, runtime.ConnectedClient, cloud, whatsmeowFn)
+func runConnectedRuntime[T any](ctx context.Context, runtime *SessionRuntime, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) (T, error)) (T, error) {
+	return runClientRuntime(ctx, runtime, runtime.ConnectedClient, whatsmeowFn)
 }
 
-func runRuntimeErr(ctx context.Context, runtime *SessionRuntime, cloud func(context.Context, *model.Session, *cloudWA.Client) error, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) error) error {
-	_, err := runSessionRuntime(ctx, runtime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (struct{}, error) {
-		return struct{}{}, cloud(ctx, session, provider)
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
+func runRuntimeErr(ctx context.Context, runtime *SessionRuntime, whatsmeowFn func(context.Context, *model.Session, *whatsmeow.Client) error) error {
+	_, err := runSessionRuntime(ctx, runtime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
 		return struct{}{}, whatsmeowFn(ctx, session, client)
 	})
 	return err

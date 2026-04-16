@@ -8,8 +8,6 @@ import (
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/types"
 
-	cloudWA "wzap/internal/provider/whatsapp"
-
 	"wzap/internal/dto"
 	"wzap/internal/model"
 )
@@ -20,9 +18,7 @@ func (s *MessageService) MarkRead(ctx context.Context, sessionID string, req dto
 		return err
 	}
 
-	return runRuntimeErr(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) error {
-		return provider.MarkRead(ctx, session.ID, req.MessageID)
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) error {
+	return runRuntimeErr(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) error {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return err
@@ -38,7 +34,7 @@ func (s *MessageService) SetPresence(ctx context.Context, sessionID string, req 
 		return err
 	}
 
-	return runRuntimeErr(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) error {
+	return runRuntimeErr(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) error {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return err

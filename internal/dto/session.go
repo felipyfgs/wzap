@@ -43,7 +43,7 @@ type WebhookCreateInline struct {
 type SessionCreateReq struct {
 	Name               string               `json:"name" validate:"required"`
 	Token              string               `json:"token,omitempty"`
-	Engine             string               `json:"engine,omitempty" validate:"omitempty,oneof=whatsmeow cloud_api"`
+	Engine             string               `json:"engine,omitempty" validate:"omitempty,oneof=whatsmeow"`
 	PhoneNumberID      string               `json:"phoneNumberId,omitempty"`
 	AccessToken        string               `json:"accessToken,omitempty"`
 	BusinessAccountID  string               `json:"businessAccountId,omitempty"`

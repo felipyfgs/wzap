@@ -17,7 +17,6 @@ import (
 	"wzap/internal/logger"
 	"wzap/internal/metrics"
 	"wzap/internal/model"
-	cloudWA "wzap/internal/provider/whatsapp"
 	"wzap/internal/repo"
 	"wzap/internal/wa"
 )
@@ -27,9 +26,9 @@ type MessageService struct {
 	persistFn       wa.MessagePersistFunc
 }
 
-func NewMessageService(engine *wa.Manager, provider *cloudWA.Client, sessRepo *repo.SessionRepository, runtimeResolver *RuntimeResolver) *MessageService {
+func NewMessageService(engine *wa.Manager, sessRepo *repo.SessionRepository, runtimeResolver *RuntimeResolver) *MessageService {
 	if runtimeResolver == nil {
-		runtimeResolver = NewRuntimeResolver(sessRepo, engine, provider)
+		runtimeResolver = NewRuntimeResolver(sessRepo, engine)
 	}
 	return &MessageService{runtimeResolver: runtimeResolver}
 }
@@ -50,28 +49,13 @@ func (s *MessageService) persistSent(sessionID, messageID, chatJID, msgType, bod
 	metrics.MessagesSent.Inc()
 }
 
-func (s *MessageService) persistSentCloud(sessionID, messageID, phone, msgType, body, mediaType string) {
-	if s.persistFn == nil {
-		return
-	}
-	s.persistFn(sessionID, messageID, phone, "", true, msgType, body, mediaType, time.Now().Unix(), nil)
-	metrics.MessagesSent.Inc()
-}
-
 func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto.SendTextReq) (string, error) {
 	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageText)
 	if err != nil {
 		return "", err
 	}
 
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		opts := buildSendOptsCloud(req.CustomID, req.ReplyTo)
-		resp, err := provider.SendText(ctx, session.ID, req.Phone, req.Body, opts...)
-		if err != nil {
-			return "", fmt.Errorf("failed to send text message via cloud api: %w", err)
-		}
-		return resp.MessageID, nil
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -118,9 +102,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		return "", err
 	}
 
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		return s.sendMediaCloud(ctx, session.ID, provider, req, mediaType)
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -246,83 +228,13 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 	})
 }
 
-func (s *MessageService) sendMediaCloud(ctx context.Context, sessionID string, provider *cloudWA.Client, req dto.SendMediaReq, mediaType whatsmeow.MediaType) (string, error) {
-	var data []byte
-	var err error
-	if req.URL != "" {
-		data, err = downloadURL(req.URL)
-		if err != nil {
-			return "", err
-		}
-	} else {
-		data, err = base64.StdEncoding.DecodeString(req.Base64)
-		if err != nil {
-			return "", fmt.Errorf("invalid base64: %w", err)
-		}
-	}
-
-	if req.FileName == "" {
-		req.FileName = "file"
-		ext, _ := mime.ExtensionsByType(req.MimeType)
-		if len(ext) > 0 {
-			req.FileName += ext[0]
-		}
-	}
-
-	uploadResp, err := provider.UploadMedia(ctx, sessionID, req.FileName, req.MimeType, data)
-	if err != nil {
-		return "", fmt.Errorf("failed to upload media to cloud api: %w", err)
-	}
-
-	media := &cloudWA.MediaIDOrURL{
-		ID:       uploadResp.ID,
-		Caption:  req.Caption,
-		Filename: req.FileName,
-	}
-
-	opts := buildSendOptsCloud(req.CustomID, req.ReplyTo)
-
-	var resp *cloudWA.MessageResponse
-	switch mediaType {
-	case whatsmeow.MediaImage:
-		resp, err = provider.SendImage(ctx, sessionID, req.Phone, media, opts...)
-	case whatsmeow.MediaVideo:
-		resp, err = provider.SendVideo(ctx, sessionID, req.Phone, media, opts...)
-	case whatsmeow.MediaDocument:
-		resp, err = provider.SendDocument(ctx, sessionID, req.Phone, media, opts...)
-	case whatsmeow.MediaAudio:
-		resp, err = provider.SendAudio(ctx, sessionID, req.Phone, media, opts...)
-	default:
-		return "", fmt.Errorf("unsupported media type for cloud api: %s", mediaType)
-	}
-	if err != nil {
-		return "", fmt.Errorf("failed to send media via cloud api: %w", err)
-	}
-
-	var msgType string
-	switch mediaType {
-	case whatsmeow.MediaImage:
-		msgType = "image"
-	case whatsmeow.MediaVideo:
-		msgType = "video"
-	case whatsmeow.MediaDocument:
-		msgType = "document"
-	case whatsmeow.MediaAudio:
-		msgType = "audio"
-	}
-
-	s.persistSentCloud(sessionID, resp.MessageID, req.Phone, msgType, req.Caption, req.MimeType)
-
-	return resp.MessageID, nil
-}
-
 func (s *MessageService) SendContact(ctx context.Context, sessionID string, req dto.SendContactReq) (string, error) {
 	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageContact)
 	if err != nil {
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -352,13 +264,7 @@ func (s *MessageService) SendLocation(ctx context.Context, sessionID string, req
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		resp, err := provider.SendLocation(ctx, session.ID, req.Phone, req.Latitude, req.Longitude, req.Name, req.Address)
-		if err != nil {
-			return "", fmt.Errorf("failed to send location via cloud api: %w", err)
-		}
-		return resp.MessageID, nil
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -390,14 +296,7 @@ func (s *MessageService) SendLink(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		opts := []cloudWA.SendOption{cloudWA.WithPreviewURL(true)}
-		resp, err := provider.SendText(ctx, session.ID, req.Phone, req.URL, opts...)
-		if err != nil {
-			return "", fmt.Errorf("failed to send link via cloud api: %w", err)
-		}
-		return resp.MessageID, nil
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err

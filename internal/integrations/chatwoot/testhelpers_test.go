@@ -154,6 +154,10 @@ func (m *mockRepo) Delete(_ context.Context, _ string) error {
 	return nil
 }
 
+func (m *mockRepo) FindByPhoneAndInboxType(_ context.Context, _, _ string) (*Config, error) {
+	return nil, fmt.Errorf("not found")
+}
+
 type mockMsgRepo struct{}
 
 func (m *mockMsgRepo) Save(_ context.Context, _ *model.Message) error {

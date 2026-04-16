@@ -10,7 +10,6 @@ import (
 
 	"wzap/internal/dto"
 	"wzap/internal/model"
-	cloudWA "wzap/internal/provider/whatsapp"
 )
 
 func (s *MessageService) SendButton(ctx context.Context, sessionID string, req dto.SendButtonReq) (string, error) {
@@ -19,31 +18,7 @@ func (s *MessageService) SendButton(ctx context.Context, sessionID string, req d
 		return "", err
 	}
 
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		buttons := make([]cloudWA.InteractiveButton, len(req.Buttons))
-		for i, b := range req.Buttons {
-			buttons[i] = cloudWA.InteractiveButton{
-				Type:  "reply",
-				Title: b.Text,
-				ID:    b.ID,
-			}
-		}
-		interactive := &cloudWA.Interactive{
-			Type: "button",
-			Action: &cloudWA.InteractiveAction{
-				Buttons: buttons,
-			},
-			Body: &cloudWA.InteractiveBody{Text: req.Body},
-		}
-		if req.Footer != "" {
-			interactive.Footer = &cloudWA.InteractiveFooter{Text: req.Footer}
-		}
-		resp, err := provider.SendInteractive(ctx, session.ID, req.Phone, interactive, buildSendOptsCloud(req.CustomID, req.ReplyTo)...)
-		if err != nil {
-			return "", fmt.Errorf("failed to send button via cloud api: %w", err)
-		}
-		return resp.MessageID, nil
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -92,40 +67,7 @@ func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, provider *cloudWA.Client) (string, error) {
-		sections := make([]cloudWA.InteractiveSection, len(req.Sections))
-		for i, sec := range req.Sections {
-			rows := make([]cloudWA.InteractiveSectionRow, len(sec.Rows))
-			for j, r := range sec.Rows {
-				rows[j] = cloudWA.InteractiveSectionRow{
-					ID:          r.ID,
-					Title:       r.Title,
-					Description: r.Description,
-				}
-			}
-			sections[i] = cloudWA.InteractiveSection{
-				Title: sec.Title,
-				Rows:  rows,
-			}
-		}
-		interactive := &cloudWA.Interactive{
-			Type: "list",
-			Action: &cloudWA.InteractiveAction{
-				Button:   req.ButtonText,
-				Sections: sections,
-			},
-			Body:   &cloudWA.InteractiveBody{Text: req.Body},
-			Header: &cloudWA.InteractiveHeader{Type: "text", Text: req.Title},
-		}
-		if req.Footer != "" {
-			interactive.Footer = &cloudWA.InteractiveFooter{Text: req.Footer}
-		}
-		resp, err := provider.SendInteractive(ctx, session.ID, req.Phone, interactive, buildSendOptsCloud(req.CustomID, req.ReplyTo)...)
-		if err != nil {
-			return "", fmt.Errorf("failed to send list via cloud api: %w", err)
-		}
-		return resp.MessageID, nil
-	}, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err
@@ -177,7 +119,7 @@ func (s *MessageService) SendPoll(ctx context.Context, sessionID string, req dto
 		return "", err
 	}
 
-	return runSessionRuntime(ctx, runtime.SessionRuntime, nil, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
+	return runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		jid, err := parseJID(req.Phone)
 		if err != nil {
 			return "", err

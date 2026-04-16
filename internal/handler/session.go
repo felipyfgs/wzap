@@ -56,7 +56,7 @@ func (h *SessionHandler) Create(c *fiber.Ctx) error {
 
 	var req dto.SessionCreateReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	session, err := h.sessionSvc.Create(c.Context(), req)
@@ -154,7 +154,7 @@ func (h *SessionHandler) Update(c *fiber.Ctx) error {
 	id := mustGetSessionID(c)
 	var req dto.SessionUpdateReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	session, err := h.sessionSvc.Update(c.Context(), id, req)
@@ -287,7 +287,7 @@ func (h *SessionHandler) Pair(c *fiber.Ctx) error {
 
 	var req dto.PairPhoneReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	result, err := h.lifecycleSvc.Pair(c.Context(), id, req.Phone)

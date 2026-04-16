@@ -14,6 +14,8 @@ import (
 	"wzap/internal/service"
 )
 
+var errResponseSent = errors.New("response already sent")
+
 // Ensure Validate is initialized at package load
 var _ = mw.Validate
 
@@ -33,7 +35,7 @@ func mustGetSessionID(c *fiber.Ctx) string {
 func parseAndValidate(c *fiber.Ctx, req any) error {
 	if err := c.BodyParser(req); err != nil {
 		_ = c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Bad Request", err.Error()))
-		return nil
+		return errResponseSent
 	}
 
 	if err := mw.Validate.Struct(req); err != nil {
@@ -46,7 +48,7 @@ func parseAndValidate(c *fiber.Ctx, req any) error {
 		} else {
 			_ = c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Validation Error", err.Error()))
 		}
-		return nil
+		return errResponseSent
 	}
 	return nil
 }

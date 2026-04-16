@@ -9,15 +9,13 @@ import (
 	"wzap/internal/dto"
 )
 
+// RateLimit applies per-IP rate limiting. This middleware runs before auth,
+// so session-scoped keys are not available here.
 func RateLimit(max int, window time.Duration) fiber.Handler {
 	return limiter.New(limiter.Config{
 		Max:        max,
 		Expiration: window,
 		KeyGenerator: func(c *fiber.Ctx) string {
-			sessionID, ok := c.Locals("sessionID").(string)
-			if ok && sessionID != "" {
-				return sessionID
-			}
 			return c.IP()
 		},
 		LimitReached: func(c *fiber.Ctx) error {

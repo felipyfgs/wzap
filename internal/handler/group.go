@@ -4,10 +4,11 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type GroupHandler struct {
@@ -62,7 +63,7 @@ func (h *GroupHandler) Create(c *fiber.Ctx) error {
 
 	var req dto.CreateGroupReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if req.Name == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "name is required"))
@@ -97,7 +98,7 @@ func (h *GroupHandler) Info(c *fiber.Ctx) error {
 
 	var req dto.GroupJIDReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if req.GroupJID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "groupJid is required"))
@@ -132,7 +133,7 @@ func (h *GroupHandler) GetInviteLink(c *fiber.Ctx) error {
 	}
 	var req dto.GroupJIDReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 	reset := c.QueryBool("reset", false)
@@ -166,7 +167,7 @@ func (h *GroupHandler) GetInfoFromLink(c *fiber.Ctx) error {
 
 	var req dto.GroupJoinReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if req.InviteCode == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(dto.ErrorResp("Invalid Request", "inviteCode is required"))
@@ -201,7 +202,7 @@ func (h *GroupHandler) JoinWithLink(c *fiber.Ctx) error {
 
 	var req dto.GroupJoinReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	jid, err := h.groupSvc.JoinWithLink(c.Context(), id, req.InviteCode)
@@ -232,7 +233,7 @@ func (h *GroupHandler) Leave(c *fiber.Ctx) error {
 	}
 	var req dto.GroupJIDReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 
@@ -265,7 +266,7 @@ func (h *GroupHandler) UpdateParticipants(c *fiber.Ctx) error {
 
 	var req dto.GroupParticipantReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 
@@ -297,7 +298,7 @@ func (h *GroupHandler) GetRequests(c *fiber.Ctx) error {
 	}
 	var req dto.GroupJIDReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 
@@ -330,7 +331,7 @@ func (h *GroupHandler) UpdateRequests(c *fiber.Ctx) error {
 
 	var req dto.GroupJoinActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 
@@ -363,7 +364,7 @@ func (h *GroupHandler) UpdateName(c *fiber.Ctx) error {
 
 	var req dto.GroupTextReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 	if jid == "" {
@@ -398,7 +399,7 @@ func (h *GroupHandler) UpdateDescription(c *fiber.Ctx) error {
 
 	var req dto.GroupTextReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 	if jid == "" {
@@ -433,7 +434,7 @@ func (h *GroupHandler) UpdatePhoto(c *fiber.Ctx) error {
 
 	var req dto.GroupPhotoReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 
@@ -471,7 +472,7 @@ func (h *GroupHandler) SetAnnounce(c *fiber.Ctx) error {
 
 	var req dto.GroupSettingReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 	if jid == "" {
@@ -506,7 +507,7 @@ func (h *GroupHandler) SetLocked(c *fiber.Ctx) error {
 
 	var req dto.GroupSettingReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 	if jid == "" {
@@ -541,7 +542,7 @@ func (h *GroupHandler) SetJoinApproval(c *fiber.Ctx) error {
 
 	var req dto.GroupSettingReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	jid := req.GroupJID
 	if jid == "" {
@@ -575,7 +576,7 @@ func (h *GroupHandler) RemovePhoto(c *fiber.Ctx) error {
 	}
 	var req dto.GroupJIDReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.groupSvc.RemovePhoto(c.Context(), id, req.GroupJID); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to remove group photo")
@@ -604,7 +605,7 @@ func (h *GroupHandler) SetEphemeral(c *fiber.Ctx) error {
 	}
 	var req dto.GroupEphemeralReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	duration := time.Duration(req.Duration) * time.Second
 	if err := h.groupSvc.SetEphemeral(c.Context(), id, req.GroupJID, duration); err != nil {

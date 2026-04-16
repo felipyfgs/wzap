@@ -36,7 +36,7 @@ func (h *NewsletterHandler) Create(c *fiber.Ctx) error {
 	}
 	var req dto.CreateNewsletterReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	meta, err := h.newsletterSvc.Create(c.Context(), id, req)
 	if err != nil {
@@ -147,7 +147,7 @@ func (h *NewsletterHandler) Messages(c *fiber.Ctx) error {
 	}
 	var req dto.NewsletterMessageReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgs, err := h.newsletterSvc.Messages(c.Context(), id, req)
 	if err != nil {
@@ -177,7 +177,7 @@ func (h *NewsletterHandler) Subscribe(c *fiber.Ctx) error {
 	}
 	var req dto.NewsletterSubscribeReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.newsletterSvc.Subscribe(c.Context(), id, req.NewsletterJID); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to subscribe to newsletter")
@@ -206,7 +206,7 @@ func (h *NewsletterHandler) Unsubscribe(c *fiber.Ctx) error {
 	}
 	var req dto.NewsletterSubscribeReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.newsletterSvc.Unsubscribe(c.Context(), id, req.NewsletterJID); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to unsubscribe from newsletter")
@@ -235,7 +235,7 @@ func (h *NewsletterHandler) Mute(c *fiber.Ctx) error {
 	}
 	var req dto.NewsletterMuteReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.newsletterSvc.Mute(c.Context(), id, req.NewsletterJID, req.Mute); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to mute newsletter")
@@ -264,7 +264,7 @@ func (h *NewsletterHandler) React(c *fiber.Ctx) error {
 	}
 	var req dto.NewsletterReactReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.newsletterSvc.React(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to react to newsletter")
@@ -293,7 +293,7 @@ func (h *NewsletterHandler) MarkViewed(c *fiber.Ctx) error {
 	}
 	var req dto.NewsletterViewReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.newsletterSvc.MarkViewed(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to mark newsletter viewed")

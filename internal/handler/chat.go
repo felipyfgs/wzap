@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type ChatHandler struct {
@@ -35,7 +36,7 @@ func (h *ChatHandler) Archive(c *fiber.Ctx) error {
 	}
 	var req dto.ChatActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.Archive(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to archive chat")
@@ -64,7 +65,7 @@ func (h *ChatHandler) Mute(c *fiber.Ctx) error {
 	}
 	var req dto.ChatActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.Mute(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to mute chat")
@@ -93,7 +94,7 @@ func (h *ChatHandler) Pin(c *fiber.Ctx) error {
 	}
 	var req dto.ChatActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.Pin(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to pin chat")
@@ -122,7 +123,7 @@ func (h *ChatHandler) Unpin(c *fiber.Ctx) error {
 	}
 	var req dto.ChatActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.Unpin(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to unpin chat")
@@ -151,7 +152,7 @@ func (h *ChatHandler) Unarchive(c *fiber.Ctx) error {
 	}
 	var req dto.ChatActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.Unarchive(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to unarchive chat")
@@ -180,7 +181,7 @@ func (h *ChatHandler) Unmute(c *fiber.Ctx) error {
 	}
 	var req dto.ChatActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.Unmute(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to unmute chat")
@@ -209,7 +210,7 @@ func (h *ChatHandler) DeleteChat(c *fiber.Ctx) error {
 	}
 	var req dto.ChatActionReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.DeleteChat(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to delete chat")
@@ -238,7 +239,7 @@ func (h *ChatHandler) MarkRead(c *fiber.Ctx) error {
 	}
 	var req dto.ChatMarkReadReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.MarkRead(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to mark chat read")
@@ -267,7 +268,7 @@ func (h *ChatHandler) MarkUnread(c *fiber.Ctx) error {
 	}
 	var req dto.ChatMarkUnreadReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.chatSvc.MarkUnread(c.Context(), id, req); err != nil {
 		return c.Status(fiber.StatusNotImplemented).JSON(dto.ErrorResp("Not Implemented", err.Error()))

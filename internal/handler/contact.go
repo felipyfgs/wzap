@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type ContactHandler struct {
@@ -59,7 +60,7 @@ func (h *ContactHandler) Check(c *fiber.Ctx) error {
 	}
 	var req dto.CheckContactReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	results, err := h.contactSvc.CheckContacts(c.Context(), id, req)
@@ -91,7 +92,7 @@ func (h *ContactHandler) GetAvatar(c *fiber.Ctx) error {
 	}
 	var req dto.GetAvatarReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	resp, err := h.contactSvc.GetAvatar(c.Context(), id, req)
 	if err != nil {
@@ -121,7 +122,7 @@ func (h *ContactHandler) Block(c *fiber.Ctx) error {
 	}
 	var req dto.BlockContactReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	resp, err := h.contactSvc.Block(c.Context(), id, req)
 	if err != nil {
@@ -151,7 +152,7 @@ func (h *ContactHandler) Unblock(c *fiber.Ctx) error {
 	}
 	var req dto.BlockContactReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	resp, err := h.contactSvc.Unblock(c.Context(), id, req)
 	if err != nil {
@@ -204,7 +205,7 @@ func (h *ContactHandler) GetUserInfo(c *fiber.Ctx) error {
 	}
 	var req dto.GetUserInfoReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	resp, err := h.contactSvc.GetUserInfo(c.Context(), id, req)
 	if err != nil {
@@ -257,7 +258,7 @@ func (h *ContactHandler) SetProfilePicture(c *fiber.Ctx) error {
 	}
 	var req dto.UpdateAvatarReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	resp, err := h.contactSvc.SetProfilePicture(c.Context(), id, req)
 	if err != nil {
@@ -287,7 +288,7 @@ func (h *ContactHandler) SubscribePresence(c *fiber.Ctx) error {
 	}
 	var req dto.SubscribePresenceReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.contactSvc.SubscribePresence(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to subscribe presence")
@@ -316,7 +317,7 @@ func (h *ContactHandler) SetPrivacy(c *fiber.Ctx) error {
 	}
 	var req dto.SetPrivacyReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	resp, err := h.contactSvc.SetPrivacy(c.Context(), id, req)
 	if err != nil {
@@ -346,7 +347,7 @@ func (h *ContactHandler) SetStatusMessage(c *fiber.Ctx) error {
 	}
 	var req dto.UpdateStatusReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.contactSvc.SetStatusMessage(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to set status message")
@@ -375,7 +376,7 @@ func (h *ContactHandler) UpdateProfileName(c *fiber.Ctx) error {
 	}
 	var req dto.UpdateProfileNameReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	if err := h.contactSvc.UpdateProfileName(c.Context(), id, req.Name); err != nil {

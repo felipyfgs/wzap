@@ -529,8 +529,8 @@ func (m *Manager) serializeEventData(sessionID string, eventType model.EventType
 	}
 
 	nameCtx, nameCancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer nameCancel()
 	sessionName := m.getSessionName(nameCtx, sessionID)
-	nameCancel()
 
 	return model.BuildEventEnvelope(sessionID, sessionName, eventType, data)
 }
@@ -542,10 +542,10 @@ func (m *Manager) dispatchEvent(sessionID string, eventType model.EventType, env
 			logger.Debug().Str("component", "wa").Str("session", sessionID).Str("event", string(eventType)).Int("size", len(envelope)).Msg("Event payload too large for NATS, skipping")
 		} else {
 			pubCtx, pubCancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer pubCancel()
 			if err := m.nats.Publish(pubCtx, "wzap.events."+sessionID, envelope); err != nil {
 				logger.Error().Str("component", "wa").Err(err).Str("session", sessionID).Msg("Failed to publish NATS event")
 			}
-			pubCancel()
 		}
 	}
 

@@ -33,7 +33,7 @@ func (h *WebhookHandler) Create(c *fiber.Ctx) error {
 	sessionID := mustGetSessionID(c)
 	var req dto.CreateWebhookReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	webhook, err := h.webhookSvc.Create(c.Context(), sessionID, req)
@@ -86,7 +86,7 @@ func (h *WebhookHandler) Update(c *fiber.Ctx) error {
 
 	var req dto.UpdateWebhookReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	webhook, err := h.webhookSvc.Update(c.Context(), sessionID, webhookID, req)

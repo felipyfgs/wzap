@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type CommunityHandler struct {
@@ -35,7 +36,7 @@ func (h *CommunityHandler) Create(c *fiber.Ctx) error {
 	}
 	var req dto.CreateCommunityReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	group, err := h.communitySvc.Create(c.Context(), id, req)
 	if err != nil {
@@ -65,7 +66,7 @@ func (h *CommunityHandler) AddParticipant(c *fiber.Ctx) error {
 	}
 	var req dto.CommunityMembersReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	participants, err := h.communitySvc.AddParticipant(c.Context(), id, req)
 	if err != nil {
@@ -95,7 +96,7 @@ func (h *CommunityHandler) RemoveParticipant(c *fiber.Ctx) error {
 	}
 	var req dto.CommunityMembersReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	participants, err := h.communitySvc.RemoveParticipant(c.Context(), id, req)
 	if err != nil {

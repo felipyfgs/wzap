@@ -63,17 +63,22 @@ func (h *Hub) Broadcast(sessionID string, payload []byte) {
 
 func (h *Hub) BroadcastAll(payload []byte) {
 	h.mu.RLock()
-	allConns := make(map[*ws.Conn]struct{})
-	for _, conns := range h.connections {
+	type connEntry struct {
+		sessionID string
+		conn      *ws.Conn
+	}
+	var allConns []connEntry
+	for sessionID, conns := range h.connections {
 		for conn := range conns {
-			allConns[conn] = struct{}{}
+			allConns = append(allConns, connEntry{sessionID: sessionID, conn: conn})
 		}
 	}
 	h.mu.RUnlock()
 
-	for conn := range allConns {
-		if err := conn.WriteMessage(ws.TextMessage, payload); err != nil {
-			_ = conn.Close()
+	for _, entry := range allConns {
+		if err := entry.conn.WriteMessage(ws.TextMessage, payload); err != nil {
+			h.Unregister(entry.sessionID, entry.conn)
+			_ = entry.conn.Close()
 		}
 	}
 }

@@ -308,10 +308,11 @@ func (d *Dispatcher) Shutdown(ctx context.Context) error {
 	}()
 	select {
 	case <-done:
-		return nil
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+	d.pool.Shutdown(ctx)
+	return nil
 }
 
 func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) error {

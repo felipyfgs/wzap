@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type LabelHandler struct {
@@ -35,7 +36,7 @@ func (h *LabelHandler) AddToChat(c *fiber.Ctx) error {
 	}
 	var req dto.LabelChatReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.labelSvc.AddToChat(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to add label to chat")
@@ -64,7 +65,7 @@ func (h *LabelHandler) RemoveFromChat(c *fiber.Ctx) error {
 	}
 	var req dto.LabelChatReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.labelSvc.RemoveFromChat(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to remove label from chat")
@@ -93,7 +94,7 @@ func (h *LabelHandler) AddToMessage(c *fiber.Ctx) error {
 	}
 	var req dto.LabelMessageReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.labelSvc.AddToMessage(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to add label to message")
@@ -122,7 +123,7 @@ func (h *LabelHandler) RemoveFromMessage(c *fiber.Ctx) error {
 	}
 	var req dto.LabelMessageReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.labelSvc.RemoveFromMessage(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to remove label from message")
@@ -151,7 +152,7 @@ func (h *LabelHandler) EditLabel(c *fiber.Ctx) error {
 	}
 	var req dto.EditLabelReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.labelSvc.EditLabel(c.Context(), id, req); err != nil {
 		logger.Warn().Err(err).Str("component", "handler").Str("session", id).Msg("failed to edit label")

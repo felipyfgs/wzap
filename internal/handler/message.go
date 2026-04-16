@@ -3,10 +3,11 @@ package handler
 import (
 	"context"
 
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type MessageHandler struct {
@@ -46,7 +47,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 	}
 	var req dto.SendTextReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	msgID, err := h.msgSvc.SendText(c.Context(), id, req)
@@ -132,7 +133,7 @@ func (h *MessageHandler) sendMedia(c *fiber.Ctx, sendFunc func(context.Context, 
 	}
 	var req dto.SendMediaReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	if req.Base64 == "" {
@@ -167,7 +168,7 @@ func (h *MessageHandler) SendContact(c *fiber.Ctx) error {
 	}
 	var req dto.SendContactReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.SendContact(c.Context(), id, req)
 	if err != nil {
@@ -196,7 +197,7 @@ func (h *MessageHandler) SendLocation(c *fiber.Ctx) error {
 	}
 	var req dto.SendLocationReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.SendLocation(c.Context(), id, req)
 	if err != nil {
@@ -225,7 +226,7 @@ func (h *MessageHandler) SendPoll(c *fiber.Ctx) error {
 	}
 	var req dto.SendPollReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.SendPoll(c.Context(), id, req)
 	if err != nil {
@@ -254,7 +255,7 @@ func (h *MessageHandler) SendSticker(c *fiber.Ctx) error {
 	}
 	var req dto.SendStickerReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.SendSticker(c.Context(), id, req)
 	if err != nil {
@@ -283,7 +284,7 @@ func (h *MessageHandler) SendLink(c *fiber.Ctx) error {
 	}
 	var req dto.SendLinkReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.SendLink(c.Context(), id, req)
 	if err != nil {
@@ -312,7 +313,7 @@ func (h *MessageHandler) EditMessage(c *fiber.Ctx) error {
 	}
 	var req dto.EditMessageReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.EditMessage(c.Context(), id, req)
 	if err != nil {
@@ -341,7 +342,7 @@ func (h *MessageHandler) DeleteMessage(c *fiber.Ctx) error {
 	}
 	var req dto.DeleteMessageReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.DeleteMessage(c.Context(), id, req)
 	if err != nil {
@@ -370,7 +371,7 @@ func (h *MessageHandler) ReactMessage(c *fiber.Ctx) error {
 	}
 	var req dto.ReactMessageReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	msgID, err := h.msgSvc.ReactMessage(c.Context(), id, req)
 	if err != nil {
@@ -399,7 +400,7 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 	}
 	var req dto.MarkReadReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.msgSvc.MarkRead(c.Context(), id, req); err != nil {
 		return h.respondMessageError(c, err, id, "failed to mark read")
@@ -427,7 +428,7 @@ func (h *MessageHandler) SetPresence(c *fiber.Ctx) error {
 	}
 	var req dto.SetPresenceReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 	if err := h.msgSvc.SetPresence(c.Context(), id, req); err != nil {
 		return h.respondMessageError(c, err, id, "failed to set presence")
@@ -455,7 +456,7 @@ func (h *MessageHandler) SendButton(c *fiber.Ctx) error {
 	}
 	var req dto.SendButtonReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	msgID, err := h.msgSvc.SendButton(c.Context(), id, req)
@@ -486,7 +487,7 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 	}
 	var req dto.SendListReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	msgID, err := h.msgSvc.SendList(c.Context(), id, req)
@@ -517,7 +518,7 @@ func (h *MessageHandler) ForwardMessage(c *fiber.Ctx) error {
 	}
 	var req dto.ForwardMessageReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	msgID, err := h.msgSvc.ForwardMessage(c.Context(), id, req)

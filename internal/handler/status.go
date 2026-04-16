@@ -49,7 +49,7 @@ func (h *StatusHandler) SendText(c *fiber.Ctx) error {
 	}
 	var req dto.StatusTextReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	msgID, err := h.statusSvc.SendStatusText(c.Context(), id, req)
@@ -101,7 +101,7 @@ func (h *StatusHandler) sendStatusMedia(c *fiber.Ctx, mediaType whatsmeow.MediaT
 	}
 	var req dto.StatusMediaReq
 	if err := parseAndValidate(c, &req); err != nil {
-		return err
+		return nil
 	}
 
 	if req.Base64 == "" && req.URL == "" {

@@ -14,6 +14,7 @@ type CloudAPIMessageReq struct {
 	Location         *CloudAPILocation `json:"location,omitempty"`
 	Reaction         *CloudAPIReaction `json:"reaction,omitempty"`
 	Contacts         []CloudAPIContact `json:"contacts,omitempty"`
+	Template         *CloudAPITemplate `json:"template,omitempty"`
 	Context          *CloudAPIContext  `json:"context,omitempty"`
 	Status           string            `json:"status,omitempty"`
 	MessageID        string            `json:"message_id,omitempty"`
@@ -87,6 +88,28 @@ type CloudAPIContact struct {
 
 type CloudAPIContext struct {
 	MessageID string `json:"message_id"`
+}
+
+type CloudAPITemplate struct {
+	Name       string                      `json:"name"`
+	Language   CloudAPITemplateLanguage    `json:"language"`
+	Components []CloudAPITemplateComponent `json:"components,omitempty"`
+}
+
+type CloudAPITemplateLanguage struct {
+	Policy string `json:"policy,omitempty"`
+	Code   string `json:"code"`
+}
+
+type CloudAPITemplateComponent struct {
+	Type       string                      `json:"type"`
+	SubType    string                      `json:"sub_type,omitempty"`
+	Parameters []CloudAPITemplateParameter `json:"parameters,omitempty"`
+}
+
+type CloudAPITemplateParameter struct {
+	Type string `json:"type"`
+	Text string `json:"text,omitempty"`
 }
 
 type CloudAPIMessageResp struct {

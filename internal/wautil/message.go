@@ -23,7 +23,8 @@ func ExtractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string)
 	case msg.GetAudioMessage() != nil:
 		return "audio", "", msg.GetAudioMessage().GetMimetype()
 	case msg.GetDocumentMessage() != nil:
-		return "document", msg.GetDocumentMessage().GetFileName(), msg.GetDocumentMessage().GetMimetype()
+		dm := msg.GetDocumentMessage()
+		return "document", dm.GetFileName(), dm.GetMimetype()
 	case msg.GetStickerMessage() != nil:
 		return "sticker", "", msg.GetStickerMessage().GetMimetype()
 	case msg.GetContactMessage() != nil:
@@ -39,11 +40,23 @@ func ExtractMessageContent(msg *waE2E.Message) (msgType, body, mediaType string)
 	case msg.GetReactionMessage() != nil:
 		return "reaction", msg.GetReactionMessage().GetText(), ""
 	case msg.GetTemplateMessage() != nil:
-		return "template", msg.GetTemplateMessage().GetHydratedTemplate().GetHydratedContentText(), ""
+		t := msg.GetTemplateMessage()
+		if t.GetHydratedTemplate() != nil {
+			hydrated := t.GetHydratedTemplate()
+			return "template", hydrated.GetHydratedContentText(), ""
+		}
+		return "template", "", ""
 	case msg.GetInteractiveMessage() != nil:
-		return "interactive", msg.GetInteractiveMessage().GetHeader().GetSubtitle(), ""
+		im := msg.GetInteractiveMessage()
+		subtitle := ""
+		if im.GetHeader() != nil {
+			subtitle = im.GetHeader().GetSubtitle()
+		}
+		return "interactive", subtitle, ""
 	case msg.GetPollUpdateMessage() != nil:
 		return "poll_update", "", ""
+	case msg.GetDocumentWithCaptionMessage() != nil:
+		return "document", "", ""
 	default:
 		return "unknown", "", ""
 	}

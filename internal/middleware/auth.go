@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"crypto/subtle"
+	"regexp"
 
 	"wzap/internal/config"
 	"wzap/internal/dto"
@@ -11,11 +12,17 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+var cloudAPIPathRegex = regexp.MustCompile(`^/v\d+\.\d+/(?:\d+|debug_token)`)
+
 func Auth(cfg *config.Config, sessionRepo *repo.SessionRepository) fiber.Handler {
 	if cfg.AdminToken == "" {
 		logger.Warn().Str("component", "http").Msg("ADMIN_TOKEN not set: all requests will be rejected")
 	}
 	return func(c *fiber.Ctx) error {
+		if cloudAPIPathRegex.MatchString(c.Path()) {
+			return c.Next()
+		}
+
 		if cfg.AdminToken == "" {
 			return c.Status(fiber.StatusServiceUnavailable).JSON(dto.ErrorResp("Misconfigured", "ADMIN_TOKEN is not set"))
 		}

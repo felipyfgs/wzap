@@ -172,6 +172,18 @@ func (s *Server) SetupRoutes() error {
 	// Chatwoot Webhook (No Auth - validated via HMAC signature)
 	s.App.Post("/chatwoot/webhook/:sessionId", chatwootHandler.IncomingWebhook)
 
+	// Cloud API simulation (for Chatwoot WhatsApp Cloud inbox) — registered BEFORE auth group to avoid being intercepted
+	// Static routes must come BEFORE dynamic /:version/:phone routes to avoid being captured by the wildcard
+	s.App.Get("/:version/debug_token", cloudWAAPIHandler.DebugToken)
+	s.App.Get("/:version/:phone", cloudWAAPIHandler.PhoneStatus)
+	s.App.Post("/:version/:phone/register", cloudWAAPIHandler.RegisterPhone)
+	s.App.Post("/:version/:phone/subscribed_apps", cloudWAAPIHandler.SubscribeApps)
+	s.App.Get("/:version/:phone/messages", cloudWAAPIHandler.VerifyWebhook)
+	s.App.Post("/:version/:phone/messages", cloudWAAPIHandler.SendMessage)
+	s.App.Get("/:version/:phone/message_templates", cloudWAAPIHandler.MessageTemplates)
+	s.App.Get("/:version/:phone/phone_numbers", cloudWAAPIHandler.PhoneNumbers)
+	s.App.Get("/:version/:phone/:media_id", cloudWAAPIHandler.GetMedia)
+
 	// API Group with Auth (admin token or session token)
 	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))
 
@@ -310,11 +322,6 @@ func (s *Server) SetupRoutes() error {
 	sess.Get("/integrations/chatwoot", chatwootHandler.GetConfig)
 	sess.Delete("/integrations/chatwoot", chatwootHandler.DeleteConfig)
 	sess.Post("/integrations/chatwoot/import", chatwootHandler.ImportHistory)
-
-	// Cloud API simulation (for Chatwoot WhatsApp Cloud inbox) — registered last to avoid route conflicts
-	s.App.Get("/:version/:phone/messages", cloudWAAPIHandler.VerifyWebhook)
-	s.App.Post("/:version/:phone/messages", cloudWAAPIHandler.SendMessage)
-	s.App.Get("/:version/:phone/:media_id", cloudWAAPIHandler.GetMedia)
 
 	return nil
 }

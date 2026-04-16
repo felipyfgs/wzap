@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,6 +15,11 @@ import (
 	"wzap/internal/repo"
 	"wzap/internal/service"
 )
+
+// resolveAndLog finds the chatwoot config by phone and logs a warning if the
+// bearer token doesn't match. Unlike the real Facebook Cloud API, we never
+// return HTTP 401 — this prevents Chatwoot from setting the
+// reauthorization_required flag and marking the channel as inactive.
 
 type CloudWAAPIPresigner interface {
 	GetPresignedURL(ctx context.Context, key string) (string, error)
@@ -33,6 +39,87 @@ func NewCloudWAAPIHandler(chatwootRepo chatwoot.Repo, messageSvc *service.Messag
 		mediaPresigner: mediaPresigner,
 		msgRepo:        msgRepo,
 	}
+}
+
+// DebugToken returns a fake valid token response to make Chatwoot believe the
+// WhatsApp Cloud API channel is authenticated.
+// GET /{version}/debug_token
+func (h *CloudWAAPIHandler) DebugToken(c *fiber.Ctx) error {
+	_ = c.Query("access_token") // consumed but ignored
+	return c.JSON(fiber.Map{
+		"data": fiber.Map{
+			"is_valid":    true,
+			"app_id":      "wzap",
+			"application": "wzap",
+			"expires_at":  0,
+			"granular_scopes": []fiber.Map{
+				{"scope": "whatsapp_business_management"},
+				{"scope": "whatsapp_business_messaging"},
+			},
+		},
+	})
+}
+
+// PhoneNumbers lists the phone numbers associated with the session.
+// GET /{version}/{phone}/phone_numbers
+func (h *CloudWAAPIHandler) PhoneNumbers(c *fiber.Ctx) error {
+	phone := c.Params("phone")
+
+	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
+	}
+
+	h.warnTokenMismatch(c, cfg.WebhookToken)
+
+	normalized := normalizePhone(phone)
+	return c.JSON(fiber.Map{
+		"data": []fiber.Map{
+			{
+				"verified_name":        cfg.InboxName,
+				"display_phone_number": normalized,
+				"id":                   normalized,
+			},
+		},
+	})
+}
+
+func (h *CloudWAAPIHandler) MessageTemplates(c *fiber.Ctx) error {
+	phone := c.Params("phone")
+	accessToken := c.Query("access_token")
+
+	logger.Warn().Str("component", "handler").Str("phone", phone).Str("accessToken", accessToken).Msg("Cloud API: MessageTemplates called")
+
+	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
+	if err != nil {
+		logger.Warn().Str("component", "handler").Str("phone", phone).Err(err).Msg("Cloud API: MessageTemplates resolveConfigByPhone failed")
+		return c.Status(fiber.StatusUnauthorized).JSON(cloudAPIError("Invalid access token", "OAuthException", 190))
+	}
+
+	if cfg.WebhookToken == "" || subtle.ConstantTimeCompare([]byte(accessToken), []byte(cfg.WebhookToken)) != 1 {
+		return c.Status(fiber.StatusUnauthorized).JSON(cloudAPIError("Invalid access token", "OAuthException", 190))
+	}
+
+	return c.JSON(fiber.Map{
+		"data": []fiber.Map{
+			{
+				"name":     "mensagem",
+				"language": "pt_BR",
+				"status":   "APPROVED",
+				"category": "UTILITY",
+				"id":       "wzap_mensagem_template",
+				"components": []fiber.Map{
+					{
+						"type": "BODY",
+						"text": "{{1}}",
+						"example": fiber.Map{
+							"body_text": [][]string{{"Olá, tudo bem?"}},
+						},
+					},
+				},
+			},
+		},
+	})
 }
 
 func (h *CloudWAAPIHandler) VerifyWebhook(c *fiber.Ctx) error {
@@ -58,6 +145,66 @@ func (h *CloudWAAPIHandler) VerifyWebhook(c *fiber.Ctx) error {
 	return c.SendString(challenge)
 }
 
+func (h *CloudWAAPIHandler) PhoneStatus(c *fiber.Ctx) error {
+	phone := c.Params("phone")
+
+	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
+	}
+
+	h.warnTokenMismatch(c, cfg.WebhookToken)
+
+	normalized := normalizePhone(phone)
+	return c.JSON(fiber.Map{
+		"id":                       normalized,
+		"display_phone_number":     normalized,
+		"verified_name":            cfg.InboxName,
+		"code_verification_status": "VERIFIED",
+		"quality_rating":           "GREEN",
+		"messaging_limit_tier":     "TIER_100K",
+		"account_mode":             "LIVE",
+		"name_status":              "APPROVED",
+		"platform_type":            "CLOUD_API",
+		"throughput": fiber.Map{
+			"level": "STANDARD",
+		},
+		"webhook_configuration": fiber.Map{
+			"application_webhooks": []any{},
+		},
+	})
+}
+
+func (h *CloudWAAPIHandler) RegisterPhone(c *fiber.Ctx) error {
+	phone := c.Params("phone")
+
+	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
+	}
+
+	h.warnTokenMismatch(c, cfg.WebhookToken)
+
+	return c.JSON(fiber.Map{
+		"success": true,
+	})
+}
+
+func (h *CloudWAAPIHandler) SubscribeApps(c *fiber.Ctx) error {
+	phone := c.Params("phone")
+
+	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
+	}
+
+	h.warnTokenMismatch(c, cfg.WebhookToken)
+
+	return c.JSON(fiber.Map{
+		"success": true,
+	})
+}
+
 func (h *CloudWAAPIHandler) SendMessage(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 
@@ -66,9 +213,7 @@ func (h *CloudWAAPIHandler) SendMessage(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
 	}
 
-	if !h.validateBearerToken(c, cfg.WebhookToken) {
-		return nil
-	}
+	h.warnTokenMismatch(c, cfg.WebhookToken)
 
 	var req dto.CloudAPIMessageReq
 	if err := c.BodyParser(&req); err != nil {
@@ -102,6 +247,8 @@ func (h *CloudWAAPIHandler) SendMessage(c *fiber.Ctx) error {
 		return h.handleReactionSend(c, cfg, req, to)
 	case "contacts":
 		return h.handleContactSend(c, cfg, req, to)
+	case "template":
+		return h.handleTemplateSend(c, cfg, req, to)
 	default:
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Unsupported message type", "OAuthException", 131009))
 	}
@@ -116,9 +263,7 @@ func (h *CloudWAAPIHandler) GetMedia(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
 	}
 
-	if !h.validateBearerToken(c, cfg.WebhookToken) {
-		return nil
-	}
+	h.warnTokenMismatch(c, cfg.WebhookToken)
 
 	if mediaID == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing media_id", "OAuthException", 100))
@@ -183,7 +328,7 @@ func (h *CloudWAAPIHandler) handleMediaSend(c *fiber.Ctx, cfg *chatwoot.Config, 
 
 	sendReq := dto.SendMediaReq{
 		Phone:    to,
-		URL:      media.Link,
+		URL:      rewriteCloudAssetURL(media.Link, cfg.URL),
 		MimeType: media.MimeType,
 		Caption:  media.Caption,
 	}
@@ -221,7 +366,7 @@ func (h *CloudWAAPIHandler) handleDocumentSend(c *fiber.Ctx, cfg *chatwoot.Confi
 
 	sendReq := dto.SendMediaReq{
 		Phone:    to,
-		URL:      req.Document.Link,
+		URL:      rewriteCloudAssetURL(req.Document.Link, cfg.URL),
 		MimeType: req.Document.MimeType,
 		Caption:  req.Document.Caption,
 		FileName: req.Document.Filename,
@@ -313,6 +458,42 @@ func (h *CloudWAAPIHandler) handleReactionSend(c *fiber.Ctx, cfg *chatwoot.Confi
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
+func (h *CloudWAAPIHandler) handleTemplateSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
+	if req.Template == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'template' field", "OAuthException", 131000))
+	}
+
+	sessionID := resolveSessionIDFromConfig(cfg)
+
+	body := ""
+	for _, comp := range req.Template.Components {
+		if comp.Type == "body" || comp.Type == "BODY" {
+			for _, p := range comp.Parameters {
+				if p.Text != "" {
+					body = p.Text
+					break
+				}
+			}
+		}
+	}
+	if body == "" {
+		body = req.Template.Name
+	}
+
+	sendReq := dto.SendTextReq{
+		Phone: to,
+		Body:  body,
+	}
+
+	msgID, err := h.messageSvc.SendText(c.Context(), sessionID, sendReq)
+	if err != nil {
+		logger.Warn().Str("component", "handler").Err(err).Str("session", sessionID).Msg("Cloud API: failed to send template")
+		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
+	}
+
+	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
+}
+
 func (h *CloudWAAPIHandler) handleMarkRead(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq) error {
 	sessionID := resolveSessionIDFromConfig(cfg)
 
@@ -340,24 +521,16 @@ func (h *CloudWAAPIHandler) handleMarkRead(c *fiber.Ctx, cfg *chatwoot.Config, r
 	return c.JSON(fiber.Map{"success": true})
 }
 
-func (h *CloudWAAPIHandler) validateBearerToken(c *fiber.Ctx, expectedToken string) bool {
+func (h *CloudWAAPIHandler) warnTokenMismatch(c *fiber.Ctx, expectedToken string) {
 	authHeader := c.Get("Authorization")
-	if authHeader == "" {
-		_ = c.Status(fiber.StatusUnauthorized).JSON(cloudAPIError("Invalid access token", "OAuthException", 190))
-		return false
-	}
-
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 	if token == authHeader {
 		token = strings.TrimPrefix(authHeader, "bearer ")
 	}
 
-	if expectedToken == "" || subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
-		_ = c.Status(fiber.StatusUnauthorized).JSON(cloudAPIError("Invalid access token", "OAuthException", 190))
-		return false
+	if expectedToken != "" && subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
+		logger.Warn().Str("component", "handler").Str("path", c.Path()).Msg("Cloud API: bearer token mismatch (ignored)")
 	}
-
-	return true
 }
 
 func (h *CloudWAAPIHandler) resolveConfigByPhone(ctx context.Context, phone string) (*chatwoot.Config, error) {
@@ -383,6 +556,35 @@ func normalizePhone(phone string) string {
 		}
 		return -1
 	}, phone), "0")
+}
+
+func rewriteCloudAssetURL(rawURL, chatwootBaseURL string) string {
+	if rawURL == "" || chatwootBaseURL == "" {
+		return rawURL
+	}
+
+	assetURL, err := url.Parse(rawURL)
+	if err != nil {
+		return rawURL
+	}
+
+	baseURL, err := url.Parse(strings.TrimRight(chatwootBaseURL, "/"))
+	if err != nil {
+		return rawURL
+	}
+
+	if assetURL.Host == "" {
+		assetURL.Scheme = baseURL.Scheme
+		assetURL.Host = baseURL.Host
+		return assetURL.String()
+	}
+
+	if strings.EqualFold(assetURL.Hostname(), "localhost") || assetURL.Hostname() == "127.0.0.1" || assetURL.Hostname() == "::1" {
+		assetURL.Scheme = baseURL.Scheme
+		assetURL.Host = baseURL.Host
+	}
+
+	return assetURL.String()
 }
 
 func cloudAPIError(message, errType string, code int) dto.CloudAPIErrorResp {

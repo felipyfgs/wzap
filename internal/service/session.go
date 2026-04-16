@@ -6,14 +6,15 @@ import (
 	"regexp"
 	"time"
 
-	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/metrics"
 	"wzap/internal/model"
 	"wzap/internal/repo"
 	"wzap/internal/wa"
+
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 
 	"github.com/google/uuid"
 )
@@ -58,20 +59,15 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 		engine = "whatsmeow"
 	}
 	session := &model.Session{
-		ID:                 uuid.NewString(),
-		Name:               req.Name,
-		Token:              token,
-		Status:             "disconnected",
-		Engine:             engine,
-		PhoneNumberID:      req.PhoneNumberID,
-		AccessToken:        req.AccessToken,
-		BusinessAccountID:  req.BusinessAccountID,
-		AppSecret:          req.AppSecret,
-		WebhookVerifyToken: req.WebhookVerifyToken,
-		Proxy:              model.SessionProxy(req.Proxy),
-		Settings:           model.SessionSettings(req.Settings),
-		CreatedAt:          now,
-		UpdatedAt:          now,
+		ID:        uuid.NewString(),
+		Name:      req.Name,
+		Token:     token,
+		Status:    "disconnected",
+		Engine:    engine,
+		Proxy:     model.SessionProxy(req.Proxy),
+		Settings:  model.SessionSettings(req.Settings),
+		CreatedAt: now,
+		UpdatedAt: now,
 	}
 
 	if err := s.repo.Create(ctx, session); err != nil {
@@ -83,18 +79,16 @@ func (s *SessionService) Create(ctx context.Context, req dto.SessionCreateReq) (
 	proxy := req.Proxy
 	proxy.Password = ""
 	resp := &dto.SessionWithTokenResp{
-		ID:                session.ID,
-		Name:              session.Name,
-		Token:             session.Token,
-		Status:            session.Status,
-		Connected:         session.Connected,
-		Engine:            session.Engine,
-		PhoneNumberID:     session.PhoneNumberID,
-		BusinessAccountID: session.BusinessAccountID,
-		Proxy:             proxy,
-		Settings:          req.Settings,
-		CreatedAt:         session.CreatedAt,
-		UpdatedAt:         session.UpdatedAt,
+		ID:        session.ID,
+		Name:      session.Name,
+		Token:     session.Token,
+		Status:    session.Status,
+		Connected: session.Connected,
+		Engine:    session.Engine,
+		Proxy:     proxy,
+		Settings:  req.Settings,
+		CreatedAt: session.CreatedAt,
+		UpdatedAt: session.UpdatedAt,
 	}
 
 	if req.Webhook != nil && req.Webhook.URL != "" {
@@ -185,21 +179,6 @@ func (s *SessionService) Update(ctx context.Context, id string, req dto.SessionU
 	}
 	if req.Engine != nil {
 		session.Engine = *req.Engine
-	}
-	if req.PhoneNumberID != nil {
-		session.PhoneNumberID = *req.PhoneNumberID
-	}
-	if req.AccessToken != nil {
-		session.AccessToken = *req.AccessToken
-	}
-	if req.BusinessAccountID != nil {
-		session.BusinessAccountID = *req.BusinessAccountID
-	}
-	if req.AppSecret != nil {
-		session.AppSecret = *req.AppSecret
-	}
-	if req.WebhookVerifyToken != nil {
-		session.WebhookVerifyToken = *req.WebhookVerifyToken
 	}
 	if req.Proxy != nil {
 		session.Proxy = model.SessionProxy(*req.Proxy)

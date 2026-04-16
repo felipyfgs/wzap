@@ -10,13 +10,18 @@ CREATE TABLE IF NOT EXISTS wz_chatwoot (
     token                VARCHAR(255)  NOT NULL,
     inbox_id             INTEGER       NOT NULL,
     inbox_name           VARCHAR(255)  NOT NULL DEFAULT 'wzap',
+    inbox_type           VARCHAR(20)   NOT NULL DEFAULT 'api',
     enabled              BOOLEAN       NOT NULL DEFAULT true,
+
+    -- Webhook
+    webhook_token        VARCHAR(255)  NOT NULL DEFAULT '',
 
     -- Message behavior
     sign_msg             BOOLEAN       NOT NULL DEFAULT false,
     sign_delimiter       VARCHAR(50)   NOT NULL DEFAULT '\n',
     reopen_conversation  BOOLEAN       NOT NULL DEFAULT true,
     conversation_pending BOOLEAN       NOT NULL DEFAULT false,
+    message_read         BOOLEAN       NOT NULL DEFAULT false,
 
     -- Contact handling
     merge_br_contacts    BOOLEAN       NOT NULL DEFAULT true,
@@ -34,8 +39,9 @@ CREATE TABLE IF NOT EXISTS wz_chatwoot (
     timeout_media_seconds INTEGER      NOT NULL DEFAULT 60,
     timeout_large_seconds INTEGER      NOT NULL DEFAULT 300,
 
-    -- External cache
+    -- External
     redis_url            VARCHAR(255)  NOT NULL DEFAULT '',
+    database_uri         TEXT          NOT NULL DEFAULT '',
 
     created_at           TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     updated_at           TIMESTAMPTZ   NOT NULL DEFAULT NOW()

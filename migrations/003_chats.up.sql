@@ -1,3 +1,6 @@
+-- =====================================================
+-- Chats (History Store)
+-- =====================================================
 CREATE TABLE IF NOT EXISTS wz_chats (
     session_id              VARCHAR(100) NOT NULL REFERENCES wz_sessions(id) ON DELETE CASCADE,
     chat_jid                VARCHAR(255) NOT NULL,
@@ -44,17 +47,3 @@ DROP TRIGGER IF EXISTS trg_wz_chats_updated_at ON wz_chats;
 CREATE TRIGGER trg_wz_chats_updated_at
     BEFORE UPDATE ON wz_chats
     FOR EACH ROW EXECUTE FUNCTION set_updated_at();
-
-ALTER TABLE wz_messages
-    ADD COLUMN IF NOT EXISTS source VARCHAR(32) NOT NULL DEFAULT 'live',
-    ADD COLUMN IF NOT EXISTS source_sync_type VARCHAR(64),
-    ADD COLUMN IF NOT EXISTS history_chunk_order INTEGER,
-    ADD COLUMN IF NOT EXISTS history_message_order BIGINT,
-    ADD COLUMN IF NOT EXISTS imported_to_chatwoot_at TIMESTAMPTZ;
-
-CREATE INDEX IF NOT EXISTS idx_wz_messages_session_source
-    ON wz_messages (session_id, source, timestamp DESC);
-
-CREATE INDEX IF NOT EXISTS idx_wz_messages_history_order
-    ON wz_messages (session_id, history_chunk_order, timestamp, history_message_order)
-    WHERE history_chunk_order IS NOT NULL;

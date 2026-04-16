@@ -7,9 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"wzap/internal/logger"
 	"wzap/migrations"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DB struct {
@@ -176,7 +177,9 @@ func (db *DB) BootstrapBaseline(ctx context.Context) error {
 	}{
 		{"wz_sessions", "001_schema.up.sql"},
 		{"wz_messages", "002_messages.up.sql"},
-		{"wz_chatwoot", "003_chatwoot.up.sql"},
+		{"wz_chats", "003_chats.up.sql"},
+		{"wz_statuses", "004_statuses.up.sql"},
+		{"wz_chatwoot", "005_chatwoot.up.sql"},
 	}
 
 	for _, tm := range tableToMigration {

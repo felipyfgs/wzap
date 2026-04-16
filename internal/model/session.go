@@ -20,21 +20,16 @@ type SessionSettings struct {
 }
 
 type Session struct {
-	ID                 string          `json:"id"`
-	Name               string          `json:"name"`
-	Token              string          `json:"token,omitempty"`
-	JID                string          `json:"jid,omitempty"`
-	QRCode             string          `json:"qrCode,omitempty"`
-	Connected          int             `json:"connected"`
-	Status             string          `json:"status"`
-	Engine             string          `json:"engine,omitempty"`
-	PhoneNumberID      string          `json:"phoneNumberId,omitempty"`
-	AccessToken        string          `json:"accessToken,omitempty"`
-	BusinessAccountID  string          `json:"businessAccountId,omitempty"`
-	AppSecret          string          `json:"appSecret,omitempty"`
-	WebhookVerifyToken string          `json:"webhookVerifyToken,omitempty"`
-	Proxy              SessionProxy    `json:"proxy"`
-	Settings           SessionSettings `json:"settings"`
-	CreatedAt          time.Time       `json:"createdAt"`
-	UpdatedAt          time.Time       `json:"updatedAt"`
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	Token     string          `json:"token,omitempty"`
+	JID       string          `json:"jid,omitempty"`
+	QRCode    string          `json:"qrCode,omitempty"`
+	Connected int             `json:"connected"`
+	Status    string          `json:"status"`
+	Engine    string          `json:"engine,omitempty"`
+	Proxy     SessionProxy    `json:"proxy"`
+	Settings  SessionSettings `json:"settings"`
+	CreatedAt time.Time       `json:"createdAt"`
+	UpdatedAt time.Time       `json:"updatedAt"`
 }

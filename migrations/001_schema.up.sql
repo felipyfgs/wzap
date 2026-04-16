@@ -23,13 +23,6 @@ CREATE TABLE IF NOT EXISTS wz_sessions (
     connected            INTEGER       NOT NULL DEFAULT 0,
     engine               VARCHAR(20)   NOT NULL DEFAULT 'whatsmeow',
 
-    -- Cloud API fields
-    phone_number_id      VARCHAR(100),
-    access_token         TEXT,
-    business_account_id  VARCHAR(100),
-    app_secret           TEXT,
-    webhook_verify_token VARCHAR(255),
-
     -- Extensible config
     proxy                JSONB         NOT NULL DEFAULT '{}',
     settings             JSONB         NOT NULL DEFAULT '{}',

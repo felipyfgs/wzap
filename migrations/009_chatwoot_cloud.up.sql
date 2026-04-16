@@ -1,2 +1,0 @@
-ALTER TABLE wz_chatwoot
-  ADD COLUMN IF NOT EXISTS inbox_type VARCHAR(20) NOT NULL DEFAULT 'api';

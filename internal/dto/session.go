@@ -41,65 +41,51 @@ type WebhookCreateInline struct {
 }
 
 type SessionCreateReq struct {
-	Name               string               `json:"name" validate:"required"`
-	Token              string               `json:"token,omitempty"`
-	Engine             string               `json:"engine,omitempty" validate:"omitempty,oneof=whatsmeow"`
-	PhoneNumberID      string               `json:"phoneNumberId,omitempty"`
-	AccessToken        string               `json:"accessToken,omitempty"`
-	BusinessAccountID  string               `json:"businessAccountId,omitempty"`
-	AppSecret          string               `json:"appSecret,omitempty"`
-	WebhookVerifyToken string               `json:"webhookVerifyToken,omitempty"`
-	Proxy              SessionProxy         `json:"proxy,omitempty"`
-	Webhook            *WebhookCreateInline `json:"webhook,omitempty"`
-	Settings           SessionSettings      `json:"settings,omitempty"`
+	Name     string               `json:"name" validate:"required"`
+	Token    string               `json:"token,omitempty"`
+	Engine   string               `json:"engine,omitempty" validate:"omitempty,oneof=whatsmeow"`
+	Proxy    SessionProxy         `json:"proxy,omitempty"`
+	Webhook  *WebhookCreateInline `json:"webhook,omitempty"`
+	Settings SessionSettings      `json:"settings,omitempty"`
 }
 
 type SessionResp struct {
-	ID                string          `json:"id"`
-	Name              string          `json:"name"`
-	JID               string          `json:"jid,omitempty"`
-	Connected         int             `json:"connected"`
-	Status            string          `json:"status"`
-	Engine            string          `json:"engine,omitempty"`
-	PhoneNumberID     string          `json:"phoneNumberId,omitempty"`
-	BusinessAccountID string          `json:"businessAccountId,omitempty"`
-	Proxy             SessionProxy    `json:"proxy"`
-	Settings          SessionSettings `json:"settings"`
-	PushName          string          `json:"pushName,omitempty"`
-	BusinessName      string          `json:"businessName,omitempty"`
-	Platform          string          `json:"platform,omitempty"`
-	ChatwootEnabled   bool            `json:"chatwootEnabled"`
-	CreatedAt         time.Time       `json:"createdAt"`
-	UpdatedAt         time.Time       `json:"updatedAt"`
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	JID             string          `json:"jid,omitempty"`
+	Connected       int             `json:"connected"`
+	Status          string          `json:"status"`
+	Engine          string          `json:"engine,omitempty"`
+	Proxy           SessionProxy    `json:"proxy"`
+	Settings        SessionSettings `json:"settings"`
+	PushName        string          `json:"pushName,omitempty"`
+	BusinessName    string          `json:"businessName,omitempty"`
+	Platform        string          `json:"platform,omitempty"`
+	ChatwootEnabled bool            `json:"chatwootEnabled"`
+	CreatedAt       time.Time       `json:"createdAt"`
+	UpdatedAt       time.Time       `json:"updatedAt"`
 }
 
 type SessionWithTokenResp struct {
-	ID                string          `json:"id"`
-	Name              string          `json:"name"`
-	Token             string          `json:"token"`
-	JID               string          `json:"jid,omitempty"`
-	Connected         int             `json:"connected"`
-	Status            string          `json:"status"`
-	Engine            string          `json:"engine,omitempty"`
-	PhoneNumberID     string          `json:"phoneNumberId,omitempty"`
-	BusinessAccountID string          `json:"businessAccountId,omitempty"`
-	Proxy             SessionProxy    `json:"proxy"`
-	Settings          SessionSettings `json:"settings"`
-	CreatedAt         time.Time       `json:"createdAt"`
-	UpdatedAt         time.Time       `json:"updatedAt"`
-	Webhook           *WebhookResp    `json:"webhook,omitempty"`
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	Token     string          `json:"token"`
+	JID       string          `json:"jid,omitempty"`
+	Connected int             `json:"connected"`
+	Status    string          `json:"status"`
+	Engine    string          `json:"engine,omitempty"`
+	Proxy     SessionProxy    `json:"proxy"`
+	Settings  SessionSettings `json:"settings"`
+	CreatedAt time.Time       `json:"createdAt"`
+	UpdatedAt time.Time       `json:"updatedAt"`
+	Webhook   *WebhookResp    `json:"webhook,omitempty"`
 }
 
 type SessionUpdateReq struct {
-	Name               *string          `json:"name,omitempty"`
-	Engine             *string          `json:"engine,omitempty"`
-	PhoneNumberID      *string          `json:"phoneNumberId,omitempty"`
-	AccessToken        *string          `json:"accessToken,omitempty"`
-	BusinessAccountID  *string          `json:"businessAccountId,omitempty"`
-	AppSecret          *string          `json:"appSecret,omitempty"`
-	WebhookVerifyToken *string          `json:"webhookVerifyToken,omitempty"`
-	Proxy              *SessionProxy    `json:"proxy,omitempty"`
-	Settings           *SessionSettings `json:"settings,omitempty"`
+	Name     *string          `json:"name,omitempty"`
+	Engine   *string          `json:"engine,omitempty"`
+	Proxy    *SessionProxy    `json:"proxy,omitempty"`
+	Settings *SessionSettings `json:"settings,omitempty"`
 }
 
 type SessionStatusResp struct {
@@ -135,20 +121,18 @@ func SessionToResp(s model.Session, pushName, businessName, platform string) Ses
 	proxy := SessionProxy(s.Proxy)
 	proxy.Password = ""
 	return SessionResp{
-		ID:                s.ID,
-		Name:              s.Name,
-		JID:               s.JID,
-		Connected:         s.Connected,
-		Status:            s.Status,
-		Engine:            s.Engine,
-		PhoneNumberID:     s.PhoneNumberID,
-		BusinessAccountID: s.BusinessAccountID,
-		Proxy:             proxy,
-		Settings:          SessionSettings(s.Settings),
-		PushName:          pushName,
-		BusinessName:      businessName,
-		Platform:          platform,
-		CreatedAt:         s.CreatedAt,
-		UpdatedAt:         s.UpdatedAt,
+		ID:           s.ID,
+		Name:         s.Name,
+		JID:          s.JID,
+		Connected:    s.Connected,
+		Status:       s.Status,
+		Engine:       s.Engine,
+		Proxy:        proxy,
+		Settings:     SessionSettings(s.Settings),
+		PushName:     pushName,
+		BusinessName: businessName,
+		Platform:     platform,
+		CreatedAt:    s.CreatedAt,
+		UpdatedAt:    s.UpdatedAt,
 	}
 }

@@ -1,1 +1,0 @@
--- no-op: dados removidos são lixo de protocolo e não precisam ser restaurados

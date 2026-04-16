@@ -110,7 +110,7 @@ func TestSessionQR_NotFound(t *testing.T) {
 
 func TestSessionPair_NotSupported(t *testing.T) {
 	app := newSessionLifecycleApp(&stubLifecycleService{
-		pairErr: &service.CapabilityError{Engine: "cloud_api", Capability: model.CapabilitySessionPair, Support: model.SupportUnavailable},
+		pairErr: &service.CapabilityError{Engine: "unknown", Capability: model.CapabilitySessionPair, Support: model.SupportUnavailable},
 	})
 	body, _ := json.Marshal(dto.PairPhoneReq{Phone: "5511999999999"})
 

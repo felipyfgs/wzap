@@ -42,6 +42,13 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 		return nil
 	}
 
+	// Chatwoot Cloud inbox only supports E164 phone numbers as source_id.
+	// Group JIDs (e.g. "120363...@g.us") are not valid and would cause the
+	// channel to be marked as inactive on Chatwoot side.
+	if strings.HasSuffix(chatJID, "@g.us") || strings.HasSuffix(chatJID, "@newsletter") {
+		return nil
+	}
+
 	if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
 		return nil
 	}
@@ -227,7 +234,11 @@ func buildCloudTextMessage(body, msgID, from, timestamp string) map[string]any {
 }
 
 func buildCloudMediaMessage(mediaType, link, mimeType, caption, filename, msgID, from, timestamp string) map[string]any {
+	// Chatwoot Cloud inbox resolves media via `id` → GET /v{version}/{phone}/{id}
+	// (handled by CloudAPIHandler.GetMedia). `link` is kept as a fallback for
+	// clients that read it directly.
 	mediaObj := map[string]any{
+		"id":        msgID,
 		"link":      link,
 		"mime_type": mimeType,
 	}

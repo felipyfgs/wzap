@@ -99,7 +99,11 @@ func (s *Server) SetupRoutes() error {
 	chatwootHandler := chatwoot.NewHandler(chatwootSvc, chatwootRepo)
 	disp.AddListener(chatwootSvc)
 
-	cloudAPIHandler := handler.NewCloudAPIHandler(chatwootRepo, messageSvc, mediaSvc, messageRepo)
+	cloudAPIHandler := handler.NewCloudAPIHandler(chatwootRepo, messageSvc, mediaSvc, messageRepo, s.Config.AdminToken)
+	if s.minio != nil {
+		cloudAPIHandler.SetMediaStorage(s.minio)
+	}
+	cloudAPIHandler.SetServerURL(s.Config.ServerURL)
 
 	mediaSvc.SetMessageRepo(messageRepo)
 	mediaSvc.SetStatusRepo(statusRepo)
@@ -174,15 +178,24 @@ func (s *Server) SetupRoutes() error {
 
 	// Cloud API simulation (for Chatwoot WhatsApp Cloud inbox) — registered BEFORE auth group to avoid being intercepted
 	// Static routes must come BEFORE dynamic /:version/:phone routes to avoid being captured by the wildcard
-	s.App.Get("/:version/debug_token", cloudAPIHandler.DebugToken)
-	s.App.Get("/:version/:phone", cloudAPIHandler.PhoneStatus)
-	s.App.Post("/:version/:phone/register", cloudAPIHandler.RegisterPhone)
-	s.App.Post("/:version/:phone/subscribed_apps", cloudAPIHandler.SubscribeApps)
-	s.App.Get("/:version/:phone/messages", cloudAPIHandler.VerifyWebhook)
-	s.App.Post("/:version/:phone/messages", cloudAPIHandler.SendMessage)
-	s.App.Get("/:version/:phone/message_templates", cloudAPIHandler.MessageTemplates)
-	s.App.Get("/:version/:phone/phone_numbers", cloudAPIHandler.PhoneNumbers)
-	s.App.Get("/:version/:phone/:media_id", cloudAPIHandler.GetMedia)
+	s.App.Get("/:version<regex(v\\d+\\.\\d+)>/debug_token", cloudAPIHandler.DebugToken)
+	// GET /v{version}/{param} covers both PhoneStatus (param is a numeric phone)
+	// and the upstream Chatwoot Cloud media download (GET /v{version}/{media_id},
+	// no phone). The PhoneStatus handler checks the param shape and delegates
+	// to GetMediaByID when it looks like a WhatsApp message id (alphanumeric).
+	s.App.Get("/:version<regex(v\\d+\\.\\d+)>/:phone", cloudAPIHandler.PhoneStatus)
+	s.App.Post("/:version<regex(v\\d+\\.\\d+)>/:phone/register", cloudAPIHandler.RegisterPhone)
+	s.App.Post("/:version<regex(v\\d+\\.\\d+)>/:phone/subscribed_apps", cloudAPIHandler.SubscribeApps)
+	s.App.Get("/:version<regex(v\\d+\\.\\d+)>/:phone/messages", cloudAPIHandler.VerifyWebhook)
+	s.App.Post("/:version<regex(v\\d+\\.\\d+)>/:phone/messages", cloudAPIHandler.SendMessage)
+	s.App.Get("/:version<regex(v\\d+\\.\\d+)>/:phone/message_templates", cloudAPIHandler.MessageTemplates)
+	s.App.Get("/:version<regex(v\\d+\\.\\d+)>/:phone/phone_numbers", cloudAPIHandler.PhoneNumbers)
+	s.App.Get("/:version<regex(v\\d+\\.\\d+)>/:phone/:media_id", cloudAPIHandler.GetMedia)
+
+	// Inline media proxy for Chatwoot Cloud inbox: returns raw bytes of an
+	// uploaded media object. See CloudAPIHandler.DownloadCloudMedia for why
+	// this route is intentionally unauthenticated.
+	s.App.Get("/cloud-media/:media_id", cloudAPIHandler.DownloadCloudMedia)
 
 	// API Group with Auth (admin token or session token)
 	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))

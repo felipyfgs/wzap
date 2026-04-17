@@ -417,6 +417,11 @@ func (s *Service) processPicture(ctx context.Context, cfg *Config, payload []byt
 }
 
 func (s *Service) processGroupInfo(ctx context.Context, cfg *Config, payload []byte) error {
+	// Chatwoot Cloud inbox rejects source_ids > 15 digits (group JIDs have 18+),
+	// so we skip group notifications entirely in cloud mode.
+	if cfg.InboxType == "cloud" {
+		return nil
+	}
 	var data struct {
 		JID      string  `json:"JID"`
 		Sender   *string `json:"Sender"`

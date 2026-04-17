@@ -1,3 +1,11 @@
+# =============================================================================
+# Chatwoot — stack completo (rails + sidekiq + postgres + redis)
+# =============================================================================
+# Usa a rede `wzap_chatwoot` criada pelo compose principal do wzap para que o
+# serviço `api` do wzap seja alcançável em http://api:8080 a partir do rails.
+# Suba o wzap antes: `make docker-dev` ou `make docker-prod`.
+# =============================================================================
+
 x-base: &base
   image: chatwoot/chatwoot:latest
   env_file: .env
@@ -6,47 +14,41 @@ x-base: &base
     - ./trigger.rb:/app/lib/webhooks/trigger.rb:ro
   restart: unless-stopped
 
+x-rails-env: &rails-env
+  NODE_ENV: production
+  RAILS_ENV: production
+  INSTALLATION_ENV: docker
+  WHATSAPP_CLOUD_BASE_URL: ${WHATSAPP_CLOUD_BASE_URL:-http://api:8080}
+
 services:
   rails:
     <<: *base
     container_name: chatwoot_rails
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
     ports:
       - "${CHATWOOT_PORT:-3000}:3000"
     environment:
-      - NODE_ENV=production
-      - RAILS_ENV=production
-      - INSTALLATION_ENV=docker
+      <<: *rails-env
     extra_hosts:
       - "host.docker.internal:host-gateway"
     entrypoint: docker/entrypoints/rails.sh
     command: ['sh', '-c', 'bundle exec rails db:chatwoot_prepare && bundle exec rails s -p 3000 -b 0.0.0.0']
-    networks:
-      - default
-      - wzap_chatwoot
+    networks: [default, wzap_chatwoot]
 
   sidekiq:
     <<: *base
     container_name: chatwoot_sidekiq
     depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      postgres: { condition: service_healthy }
+      redis:    { condition: service_healthy }
     environment:
-      - NODE_ENV=production
-      - RAILS_ENV=production
-      - INSTALLATION_ENV=docker
+      <<: *rails-env
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
-    networks:
-      - default
-      - wzap_chatwoot
+    networks: [default, wzap_chatwoot]
 
   postgres:
     image: pgvector/pgvector:pg16

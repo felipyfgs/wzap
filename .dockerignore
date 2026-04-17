@@ -1,25 +1,54 @@
+# =============================================================================
+# Docker build context — exclui o que NÃO faz parte das imagens
+# =============================================================================
+
+# VCS + config de editor
 .git
 .github
 .gitignore
-.env
-.env.*
-.factory
-.home
-.devcontainer
 .editorconfig
 .vscode
 .windsurf
 .opencode
-*.md
-Makefile
-docker-compose*.yml
-docker-compose.dev.yml
-docker-compose.prod.yml
-docker
-docs
-temp
+.factory
+.home
+.devcontainer
+
+# Env local (as imagens devem receber env via compose/runtime)
+.env
+.env.*
+!.env.example
+
+# Artefatos de build / caches
 bin
-chatwoot-docker
+tmp
+temp
+.nuxt
+.output
+.cache
+dist
+coverage
+**/*.log
+
+# Node artifacts (serão reinstalados dentro do container)
+**/node_modules
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Compose + stacks (não entram nas imagens)
+docker-compose*.yml
+docker/chatwoot
+
+# Documentação e materiais auxiliares
+*.md
+!README.md
+docs
 openspec
-scripts
+_study
 stacks
+
+# Toolchain local
+Makefile
+.air.toml
+.golangci*.yml

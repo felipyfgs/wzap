@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
+	"io"
 	"net/url"
 	"strings"
 
@@ -16,29 +17,71 @@ import (
 	"wzap/internal/service"
 )
 
-// resolveAndLog finds the chatwoot config by phone and logs a warning if the
-// bearer token doesn't match. Unlike the real Facebook Cloud API, we never
-// return HTTP 401 — this prevents Chatwoot from setting the
-// reauthorization_required flag and marking the channel as inactive.
+// Package-level note: every handler in this file emulates a subset of the
+// Facebook WhatsApp Cloud API for Chatwoot's "WhatsApp Cloud" inbox.
+//
+// Rule: we NEVER return HTTP 401 from these endpoints. Chatwoot's
+// Reauthorizable concern increments an error counter on 401 responses and
+// flips the channel to `reauthorization_required` after 2 failures, which
+// silently drops every subsequent webhook. Token mismatches are logged via
+// `warnTokenMismatch` and otherwise ignored.
 
 type CloudPresigner interface {
 	GetPresignedURL(ctx context.Context, key string) (string, error)
+}
+
+// CloudMediaStorage lets the Cloud API emulator stream object bytes back to
+// the caller (Chatwoot) without redirecting to MinIO. Redirecting is fragile
+// because Chatwoot's Down.download call always sends `Authorization: Bearer
+// <api_key>` and MinIO rejects 400 when both a Bearer token and an AWS v4
+// presigned signature are present on the same request.
+type CloudMediaStorage interface {
+	Download(ctx context.Context, key string) (io.ReadCloser, error)
+	Stat(ctx context.Context, key string) (contentType string, size int64, err error)
 }
 
 type CloudAPIHandler struct {
 	chatwootRepo   chatwoot.Repo
 	messageSvc     *service.MessageService
 	mediaPresigner CloudPresigner
+	mediaStorage   CloudMediaStorage
 	msgRepo        repo.MessageRepo
+	adminToken     string
+	serverURL      string
 }
 
-func NewCloudAPIHandler(chatwootRepo chatwoot.Repo, messageSvc *service.MessageService, mediaPresigner CloudPresigner, msgRepo repo.MessageRepo) *CloudAPIHandler {
+func NewCloudAPIHandler(chatwootRepo chatwoot.Repo, messageSvc *service.MessageService, mediaPresigner CloudPresigner, msgRepo repo.MessageRepo, adminToken string) *CloudAPIHandler {
 	return &CloudAPIHandler{
 		chatwootRepo:   chatwootRepo,
 		messageSvc:     messageSvc,
 		mediaPresigner: mediaPresigner,
 		msgRepo:        msgRepo,
+		adminToken:     adminToken,
 	}
+}
+
+// SetMediaStorage enables the inline streaming proxy for Chatwoot Cloud
+// downloads. When set, GetMedia / GetMediaByID return a wzap URL instead of a
+// MinIO presigned URL.
+func (h *CloudAPIHandler) SetMediaStorage(s CloudMediaStorage) {
+	h.mediaStorage = s
+}
+
+// SetServerURL configures the base URL that will be embedded in media
+// responses. It should be reachable by Chatwoot (typically the docker service
+// name, e.g. http://wzap_app:8080).
+func (h *CloudAPIHandler) SetServerURL(u string) {
+	h.serverURL = strings.TrimRight(u, "/")
+}
+
+// isAdminToken returns true if the provided token matches the admin token
+// configured in the server. Used as a bypass during Chatwoot inbox creation,
+// when the wz_chatwoot config for the phone does not yet exist.
+func (h *CloudAPIHandler) isAdminToken(token string) bool {
+	if h.adminToken == "" || token == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(token), []byte(h.adminToken)) == 1
 }
 
 // DebugToken returns a fake valid token response to make Chatwoot believe the
@@ -67,6 +110,18 @@ func (h *CloudAPIHandler) PhoneNumbers(c *fiber.Ctx) error {
 
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
 	if err != nil {
+		if h.isAdminToken(h.extractAccessToken(c)) {
+			normalized := normalizePhone(phone)
+			return c.JSON(fiber.Map{
+				"data": []fiber.Map{
+					{
+						"verified_name":        "wzap",
+						"display_phone_number": normalized,
+						"id":                   normalized,
+					},
+				},
+			})
+		}
 		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
 	}
 
@@ -86,19 +141,18 @@ func (h *CloudAPIHandler) PhoneNumbers(c *fiber.Ctx) error {
 
 func (h *CloudAPIHandler) MessageTemplates(c *fiber.Ctx) error {
 	phone := c.Params("phone")
-	accessToken := c.Query("access_token")
-
-	logger.Warn().Str("component", "handler").Str("phone", phone).Str("accessToken", accessToken).Msg("Cloud API: MessageTemplates called")
 
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
 	if err != nil {
-		logger.Warn().Str("component", "handler").Str("phone", phone).Err(err).Msg("Cloud API: MessageTemplates resolveConfigByPhone failed")
-		return c.Status(fiber.StatusUnauthorized).JSON(cloudAPIError("Invalid access token", "OAuthException", 190))
+		// Unknown phone: return an empty list so Chatwoot's
+		// validate_provider_config? and sync_templates see a 200 response.
+		// Returning 401 would trigger the Reauthorizable flow — see the note
+		// at the top of this file.
+		logger.Debug().Str("component", "handler").Str("phone", phone).Err(err).Msg("Cloud API: MessageTemplates unknown phone, returning empty list")
+		return c.JSON(fiber.Map{"data": []fiber.Map{}})
 	}
 
-	if cfg.WebhookToken == "" || subtle.ConstantTimeCompare([]byte(accessToken), []byte(cfg.WebhookToken)) != 1 {
-		return c.Status(fiber.StatusUnauthorized).JSON(cloudAPIError("Invalid access token", "OAuthException", 190))
-	}
+	h.warnTokenMismatch(c, cfg.WebhookToken)
 
 	return c.JSON(fiber.Map{
 		"data": []fiber.Map{
@@ -148,8 +202,27 @@ func (h *CloudAPIHandler) VerifyWebhook(c *fiber.Ctx) error {
 func (h *CloudAPIHandler) PhoneStatus(c *fiber.Ctx) error {
 	phone := c.Params("phone")
 
+	// Upstream Chatwoot calls GET /v{version}/{media_id} (no phone) for media
+	// downloads. WhatsApp message ids contain letters ("A5...", "3EB0..."),
+	// so if :phone is not purely numeric we delegate to the media handler.
+	if !isNumeric(phone) {
+		c.Locals("media_id", phone)
+		return h.GetMediaByID(c)
+	}
+
 	cfg, err := h.resolveConfigByPhone(c.Context(), phone)
 	if err != nil {
+		if h.isAdminToken(h.extractAccessToken(c)) {
+			normalized := normalizePhone(phone)
+			return c.JSON(fiber.Map{
+				"id":                       normalized,
+				"display_phone_number":     normalized,
+				"verified_name":            "wzap",
+				"code_verification_status": "VERIFIED",
+				"quality_rating":           "GREEN",
+				"platform_type":            "CLOUD_API",
+			})
+		}
 		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Phone number not found", "OAuthException", 100))
 	}
 
@@ -269,21 +342,124 @@ func (h *CloudAPIHandler) GetMedia(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing media_id", "OAuthException", 100))
 	}
 
-	if h.mediaPresigner == nil {
-		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Media not found", "OAuthException", 100))
-	}
-
-	key := fmt.Sprintf("chatwoot/%s/%s", cfg.SessionID, mediaID)
-	presignedURL, err := h.mediaPresigner.GetPresignedURL(c.Context(), key)
+	url, err := h.buildMediaURL(c.Context(), cfg.SessionID, mediaID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Media not found", "OAuthException", 100))
 	}
 
 	return c.JSON(dto.CloudAPIMediaResp{
-		URL:              presignedURL,
+		URL:              url,
 		MessagingProduct: "whatsapp",
 		ID:               mediaID,
 	})
+}
+
+// GetMediaByID handles the upstream Chatwoot request format:
+//
+//	GET /v{version}/{media_id}
+//
+// (without phone_number_id in the path). Chatwoot's WhatsappCloudService
+// builds the URL as `{WHATSAPP_CLOUD_BASE_URL}/v13.0/{media_id}`, so this
+// route is required to respond with the presigned URL and avoid marking the
+// channel as reauthorization_required on download failures.
+func (h *CloudAPIHandler) GetMediaByID(c *fiber.Ctx) error {
+	mediaID := c.Params("media_id")
+	if mediaID == "" {
+		if v, ok := c.Locals("media_id").(string); ok {
+			mediaID = v
+		}
+	}
+	if mediaID == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing media_id", "OAuthException", 100))
+	}
+
+	if h.msgRepo == nil {
+		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Media not found", "OAuthException", 100))
+	}
+
+	sessionID, err := h.msgRepo.FindSessionByMessageID(c.Context(), mediaID)
+	if err != nil || sessionID == "" {
+		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Media not found", "OAuthException", 100))
+	}
+
+	url, err := h.buildMediaURL(c.Context(), sessionID, mediaID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Media not found", "OAuthException", 100))
+	}
+
+	return c.JSON(dto.CloudAPIMediaResp{
+		URL:              url,
+		MessagingProduct: "whatsapp",
+		ID:               mediaID,
+	})
+}
+
+// buildMediaURL returns the URL that Chatwoot should use to download the
+// media. Two modes are supported:
+//
+//  1. Inline proxy (preferred): when `mediaStorage` is configured, we return
+//     a wzap URL that streams the object bytes (see DownloadCloudMedia).
+//     This avoids the MinIO 400 error caused by Chatwoot's Down.download
+//     always attaching an `Authorization: Bearer` header that conflicts with
+//     AWS v4 presigned signatures.
+//  2. Presigned fallback: when no proxy is available, return the MinIO
+//     presigned URL directly. This only works when nothing else adds a
+//     Bearer header.
+func (h *CloudAPIHandler) buildMediaURL(ctx context.Context, sessionID, mediaID string) (string, error) {
+	if h.mediaStorage != nil && h.serverURL != "" {
+		return fmt.Sprintf("%s/cloud-media/%s", h.serverURL, mediaID), nil
+	}
+	if h.mediaPresigner == nil {
+		return "", fmt.Errorf("no media backend configured")
+	}
+	key := fmt.Sprintf("chatwoot/%s/%s", sessionID, mediaID)
+	return h.mediaPresigner.GetPresignedURL(ctx, key)
+}
+
+// DownloadCloudMedia streams the raw bytes of a Cloud-API media object to the
+// caller (Chatwoot). It is registered WITHOUT authentication because:
+//
+//   - The media id itself is a high-entropy WhatsApp stanza id that is only
+//     known to the real sender/recipient and the Chatwoot worker.
+//   - Chatwoot always sends `Authorization: Bearer <api_key>` on this call,
+//     which we must accept silently (NEVER 401, see Reauthorizable note).
+func (h *CloudAPIHandler) DownloadCloudMedia(c *fiber.Ctx) error {
+	mediaID := c.Params("media_id")
+	if mediaID == "" {
+		return c.Status(fiber.StatusNotFound).SendString("not found")
+	}
+	if h.mediaStorage == nil || h.msgRepo == nil {
+		return c.Status(fiber.StatusNotFound).SendString("not found")
+	}
+
+	sessionID, err := h.msgRepo.FindSessionByMessageID(c.Context(), mediaID)
+	if err != nil || sessionID == "" {
+		return c.Status(fiber.StatusNotFound).SendString("not found")
+	}
+
+	key := fmt.Sprintf("chatwoot/%s/%s", sessionID, mediaID)
+	contentType, size, err := h.mediaStorage.Stat(c.Context(), key)
+	if err != nil {
+		logger.Warn().Str("component", "handler").Err(err).Str("key", key).Msg("DownloadCloudMedia: stat failed")
+		return c.Status(fiber.StatusNotFound).SendString("not found")
+	}
+
+	reader, err := h.mediaStorage.Download(c.Context(), key)
+	if err != nil {
+		logger.Warn().Str("component", "handler").Err(err).Str("key", key).Msg("DownloadCloudMedia: storage read failed")
+		return c.Status(fiber.StatusNotFound).SendString("not found")
+	}
+	defer func() { _ = reader.Close() }()
+
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+	c.Set("Content-Type", contentType)
+	if size > 0 {
+		c.Set("Content-Length", fmt.Sprintf("%d", size))
+	}
+	_, err = io.Copy(c.Response().BodyWriter(), reader)
+	return err
 }
 
 func (h *CloudAPIHandler) handleTextSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
@@ -522,15 +698,25 @@ func (h *CloudAPIHandler) handleMarkRead(c *fiber.Ctx, cfg *chatwoot.Config, req
 }
 
 func (h *CloudAPIHandler) warnTokenMismatch(c *fiber.Ctx, expectedToken string) {
+	token := h.extractAccessToken(c)
+
+	if expectedToken != "" && subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
+		logger.Warn().Str("component", "handler").Str("path", c.Path()).Msg("Cloud API: bearer token mismatch (ignored)")
+	}
+}
+
+// extractAccessToken extracts the token from the Authorization header
+// (supports "Bearer " prefix) or the access_token query string.
+func (h *CloudAPIHandler) extractAccessToken(c *fiber.Ctx) string {
 	authHeader := c.Get("Authorization")
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 	if token == authHeader {
 		token = strings.TrimPrefix(authHeader, "bearer ")
 	}
-
-	if expectedToken != "" && subtle.ConstantTimeCompare([]byte(token), []byte(expectedToken)) != 1 {
-		logger.Warn().Str("component", "handler").Str("path", c.Path()).Msg("Cloud API: bearer token mismatch (ignored)")
+	if token == "" {
+		token = c.Query("access_token")
 	}
+	return token
 }
 
 func (h *CloudAPIHandler) resolveConfigByPhone(ctx context.Context, phone string) (*chatwoot.Config, error) {
@@ -556,6 +742,20 @@ func normalizePhone(phone string) string {
 		}
 		return -1
 	}, phone), "0")
+}
+
+// isNumeric reports whether s is a non-empty sequence of ASCII digits.
+// Used to distinguish phone numbers from WhatsApp media ids in shared routes.
+func isNumeric(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }
 
 func rewriteCloudAssetURL(rawURL, chatwootBaseURL string) string {

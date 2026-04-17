@@ -44,6 +44,12 @@ func isValidWhatsAppJID(jid string) bool {
 
 func extractPhone(jid string) string {
 	jid = strings.Split(jid, "@")[0]
+	// WhatsApp appends a device index (":N") for linked devices, e.g.
+	// "559992032709:7@s.whatsapp.net". Chatwoot validates source_id as
+	// strict E.164, so we drop the suffix.
+	if idx := strings.Index(jid, ":"); idx >= 0 {
+		jid = jid[:idx]
+	}
 	jid = strings.TrimPrefix(jid, "+")
 	return jid
 }

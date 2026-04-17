@@ -27,6 +27,7 @@ type MessageRepo interface {
 	FindByChat(ctx context.Context, sessionID, chatJID string, limit, offset int) ([]model.Message, error)
 	FindBySession(ctx context.Context, sessionID string, limit, offset int) ([]model.Message, error)
 	FindByID(ctx context.Context, sessionID, msgID string) (*model.Message, error)
+	FindSessionByMessageID(ctx context.Context, msgID string) (string, error)
 	FindByCWMessageID(ctx context.Context, sessionID string, cwMsgID int) (*model.Message, error)
 	FindAllByCWMessageID(ctx context.Context, sessionID string, cwMsgID int) ([]model.Message, error)
 	FindBySourceID(ctx context.Context, sessionID, sourceID string) (*model.Message, error)
@@ -312,6 +313,17 @@ func (r *MessageRepository) FindByID(ctx context.Context, sessionID, msgID strin
 		return nil, fmt.Errorf("failed to find message by ID: %w", err)
 	}
 	return &m, nil
+}
+
+func (r *MessageRepository) FindSessionByMessageID(ctx context.Context, msgID string) (string, error) {
+	var sessionID string
+	err := r.db.QueryRow(ctx,
+		`SELECT session_id FROM wz_messages WHERE id = $1 ORDER BY created_at DESC LIMIT 1`,
+		msgID).Scan(&sessionID)
+	if err != nil {
+		return "", fmt.Errorf("failed to find session by message ID: %w", err)
+	}
+	return sessionID, nil
 }
 
 func (r *MessageRepository) UpdateChatwootRef(ctx context.Context, sessionID, msgID string, cwMsgID, cwConvID int, sourceID string) error {

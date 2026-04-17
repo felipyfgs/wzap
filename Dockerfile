@@ -1,58 +1,116 @@
-# ── web-builder: compila o frontend Nuxt ─────────────────────────────────────
-FROM node:22-alpine AS web-builder
-RUN npm install -g pnpm@10.33.0
+# syntax=docker/dockerfile:1.7
+# =============================================================================
+# wzap — Dockerfile multi-stage (API Go + Web Nuxt)
+# =============================================================================
+# Targets:
+#   web-dev      Nuxt dev server (hot reload)          → porta 3000
+#   web-prod     Nuxt Nitro output (node server)       → porta 3000
+#   api-dev      API Go com air (hot reload)           → porta 8080
+#   api-prod     API Go compilada (runtime mínimo)     → porta 8080
+#   combined     API + Web numa imagem só              → portas 8080 + 3000
+# =============================================================================
+
+ARG GO_VERSION=1.25
+ARG NODE_VERSION=22
+ARG PNPM_VERSION=10.33.0
+ARG ALPINE_VERSION=3.21
+
+# =============================================================================
+#                                  WEB
+# =============================================================================
+
+# ── web-base: Node + pnpm ────────────────────────────────────────────────────
+FROM node:${NODE_VERSION}-alpine AS web-base
+ARG PNPM_VERSION
+ENV CI=1 \
+    PNPM_HOME=/pnpm \
+    PATH=/pnpm:$PATH
+RUN npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /web
-COPY web/pnpm-lock.yaml web/package.json ./
-RUN pnpm install --frozen-lockfile
+
+# ── web-deps: resolve dependências (cache layer) ─────────────────────────────
+FROM web-base AS web-deps
+COPY web/package.json web/pnpm-lock.yaml web/pnpm-workspace.yaml ./
+RUN --mount=type=cache,id=wzap-pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# ── web-dev: Nuxt dev server (hot reload) ────────────────────────────────────
+FROM web-deps AS web-dev
+ENV NODE_ENV=development \
+    HOST=0.0.0.0 \
+    PORT=3000
+EXPOSE 3000
+# usa o binário do nuxt diretamente p/ evitar o `--dotenv ../.env` do script npm
+CMD ["pnpm", "exec", "nuxt", "dev", "--host", "0.0.0.0"]
+
+# ── web-builder: build de produção (.output) ─────────────────────────────────
+FROM web-deps AS web-builder
 COPY web/ ./
-RUN pnpm build
+# nota: NÃO usar cache mount em /web/.nuxt — o postinstall já gerou tsconfigs
+# necessários ali e um cache mount os sobrescreveria com um volume vazio.
+RUN pnpm exec nuxt build
 
-# ─────────────────────────────────────────────────────────────────────────────
-FROM golang:1.25-alpine AS base
+# ── web-prod: runtime mínimo (node server) ───────────────────────────────────
+FROM node:${NODE_VERSION}-alpine AS web-prod
+RUN apk add --no-cache wget \
+    && addgroup -S wzap && adduser -S wzap -G wzap -h /app
 WORKDIR /app
+COPY --chown=wzap:wzap --from=web-builder /web/.output ./
+USER wzap
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=3000 \
+    NITRO_PORT=3000
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD wget -qO- http://localhost:${PORT}/health || exit 1
+CMD ["node", "server/index.mjs"]
+
+# =============================================================================
+#                                   API
+# =============================================================================
+
+# ── api-base: toolchain Go ───────────────────────────────────────────────────
+FROM golang:${GO_VERSION}-alpine AS api-base
 RUN apk add --no-cache git ca-certificates tzdata
+WORKDIR /app
 
-# ── dev: hot reload via air ──────────────────────────────────────────────────
-FROM base AS dev
-RUN go install github.com/air-verse/air@latest
+# ── api-deps: baixa módulos Go (cache layer) ─────────────────────────────────
+FROM api-base AS api-deps
 COPY go.mod go.sum ./
-RUN go mod download
-CMD ["air", "-c", ".air.toml"]
+RUN --mount=type=cache,id=wzap-gomod,target=/go/pkg/mod \
+    go mod download
 
-# ── dev-combined: API (air) + Web (nuxt dev) numa imagem só ──────────────────
-FROM base AS dev-combined
-RUN apk add --no-cache nodejs npm ffmpeg \
-    && go install github.com/air-verse/air@latest \
-    && npm install -g pnpm@10.33.0
-COPY go.mod go.sum ./
-RUN go mod download
-COPY web/pnpm-lock.yaml web/package.json ./web/
-RUN cd web && pnpm install --frozen-lockfile
+# ── api-dev: hot reload via air ──────────────────────────────────────────────
+FROM api-deps AS api-dev
+RUN --mount=type=cache,id=wzap-gomod,target=/go/pkg/mod \
+    --mount=type=cache,id=wzap-gobuild,target=/root/.cache/go-build \
+    go install github.com/air-verse/air@latest
 ENV PORT=8080 \
     SERVER_HOST=0.0.0.0 \
     LOG_LEVEL=debug \
-    ENVIRONMENT=development \
-    HOST=0.0.0.0 \
-    WEB_PORT=3000
-EXPOSE 8080 3000
-CMD ["sh", "-c", "air -c .air.toml & API=$!; cd web && PORT=${WEB_PORT} pnpm dev --host 0.0.0.0 & WEB=$!; wait $API $WEB"]
+    ENVIRONMENT=development
+EXPOSE 8080
+CMD ["air", "-c", ".air.toml"]
 
-# ── builder: generate docs + compile binary ───────────────────────────────────
-FROM base AS builder
-RUN go install github.com/swaggo/swag/cmd/swag@v1.16.6
-COPY go.mod go.sum ./
-RUN go mod download
+# ── api-builder: gera docs Swagger + compila binário ────────────────────────
+FROM api-deps AS api-builder
+RUN --mount=type=cache,id=wzap-gomod,target=/go/pkg/mod \
+    --mount=type=cache,id=wzap-gobuild,target=/root/.cache/go-build \
+    go install github.com/swaggo/swag/cmd/swag@v1.16.6
 COPY . .
 RUN swag init -g main.go -o docs --parseInternal --useStructName \
-    -d cmd/wzap,internal/handler,internal/dto,internal/model,internal/service,internal/repo
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o /app/wzap cmd/wzap/main.go
+        -d cmd/wzap,internal/handler,internal/dto,internal/model,internal/service,internal/repo
+RUN --mount=type=cache,id=wzap-gomod,target=/go/pkg/mod \
+    --mount=type=cache,id=wzap-gobuild,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o /out/wzap cmd/wzap/main.go
 
-# ── prod: minimal runtime image ───────────────────────────────────────────────
-FROM alpine:3.21 AS prod
+# ── api-prod: runtime mínimo ────────────────────────────────────────────────
+FROM alpine:${ALPINE_VERSION} AS api-prod
 RUN apk add --no-cache ca-certificates tzdata wget ffmpeg \
     && addgroup -S wzap && adduser -S wzap -G wzap -h /app
 WORKDIR /app
-COPY --chown=wzap:wzap --from=builder /app/wzap /app/wzap
+COPY --chown=wzap:wzap --from=api-builder /out/wzap /app/wzap
 USER wzap
 ENV PORT=8080 \
     SERVER_HOST=0.0.0.0 \
@@ -63,25 +121,26 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD wget -qO- http://localhost:${PORT}/health || exit 1
 ENTRYPOINT ["/app/wzap"]
 
-# ── combined: API Go + Web Nuxt numa imagem só ────────────────────────────────
-FROM node:22-alpine AS combined
-RUN apk add --no-cache ca-certificates tzdata wget ffmpeg \
+# =============================================================================
+#                        COMBINED (API + WEB numa imagem)
+# =============================================================================
+
+FROM node:${NODE_VERSION}-alpine AS combined
+RUN apk add --no-cache ca-certificates tzdata wget ffmpeg tini \
     && addgroup -S wzap && adduser -S wzap -G wzap -h /app
 WORKDIR /app
-
-COPY --chown=wzap:wzap --from=builder /app/wzap       ./api
-COPY --chown=wzap:wzap --from=web-builder /web/.output ./web
-
+COPY --chown=wzap:wzap --from=api-builder  /out/wzap      ./api
+COPY --chown=wzap:wzap --from=web-builder  /web/.output   ./web
 USER wzap
 ENV PORT=8080 \
     SERVER_HOST=0.0.0.0 \
     LOG_LEVEL=info \
     ENVIRONMENT=production \
     HOST=0.0.0.0 \
-    WEB_PORT=3000
-
+    WEB_PORT=3000 \
+    NITRO_PORT=3000
 EXPOSE 8080 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
     CMD wget -qO- http://localhost:${PORT}/health || exit 1
-
-CMD ["sh", "-c", "./api & API=$!; PORT=${WEB_PORT} node web/server/index.mjs & WEB=$!; wait $API $WEB"]
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["sh", "-c", "./api & API=$!; PORT=${WEB_PORT} node web/server/index.mjs & WEB=$!; trap 'kill $API $WEB 2>/dev/null' TERM INT; wait -n $API $WEB; kill $API $WEB 2>/dev/null; wait"]

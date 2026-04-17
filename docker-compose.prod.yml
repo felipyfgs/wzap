@@ -1,30 +1,52 @@
+# =============================================================================
+# wzap — Overlay de produção (api + web como serviços separados)
+# =============================================================================
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#   (ou `make docker-prod`)
+#
+# Para um deploy single-image (API + Web numa só imagem), use
+# `./scripts/setup.sh` (target=combined) e a imagem `wzap:latest`.
+# =============================================================================
+
 services:
-  app:
-    image: wzap:latest
+  api:
+    image: wzap-api:latest
     build:
       context: .
-      target: combined
-    container_name: wzap_app
-    env_file:
-      - .env
+      target: api-prod
+    container_name: wzap_api
+    env_file: [.env]
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-wzap}:${POSTGRES_PASSWORD:-wzap123}@postgres:5432/${POSTGRES_DB:-wzap}?sslmode=disable
       MINIO_ENDPOINT: minio:9000
       NATS_URL: nats://nats:4222
-      SERVER_URL: ${SERVER_URL:-http://wzap_app:8080}
-      NUXT_API_URL: http://localhost:8080
-      NUXT_MINIO_ENDPOINT: http://minio:9000
+      SERVER_URL: ${SERVER_URL:-http://api:8080}
     ports:
       - "${PORT:-8080}:8080"
+    depends_on:
+      postgres: { condition: service_healthy }
+      minio:    { condition: service_healthy }
+      nats:     { condition: service_healthy }
+    restart: unless-stopped
+    networks: [wzap_net, wzap_chatwoot]
+
+  web:
+    image: wzap-web:latest
+    build:
+      context: .
+      target: web-prod
+    container_name: wzap_web
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      NUXT_API_URL: ${NUXT_API_URL:-http://api:8080}
+      NUXT_MINIO_ENDPOINT: ${NUXT_MINIO_ENDPOINT:-http://minio:9000}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-}
+    ports:
       - "${WEB_PORT:-3001}:3000"
     depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-    networks:
-      - default
-      - wzap_chatwoot
+      api: { condition: service_started }
     restart: unless-stopped
+    networks: [wzap_net]

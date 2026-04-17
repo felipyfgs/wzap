@@ -3,7 +3,6 @@ package chatwoot
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -34,29 +33,6 @@ const chatwootSelectColumns = `session_id, url, account_id, token, COALESCE(webh
 
 type chatwootConfigScanner interface {
 	Scan(dest ...any) error
-}
-
-func qualifyChatwootColumns(alias string) string {
-	lines := strings.Split(chatwootSelectColumns, "\n")
-	for i, line := range lines {
-		line = strings.TrimSpace(line)
-		var parts []string
-		for _, col := range strings.Split(line, ",") {
-			col = strings.TrimSpace(col)
-			if col == "" {
-				continue
-			}
-			if strings.HasPrefix(col, "COALESCE(") {
-				// COALESCE(col, val) → COALESCE(alias.col, val)
-				col = strings.Replace(col, "COALESCE(", "COALESCE("+alias+".", 1)
-			} else {
-				col = alias + "." + col
-			}
-			parts = append(parts, col)
-		}
-		lines[i] = strings.Join(parts, ", ")
-	}
-	return strings.Join(lines, "\n\t")
 }
 
 func scanConfig(s chatwootConfigScanner, cfg *Config) error {
@@ -122,18 +98,19 @@ func (r *Repository) FindBySessionID(ctx context.Context, sessionID string) (*Co
 }
 
 func (r *Repository) FindByPhoneAndInboxType(ctx context.Context, phone, inboxType string) (*Config, error) {
-	var cfg Config
-	row := r.db.QueryRow(ctx,
-		`SELECT `+qualifyChatwootColumns("c")+`
+	var sessionID string
+	err := r.db.QueryRow(ctx,
+		`SELECT c.session_id
 		 FROM wz_chatwoot c
 		 JOIN wz_sessions s ON c.session_id = s.id
 		 WHERE c.inbox_type = $1
-		 AND split_part(split_part(s.jid, '@', 1), ':', 1) = $2`,
-		inboxType, phone)
-	if err := scanConfig(row, &cfg); err != nil {
+		 AND split_part(split_part(s.jid, '@', 1), ':', 1) = $2
+		 LIMIT 1`,
+		inboxType, phone).Scan(&sessionID)
+	if err != nil {
 		return nil, fmt.Errorf("failed to find chatwoot config by phone: %w", err)
 	}
-	return &cfg, nil
+	return r.FindBySessionID(ctx, sessionID)
 }
 
 func (r *Repository) Delete(ctx context.Context, sessionID string) error {

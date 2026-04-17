@@ -1,42 +1,77 @@
+# =============================================================================
+# wzap — Overlay de desenvolvimento (api + web com hot reload)
+# =============================================================================
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+#   (ou `make docker-dev`)
+# =============================================================================
+
 services:
-  app:
-    image: wzap:dev
+  api:
+    image: wzap-api:dev
     build:
       context: .
-      target: dev-combined
-    container_name: wzap_app
-    env_file:
-      - .env
+      target: api-dev
+    container_name: wzap_api
+    env_file: [.env]
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-wzap}:${POSTGRES_PASSWORD:-wzap123}@postgres:5432/${POSTGRES_DB:-wzap}?sslmode=disable
       MINIO_ENDPOINT: minio:9000
       NATS_URL: nats://nats:4222
-      SERVER_URL: ${SERVER_URL:-http://wzap_app:8080}
-      NUXT_API_URL: http://localhost:8080
-      NUXT_MINIO_ENDPOINT: http://minio:9000
-    volumes:
-      - .:/app
-      - go_mod_cache:/go/pkg/mod
-      - go_build_cache:/root/.cache/go-build
-      - web_node_modules:/app/web/node_modules
-      - web_nuxt_cache:/app/web/.nuxt
+      SERVER_URL: ${SERVER_URL:-http://api:8080}
     ports:
       - "${PORT:-8080}:8080"
-      - "${WEB_PORT:-3001}:3000"
+    volumes:
+      - .:/app
+      - api_go_mod:/go/pkg/mod
+      - api_go_build:/root/.cache/go-build
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
-      nats:
-        condition: service_healthy
-    networks:
-      - default
-      - wzap_chatwoot
+      postgres: { condition: service_healthy }
+      minio:    { condition: service_healthy }
+      nats:     { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
     restart: unless-stopped
+    networks: [wzap_net, wzap_chatwoot]
+
+  web:
+    image: wzap-web:dev
+    build:
+      context: .
+      target: web-dev
+    container_name: wzap_web
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: 3000
+      NUXT_API_URL: ${NUXT_API_URL:-http://api:8080}
+      NUXT_MINIO_ENDPOINT: ${NUXT_MINIO_ENDPOINT:-http://localhost:${MINIO_PORT:-9010}}
+      NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-}
+    ports:
+      - "${WEB_PORT:-3001}:3000"
+    volumes:
+      - ./web:/web
+      - web_node_modules:/web/node_modules
+      - web_nuxt_cache:/web/.nuxt
+    depends_on:
+      api: { condition: service_started }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    restart: unless-stopped
+    networks: [wzap_net]
 
 volumes:
-  go_mod_cache:
-  go_build_cache:
+  api_go_mod:
+  api_go_build:
   web_node_modules:
   web_nuxt_cache:

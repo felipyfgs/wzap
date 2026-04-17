@@ -164,6 +164,10 @@ func (m *mockMsgRepo) FindByID(_ context.Context, sessionID, msgID string) (*mod
 	return &model.Message{ID: msgID, SessionID: sessionID}, nil
 }
 
+func (m *mockMsgRepo) FindSessionByMessageID(_ context.Context, _ string) (string, error) {
+	return "", fmt.Errorf("not implemented")
+}
+
 func (m *mockMsgRepo) FindByCWMessageID(_ context.Context, sessionID string, _ int) (*model.Message, error) {
 	return &model.Message{ID: "test-msg", SessionID: sessionID}, nil
 }
@@ -242,6 +246,10 @@ func (m *mockDupMsgRepo) FindByChat(_ context.Context, _, _ string, _, _ int) ([
 
 func (m *mockDupMsgRepo) FindByID(_ context.Context, sessionID, msgID string) (*model.Message, error) {
 	return &model.Message{ID: msgID, SessionID: sessionID}, nil
+}
+
+func (m *mockDupMsgRepo) FindSessionByMessageID(_ context.Context, _ string) (string, error) {
+	return "", fmt.Errorf("not implemented")
 }
 
 func (m *mockDupMsgRepo) FindByCWMessageID(_ context.Context, _ string, _ int) (*model.Message, error) {

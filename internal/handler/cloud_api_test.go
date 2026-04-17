@@ -52,7 +52,7 @@ func (m *mockCloudWAPresigner) GetPresignedURL(_ context.Context, key string) (s
 func newCloudWAAPIApp(repo chatwoot.Repo, presigner CloudPresigner) *fiber.App {
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
 	app.Use(recover.New())
-	h := NewCloudAPIHandler(repo, nil, presigner, nil)
+	h := NewCloudAPIHandler(repo, nil, presigner, nil, "")
 	app.Get("/:version/:phone/messages", h.VerifyWebhook)
 	app.Post("/:version/:phone/messages", h.SendMessage)
 	app.Get("/:version/:phone/:media_id", h.GetMedia)
@@ -161,7 +161,11 @@ func TestGetMedia_NotFound(t *testing.T) {
 	}
 }
 
-func TestSendMessage_InvalidAuth(t *testing.T) {
+// TestSendMessage_BadTokenNeverReturns401 verifies the file-level invariant
+// that Cloud API handlers never respond 401. If they did, Chatwoot's
+// Reauthorizable concern would flip the channel to reauthorization_required
+// after two failures, silently dropping webhooks.
+func TestSendMessage_BadTokenNeverReturns401(t *testing.T) {
 	repo := &mockCloudWARepo{
 		cfg: &chatwoot.Config{
 			SessionID:    "sess1",
@@ -172,32 +176,30 @@ func TestSendMessage_InvalidAuth(t *testing.T) {
 	}
 
 	app := fiber.New(fiber.Config{DisableStartupMessage: true})
-	h := NewCloudAPIHandler(repo, nil, nil, nil)
+	h := NewCloudAPIHandler(repo, nil, nil, nil, "")
 	app.Post("/:version/:phone/messages", h.SendMessage)
 
+	// Use an unsupported message type so the handler exits with 400 via
+	// SendMessage's own switch — this exercises the token-check path without
+	// needing a real messageSvc, which is nil in this test.
 	body, _ := json.Marshal(dto.CloudAPIMessageReq{
 		MessagingProduct: "whatsapp",
 		To:               "5511988887777",
-		Type:             "text",
-		Text:             &dto.CloudAPIText{Body: "hello"},
+		Type:             "unsupported",
 	})
 	req := httptest.NewRequest(http.MethodPost, "/v17.0/5511999999999/messages", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer wrong-token")
+
 	resp, err := app.Test(req, -1)
 	if err != nil {
 		t.Fatalf("test error: %v", err)
 	}
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("expected 401, got %d", resp.StatusCode)
+	if resp.StatusCode == http.StatusUnauthorized {
+		t.Fatalf("Cloud API must never return 401 on token mismatch, got %d", resp.StatusCode)
 	}
-
-	var errResp dto.CloudAPIErrorResp
-	if err := json.NewDecoder(resp.Body).Decode(&errResp); err != nil {
-		t.Fatalf("failed to decode: %v", err)
-	}
-	if errResp.Error.Code != 190 {
-		t.Fatalf("expected error code 190, got %d", errResp.Error.Code)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 (unsupported type), got %d", resp.StatusCode)
 	}
 }
 

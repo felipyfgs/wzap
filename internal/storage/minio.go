@@ -7,10 +7,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"wzap/internal/config"
 	"wzap/internal/logger"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type Minio struct {
@@ -66,6 +67,16 @@ func (m *Minio) Download(ctx context.Context, key string) (io.ReadCloser, error)
 		return nil, err
 	}
 	return obj, nil
+}
+
+// Stat returns the stored Content-Type and Size for the given key.
+// Returns an error if the object does not exist.
+func (m *Minio) Stat(ctx context.Context, key string) (contentType string, size int64, err error) {
+	info, err := m.Client.StatObject(ctx, m.Bucket, key, minio.StatObjectOptions{})
+	if err != nil {
+		return "", 0, err
+	}
+	return info.ContentType, info.Size, nil
 }
 
 func (m *Minio) PresignedURL(ctx context.Context, key string, expiry time.Duration) (string, error) {

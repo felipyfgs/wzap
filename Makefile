@@ -18,7 +18,7 @@ help: ## Mostra este menu
 	@grep -E '^web-.*:.*## ' Makefile | awk 'BEGIN{FS=":.*## "}{printf "    \033[36m%-18s\033[0m %s\n",$$1,$$2}'
 	@echo ""
 	@echo "  \033[1mDocker\033[0m"
-	@grep -E '^(docker-.*|logs|push):.*## ' Makefile | awk 'BEGIN{FS=":.*## "}{printf "    \033[36m%-18s\033[0m %s\n",$$1,$$2}'
+	@grep -E '^(docker-.*|logs.*|push):.*## ' Makefile | awk 'BEGIN{FS=":.*## "}{printf "    \033[36m%-18s\033[0m %s\n",$$1,$$2}'
 	@echo ""
 	@echo "  \033[1mChatwoot\033[0m"
 	@grep -E '^chatwoot-.*:.*## ' Makefile | awk 'BEGIN{FS=":.*## "}{printf "    \033[36m%-18s\033[0m %s\n",$$1,$$2}'
@@ -60,20 +60,29 @@ web-build: ## Builda o frontend para produção
 
 # ─── Docker ───────────────────────────────────────────────────────────────────
 
-docker-dev: ## Sobe infra + app com hot reload (air + nuxt dev)
+docker-dev: ## Sobe infra + api + web com hot reload (air + nuxt dev)
 	$(COMPOSE_DEV) up -d --build --remove-orphans
 
-docker-prod: ## Sobe infra + imagem combinada compilada
-	$(COMPOSE_PROD) up -d --remove-orphans
+docker-prod: ## Sobe infra + api + web em modo produção
+	$(COMPOSE_PROD) up -d --build --remove-orphans
 
-docker-build: ## Builda a imagem de produção (wzap:latest)
+docker-build: ## Builda a imagem combinada (wzap:latest)
 	./scripts/setup.sh
 
-push: ## Build + push da imagem para Docker Hub
+docker-build-split: ## Builda imagens separadas (wzap-api:latest + wzap-web:latest)
+	./scripts/setup.sh --split
+
+push: ## Build + push da imagem combinada para Docker Hub
 	./scripts/setup.sh --push
 
-logs: ## Logs em tempo real do container app
-	$(COMPOSE_DEV) logs -f app 2>/dev/null || $(COMPOSE_PROD) logs -f app
+logs: ## Logs em tempo real dos containers api+web (dev)
+	$(COMPOSE_DEV) logs -f api web 2>/dev/null || $(COMPOSE_PROD) logs -f api web
+
+logs-api: ## Logs em tempo real da API
+	$(COMPOSE_DEV) logs -f api 2>/dev/null || $(COMPOSE_PROD) logs -f api
+
+logs-web: ## Logs em tempo real do Web
+	$(COMPOSE_DEV) logs -f web 2>/dev/null || $(COMPOSE_PROD) logs -f web
 
 docker-down: ## Para todos os containers
 	$(COMPOSE_DEV) down --remove-orphans 2>/dev/null; \

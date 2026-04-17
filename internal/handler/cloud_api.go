@@ -38,6 +38,7 @@ type CloudPresigner interface {
 type CloudMediaStorage interface {
 	Download(ctx context.Context, key string) (io.ReadCloser, error)
 	Stat(ctx context.Context, key string) (contentType string, size int64, err error)
+	StatMeta(ctx context.Context, key string) (contentType string, size int64, userMeta map[string]string, err error)
 }
 
 type CloudAPIHandler struct {
@@ -154,23 +155,37 @@ func (h *CloudAPIHandler) MessageTemplates(c *fiber.Ctx) error {
 
 	h.warnTokenMismatch(c, cfg.WebhookToken)
 
+	// Template único "mensagem_inicial": BODY = {{1}}, onde {{1}} é o texto
+	// digitado pelo agente na UI "Nova Conversa" do Chatwoot. Isso permite
+	// iniciar conversas com qualquer texto (não precisa template aprovado
+	// pela Meta, porque o wzap usa whatsmeow sob o capô).
 	return c.JSON(fiber.Map{
 		"data": []fiber.Map{
 			{
-				"name":     "mensagem",
-				"language": "pt_BR",
-				"status":   "APPROVED",
-				"category": "UTILITY",
-				"id":       "wzap_mensagem_template",
+				"name":              "mensagem_inicial",
+				"language":          "pt_BR",
+				"status":            "APPROVED",
+				"category":          "UTILITY",
+				"id":                "wzap_mensagem_inicial",
+				"rejected_reason":   "NONE",
+				"quality_score":     fiber.Map{"score": "GREEN"},
+				"previous_category": "UTILITY",
+				"parameter_format":  "POSITIONAL",
 				"components": []fiber.Map{
 					{
 						"type": "BODY",
 						"text": "{{1}}",
 						"example": fiber.Map{
-							"body_text": [][]string{{"Olá, tudo bem?"}},
+							"body_text": [][]string{{"Olá, tudo bem? Gostaria de falar com você."}},
 						},
 					},
 				},
+			},
+		},
+		"paging": fiber.Map{
+			"cursors": fiber.Map{
+				"before": "",
+				"after":  "",
 			},
 		},
 	})
@@ -347,11 +362,7 @@ func (h *CloudAPIHandler) GetMedia(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Media not found", "OAuthException", 100))
 	}
 
-	return c.JSON(dto.CloudAPIMediaResp{
-		URL:              url,
-		MessagingProduct: "whatsapp",
-		ID:               mediaID,
-	})
+	return c.JSON(h.mediaRespWithMeta(c.Context(), cfg.SessionID, mediaID, url))
 }
 
 // GetMediaByID handles the upstream Chatwoot request format:
@@ -387,11 +398,28 @@ func (h *CloudAPIHandler) GetMediaByID(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).JSON(cloudAPIError("Media not found", "OAuthException", 100))
 	}
 
-	return c.JSON(dto.CloudAPIMediaResp{
+	return c.JSON(h.mediaRespWithMeta(c.Context(), sessionID, mediaID, url))
+}
+
+// mediaRespWithMeta builds a CloudAPIMediaResp populated with `mime_type` and
+// `file_size` read from MinIO (when available). These fields are what Chatwoot
+// uses to pick the right attachment renderer (e.g., PDF preview vs. generic
+// file). Without them, the UI falls back to a bare filename/id display.
+func (h *CloudAPIHandler) mediaRespWithMeta(ctx context.Context, sessionID, mediaID, url string) dto.CloudAPIMediaResp {
+	resp := dto.CloudAPIMediaResp{
 		URL:              url,
 		MessagingProduct: "whatsapp",
 		ID:               mediaID,
-	})
+	}
+	if h.mediaStorage == nil {
+		return resp
+	}
+	key := fmt.Sprintf("chatwoot/%s/%s", sessionID, mediaID)
+	if ct, size, err := h.mediaStorage.Stat(ctx, key); err == nil {
+		resp.MimeType = ct
+		resp.FileSize = size
+	}
+	return resp
 }
 
 // buildMediaURL returns the URL that Chatwoot should use to download the
@@ -438,7 +466,7 @@ func (h *CloudAPIHandler) DownloadCloudMedia(c *fiber.Ctx) error {
 	}
 
 	key := fmt.Sprintf("chatwoot/%s/%s", sessionID, mediaID)
-	contentType, size, err := h.mediaStorage.Stat(c.Context(), key)
+	contentType, size, userMeta, err := h.mediaStorage.StatMeta(c.Context(), key)
 	if err != nil {
 		logger.Warn().Str("component", "handler").Err(err).Str("key", key).Msg("DownloadCloudMedia: stat failed")
 		return c.Status(fiber.StatusNotFound).SendString("not found")
@@ -458,8 +486,41 @@ func (h *CloudAPIHandler) DownloadCloudMedia(c *fiber.Ctx) error {
 	if size > 0 {
 		c.Set("Content-Length", fmt.Sprintf("%d", size))
 	}
+	// Preserva o nome original do arquivo no header Content-Disposition.
+	// Sem isso, o Chatwoot salva o anexo usando o próprio mediaID como nome
+	// (o último segmento da URL), o que aparece como um ID aleatório feio
+	// na UI em vez do nome real do arquivo (ex.: "report.pdf").
+	if filename := pickFilenameFromMeta(userMeta); filename != "" {
+		c.Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, sanitizeFilename(filename)))
+	}
 	_, err = io.Copy(c.Response().BodyWriter(), reader)
 	return err
+}
+
+// pickFilenameFromMeta extrai o filename do metadata (case-insensitive — alguns
+// backends normalizam as keys para lower, outros preservam case).
+func pickFilenameFromMeta(meta map[string]string) string {
+	if meta == nil {
+		return ""
+	}
+	for _, k := range []string{"filename", "Filename", "FileName", "X-Amz-Meta-Filename"} {
+		if v, ok := meta[k]; ok && v != "" {
+			return v
+		}
+	}
+	for k, v := range meta {
+		if strings.EqualFold(k, "filename") && v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// sanitizeFilename remove aspas e caracteres de controle que quebrariam o
+// header Content-Disposition.
+func sanitizeFilename(name string) string {
+	r := strings.NewReplacer(`"`, "", "\r", "", "\n", "", "\\", "")
+	return r.Replace(name)
 }
 
 func (h *CloudAPIHandler) handleTextSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {

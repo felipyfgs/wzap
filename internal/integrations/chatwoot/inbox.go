@@ -2,8 +2,6 @@ package chatwoot
 
 import (
 	"context"
-	"strings"
-	"time"
 
 	"wzap/internal/logger"
 	"wzap/internal/model"
@@ -11,7 +9,6 @@ import (
 
 type InboxHandler interface {
 	HandleMessage(ctx context.Context, cfg *Config, payload []byte) error
-	UnlockWindow(ctx context.Context, cfg *Config, chatJID string)
 }
 
 func (s *Service) getInboxHandler(cfg *Config) InboxHandler {
@@ -28,34 +25,11 @@ func (s *Service) processMessage(ctx context.Context, cfg *Config, payload []byt
 		return nil
 	}
 
-	if cfg.InboxType == "cloud" && !data.Info.IsFromMe {
-		return s.getInboxHandler(cfg).HandleMessage(ctx, cfg, payload)
-	}
-
+	// Cloud mode só processa inbound (fromMe=false). Outbound (mensagens
+	// enviadas pelo agente via Chatwoot) não precisa ser re-ecoado porque o
+	// próprio Chatwoot já persistiu essa mensagem localmente.
 	if cfg.InboxType == "cloud" && data.Info.IsFromMe {
-		chatJID := data.Info.Chat
-		if chatJID == "" {
-			return nil
-		}
-
-		if data.Info.RecipientAlt != "" {
-			chatJID = s.resolveLID(ctx, cfg.SessionID, chatJID, data.Info.RecipientAlt)
-		}
-		if strings.HasSuffix(chatJID, "@lid") {
-			return nil
-		}
-
-		if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
-			return nil
-		}
-
-		if _, _, ok := s.cache.GetConv(ctx, cfg.SessionID, chatJID); !ok {
-			handler := s.getInboxHandler(cfg)
-			handler.UnlockWindow(ctx, cfg, chatJID)
-			time.Sleep(3 * time.Second)
-		}
-
-		return s.getInboxHandler(cfg).HandleMessage(ctx, cfg, payload)
+		return nil
 	}
 
 	return s.getInboxHandler(cfg).HandleMessage(ctx, cfg, payload)

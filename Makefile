@@ -60,10 +60,18 @@ web-build: ## Builda o frontend para produção
 
 # ─── Docker ───────────────────────────────────────────────────────────────────
 
-docker-dev: ## Sobe infra + api + web com hot reload (air + nuxt dev)
+docker-network-init: ## Cria rede compartilhada `wzap_chatwoot` (idempotente)
+	@if docker network inspect wzap_chatwoot >/dev/null 2>&1; then \
+		echo "✔ Rede wzap_chatwoot já existe"; \
+	else \
+		docker network create wzap_chatwoot >/dev/null && \
+		echo "✔ Rede wzap_chatwoot criada"; \
+	fi
+
+docker-dev: docker-network-init ## Sobe infra + api + web com hot reload (air + nuxt dev)
 	$(COMPOSE_DEV) up -d --build --remove-orphans
 
-docker-prod: ## Sobe infra + api + web em modo produção
+docker-prod: docker-network-init ## Sobe infra + api + web em modo produção
 	$(COMPOSE_PROD) up -d --build --remove-orphans
 
 docker-build: ## Builda a imagem combinada (wzap:latest)
@@ -94,7 +102,7 @@ docker-down-v: ## Para containers e remove volumes (DESTRUTIVO)
 
 # ─── Chatwoot ─────────────────────────────────────────────────────────────────
 
-chatwoot-up: ## Sobe o stack do Chatwoot
+chatwoot-up: docker-network-init ## Sobe o stack do Chatwoot
 	docker compose -f docker/chatwoot/docker-compose.yml up -d
 
 chatwoot-down: ## Para o stack do Chatwoot

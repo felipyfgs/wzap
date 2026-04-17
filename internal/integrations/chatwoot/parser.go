@@ -229,22 +229,18 @@ func extractText(msg map[string]any) string {
 	}
 
 	if docMsg := getMapField(msg, "documentMessage"); docMsg != nil {
-		caption := getStringField(docMsg, "caption")
-		filename := getStringField(docMsg, "fileName")
-		if caption != "" {
-			return caption
-		}
-		return filename
+		// Retorna apenas a caption real; o `fileName` NÃO é texto/caption — é
+		// o nome do arquivo e deve ser tratado em separado pelo caller (ex.:
+		// `document.filename` no webhook Cloud API, ou parâmetro `filename`
+		// de `CreateAttachment`). Retorná-lo aqui fazia o Chatwoot exibir o
+		// nome do arquivo como se fosse uma mensagem de texto extra.
+		return getStringField(docMsg, "caption")
 	}
 
 	if dwc := getMapField(msg, "documentWithCaptionMessage"); dwc != nil {
 		if innerMsg := getMapField(dwc, "message"); innerMsg != nil {
 			if docMsg := getMapField(innerMsg, "documentMessage"); docMsg != nil {
-				caption := getStringField(docMsg, "caption")
-				if caption != "" {
-					return caption
-				}
-				return getStringField(docMsg, "fileName")
+				return getStringField(docMsg, "caption")
 			}
 		}
 	}

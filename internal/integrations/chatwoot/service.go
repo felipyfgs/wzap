@@ -61,6 +61,7 @@ type MediaPresigner interface {
 
 type MediaStorage interface {
 	Upload(ctx context.Context, key string, reader io.Reader, size int64, contentType string) error
+	UploadWithMeta(ctx context.Context, key string, reader io.Reader, size int64, contentType string, userMeta map[string]string) error
 }
 
 type SessionPhoneGetter interface {
@@ -110,18 +111,18 @@ func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messag
 	}
 }
 
-func (s *Service) SetJIDResolver(r JIDResolver)               { s.jidResolver = r }
-func (s *Service) SetMediaDownloader(d MediaDownloader)       { s.mediaDownloader = d }
-func (s *Service) SetSessionConnector(c SessionConnector)     { s.connector = c }
-func (s *Service) SetAvatarGetter(p AvatarGetter)             { s.picGetter = p }
-func (s *Service) SetNumberChecker(n NumberChecker)           { s.numberChecker = n }
-func (s *Service) SetServerURL(url string)                    { s.serverURL = url }
-func (s *Service) SetJetStream(js jetstream.JetStream)        { s.js = js }
-func (s *Service) SetCache(c Cache)                           { s.cache = c }
-func (s *Service) SetNameGetter(g ContactNameGetter)   { s.contactNameGetter = g }
-func (s *Service) SetMediaPresigner(p MediaPresigner)         { s.mediaPresigner = p }
-func (s *Service) SetMediaStorage(st MediaStorage)            { s.mediaStorage = st }
-func (s *Service) SetPhoneGetter(g SessionPhoneGetter) { s.sessionPhoneGet = g }
+func (s *Service) SetJIDResolver(r JIDResolver)           { s.jidResolver = r }
+func (s *Service) SetMediaDownloader(d MediaDownloader)   { s.mediaDownloader = d }
+func (s *Service) SetSessionConnector(c SessionConnector) { s.connector = c }
+func (s *Service) SetAvatarGetter(p AvatarGetter)         { s.picGetter = p }
+func (s *Service) SetNumberChecker(n NumberChecker)       { s.numberChecker = n }
+func (s *Service) SetServerURL(url string)                { s.serverURL = url }
+func (s *Service) SetJetStream(js jetstream.JetStream)    { s.js = js }
+func (s *Service) SetCache(c Cache)                       { s.cache = c }
+func (s *Service) SetNameGetter(g ContactNameGetter)      { s.contactNameGetter = g }
+func (s *Service) SetMediaPresigner(p MediaPresigner)     { s.mediaPresigner = p }
+func (s *Service) SetMediaStorage(st MediaStorage)        { s.mediaStorage = st }
+func (s *Service) SetPhoneGetter(g SessionPhoneGetter)    { s.sessionPhoneGet = g }
 func (s *Service) ClearConfigCache(sessionID string) {
 	s.missingConfig.Delete(sessionID)
 }

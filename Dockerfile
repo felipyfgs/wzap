@@ -63,7 +63,7 @@ ENV NODE_ENV=production \
     NITRO_PORT=3000
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD wget -qO- http://localhost:${PORT}/health || exit 1
+    CMD wget -qO- http://127.0.0.1:${PORT}/health || exit 1
 CMD ["node", "server/index.mjs"]
 
 # =============================================================================
@@ -118,7 +118,7 @@ ENV PORT=8080 \
     ENVIRONMENT=production
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:${PORT}/health || exit 1
+    CMD wget -qO- http://127.0.0.1:${PORT}/health || exit 1
 ENTRYPOINT ["/app/wzap"]
 
 # =============================================================================
@@ -141,6 +141,6 @@ ENV PORT=8080 \
     NITRO_PORT=3000
 EXPOSE 8080 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-    CMD wget -qO- http://localhost:${PORT}/health || exit 1
+    CMD wget -qO- http://127.0.0.1:${PORT}/health || exit 1
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["sh", "-c", "./api & API=$!; PORT=${WEB_PORT} node web/server/index.mjs & WEB=$!; trap 'kill $API $WEB 2>/dev/null' TERM INT; wait -n $API $WEB; kill $API $WEB 2>/dev/null; wait"]

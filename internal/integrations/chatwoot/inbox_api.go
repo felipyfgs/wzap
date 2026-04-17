@@ -233,5 +233,3 @@ func (h *apiInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payloa
 	}
 	return nil
 }
-
-func (h *apiInboxHandler) UnlockWindow(_ context.Context, _ *Config, _ string) {}

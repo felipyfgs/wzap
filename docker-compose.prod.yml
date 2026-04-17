@@ -29,7 +29,13 @@ services:
       minio:    { condition: service_healthy }
       nats:     { condition: service_healthy }
     restart: unless-stopped
-    networks: [wzap_net, wzap_chatwoot]
+    networks:
+      wzap_net: {}
+      # Alias `wzap_app` p/ backward-compat com Chatwoot (que tem o hostname antigo
+      # salvo na config do Cloud Inbox). Assim, tanto `api:8080` quanto
+      # `wzap_app:8080` resolvem para este container.
+      wzap_chatwoot:
+        aliases: [api, wzap_app]
 
   web:
     image: wzap-web:latest
@@ -41,8 +47,9 @@ services:
       NODE_ENV: production
       HOST: 0.0.0.0
       PORT: 3000
-      NUXT_API_URL: ${NUXT_API_URL:-http://api:8080}
-      NUXT_MINIO_ENDPOINT: ${NUXT_MINIO_ENDPOINT:-http://minio:9000}
+      # URLs internas do Docker — NÃO ler do .env (que é p/ dev local sem docker)
+      NUXT_API_URL: http://api:8080
+      NUXT_MINIO_ENDPOINT: http://minio:9000
       NUXT_PUBLIC_SITE_URL: ${NUXT_PUBLIC_SITE_URL:-}
     ports:
       - "${WEB_PORT:-3001}:3000"

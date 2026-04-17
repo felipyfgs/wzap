@@ -5,8 +5,10 @@
 #   docker-compose.dev.yml   → modo dev (hot reload)
 #   docker-compose.prod.yml  → modo produção
 #
-# A rede `wzap_chatwoot` é criada aqui e referenciada como `external: true`
-# pelo stack do Chatwoot em `docker/chatwoot/docker-compose.yml`.
+# A rede `wzap_chatwoot` é `external: true` em ambos os stacks (wzap e chatwoot)
+# para permitir comunicação cross-stack. Ela é criada idempotentemente pelo
+# Makefile antes do `docker compose up` (target `docker-network-init`), ou
+# manualmente com `docker network create wzap_chatwoot`.
 # =============================================================================
 
 services:
@@ -73,5 +75,5 @@ networks:
     name: wzap_net
     driver: bridge
   wzap_chatwoot:
+    external: true
     name: wzap_chatwoot
-    driver: bridge

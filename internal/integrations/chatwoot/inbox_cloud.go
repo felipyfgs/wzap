@@ -151,10 +151,6 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 	return nil
 }
 
-func (h *cloudInboxHandler) UnlockWindow(ctx context.Context, cfg *Config, chatJID string) {
-	h.svc.unlockCloudWindow(ctx, cfg, chatJID)
-}
-
 type cloudWebhookEnvelope struct {
 	Object string              `json:"object"`
 	Entry  []cloudWebhookEntry `json:"entry"`
@@ -373,7 +369,7 @@ func parseVCardToCloudContacts(vcard, displayName string) []map[string]any {
 	return []map[string]any{contact}
 }
 
-type mediaUploader func(ctx context.Context, key string, reader io.Reader, size int64, mimeType string) error
+type mediaUploader func(ctx context.Context, key string, reader io.Reader, size int64, mimeType string, userMeta map[string]string) error
 
 func (s *Service) postToChatwootCloud(ctx context.Context, cfg *Config, sessionPhone string, payload any) error {
 	jsonData, err := json.Marshal(payload)
@@ -456,7 +452,7 @@ func (s *Service) uploadCloudMedia(ctx context.Context, cfg *Config, info *media
 	return url, nil
 }
 
-func (s *Service) uploadRawMedia(ctx context.Context, _ *Config, data []byte, sessionID, msgID, _, mimeType string) (string, error) {
+func (s *Service) uploadRawMedia(ctx context.Context, _ *Config, data []byte, sessionID, msgID, filename, mimeType string) (string, error) {
 	if s.mediaPresigner == nil {
 		return "", fmt.Errorf("MinIO not configured, cannot upload media for cloud mode")
 	}
@@ -468,7 +464,17 @@ func (s *Service) uploadRawMedia(ctx context.Context, _ *Config, data []byte, se
 		return "", fmt.Errorf("media storage not available")
 	}
 
-	if err := upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType); err != nil {
+	// Persiste o filename original como user metadata no MinIO. O
+	// CloudAPIHandler.DownloadCloudMedia lê esse metadata e emite o header
+	// `Content-Disposition: inline; filename="..."` para que o Chatwoot
+	// preserve o nome real do arquivo (ex.: "report.pdf") em vez de usar
+	// o mediaID como nome do anexo.
+	var userMeta map[string]string
+	if filename != "" {
+		userMeta = map[string]string{"filename": filename}
+	}
+
+	if err := upload(ctx, key, bytes.NewReader(data), int64(len(data)), mimeType, userMeta); err != nil {
 		return "", fmt.Errorf("failed to upload media to storage: %w", err)
 	}
 
@@ -484,49 +490,7 @@ func (s *Service) getMediaUploader() mediaUploader {
 	if s.mediaStorage == nil {
 		return nil
 	}
-	return func(ctx context.Context, key string, reader io.Reader, size int64, mimeType string) error {
-		return s.mediaStorage.Upload(ctx, key, reader, size, mimeType)
-	}
-}
-
-func (s *Service) unlockCloudWindow(ctx context.Context, cfg *Config, chatJID string) {
-	sessionPhone := ""
-	if s.sessionPhoneGet != nil {
-		sessionPhone = s.sessionPhoneGet.GetSessionPhone(ctx, cfg.SessionID)
-	}
-	if sessionPhone == "" {
-		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Msg("unlockCloudWindow: no session phone, skipping")
-		return
-	}
-
-	from := extractPhone(chatJID)
-	if from == "" {
-		return
-	}
-
-	contactName := from
-	if s.contactNameGetter != nil {
-		if name := s.contactNameGetter.GetContactName(ctx, cfg.SessionID, chatJID); name != "" {
-			contactName = name
-		}
-	}
-	if contactName == from {
-		client := s.clientFn(cfg)
-		if contacts, err := client.FilterContacts(ctx, from); err == nil && len(contacts) > 0 {
-			if contacts[0].Name != "" && contacts[0].Name != from {
-				contactName = contacts[0].Name
-			}
-		}
-	}
-
-	ts := fmt.Sprintf("%d", time.Now().Unix())
-	msgID := fmt.Sprintf("wzap-unlock-%d", time.Now().UnixNano())
-	cloudMsg := buildCloudTextMessage("\u200e", msgID, from, ts)
-	envelope := buildCloudWebhookEnvelope(sessionPhone, from, msgID, ts, "", cloudMsg, buildCloudContact(from, contactName))
-
-	if err := s.postToChatwootCloud(ctx, cfg, sessionPhone, envelope); err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Str("chatJID", chatJID).Msg("unlockCloudWindow: failed to post webhook")
-	} else {
-		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Str("from", from).Msg("unlockCloudWindow: sent synthetic incoming to unlock 24h window")
+	return func(ctx context.Context, key string, reader io.Reader, size int64, mimeType string, userMeta map[string]string) error {
+		return s.mediaStorage.UploadWithMeta(ctx, key, reader, size, mimeType, userMeta)
 	}
 }

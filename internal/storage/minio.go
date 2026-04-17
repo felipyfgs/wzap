@@ -52,13 +52,18 @@ func New(cfg *config.Config) (*Minio, error) {
 }
 
 func (m *Minio) Upload(ctx context.Context, key string, reader io.Reader, size int64, contentType string) error {
+	return m.UploadWithMeta(ctx, key, reader, size, contentType, nil)
+}
+
+// UploadWithMeta faz upload com metadata customizado (user metadata).
+// Útil para persistir o filename original, que depois é recuperado via StatMeta
+// e embarcado em `Content-Disposition` nos downloads.
+func (m *Minio) UploadWithMeta(ctx context.Context, key string, reader io.Reader, size int64, contentType string, userMeta map[string]string) error {
 	_, err := m.Client.PutObject(ctx, m.Bucket, key, reader, size, minio.PutObjectOptions{
-		ContentType: contentType,
+		ContentType:  contentType,
+		UserMetadata: userMeta,
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (m *Minio) Download(ctx context.Context, key string) (io.ReadCloser, error) {
@@ -77,6 +82,16 @@ func (m *Minio) Stat(ctx context.Context, key string) (contentType string, size 
 		return "", 0, err
 	}
 	return info.ContentType, info.Size, nil
+}
+
+// StatMeta returns content-type, size and user metadata for the given key.
+// User metadata keys are returned lowercased and WITHOUT the "X-Amz-Meta-" prefix.
+func (m *Minio) StatMeta(ctx context.Context, key string) (contentType string, size int64, userMeta map[string]string, err error) {
+	info, err := m.Client.StatObject(ctx, m.Bucket, key, minio.StatObjectOptions{})
+	if err != nil {
+		return "", 0, nil, err
+	}
+	return info.ContentType, info.Size, info.UserMetadata, nil
 }
 
 func (m *Minio) PresignedURL(ctx context.Context, key string, expiry time.Duration) (string, error) {

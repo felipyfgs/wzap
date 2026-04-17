@@ -74,7 +74,12 @@ internal/
   websocket/              # WebSocket hub for real-time events
 migrations/               # Numbered SQL migrations (embedded via //go:embed)
 docs/                     # Generated Swagger JSON/YAML
-docker/                   # Docker Compose files (base, dev, prod) + chatwoot stack
+docker/chatwoot/          # Chatwoot stack (docker-compose.yml + trigger.rb)
+Dockerfile                # Multi-stage: web-dev, web-prod, api-dev, api-prod, combined
+docker-compose.yml        # Base infra: postgres + minio + nats + redes
+docker-compose.dev.yml    # Overlay dev: api + web com hot reload
+docker-compose.prod.yml   # Overlay prod: api + web compilados
+scripts/setup.sh          # Build de imagens (combined/api-prod/web-prod/--split)
 web/                      # Nuxt 4 SPA frontend
 ```
 
@@ -218,11 +223,68 @@ Every exported handler has godoc/Swagger annotations. Regenerate with `make docs
 
 ## Docker
 
-- `docker-compose.yml` — base infrastructure (Postgres, Redis, MinIO, NATS)
-- `docker-compose.dev.yml` — dev mode with hot reload (air + nuxt dev)
-- `docker-compose.prod.yml` — production build
-- `docker/chatwoot/docker-compose.yml` — Chatwoot stack
-- Makefile targets: `make docker-dev`, `make docker-prod`, `make docker-build`, `make chatwoot-up`
+### Dockerfile (multi-stage, raiz único)
+
+O `Dockerfile` na raiz consolida **API Go + Web Nuxt** em stages nomeados com BuildKit cache mounts (pnpm store, go mod, go build).
+
+| Target     | Base                  | Uso                                  | Porta(s)    |
+|------------|-----------------------|--------------------------------------|-------------|
+| `web-dev`  | `node:22-alpine`      | Nuxt dev (hot reload)                | 3000        |
+| `web-prod` | `node:22-alpine`      | Nitro node-server (`.output`)        | 3000        |
+| `api-dev`  | `golang:1.25-alpine`  | API com air (hot reload)             | 8080        |
+| `api-prod` | `alpine:3.21`         | Binário Go compilado                 | 8080        |
+| `combined` | `node:22-alpine`+tini | API + Web numa única imagem          | 8080 + 3000 |
+
+> Não existe `web/Dockerfile` — tudo vive no `Dockerfile` raiz. `tini` é usado no `combined` para propagação correta de sinais.
+
+### Compose layering
+
+- `docker-compose.yml` — **somente infra**: postgres + minio + nats + redes `wzap_net` e `wzap_chatwoot`
+- `docker-compose.dev.yml` — **overlay dev**: serviços `api` (air) + `web` (nuxt dev), bind mount de código, volumes nomeados para caches
+- `docker-compose.prod.yml` — **overlay prod**: serviços `api` + `web` compilados (imagens `wzap-api:latest` e `wzap-web:latest`)
+- `docker/chatwoot/docker-compose.yml` — stack Chatwoot (rails + sidekiq + postgres + redis), usa `wzap_chatwoot` como `external`
+
+Serviços `api` e `web` são **sempre separados** (dev e prod). A imagem `combined` existe apenas para deploys single-container (VPS simples) via `scripts/setup.sh`.
+
+### Redes
+
+- `wzap_net` — rede interna do wzap (postgres, minio, nats, api, web). Criada pelo compose base.
+- `wzap_chatwoot` — rede compartilhada com Chatwoot. Criada pelo compose base do wzap (**não é `external`**), e referenciada como `external: true` pelo stack do Chatwoot.
+
+### Comunicação entre serviços
+
+- **Web → API** (server-side): `NUXT_API_URL=http://api:8080` (DNS interno). Usado pelo proxy Nitro em `web/server/api/[...].ts` e pelo WS bridge em `web/server/routes/ws.ts`.
+- **Web → MinIO** (whitelist SSRF): `NUXT_MINIO_ENDPOINT` — dev: `http://localhost:9010`, prod: `http://minio:9000`.
+- **API → DB/MinIO/NATS**: via DNS interno (`postgres:5432`, `minio:9000`, `nats:4222`).
+- **Chatwoot → API (Cloud API)**: `WHATSAPP_CLOUD_BASE_URL=http://api:8080` via rede `wzap_chatwoot`.
+
+### Makefile targets
+
+| Comando                   | Ação                                                   |
+|---------------------------|--------------------------------------------------------|
+| `make docker-dev`         | sobe infra + api + web com hot reload                  |
+| `make docker-prod`        | sobe infra + api + web em modo produção                |
+| `make docker-build`       | builda imagem combinada (`wzap:latest`)                 |
+| `make docker-build-split` | builda imagens separadas (`wzap-api`, `wzap-web`)       |
+| `make push`               | build + push da imagem combinada ao Docker Hub         |
+| `make logs-api`           | logs em tempo real do container `api`                  |
+| `make logs-web`           | logs em tempo real do container `web`                  |
+| `make docker-down`        | para todos os containers                               |
+| `make docker-down-v`      | para + remove volumes (**destrutivo**)                 |
+| `make chatwoot-up/down`   | sobe/para stack do Chatwoot                            |
+
+### scripts/setup.sh
+
+Builda imagens para deploy (tags locais + Docker Hub):
+
+```bash
+./scripts/setup.sh                     # combined (wzap:latest) [default]
+./scripts/setup.sh --target=api-prod   # somente API (wzap-api:latest)
+./scripts/setup.sh --target=web-prod   # somente Web (wzap-web:latest)
+./scripts/setup.sh --split             # api-prod + web-prod separados
+./scripts/setup.sh --push              # build + push ao Docker Hub
+./scripts/setup.sh --no-cache          # force rebuild
+```
 
 ## Security
 

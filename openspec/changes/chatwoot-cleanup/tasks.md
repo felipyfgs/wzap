@@ -80,10 +80,10 @@
 
 ## 9. Passo 8 — Dividir `webhook_outbound.go` (507 LOC) em dois arquivos
 
-- [ ] 9.1 Em `webhook_outbound.go` (~280 LOC restantes): manter `HandleIncomingWebhook`, `syncCloudMessageRef`, `isOutboundDuplicate`, `processOutgoingMessage`, `processMessageEdited`, `processMessageUpdated`, `processStatusChanged`
-- [ ] 9.2 Criar `internal/integrations/chatwoot/webhook_attachments.go` (~230 LOC): mover `sendAttachment`, `sendVCardToWhatsApp`, `resolveOutboundReply`, `signContent`, `markReadIfEnabled`, `sendErrorToAgent`, `rewriteAttachmentURL`, `filenameFromURL`
-- [ ] 9.3 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 9.4 Commit: `refactor(chatwoot): split webhook_outbound.go into outbound + attachments`
+- [x] 9.1 Em `webhook_outbound.go` (302 LOC): `HandleIncomingWebhook`, `syncCloudMessageRef`, `isOutboundDuplicate`, `processOutgoingMessage`, `processMessageEdited`, `processMessageUpdated`, `processStatusChanged`, const `maxMediaBytes`
+- [x] 9.2 Criar `internal/integrations/chatwoot/webhook_attachments.go` (217 LOC): `sendAttachment`, `sendVCardToWhatsApp`, `resolveOutboundReply`, `signContent`, `markReadIfEnabled`, `sendErrorToAgent`, `rewriteAttachmentURL`, `filenameFromURL`
+- [x] 9.3 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 9.4 Commit: `refactor(chatwoot): split webhook_outbound.go into outbound + attachments`
 
 ## 10. Verificação final
 

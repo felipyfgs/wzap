@@ -1,19 +1,19 @@
 ## 1. Pré-requisitos
 
-- [ ] 1.1 Confirmar que o WIP de `chatwoot-cloud-mode-parity` está commitado (git status limpo no pacote `internal/integrations/chatwoot/`)
-- [ ] 1.2 Rodar baseline: `go build ./...`, `go vet ./...`, `go test ./internal/integrations/chatwoot/...` — todos devem passar antes de iniciar
-- [ ] 1.3 Criar branch `refactor/chatwoot-cleanup` a partir de `main`
+- [x] 1.1 Confirmar que o WIP de `chatwoot-cloud-mode-parity` está commitado (git status limpo no pacote `internal/integrations/chatwoot/`)
+- [x] 1.2 Rodar baseline: `go build ./...`, `go vet ./...`, `go test ./internal/integrations/chatwoot/...` — todos devem passar antes de iniciar
+- [x] 1.3 Criar branch `refactor/chatwoot-cleanup` a partir de `main`
 
 ## 2. Passo 1 — Remover código morto e helpers duplicados (baixo risco, −35 LOC)
 
-- [ ] 2.1 Deletar função `buildCloudReactionMessage` (inbox_cloud.go:323-334)
-- [ ] 2.2 Deletar wrapper `UnlockCloudWindow` (inbox_cloud.go:533-535); renomear `unlockCloudWindow` privado → `UnlockCloudWindow` público
-- [ ] 2.3 Inlinar `qrcode.Encode(...)` no único caller em `processQR` (wa_events.go:~413) e deletar arquivo `qrcode.go`
-- [ ] 2.4 Remover anchor `var _ model.EventType = ""` em inbox.go:38
-- [ ] 2.5 Remover função duplicada `urlFilename` (jid.go:109-113); atualizar caller em `cw_conversation.go:~135` para usar `filenameFromURL` (cw_webhook.go)
-- [ ] 2.6 Unexportar `ClearConfigCache` → `clearConfigCache` (service.go:133); atualizar caller em `cw_conversation.go:~323`
-- [ ] 2.7 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 2.8 Commit: `refactor(chatwoot): remove dead code and duplicated helpers`
+- [x] 2.1 Deletar função `buildCloudReactionMessage` (inbox_cloud.go:323-334)
+- [x] 2.2 Deletar wrapper `UnlockCloudWindow` (inbox_cloud.go:533-535); renomear `unlockCloudWindow` privado → `UnlockCloudWindow` público
+- [x] 2.3 Inlinar `qrcode.Encode(...)` no único caller em `processQR` (wa_events.go:~413) e deletar arquivo `qrcode.go`
+- [x] 2.4 Remover anchor `var _ model.EventType = ""` em inbox.go:38
+- [x] 2.5 Remover função duplicada `urlFilename` (jid.go:109-113); atualizar caller em `cw_conversation.go:~135` para usar `filenameFromURL` (cw_webhook.go)
+- [x] 2.6 Unexportar `ClearConfigCache` → `clearConfigCache` (service.go:133); atualizar caller em `cw_conversation.go:~323`
+- [x] 2.7 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 2.8 Commit: `refactor(chatwoot): remove dead code and duplicated helpers`
 
 ## 3. Passo 2 — Renomear arquivos (zero mudança de conteúdo)
 

@@ -130,7 +130,7 @@ func (s *Service) SetNameGetter(g ContactNameGetter)      { s.contactNameGetter 
 func (s *Service) SetMediaPresigner(p MediaPresigner)     { s.mediaPresigner = p }
 func (s *Service) SetMediaStorage(st MediaStorage)        { s.mediaStorage = st }
 func (s *Service) SetPhoneGetter(g SessionPhoneGetter)    { s.sessionPhoneGet = g }
-func (s *Service) ClearConfigCache(sessionID string) {
+func (s *Service) clearConfigCache(sessionID string) {
 	s.missingConfig.Delete(sessionID)
 }
 

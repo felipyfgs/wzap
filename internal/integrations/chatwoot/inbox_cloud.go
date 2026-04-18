@@ -320,19 +320,6 @@ func buildCloudContactMessage(contacts []map[string]any, msgID, from, timestamp 
 	}
 }
 
-func buildCloudReactionMessage(targetMsgID, emoji, msgID, from, timestamp string) map[string]any {
-	return map[string]any{
-		"from":      from,
-		"id":        msgID,
-		"timestamp": timestamp,
-		"type":      "reaction",
-		"reaction": map[string]any{
-			"message_id": targetMsgID,
-			"emoji":      emoji,
-		},
-	}
-}
-
 func buildCloudContact(phone, name string) map[string]any {
 	contact := map[string]any{}
 	if name != "" {
@@ -531,10 +518,6 @@ func (s *Service) getMediaUploader() mediaUploader {
 }
 
 func (s *Service) UnlockCloudWindow(ctx context.Context, cfg *Config, chatJID string) {
-	s.unlockCloudWindow(ctx, cfg, chatJID)
-}
-
-func (s *Service) unlockCloudWindow(ctx context.Context, cfg *Config, chatJID string) {
 	if cfg == nil || cfg.InboxType != "cloud" || chatJID == "" {
 		return
 	}
@@ -552,7 +535,7 @@ func (s *Service) unlockCloudWindow(ctx context.Context, cfg *Config, chatJID st
 		sessionPhone = s.sessionPhoneGet.GetSessionPhone(ctx, cfg.SessionID)
 	}
 	if sessionPhone == "" {
-		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Msg("unlockCloudWindow: no session phone, skipping")
+		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Msg("UnlockCloudWindow: no session phone, skipping")
 		return
 	}
 
@@ -583,8 +566,8 @@ func (s *Service) unlockCloudWindow(ctx context.Context, cfg *Config, chatJID st
 	envelope := buildCloudWebhookEnvelope(sessionPhone, false, cloudMsg, buildCloudContact(from, contactName))
 
 	if err := s.postToChatwootCloud(ctx, cfg, sessionPhone, envelope); err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Str("chatJID", chatJID).Msg("unlockCloudWindow: failed to post webhook")
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("chatJID", chatJID).Msg("UnlockCloudWindow: failed to post webhook")
 	} else {
-		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Str("from", from).Msg("unlockCloudWindow: sent synthetic incoming to unlock 24h window")
+		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Str("from", from).Msg("UnlockCloudWindow: sent synthetic incoming to unlock 24h window")
 	}
 }

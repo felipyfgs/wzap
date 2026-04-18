@@ -106,12 +106,6 @@ func (s *Service) resolveJID(ctx context.Context, sessionID, jid string) string 
 	return jid
 }
 
-func urlFilename(rawURL string) string {
-	u := strings.Split(strings.Split(rawURL, "?")[0], "#")[0]
-	parts := strings.Split(u, "/")
-	return parts[len(parts)-1]
-}
-
 func (s *Service) resolvePhoneToJID(ctx context.Context, sessionID, phone string) string {
 	if s.numberChecker == nil {
 		return phone + "@s.whatsapp.net"

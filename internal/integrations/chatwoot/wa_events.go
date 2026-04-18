@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/skip2/go-qrcode"
+
 	"wzap/internal/logger"
 	"wzap/internal/model"
 )
@@ -410,7 +412,7 @@ func (s *Service) processQR(ctx context.Context, cfg *Config, payload []byte) {
 	}
 
 	client := s.clientFn(cfg)
-	qrPNG, err := generateQRCodePNG(qrContent)
+	qrPNG, err := qrcode.Encode(qrContent, qrcode.Medium, 256)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to generate QR code")
 		return

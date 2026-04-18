@@ -132,7 +132,7 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 		}
 		if s.picGetter != nil {
 			if picURL, err := s.picGetter.GetProfilePicture(ctx, cfg.SessionID, chatJID); err == nil && picURL != "" {
-				if urlFilename(picURL) != urlFilename(contacts[0].Thumbnail) {
+				if filenameFromURL(picURL) != filenameFromURL(contacts[0].Thumbnail) {
 					update.AvatarURL = picURL
 				}
 			}
@@ -320,7 +320,7 @@ func (s *Service) Configure(ctx context.Context, cfg *Config) error {
 	if err := s.repo.Upsert(ctx, cfg); err != nil {
 		return err
 	}
-	s.ClearConfigCache(cfg.SessionID)
+	s.clearConfigCache(cfg.SessionID)
 	return nil
 }
 

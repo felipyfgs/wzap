@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"wzap/internal/logger"
-	"wzap/internal/model"
 )
 
 type InboxHandler interface {
@@ -34,5 +33,3 @@ func (s *Service) processMessage(ctx context.Context, cfg *Config, payload []byt
 
 	return s.getInboxHandler(cfg).HandleMessage(ctx, cfg, payload)
 }
-
-var _ model.EventType = ""

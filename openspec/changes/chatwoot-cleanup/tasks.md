@@ -55,13 +55,13 @@
 
 ## 6. Passo 5 — Dividir `wa_events.go` (663 LOC) em três arquivos
 
-- [ ] 6.1 Criar `internal/integrations/chatwoot/events_message_lifecycle.go` movendo: `processReceipt`, `processDelete`, `processRevoke`, `processEdit`, `processEditCloud`, `waitForCWRef` (~220 LOC)
-- [ ] 6.2 Criar `internal/integrations/chatwoot/events_session.go` movendo: `processConnected`, `processDisconnected`, `processQR` (~130 LOC)
-- [ ] 6.3 Criar `internal/integrations/chatwoot/events_contact_group.go` movendo: `processContact`, `processPushName`, `processPicture`, `processGroupInfo`, `processHistorySync` (~240 LOC)
-- [ ] 6.4 Deletar `wa_events.go` original
-- [ ] 6.5 Se `wa_events_test.go` existir, renomear/dividir conforme necessário para que cada teste acompanhe o arquivo correspondente (ou manter um único arquivo de teste se simpler)
-- [ ] 6.6 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 6.7 Commit: `refactor(chatwoot): split wa_events.go into three lifecycle files`
+- [x] 6.1 Criar `internal/integrations/chatwoot/events_message_lifecycle.go` movendo: `processReceipt`, `processDelete`, `processRevoke`, `processEdit`, `processEditCloud`, `waitForCWRef` (345 LOC)
+- [x] 6.2 Criar `internal/integrations/chatwoot/events_session.go` movendo: `processConnected`, `processDisconnected`, `processQR` (93 LOC)
+- [x] 6.3 Criar `internal/integrations/chatwoot/events_contact_group.go` movendo: `processContact`, `processPushName`, `processPicture`, `processGroupInfo`, `processHistorySync` (244 LOC)
+- [x] 6.4 Deletar `wa_events.go` original
+- [x] 6.5 Renomeado `wa_events_test.go` → `events_test.go` (um único arquivo cobrindo os três novos)
+- [x] 6.6 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 6.7 Commit: `refactor(chatwoot): split wa_events.go into three lifecycle files`
 
 ## 7. Passo 6 — Dividir `inbox_cloud.go` (590 LOC) em três arquivos
 

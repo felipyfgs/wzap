@@ -64,11 +64,11 @@ Services que precisam funcionar nos dois engines usam um dispatcher genérico: `
 
 ### Integração Chatwoot
 
-[internal/integrations/chatwoot/](internal/integrations/chatwoot/) é o subsistema arquiteturalmente mais denso. As convenções de prefixo de arquivo são estruturais:
+[internal/integrations/chatwoot/](internal/integrations/chatwoot/) é o subsistema arquiteturalmente mais denso. Os prefixos de arquivo que sobraram após o refactor são estruturais:
 
-- `wa_*` = entrada vinda do WhatsApp (eventos, tipos de mensagem, helpers)
-- `cw_*` = originado no Chatwoot (webhook, conversas, bot, labels, backfill, mapping)
-- `inbox_*` = abstração do modo de inbox
+- `inbox_*` = abstração do modo de inbox (`inbox.go`, `inbox_api.go`, `inbox_cloud.go`, `inbox_common.go`)
+- `wa_events*` = pipeline de eventos vindos do WhatsApp
+- Todos os outros arquivos (webhook_outbound, conversation, bot, labels, backfill, mapping, ...) são puramente Chatwoot-side — o antigo prefixo `cw_*` foi removido em `2edce63`; não reintroduza.
 
 A interface `InboxHandler` em [inbox.go](internal/integrations/chatwoot/inbox.go) tem duas implementações (`apiInboxHandler`, `cloudInboxHandler`), escolhidas por sessão via `cfg.InboxType`. `Service.processMessage` roteia para a implementação certa.
 
@@ -96,3 +96,7 @@ SPA Nuxt 4 em `web/`. Código server-side (`web/server/api/[...].ts`, `web/serve
 - **Logging**: apenas o singleton `logger` — toda linha começa com `.Str("component", "xxx")`. Sem `log.Print` / `fmt.Print`.
 - **Models vs DTOs**: modelos em `internal/model/` não têm tags de validação; DTOs de request em `internal/dto/` têm (`validate:"required"` etc.). Mappers ficam no pacote `dto` (`SessionToResp(...)`).
 - **DTOs de update usam ponteiros** (`*string`, `*bool`) para updates parciais — aplique com nil-check, não com checagem de zero-value.
+
+## OpenSpec
+
+O diretório [openspec/](openspec/) guarda propostas de mudança (`changes/`) e specs vigentes (`specs/`) num workflow spec-driven. A ordem exigida por `openspec/config.yaml` para implementar uma change é `model → repo → service → handler → tests`, finalizando com `golangci-lint run ./...` e `go test -race ./...`. Ao trabalhar numa change ativa, prefira os skills `openspec-*` em vez de editar os arquivos na mão.

@@ -180,7 +180,7 @@ logger.Info().Str("component", "server").Str("addr", addr).Msg("Starting API ser
 
 ## Cloud API emulator
 
-`internal/handler/cloud_wa_api.go` emulates the Facebook WhatsApp Cloud API for Chatwoot's Cloud inbox mode. Routes are registered **before** the auth group:
+`internal/handler/cloud_api.go` emulates the Facebook WhatsApp Cloud API for Chatwoot's Cloud inbox mode. Routes are registered **before** the auth group:
 
 - `GET /:version/debug_token` — fake token validation
 - `GET /:version/:phone` — phone status
@@ -200,11 +200,12 @@ Never returns HTTP 401 to prevent Chatwoot from setting `reauthorization_require
 
 ### File naming convention
 
+Após o refactor `2edce63`, apenas dois prefixos sobrevivem — os demais arquivos usam nomes diretos (`webhook_outbound.go`, `conversation.go`, `bot.go`, `labels.go`, `backfill.go`, `mapping.go`, ...).
+
 | Prefix | Origin | Purpose |
 |--------|--------|---------|
-| `wa_*` | WhatsApp inbound | Event processors (`wa_events.go`), message type processors (`wa_messages.go`), utilities (`wa_helpers.go`) |
-| `cw_*` | Chatwoot-specific | Webhook handler (`cw_webhook.go`), conversation mgmt (`cw_conversation.go`), bot commands (`cw_bot.go`), labels (`cw_labels.go`) |
-| `inbox_*` | Inbox mode | Interface + router (`inbox.go`), API mode (`inbox_api.go`), Cloud mode (`inbox_cloud.go`) |
+| `wa_*` | WhatsApp inbound | Event pipeline (`wa_events.go`) |
+| `inbox_*` | Inbox mode | Interface + router (`inbox.go`), API mode (`inbox_api.go`), Cloud mode (`inbox_cloud.go`), shared helpers (`inbox_common.go`) |
 
 ### InboxHandler interface
 

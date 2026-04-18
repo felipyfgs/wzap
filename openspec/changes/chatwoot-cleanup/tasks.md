@@ -17,22 +17,22 @@
 
 ## 3. Passo 2 — Renomear arquivos (zero mudança de conteúdo)
 
-- [ ] 3.1 `git mv internal/integrations/chatwoot/cw_webhook.go internal/integrations/chatwoot/webhook_outbound.go`
-- [ ] 3.2 `git mv internal/integrations/chatwoot/cw_webhook_test.go internal/integrations/chatwoot/webhook_outbound_test.go`
-- [ ] 3.3 `git mv internal/integrations/chatwoot/cw_conversation.go internal/integrations/chatwoot/conversation.go`
-- [ ] 3.4 `git mv internal/integrations/chatwoot/cw_conversation_test.go internal/integrations/chatwoot/conversation_test.go`
-- [ ] 3.5 `git mv internal/integrations/chatwoot/cw_mapping.go internal/integrations/chatwoot/mapping.go`
-- [ ] 3.6 `git mv internal/integrations/chatwoot/cw_mapping_test.go internal/integrations/chatwoot/mapping_test.go`
-- [ ] 3.7 `git mv internal/integrations/chatwoot/cw_backfill.go internal/integrations/chatwoot/backfill.go`
-- [ ] 3.8 `git mv internal/integrations/chatwoot/cw_backfill_test.go internal/integrations/chatwoot/backfill_test.go`
-- [ ] 3.9 `git mv internal/integrations/chatwoot/cw_labels.go internal/integrations/chatwoot/labels.go`
-- [ ] 3.10 `git mv internal/integrations/chatwoot/cw_labels_test.go internal/integrations/chatwoot/labels_test.go`
-- [ ] 3.11 `git mv internal/integrations/chatwoot/cw_bot.go internal/integrations/chatwoot/bot.go`
-- [ ] 3.12 `git mv internal/integrations/chatwoot/wa_messages.go internal/integrations/chatwoot/message_types.go`
-- [ ] 3.13 `git mv internal/integrations/chatwoot/wa_messages_test.go internal/integrations/chatwoot/message_types_test.go`
-- [ ] 3.14 `git mv internal/integrations/chatwoot/wa_helpers.go internal/integrations/chatwoot/message_builder.go`
-- [ ] 3.15 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 3.16 Commit: `refactor(chatwoot): rename files to drop redundant cw_/wa_ prefixes`
+- [x] 3.1 `git mv internal/integrations/chatwoot/cw_webhook.go internal/integrations/chatwoot/webhook_outbound.go`
+- [x] 3.2 `git mv internal/integrations/chatwoot/cw_webhook_test.go internal/integrations/chatwoot/webhook_outbound_test.go`
+- [x] 3.3 `git mv internal/integrations/chatwoot/cw_conversation.go internal/integrations/chatwoot/conversation.go`
+- [x] 3.4 `git mv internal/integrations/chatwoot/cw_conversation_test.go internal/integrations/chatwoot/conversation_test.go`
+- [x] 3.5 `git mv internal/integrations/chatwoot/cw_mapping.go internal/integrations/chatwoot/mapping.go`
+- [x] 3.6 `git mv internal/integrations/chatwoot/cw_mapping_test.go internal/integrations/chatwoot/mapping_test.go`
+- [x] 3.7 `git mv internal/integrations/chatwoot/cw_backfill.go internal/integrations/chatwoot/backfill.go`
+- [x] 3.8 `git mv internal/integrations/chatwoot/cw_backfill_test.go internal/integrations/chatwoot/backfill_test.go`
+- [x] 3.9 `git mv internal/integrations/chatwoot/cw_labels.go internal/integrations/chatwoot/labels.go`
+- [x] 3.10 `git mv internal/integrations/chatwoot/cw_labels_test.go internal/integrations/chatwoot/labels_test.go`
+- [x] 3.11 `git mv internal/integrations/chatwoot/cw_bot.go internal/integrations/chatwoot/bot.go`
+- [x] 3.12 `git mv internal/integrations/chatwoot/wa_messages.go internal/integrations/chatwoot/message_types.go`
+- [x] 3.13 `git mv internal/integrations/chatwoot/wa_messages_test.go internal/integrations/chatwoot/message_types_test.go`
+- [x] 3.14 `git mv internal/integrations/chatwoot/wa_helpers.go internal/integrations/chatwoot/message_builder.go`
+- [x] 3.15 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 3.16 Commit: `refactor(chatwoot): rename files to drop redundant cw_/wa_ prefixes`
 
 ## 4. Passo 3 — Extrair prólogo compartilhado dos inbox handlers
 

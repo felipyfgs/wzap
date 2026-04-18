@@ -22,30 +22,17 @@ func newCloudInboxHandler(svc *Service) *cloudInboxHandler {
 }
 
 func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payload []byte) error {
-	data, err := parseMessagePayload(payload)
-	if err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to parse message payload for cloud mode")
-		return nil
+	res, skip, err := h.svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{})
+	if err != nil || skip {
+		return err
 	}
-
-	chatJID := data.Info.Chat
-	if chatJID == "" {
-		return nil
-	}
-
-	chatJID = h.svc.resolveLID(ctx, cfg.SessionID, chatJID, data.Info.SenderAlt, data.Info.RecipientAlt)
-	if strings.HasSuffix(chatJID, "@lid") {
-		return nil
-	}
+	data := res.data
+	chatJID := res.chatJID
 
 	// Chatwoot Cloud inbox only supports E164 phone numbers as source_id.
 	// Group JIDs (e.g. "120363...@g.us") are not valid and would cause the
 	// channel to be marked as inactive on Chatwoot side.
 	if strings.HasSuffix(chatJID, "@g.us") || strings.HasSuffix(chatJID, "@newsletter") {
-		return nil
-	}
-
-	if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
 		return nil
 	}
 
@@ -55,9 +42,6 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 		from = extractPhone(data.Info.Sender)
 	}
 	msgID := data.Info.ID
-	if msgID != "" && h.svc.cache.GetIdempotent(ctx, cfg.SessionID, "WAID:"+msgID) {
-		return nil
-	}
 	timestamp := fmt.Sprintf("%d", data.Info.Timestamp)
 	pushName := data.Info.PushName
 

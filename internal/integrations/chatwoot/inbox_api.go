@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"wzap/internal/logger"
-	"wzap/internal/metrics"
 	"wzap/internal/model"
 )
 
@@ -19,64 +18,21 @@ func newAPIInboxHandler(svc *Service) *apiInboxHandler {
 }
 
 func (h *apiInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payload []byte) error {
-	data, err := parseMessagePayload(payload)
-	if err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to parse message payload")
-		return nil
+	res, skip, err := h.svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{checkDBIdempotency: true})
+	if err != nil || skip {
+		return err
 	}
+	data := res.data
+	chatJID := res.chatJID
+	sourceID := res.sourceID
 
 	logger.Debug().Str("component", "chatwoot").Str("chat", data.Info.Chat).Str("id", data.Info.ID).Bool("fromMe", data.Info.IsFromMe).Msg("processMessage (api)")
-
-	chatJID := data.Info.Chat
-	if chatJID == "" {
-		logger.Warn().Str("component", "chatwoot").Msg("chatJID empty, skipping")
-		return nil
-	}
-
-	if strings.HasSuffix(chatJID, "@lid") {
-		logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).
-			Bool("fromMe", data.Info.IsFromMe).
-			Str("chatLID", chatJID).
-			Str("senderAlt", data.Info.SenderAlt).
-			Str("recipientAlt", data.Info.RecipientAlt).
-			Msg("resolving LID chat")
-	}
-	if data.Info.IsFromMe {
-		chatJID = h.svc.resolveLID(ctx, cfg.SessionID, chatJID, data.Info.RecipientAlt)
-	} else {
-		chatJID = h.svc.resolveLID(ctx, cfg.SessionID, chatJID, data.Info.SenderAlt, data.Info.RecipientAlt)
-	}
-	if strings.HasSuffix(chatJID, "@lid") {
-		logger.Warn().Str("component", "chatwoot").Str("lid", chatJID).Str("session", cfg.SessionID).Msg("unresolvable LID chat, skipping")
-		return nil
-	}
-
-	if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
-		logger.Debug().Str("component", "chatwoot").Str("chat", chatJID).Msg("JID ignored, skipping")
-		return nil
-	}
 
 	pushName := data.Info.PushName
 	fromMe := data.Info.IsFromMe
 	msgID := data.Info.ID
-	sourceID := "WAID:" + msgID
 
 	if msgID != "" {
-		_, idemSpan := startSpan(ctx, "chatwoot.check_idempotency",
-			spanAttrs(cfg.SessionID, "message", "inbound")...)
-		isDup := h.svc.cache.GetIdempotent(ctx, cfg.SessionID, sourceID)
-		if !isDup {
-			if exists, err := h.svc.msgRepo.ExistsBySourceID(ctx, cfg.SessionID, sourceID); err == nil && exists {
-				h.svc.cache.SetIdempotent(ctx, cfg.SessionID, sourceID)
-				isDup = true
-			}
-		}
-		idemSpan.End()
-		if isDup {
-			logger.Debug().Str("component", "chatwoot").Str("sourceID", sourceID).Msg("inbound duplicate, skipping")
-			metrics.CWIdempotentDrops.WithLabelValues(cfg.SessionID).Inc()
-			return nil
-		}
 		h.svc.cache.SetIdempotent(ctx, cfg.SessionID, sourceID)
 
 		msgBody := extractText(data.Message)

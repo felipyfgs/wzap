@@ -36,13 +36,13 @@
 
 ## 4. Passo 3 — Extrair prólogo compartilhado dos inbox handlers
 
-- [ ] 4.1 Criar `internal/integrations/chatwoot/inbox_common.go` com struct `inboxPrologueOpts` (campo `checkDBIdempotency bool`) e método `(s *Service) inboxPrologue(ctx, cfg, payload, opts) (*waMessagePayload, string, string, bool, error)` retornando `(data, chatJID, sourceID, skip, err)`
-- [ ] 4.2 Implementar no helper: parse → resolve LID → valida @lid → aplica `shouldIgnoreJID` → verifica cache idempotente → (se `checkDBIdempotency`) verifica `msgRepo.FindByWAID`
-- [ ] 4.3 Refatorar `apiInboxHandler.HandleMessage` em `inbox_api.go` para chamar `inboxPrologue(..., opts{checkDBIdempotency: true})` e remover código duplicado do topo
-- [ ] 4.4 Refatorar `cloudInboxHandler.HandleMessage` em `inbox_cloud.go` para chamar `inboxPrologue(..., opts{checkDBIdempotency: false})` e remover código duplicado do topo
-- [ ] 4.5 Criar `internal/integrations/chatwoot/inbox_common_test.go` com teste de paridade: mesmo payload deve produzir `skip` equivalente para ambos os modos nas etapas compartilhadas
-- [ ] 4.6 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 4.7 Commit: `refactor(chatwoot): extract shared inbox prologue to inbox_common.go`
+- [x] 4.1 Criar `internal/integrations/chatwoot/inbox_common.go` com struct `inboxPrologueOpts` (campo `checkDBIdempotency bool`) e método `(s *Service) inboxPrologue(ctx, cfg, payload, opts) (*waMessagePayload, string, string, bool, error)` retornando `(data, chatJID, sourceID, skip, err)`
+- [x] 4.2 Implementar no helper: parse → resolve LID → valida @lid → aplica `shouldIgnoreJID` → verifica cache idempotente → (se `checkDBIdempotency`) verifica `msgRepo.FindByWAID`
+- [x] 4.3 Refatorar `apiInboxHandler.HandleMessage` em `inbox_api.go` para chamar `inboxPrologue(..., opts{checkDBIdempotency: true})` e remover código duplicado do topo
+- [x] 4.4 Refatorar `cloudInboxHandler.HandleMessage` em `inbox_cloud.go` para chamar `inboxPrologue(..., opts{checkDBIdempotency: false})` e remover código duplicado do topo
+- [x] 4.5 Criar `internal/integrations/chatwoot/inbox_common_test.go` com teste de paridade: mesmo payload deve produzir `skip` equivalente para ambos os modos nas etapas compartilhadas
+- [x] 4.6 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 4.7 Commit: `refactor(chatwoot): extract shared inbox prologue to inbox_common.go`
 
 ## 5. Passo 4 — Extrair `import.go` e `events.go` de `service.go`
 

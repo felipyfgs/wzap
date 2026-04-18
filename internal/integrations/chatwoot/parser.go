@@ -273,6 +273,36 @@ func extractText(msg map[string]any) string {
 		}
 	}
 
+	if text := extractButtonText(msg); text != "" {
+		return text
+	}
+
+	if text := extractListText(msg); text != "" {
+		return text
+	}
+
+	if text := extractTemplateText(msg); text != "" {
+		return text
+	}
+
+	for _, key := range []string{"ephemeralMessage", "viewOnceMessage", "viewOnceMessageV2", "viewOnceMessageV2Extension", "editedMessage"} {
+		if wrapper := getMapField(msg, key); wrapper != nil {
+			if inner := getMapField(wrapper, "message"); inner != nil {
+				if text := extractText(inner); text != "" {
+					return text
+				}
+			}
+		}
+	}
+
+	if protocolMsg := getMapField(msg, "protocolMessage"); protocolMsg != nil {
+		if editedMsg := getMapField(protocolMsg, "editedMessage"); editedMsg != nil {
+			if text := extractText(editedMsg); text != "" {
+				return text
+			}
+		}
+	}
+
 	return ""
 }
 
@@ -404,38 +434,83 @@ func getMapField(m map[string]any, key string) map[string]any {
 	return nil
 }
 
-func extractStanzaID(msg map[string]any) string {
-	if msg == nil {
-		return ""
+func findNestedContextInfo(msg map[string]any, depth int) map[string]any {
+	if msg == nil || depth > 8 {
+		return nil
 	}
 
 	if ci := getMapField(msg, "contextInfo"); ci != nil {
-		if id := getStringField(ci, "stanzaId"); id != "" {
-			return id
-		}
-		if id := getStringField(ci, "stanzaID"); id != "" {
-			return id
-		}
+		return ci
 	}
 
-	msgTypes := []string{
+	for _, key := range []string{
 		"extendedTextMessage",
 		"imageMessage",
 		"videoMessage",
 		"audioMessage",
 		"documentMessage",
 		"stickerMessage",
+		"contactMessage",
+		"contactsArrayMessage",
+		"locationMessage",
+		"liveLocationMessage",
+		"buttonsResponseMessage",
+		"listResponseMessage",
+		"templateButtonReplyMessage",
+		"pollCreationMessage",
+		"pollCreationMessageV3",
+		"reactionMessage",
+	} {
+		if sub := getMapField(msg, key); sub != nil {
+			if ci := findNestedContextInfo(sub, depth+1); ci != nil {
+				return ci
+			}
+		}
 	}
 
-	for _, key := range msgTypes {
-		sub := getMapField(msg, key)
-		if sub == nil {
-			continue
+	for _, key := range []string{
+		"documentWithCaptionMessage",
+		"ephemeralMessage",
+		"viewOnceMessage",
+		"viewOnceMessageV2",
+		"viewOnceMessageV2Extension",
+		"editedMessage",
+	} {
+		if sub := getMapField(msg, key); sub != nil {
+			if ci := findNestedContextInfo(sub, depth+1); ci != nil {
+				return ci
+			}
+			if inner := getMapField(sub, "message"); inner != nil {
+				if ci := findNestedContextInfo(inner, depth+1); ci != nil {
+					return ci
+				}
+			}
 		}
-		ci := getMapField(sub, "contextInfo")
-		if ci == nil {
-			continue
+	}
+
+	if inner := getMapField(msg, "message"); inner != nil {
+		if ci := findNestedContextInfo(inner, depth+1); ci != nil {
+			return ci
 		}
+	}
+
+	if protocolMsg := getMapField(msg, "protocolMessage"); protocolMsg != nil {
+		if editedMsg := getMapField(protocolMsg, "editedMessage"); editedMsg != nil {
+			if ci := findNestedContextInfo(editedMsg, depth+1); ci != nil {
+				return ci
+			}
+		}
+	}
+
+	return nil
+}
+
+func extractStanzaID(msg map[string]any) string {
+	if msg == nil {
+		return ""
+	}
+
+	if ci := findNestedContextInfo(msg, 0); ci != nil {
 		if id := getStringField(ci, "stanzaId"); id != "" {
 			return id
 		}
@@ -452,37 +527,18 @@ func extractQuoteText(msg map[string]any) string {
 		return ""
 	}
 
-	msgTypes := []string{
-		"extendedTextMessage",
-		"imageMessage",
-		"videoMessage",
-		"audioMessage",
-		"documentMessage",
-		"stickerMessage",
+	ci := findNestedContextInfo(msg, 0)
+	if ci == nil {
+		return ""
 	}
 
-	for _, key := range msgTypes {
-		sub, ok := msg[key].(map[string]any)
-		if !ok {
-			continue
-		}
-		ci, ok := sub["contextInfo"].(map[string]any)
-		if !ok {
-			continue
-		}
-		quoted, ok := ci["quotedMessage"].(map[string]any)
-		if !ok {
-			continue
-		}
-		if conv, ok := quoted["conversation"].(string); ok && conv != "" {
-			text := strings.Trim(conv, `"`)
-			return strings.TrimSpace(text)
-		}
-		if extText, ok := quoted["extendedTextMessage"].(map[string]any); ok {
-			if text, ok := extText["text"].(string); ok && text != "" {
-				return strings.TrimSpace(text)
-			}
-		}
+	quoted := getMapField(ci, "quotedMessage")
+	if quoted == nil {
+		return ""
+	}
+
+	if text := strings.TrimSpace(extractText(quoted)); text != "" {
+		return text
 	}
 
 	return ""

@@ -192,6 +192,138 @@ func TestConvertWAToCWMarkdown(t *testing.T) {
 	}
 }
 
+func TestExtractStanzaID_NestedMessageTypes(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  map[string]any
+		want string
+	}{
+		{
+			name: "location message",
+			msg: map[string]any{
+				"locationMessage": map[string]any{
+					"contextInfo": map[string]any{"stanzaId": "loc-123"},
+				},
+			},
+			want: "loc-123",
+		},
+		{
+			name: "buttons response message",
+			msg: map[string]any{
+				"buttonsResponseMessage": map[string]any{
+					"selectedDisplayText": "OK",
+					"contextInfo":         map[string]any{"stanzaId": "btn-123"},
+				},
+			},
+			want: "btn-123",
+		},
+		{
+			name: "view once wrapper",
+			msg: map[string]any{
+				"viewOnceMessage": map[string]any{
+					"message": map[string]any{
+						"imageMessage": map[string]any{
+							"contextInfo": map[string]any{"stanzaId": "view-123"},
+						},
+					},
+				},
+			},
+			want: "view-123",
+		},
+		{
+			name: "edited message wrapper",
+			msg: map[string]any{
+				"editedMessage": map[string]any{
+					"message": map[string]any{
+						"extendedTextMessage": map[string]any{
+							"text":        "oi",
+							"contextInfo": map[string]any{"stanzaId": "edit-123"},
+						},
+					},
+				},
+			},
+			want: "edit-123",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := extractStanzaID(tt.msg); got != tt.want {
+				t.Fatalf("extractStanzaID() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExtractQuoteText_NestedMessageTypes(t *testing.T) {
+	msg := map[string]any{
+		"viewOnceMessageV2": map[string]any{
+			"message": map[string]any{
+				"audioMessage": map[string]any{
+					"contextInfo": map[string]any{
+						"stanzaId": "aud-123",
+						"quotedMessage": map[string]any{
+							"extendedTextMessage": map[string]any{"text": "mensagem citada"},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if got := extractQuoteText(msg); got != "mensagem citada" {
+		t.Fatalf("extractQuoteText() = %q, want %q", got, "mensagem citada")
+	}
+}
+
+func TestExtractText_InteractiveAndWrappedMessages(t *testing.T) {
+	tests := []struct {
+		name string
+		msg  map[string]any
+		want string
+	}{
+		{
+			name: "button response text",
+			msg: map[string]any{
+				"buttonsResponseMessage": map[string]any{
+					"selectedDisplayText": "Confirmar",
+				},
+			},
+			want: "[Botão] Confirmar",
+		},
+		{
+			name: "template reply text",
+			msg: map[string]any{
+				"templateButtonReplyMessage": map[string]any{
+					"selectedDisplayText": "Quero continuar",
+				},
+			},
+			want: "[Template] Quero continuar",
+		},
+		{
+			name: "wrapped ephemeral text",
+			msg: map[string]any{
+				"ephemeralMessage": map[string]any{
+					"message": map[string]any{
+						"extendedTextMessage": map[string]any{
+							"text": "texto dentro do wrapper",
+						},
+					},
+				},
+			},
+			want: "texto dentro do wrapper",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := extractText(tt.msg); got != tt.want {
+				t.Fatalf("extractText() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestConvertCWToWAMarkdown(t *testing.T) {
 	tests := []struct {
 		name     string

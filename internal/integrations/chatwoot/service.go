@@ -97,6 +97,13 @@ type Service struct {
 	missingConfig     sync.Map
 }
 
+func (s *Service) MarkSourceIDIdempotent(ctx context.Context, sessionID, sourceID string) {
+	if s == nil || s.cache == nil || sessionID == "" || sourceID == "" {
+		return
+	}
+	s.cache.SetIdempotent(ctx, sessionID, sourceID)
+}
+
 func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messageSvc MessageService) *Service {
 	return &Service{
 		repo:    repo,

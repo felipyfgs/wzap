@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mime"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -132,12 +133,19 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 					logger.Warn().Str("component", "service").Err(convErr).Str("session", session.ID).Msg("Failed to convert audio to OGG, sending original")
 				} else {
 					data = convertedData
-					req.MimeType = "audio/ogg"
+					// IMPORTANTE: WhatsApp mobile só renderiza como voice note
+					// (PTT) quando o mimetype declara explicitamente o codec.
+					// Sem `codecs=opus` o áudio aparece como anexo em iOS/Android.
+					req.MimeType = "audio/ogg; codecs=opus"
 					logger.Debug().Str("component", "service").Str("session", session.ID).Msg("Audio converted to OGG Opus format")
 				}
 			} else {
 				logger.Warn().Str("component", "service").Str("session", session.ID).Msg("ffmpeg not available, sending audio without conversion")
 			}
+		}
+		// Normaliza mimetype OGG/Opus já recebido sem codec declarado.
+		if mediaType == whatsmeow.MediaAudio && strings.EqualFold(strings.TrimSpace(req.MimeType), "audio/ogg") {
+			req.MimeType = "audio/ogg; codecs=opus"
 		}
 
 		uploaded, err := client.Upload(ctx, data, mediaType)
@@ -195,7 +203,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 				ContextInfo:   ci,
 			}
 		case whatsmeow.MediaAudio:
-			msg.AudioMessage = &waE2E.AudioMessage{
+			audioMsg := &waE2E.AudioMessage{
 				Mimetype:      proto.String(req.MimeType),
 				PTT:           proto.Bool(true),
 				URL:           proto.String(uploaded.URL),
@@ -206,6 +214,12 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 				FileLength:    proto.Uint64(uint64(len(data))),
 				ContextInfo:   ci,
 			}
+			// Seconds é usado pelo WhatsApp para renderizar a duração e o
+			// tamanho da waveform do voice note. Sem ele a barra fica "0:00".
+			if secs := probeOggDurationSeconds(data); secs > 0 {
+				audioMsg.Seconds = proto.Uint32(secs)
+			}
+			msg.AudioMessage = audioMsg
 		}
 
 		var msgType string

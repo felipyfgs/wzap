@@ -100,6 +100,8 @@ func (s *Server) SetupRoutes() error {
 	disp.AddListener(chatwootSvc)
 
 	cloudAPIHandler := handler.NewCloudAPIHandler(chatwootRepo, messageSvc, mediaSvc, messageRepo, s.Config.AdminToken)
+	cloudAPIHandler.SetWindowUnlocker(chatwootSvc)
+	cloudAPIHandler.SetIdempotencyMarker(chatwootSvc)
 	if s.minio != nil {
 		cloudAPIHandler.SetMediaStorage(s.minio)
 	}
@@ -335,6 +337,7 @@ func (s *Server) SetupRoutes() error {
 	sess.Get("/integrations/chatwoot", chatwootHandler.GetConfig)
 	sess.Delete("/integrations/chatwoot", chatwootHandler.DeleteConfig)
 	sess.Post("/integrations/chatwoot/import", chatwootHandler.ImportHistory)
+	sess.Post("/integrations/chatwoot/backfill", chatwootHandler.BackfillRefs)
 
 	return nil
 }

@@ -72,7 +72,10 @@ CMD ["node", "server/index.mjs"]
 
 # ── api-base: toolchain Go ───────────────────────────────────────────────────
 FROM golang:${GO_VERSION}-alpine AS api-base
-RUN apk add --no-cache git ca-certificates tzdata
+# ffmpeg é necessário em runtime (conversão de áudio p/ OGG Opus antes
+# de enviar ao WhatsApp). Adicionado aqui para cobrir tanto o api-dev
+# (que herda de api-deps → api-base) quanto o api-builder.
+RUN apk add --no-cache git ca-certificates tzdata ffmpeg
 WORKDIR /app
 
 # ── api-deps: baixa módulos Go (cache layer) ─────────────────────────────────

@@ -28,10 +28,6 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 		return nil
 	}
 
-	if data.Info.IsFromMe {
-		return nil
-	}
-
 	chatJID := data.Info.Chat
 	if chatJID == "" {
 		return nil
@@ -53,11 +49,15 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 		return nil
 	}
 
-	from := extractPhone(chatJID)
+	chatPhone := extractPhone(chatJID)
+	from := chatPhone
 	if from == "" {
 		from = extractPhone(data.Info.Sender)
 	}
 	msgID := data.Info.ID
+	if msgID != "" && h.svc.cache.GetIdempotent(ctx, cfg.SessionID, "WAID:"+msgID) {
+		return nil
+	}
 	timestamp := fmt.Sprintf("%d", data.Info.Timestamp)
 	pushName := data.Info.PushName
 
@@ -69,6 +69,9 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 		logger.Warn().Str("component", "chatwoot").Str("session", cfg.SessionID).Msg("Cloud: could not resolve session phone, skipping")
 		return nil
 	}
+	if data.Info.IsFromMe {
+		from = sessionPhone
+	}
 
 	msg := data.Message
 	if msg == nil {
@@ -76,9 +79,14 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 	}
 
 	stanzaID := extractStanzaID(msg)
+	replyTargetID := stanzaID
 
 	var cloudMsg map[string]any
-	contactEntry := buildCloudContact(from, pushName)
+	contactPhone := chatPhone
+	if contactPhone == "" {
+		contactPhone = extractPhone(data.Info.Sender)
+	}
+	contactEntry := buildCloudContact(contactPhone, pushName)
 
 	mediaInfo := extractMediaInfo(msg)
 	if mediaInfo != nil {
@@ -118,7 +126,11 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 			targetID = getStringField(key, "ID")
 		}
 		emoji := getStringField(reactMsg, "text")
-		cloudMsg = buildCloudReactionMessage(targetID, emoji, msgID, from, timestamp)
+		if emoji == "" {
+			return nil
+		}
+		replyTargetID = targetID
+		cloudMsg = buildCloudTextMessage(emoji, msgID, from, timestamp)
 	} else {
 		text := extractText(msg)
 		if text == "" {
@@ -130,14 +142,18 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 	if cloudMsg == nil {
 		return nil
 	}
+	if data.Info.IsFromMe && contactPhone != "" {
+		cloudMsg["to"] = contactPhone
+	}
 
-	if stanzaID != "" {
+	if replyTargetID != "" {
 		cloudMsg["context"] = map[string]any{
-			"message_id": stanzaID,
+			"id":         replyTargetID,
+			"message_id": replyTargetID,
 		}
 	}
 
-	envelope := buildCloudWebhookEnvelope(sessionPhone, from, msgID, timestamp, pushName, cloudMsg, contactEntry)
+	envelope := buildCloudWebhookEnvelope(sessionPhone, data.Info.IsFromMe, cloudMsg, contactEntry)
 	if envelope == nil {
 		return nil
 	}
@@ -146,8 +162,18 @@ func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payl
 		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("mid", msgID).Msg("cloud inbound: failed to post to chatwoot")
 		return err
 	}
+	if msgID != "" {
+		h.svc.cache.SetIdempotent(ctx, cfg.SessionID, "WAID:"+msgID)
+	}
 
 	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("mid", msgID).Msg("cloud inbound: message sent to chatwoot")
+
+	// Proactively resolve CW refs so edit/revoke can find them without
+	// depending on the message_created return webhook from Chatwoot.
+	if msgID != "" && chatJID != "" {
+		h.svc.resolveCloudRefAsync(cfg, msgID, chatJID)
+	}
+
 	return nil
 }
 
@@ -170,6 +196,7 @@ type cloudWebhookValue struct {
 	MessagingProduct string                `json:"messaging_product"`
 	Metadata         *cloudWebhookMetadata `json:"metadata,omitempty"`
 	Messages         []map[string]any      `json:"messages,omitempty"`
+	MessageEchoes    []map[string]any      `json:"message_echoes,omitempty"`
 	Contacts         []map[string]any      `json:"contacts,omitempty"`
 	Statuses         []map[string]any      `json:"statuses,omitempty"`
 	Errors           []map[string]any      `json:"errors,omitempty"`
@@ -180,9 +207,27 @@ type cloudWebhookMetadata struct {
 	PhoneNumberID      string `json:"phone_number_id"`
 }
 
-func buildCloudWebhookEnvelope(sessionPhone string, _, _, _, _ string, msg map[string]any, contact map[string]any) *cloudWebhookEnvelope {
+func buildCloudWebhookEnvelope(sessionPhone string, outgoing bool, msg map[string]any, contact map[string]any) *cloudWebhookEnvelope {
 	if msg == nil {
 		return nil
+	}
+
+	field := "messages"
+	value := cloudWebhookValue{
+		MessagingProduct: "whatsapp",
+		Metadata: &cloudWebhookMetadata{
+			DisplayPhoneNumber: sessionPhone,
+			PhoneNumberID:      sessionPhone,
+		},
+		Statuses: []map[string]any{},
+		Errors:   []map[string]any{},
+	}
+	if outgoing {
+		field = "smb_message_echoes"
+		value.MessageEchoes = []map[string]any{msg}
+	} else {
+		value.Messages = []map[string]any{msg}
+		value.Contacts = []map[string]any{}
 	}
 
 	envelope := &cloudWebhookEnvelope{
@@ -192,25 +237,15 @@ func buildCloudWebhookEnvelope(sessionPhone string, _, _, _, _ string, msg map[s
 				ID: sessionPhone,
 				Changes: []cloudWebhookChange{
 					{
-						Field: "messages",
-						Value: cloudWebhookValue{
-							MessagingProduct: "whatsapp",
-							Metadata: &cloudWebhookMetadata{
-								DisplayPhoneNumber: sessionPhone,
-								PhoneNumberID:      sessionPhone,
-							},
-							Messages: []map[string]any{msg},
-							Contacts: []map[string]any{},
-							Statuses: []map[string]any{},
-							Errors:   []map[string]any{},
-						},
+						Field: field,
+						Value: value,
 					},
 				},
 			},
 		},
 	}
 
-	if contact != nil {
+	if !outgoing && contact != nil {
 		envelope.Entry[0].Changes[0].Value.Contacts = []map[string]any{contact}
 	}
 
@@ -492,5 +527,64 @@ func (s *Service) getMediaUploader() mediaUploader {
 	}
 	return func(ctx context.Context, key string, reader io.Reader, size int64, mimeType string, userMeta map[string]string) error {
 		return s.mediaStorage.UploadWithMeta(ctx, key, reader, size, mimeType, userMeta)
+	}
+}
+
+func (s *Service) UnlockCloudWindow(ctx context.Context, cfg *Config, chatJID string) {
+	s.unlockCloudWindow(ctx, cfg, chatJID)
+}
+
+func (s *Service) unlockCloudWindow(ctx context.Context, cfg *Config, chatJID string) {
+	if cfg == nil || cfg.InboxType != "cloud" || chatJID == "" {
+		return
+	}
+	if shouldIgnoreJID(chatJID, cfg.IgnoreGroups, cfg.IgnoreJIDs) {
+		return
+	}
+	if s.cache != nil {
+		if _, _, ok := s.cache.GetConv(ctx, cfg.SessionID, chatJID); ok {
+			return
+		}
+	}
+
+	sessionPhone := ""
+	if s.sessionPhoneGet != nil {
+		sessionPhone = s.sessionPhoneGet.GetSessionPhone(ctx, cfg.SessionID)
+	}
+	if sessionPhone == "" {
+		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Msg("unlockCloudWindow: no session phone, skipping")
+		return
+	}
+
+	from := extractPhone(chatJID)
+	if from == "" {
+		return
+	}
+
+	contactName := from
+	if s.contactNameGetter != nil {
+		if name := s.contactNameGetter.GetContactName(ctx, cfg.SessionID, chatJID); name != "" {
+			contactName = name
+		}
+	}
+	if contactName == from {
+		client := s.clientFn(cfg)
+		if contacts, err := client.FilterContacts(ctx, from); err == nil && len(contacts) > 0 {
+			if contacts[0].Name != "" && contacts[0].Name != from {
+				contactName = contacts[0].Name
+			}
+		}
+	}
+
+	ts := fmt.Sprintf("%d", time.Now().Unix())
+	msgID := fmt.Sprintf("wzap-unlock-%d", time.Now().UnixNano())
+	unlockNotice := "✓ Conversa iniciada."
+	cloudMsg := buildCloudTextMessage(unlockNotice, msgID, from, ts)
+	envelope := buildCloudWebhookEnvelope(sessionPhone, false, cloudMsg, buildCloudContact(from, contactName))
+
+	if err := s.postToChatwootCloud(ctx, cfg, sessionPhone, envelope); err != nil {
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("chatJID", chatJID).Msg("unlockCloudWindow: failed to post webhook")
+	} else {
+		logger.Debug().Str("component", "chatwoot").Str("chatJID", chatJID).Str("from", from).Msg("unlockCloudWindow: sent synthetic incoming to unlock 24h window")
 	}
 }

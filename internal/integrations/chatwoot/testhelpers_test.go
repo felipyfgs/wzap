@@ -90,6 +90,10 @@ func (m *mockClient) DeleteMessage(_ context.Context, _, _ int) error {
 	return nil
 }
 
+func (m *mockClient) FindMessageBySourceID(_ context.Context, _ int, _ string) (*Message, error) {
+	return nil, nil
+}
+
 func (m *mockClient) UpdateLastSeen(_ context.Context, _, _ string, _ int) error {
 	return nil
 }
@@ -180,6 +184,10 @@ func (m *mockMsgRepo) UpdateChatwootRef(_ context.Context, _, _ string, _, _ int
 	return nil
 }
 
+func (m *mockMsgRepo) ListMissingChatwootRefs(_ context.Context, _ string, _ int, _ string) ([]string, error) {
+	return nil, nil
+}
+
 func (m *mockMsgRepo) ExistsBySourceID(_ context.Context, _, _ string) (bool, error) {
 	return false, nil
 }
@@ -262,6 +270,10 @@ func (m *mockDupMsgRepo) FindAllByCWMessageID(_ context.Context, _ string, _ int
 
 func (m *mockDupMsgRepo) UpdateChatwootRef(_ context.Context, _, _ string, _, _ int, _ string) error {
 	return nil
+}
+
+func (m *mockDupMsgRepo) ListMissingChatwootRefs(_ context.Context, _ string, _ int, _ string) ([]string, error) {
+	return nil, nil
 }
 
 func (m *mockDupMsgRepo) ExistsBySourceID(_ context.Context, sessionID, sourceID string) (bool, error) {

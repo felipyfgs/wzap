@@ -27,6 +27,7 @@ type Client interface {
 	CreateMessage(ctx context.Context, convID int, req MessageReq) (*Message, error)
 	CreateAttachment(ctx context.Context, convID int, content string, filename string, data []byte, mimeType string, messageType string, sourceID string, sourceReplyID int, contentAttrs map[string]any) (*Message, error)
 	DeleteMessage(ctx context.Context, convID, msgID int) error
+	FindMessageBySourceID(ctx context.Context, convID int, sourceID string) (*Message, error)
 	UpdateLastSeen(ctx context.Context, inboxIdentifier, sourceID string, convID int) error
 	ListInboxes(ctx context.Context) ([]Inbox, error)
 	CreateInbox(ctx context.Context, name, webhookURL string) (*Inbox, error)
@@ -374,6 +375,27 @@ func (c *HTTPClient) CreateAttachment(ctx context.Context, convID int, content s
 func (c *HTTPClient) DeleteMessage(ctx context.Context, convID, msgID int) error {
 	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages/%d", c.accountID, convID, msgID)
 	return c.do(ctx, http.MethodDelete, path, nil, nil, "")
+}
+
+func (c *HTTPClient) FindMessageBySourceID(ctx context.Context, convID int, sourceID string) (*Message, error) {
+	var result struct {
+		Meta struct {
+			ContactInbox struct {
+				SourceID int `json:"source_id"`
+			} `json:"contact_inbox"`
+		} `json:"meta"`
+		Payload []Message `json:"payload"`
+	}
+	path := fmt.Sprintf("/api/v1/accounts/%d/conversations/%d/messages", c.accountID, convID)
+	if err := c.do(ctx, http.MethodGet, path, nil, &result, ""); err != nil {
+		return nil, fmt.Errorf("find message by source_id: %w", err)
+	}
+	for i := range result.Payload {
+		if result.Payload[i].SourceID == sourceID {
+			return &result.Payload[i], nil
+		}
+	}
+	return nil, nil
 }
 
 type Inbox struct {

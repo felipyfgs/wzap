@@ -38,6 +38,7 @@ type MessageRepo interface {
 	FindByTimestamp(ctx context.Context, sessionID, chatJID string, timestamp int64, windowSeconds int64) (*model.Message, error)
 	FindLastReceived(ctx context.Context, sessionID, chatJID string) (*model.Message, error)
 	UpdateChatwootRef(ctx context.Context, sessionID, msgID string, cwMsgID, cwConvID int, cwSourceID string) error
+	ListMissingChatwootRefs(ctx context.Context, sessionID string, limit int, afterID string) ([]string, error)
 	ExistsBySourceID(ctx context.Context, sessionID, sourceID string) (bool, error)
 	FindUnimportedHistory(ctx context.Context, sessionID string, since time.Time, limit, offset int) ([]model.Message, error)
 	MarkImported(ctx context.Context, sessionID, msgID string) error
@@ -335,6 +336,37 @@ func (r *MessageRepository) UpdateChatwootRef(ctx context.Context, sessionID, ms
 		return fmt.Errorf("failed to update chatwoot ref: %w", err)
 	}
 	return nil
+}
+
+func (r *MessageRepository) ListMissingChatwootRefs(ctx context.Context, sessionID string, limit int, afterID string) ([]string, error) {
+	if limit <= 0 {
+		limit = 500
+	}
+	rows, err := r.db.Query(ctx,
+		`SELECT id
+		   FROM wz_messages
+		  WHERE session_id = $1
+		    AND cw_message_id IS NULL
+		    AND ($2 = '' OR id > $2)
+		  ORDER BY id ASC
+		  LIMIT $3`,
+		sessionID, afterID, limit)
+	if err != nil {
+		return nil, fmt.Errorf("list missing chatwoot refs: %w", err)
+	}
+	defer rows.Close()
+	ids := make([]string, 0, limit)
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scan missing chatwoot ref id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate missing chatwoot refs: %w", err)
+	}
+	return ids, nil
 }
 
 func (r *MessageRepository) FindByCWMessageID(ctx context.Context, sessionID string, cwMsgID int) (*model.Message, error) {

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -156,7 +157,21 @@ func (s *MediaService) RetryMediaUpload(input wa.MediaRetryInput) {
 }
 
 func convertToOGG(input []byte) ([]byte, error) {
-	cmd := exec.Command("ffmpeg", "-i", "pipe:0", "-c:a", "libopus", "-f", "ogg", "pipe:1")
+	// Parâmetros canônicos do WhatsApp PTT:
+	// - codec libopus @ 48kHz mono, bitrate ~32k (o que o app oficial grava)
+	// - application=voip melhora compressão de voz
+	// Sem esses parâmetros o áudio aparece como arquivo em alguns clientes.
+	cmd := exec.Command("ffmpeg",
+		"-hide_banner", "-loglevel", "error",
+		"-i", "pipe:0",
+		"-vn",
+		"-c:a", "libopus",
+		"-b:a", "32k",
+		"-ar", "48000",
+		"-ac", "1",
+		"-application", "voip",
+		"-f", "ogg", "pipe:1",
+	)
 	cmd.Stdin = bytes.NewReader(input)
 	var out bytes.Buffer
 	cmd.Stdout = &out
@@ -168,6 +183,34 @@ func convertToOGG(input []byte) ([]byte, error) {
 	}
 
 	return out.Bytes(), nil
+}
+
+// probeOggDurationSeconds returns the duration in seconds of an OGG/Opus
+// stream using ffprobe. Returns 0 on any error — duration is best-effort
+// metadata for WhatsApp clients to render the waveform length.
+func probeOggDurationSeconds(input []byte) uint32 {
+	cmd := exec.Command("ffprobe",
+		"-hide_banner", "-loglevel", "error",
+		"-i", "pipe:0",
+		"-show_entries", "format=duration",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+	)
+	cmd.Stdin = bytes.NewReader(input)
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		return 0
+	}
+	s := strings.TrimSpace(out.String())
+	if s == "" {
+		return 0
+	}
+	// Ex.: "4.547000"
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil || f <= 0 {
+		return 0
+	}
+	return uint32(f + 0.5)
 }
 
 func isOGGOpus(mimeType string) bool {

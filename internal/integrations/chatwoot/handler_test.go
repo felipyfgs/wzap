@@ -46,6 +46,7 @@ func newChatwootApp() (*fiber.App, *mockRepo, *mockClient) {
 	app.Get("/sessions/:sessionId/integrations/chatwoot", sessionMW, h.GetConfig)
 	app.Delete("/sessions/:sessionId/integrations/chatwoot", sessionMW, h.DeleteConfig)
 	app.Post("/sessions/:sessionId/integrations/chatwoot/import", sessionMW, h.ImportHistory)
+	app.Post("/sessions/:sessionId/integrations/chatwoot/backfill", sessionMW, h.BackfillRefs)
 	app.Post("/chatwoot/webhook/:sessionId", h.IncomingWebhook)
 
 	return app, repository, mockClient
@@ -443,6 +444,29 @@ func TestImportHistory_Returns202_WithConfig(t *testing.T) {
 	}
 	if data["period"] != "7d" {
 		t.Errorf("expected period 7d, got %v", data["period"])
+	}
+}
+
+func TestBackfillRefs_Returns422_WhenDatabaseURIIsMissing(t *testing.T) {
+	app, repo, _ := newChatwootApp()
+	repo.cfg = &Config{SessionID: "test-session", Enabled: true, InboxID: 1}
+
+	req := httptest.NewRequest("POST", "/sessions/test-session/integrations/chatwoot/backfill", nil)
+	resp, err := app.Test(req, -1)
+	if err != nil {
+		t.Fatalf("app.Test: %v", err)
+	}
+	if resp.StatusCode != 422 {
+		t.Fatalf("expected 422, got %d", resp.StatusCode)
+	}
+
+	var result map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	if success, ok := result["success"].(bool); !ok || success {
+		t.Fatalf("expected success=false, got %v", result["success"])
 	}
 }
 

@@ -28,7 +28,7 @@ func (s *Service) processMessage(ctx context.Context, cfg *Config, payload []byt
 	// Cloud mode só processa inbound (fromMe=false). Outbound (mensagens
 	// enviadas pelo agente via Chatwoot) não precisa ser re-ecoado porque o
 	// próprio Chatwoot já persistiu essa mensagem localmente.
-	if cfg.InboxType == "cloud" && data.Info.IsFromMe {
+	if cfg.InboxType == "cloud" && data.Info.IsFromMe && data.Info.ID != "" && s.cache.GetIdempotent(ctx, cfg.SessionID, "WAID:"+data.Info.ID) {
 		return nil
 	}
 

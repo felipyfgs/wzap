@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -61,29 +62,29 @@ func configToResp(cfg *Config, webhookURL string) dto.CWConfigResp {
 	}
 
 	return dto.CWConfigResp{
-		SessionID:           cfg.SessionID,
-		URL:                 cfg.URL,
-		AccountID:           cfg.AccountID,
-		InboxID:             cfg.InboxID,
-		InboxName:           cfg.InboxName,
-		InboxType:           cfg.InboxType,
-		SignMsg:             cfg.SignMsg,
-		SignDelimiter:       cfg.SignDelimiter,
-		ReopenConv:  cfg.ReopenConv,
-		MergeBRContacts:     cfg.MergeBRContacts,
-		IgnoreGroups:        ignoreGroups,
-		IgnoreJIDs:          cfg.IgnoreJIDs,
-		PendingConv: cfg.PendingConv,
-		Enabled:             cfg.Enabled,
-		WebhookURL:          webhookURL,
-		ImportOnConnect:     cfg.ImportOnConnect,
-		ImportPeriod:        cfg.ImportPeriod,
-		TextTimeout:  cfg.TextTimeout,
-		MediaTimeout: cfg.MediaTimeout,
-		LargeTimeout: cfg.LargeTimeout,
-		MessageRead:         cfg.MessageRead,
-		DatabaseURI:         maskURL(cfg.DatabaseURI),
-		RedisURL:            maskURL(cfg.RedisURL),
+		SessionID:       cfg.SessionID,
+		URL:             cfg.URL,
+		AccountID:       cfg.AccountID,
+		InboxID:         cfg.InboxID,
+		InboxName:       cfg.InboxName,
+		InboxType:       cfg.InboxType,
+		SignMsg:         cfg.SignMsg,
+		SignDelimiter:   cfg.SignDelimiter,
+		ReopenConv:      cfg.ReopenConv,
+		MergeBRContacts: cfg.MergeBRContacts,
+		IgnoreGroups:    ignoreGroups,
+		IgnoreJIDs:      cfg.IgnoreJIDs,
+		PendingConv:     cfg.PendingConv,
+		Enabled:         cfg.Enabled,
+		WebhookURL:      webhookURL,
+		ImportOnConnect: cfg.ImportOnConnect,
+		ImportPeriod:    cfg.ImportPeriod,
+		TextTimeout:     cfg.TextTimeout,
+		MediaTimeout:    cfg.MediaTimeout,
+		LargeTimeout:    cfg.LargeTimeout,
+		MessageRead:     cfg.MessageRead,
+		DatabaseURI:     maskURL(cfg.DatabaseURI),
+		RedisURL:        maskURL(cfg.RedisURL),
 	}
 }
 
@@ -127,27 +128,27 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 	}
 
 	cfg := &Config{
-		SessionID:           sessionID,
-		URL:                 req.URL,
-		AccountID:           req.AccountID,
-		Token:               req.Token,
-		WebhookToken:        req.WebhookToken,
-		InboxID:             req.InboxID,
-		InboxName:           req.InboxName,
-		InboxType:           "api",
-		SignMsg:             req.SignMsg != nil && *req.SignMsg,
-		SignDelimiter:       req.SignDelimiter,
-		ReopenConv:  req.ReopenConv == nil || *req.ReopenConv,
-		MergeBRContacts:     req.MergeBRContacts == nil || *req.MergeBRContacts,
-		PendingConv: req.PendingConv != nil && *req.PendingConv,
-		ImportOnConnect:     req.ImportOnConnect != nil && *req.ImportOnConnect,
-		ImportPeriod:        importPeriod,
-		TextTimeout:  timeoutText,
-		MediaTimeout: timeoutMedia,
-		LargeTimeout: timeoutLarge,
-		MessageRead:         req.MessageRead != nil && *req.MessageRead,
-		DatabaseURI:         req.DatabaseURI,
-		RedisURL:            req.RedisURL,
+		SessionID:       sessionID,
+		URL:             req.URL,
+		AccountID:       req.AccountID,
+		Token:           req.Token,
+		WebhookToken:    req.WebhookToken,
+		InboxID:         req.InboxID,
+		InboxName:       req.InboxName,
+		InboxType:       "api",
+		SignMsg:         req.SignMsg != nil && *req.SignMsg,
+		SignDelimiter:   req.SignDelimiter,
+		ReopenConv:      req.ReopenConv == nil || *req.ReopenConv,
+		MergeBRContacts: req.MergeBRContacts == nil || *req.MergeBRContacts,
+		PendingConv:     req.PendingConv != nil && *req.PendingConv,
+		ImportOnConnect: req.ImportOnConnect != nil && *req.ImportOnConnect,
+		ImportPeriod:    importPeriod,
+		TextTimeout:     timeoutText,
+		MediaTimeout:    timeoutMedia,
+		LargeTimeout:    timeoutLarge,
+		MessageRead:     req.MessageRead != nil && *req.MessageRead,
+		DatabaseURI:     req.DatabaseURI,
+		RedisURL:        req.RedisURL,
 	}
 
 	ignoreJIDs := make([]string, 0, len(req.IgnoreJIDs))
@@ -324,6 +325,38 @@ func (h *Handler) ImportHistory(c *fiber.Ctx) error {
 		Period:    req.Period,
 		Status:    "importing",
 	}))
+}
+
+// BackfillRefs
+// @Summary Backfill Chatwoot message references for cloud inbox
+// @Description Walks wz_messages without Chatwoot refs and resolves them via direct read-only query on the Chatwoot database
+// @Tags Chatwoot
+// @Produce json
+// @Param sessionId path string true "Session ID"
+// @Success 200 {object} dto.APIResponse
+// @Security Authorization
+// @Failure 404 {object} dto.APIError
+// @Failure 422 {object} dto.APIError
+// @Failure 500 {object} dto.APIError
+// @Router /sessions/{sessionId}/integrations/chatwoot/backfill [post]
+func (h *Handler) BackfillRefs(c *fiber.Ctx) error {
+	sessionID := mustGetSessionID(c)
+
+	_, err := h.repo.FindBySessionID(c.Context(), sessionID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(dto.ErrorResp("Not Found", "Chatwoot integration not configured for this session"))
+	}
+
+	result, err := h.service.BackfillCloudRefs(c.Context(), sessionID)
+	if err != nil {
+		if errors.Is(err, ErrBackfillUnavailable) {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(dto.ErrorResp("Backfill Unavailable", "database_uri is not configured for this session"))
+		}
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Msg("backfill failed")
+		return c.Status(fiber.StatusInternalServerError).JSON(dto.ErrorResp("Backfill Error", "internal server error"))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(dto.SuccessResp(result))
 }
 
 func mustGetSessionID(c *fiber.Ctx) string {

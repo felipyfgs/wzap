@@ -37,6 +37,10 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 		eventType = body.Event
 	}
 
+	if eventType == "message_created" && msg != nil && s.syncCloudMessageRef(ctx, cfg, body) {
+		return nil
+	}
+
 	if eventType == "message_updated" && msg != nil {
 		if deleted, _ := msg.ContentAttributes["deleted"].(bool); deleted {
 			return s.processMessageUpdated(ctx, cfg, body)
@@ -56,6 +60,36 @@ func (s *Service) HandleIncomingWebhook(ctx context.Context, sessionID string, b
 	}
 
 	return nil
+}
+
+func (s *Service) syncCloudMessageRef(ctx context.Context, cfg *Config, body dto.CWWebhookPayload) bool {
+	if cfg == nil || cfg.InboxType != "cloud" || body.Conversation == nil {
+		return false
+	}
+
+	msg := body.GetMessage()
+	if msg == nil || msg.ID == 0 || msg.SourceID == "" {
+		return false
+	}
+
+	waMsgID := strings.TrimPrefix(msg.SourceID, "WAID:")
+	storedMsg, err := s.msgRepo.FindByID(ctx, cfg.SessionID, waMsgID)
+	if err != nil || storedMsg == nil {
+		return false
+	}
+
+	cwConvID := body.Conversation.ID
+	if storedMsg.CWMessageID != nil && storedMsg.CWConvID != nil && storedMsg.CWSrcID != nil && *storedMsg.CWMessageID == msg.ID && *storedMsg.CWConvID == cwConvID && *storedMsg.CWSrcID == msg.SourceID {
+		return true
+	}
+
+	if err := s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, waMsgID, msg.ID, cwConvID, msg.SourceID); err != nil {
+		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("cwMsgID", msg.ID).Int("cwConvID", cwConvID).Msg("failed to sync cloud chatwoot refs")
+		return true
+	}
+
+	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("cwMsgID", msg.ID).Int("cwConvID", cwConvID).Str("sourceID", msg.SourceID).Msg("synced cloud chatwoot refs from webhook")
+	return true
 }
 
 func (s *Service) isOutboundDuplicate(ctx context.Context, sessionID string, msg *dto.CWWebhookMsg) bool {

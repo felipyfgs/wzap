@@ -210,6 +210,13 @@ Never returns HTTP 401 to prevent Chatwoot from setting `reauthorization_require
 
 `InboxHandler` in `inbox.go` — `HandleMessage(ctx, cfg, payload)` + `UnlockWindow(ctx, cfg, chatJID)`. The `processMessage` router on Service delegates to `apiInboxHandler` (REST API) or `cloudInboxHandler` (Cloud webhook) based on `cfg.InboxType`.
 
+### Cloud mapping (`database_uri`)
+
+- For `inbox_type=cloud`, set `database_uri` in `wz_chatwoot` whenever possible.
+- `database_uri` enables direct read-only lookup of Chatwoot `messages.source_id` (WAID mapping), avoiding dependence on webhook timing.
+- Use `POST /sessions/{sessionId}/integrations/chatwoot/backfill` to retroactively fill `wz_messages.cw_message_id/cw_conversation_id/cw_source_id` for existing rows.
+- Keep `database_uri` secret (never log full URI).
+
 ## Swagger docs
 
 Every exported handler has godoc/Swagger annotations. Regenerate with `make docs`. The swag command scans `cmd/wzap,internal` with `--parseInternal --useStructName`.

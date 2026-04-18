@@ -5,7 +5,9 @@ import (
 	"crypto/subtle"
 	"fmt"
 	"io"
+	"mime"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -41,11 +43,21 @@ type CloudMediaStorage interface {
 	StatMeta(ctx context.Context, key string) (contentType string, size int64, userMeta map[string]string, err error)
 }
 
+type CloudWindowUnlocker interface {
+	UnlockCloudWindow(ctx context.Context, cfg *chatwoot.Config, chatJID string)
+}
+
+type CloudIdempotencyMarker interface {
+	MarkSourceIDIdempotent(ctx context.Context, sessionID, sourceID string)
+}
+
 type CloudAPIHandler struct {
 	chatwootRepo   chatwoot.Repo
 	messageSvc     *service.MessageService
 	mediaPresigner CloudPresigner
 	mediaStorage   CloudMediaStorage
+	windowUnlocker CloudWindowUnlocker
+	idempotency    CloudIdempotencyMarker
 	msgRepo        repo.MessageRepo
 	adminToken     string
 	serverURL      string
@@ -66,6 +78,16 @@ func NewCloudAPIHandler(chatwootRepo chatwoot.Repo, messageSvc *service.MessageS
 // MinIO presigned URL.
 func (h *CloudAPIHandler) SetMediaStorage(s CloudMediaStorage) {
 	h.mediaStorage = s
+}
+
+// SetWindowUnlocker configures an optional unlock strategy for Chatwoot Cloud
+// 24h window. It is used only on template sends.
+func (h *CloudAPIHandler) SetWindowUnlocker(u CloudWindowUnlocker) {
+	h.windowUnlocker = u
+}
+
+func (h *CloudAPIHandler) SetIdempotencyMarker(m CloudIdempotencyMarker) {
+	h.idempotency = m
 }
 
 // SetServerURL configures the base URL that will be embedded in media
@@ -327,6 +349,8 @@ func (h *CloudAPIHandler) SendMessage(c *fiber.Ctx) error {
 		return h.handleMediaSend(c, cfg, req, to, "video")
 	case "audio":
 		return h.handleMediaSend(c, cfg, req, to, "audio")
+	case "sticker":
+		return h.handleMediaSend(c, cfg, req, to, "sticker")
 	case "document":
 		return h.handleDocumentSend(c, cfg, req, to)
 	case "location":
@@ -523,6 +547,29 @@ func sanitizeFilename(name string) string {
 	return r.Replace(name)
 }
 
+// inferMimeType devolve o primeiro mime não vazio entre o explícito, a
+// extensão do filename e a extensão da URL. Usa o stdlib `mime.TypeByExtension`
+// (que cobre os formatos comuns). Retorna "" quando não consegue resolver —
+// whatsmeow aceita mime vazio para alguns tipos e detecta via magic bytes.
+func inferMimeType(explicit, link, filename string) string {
+	if explicit != "" {
+		return explicit
+	}
+	if filename != "" {
+		if mt := mime.TypeByExtension(strings.ToLower(path.Ext(filename))); mt != "" {
+			return mt
+		}
+	}
+	if link != "" {
+		if u, err := url.Parse(link); err == nil {
+			if mt := mime.TypeByExtension(strings.ToLower(path.Ext(u.Path))); mt != "" {
+				return mt
+			}
+		}
+	}
+	return ""
+}
+
 func (h *CloudAPIHandler) handleTextSend(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq, to string) error {
 	if req.Text == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'text' field", "OAuthException", 131000))
@@ -544,6 +591,7 @@ func (h *CloudAPIHandler) handleTextSend(c *fiber.Ctx, cfg *chatwoot.Config, req
 		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 	}
 
+	h.markOutboundWAID(c.Context(), sessionID, msgID)
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
@@ -556,17 +604,23 @@ func (h *CloudAPIHandler) handleMediaSend(c *fiber.Ctx, cfg *chatwoot.Config, re
 		media = req.Video
 	case "audio":
 		media = req.Audio
+	case "sticker":
+		media = req.Sticker
 	}
 	if media == nil {
-		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError(fmt.Sprintf("Missing '%s' field", mediaType), "OAuthException", 131000))
+		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing '"+mediaType+"' field", "OAuthException", 131000))
+	}
+	if media.Link == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing '"+mediaType+".link' field", "OAuthException", 131000))
 	}
 
 	sessionID := resolveSessionIDFromConfig(cfg)
+	link := rewriteCloudAssetURL(media.Link, cfg.URL)
 
 	sendReq := dto.SendMediaReq{
 		Phone:    to,
-		URL:      rewriteCloudAssetURL(media.Link, cfg.URL),
-		MimeType: media.MimeType,
+		URL:      link,
+		MimeType: inferMimeType(media.MimeType, link, ""),
 		Caption:  media.Caption,
 	}
 
@@ -584,6 +638,10 @@ func (h *CloudAPIHandler) handleMediaSend(c *fiber.Ctx, cfg *chatwoot.Config, re
 		msgID, err = h.messageSvc.SendVideo(c.Context(), sessionID, sendReq)
 	case "audio":
 		msgID, err = h.messageSvc.SendAudio(c.Context(), sessionID, sendReq)
+	case "sticker":
+		// whatsmeow não expõe SendSticker via URL; usamos o caminho de
+		// documento preservando o mime type para render correto no cliente.
+		msgID, err = h.messageSvc.SendDocument(c.Context(), sessionID, sendReq)
 	}
 
 	if err != nil {
@@ -591,6 +649,7 @@ func (h *CloudAPIHandler) handleMediaSend(c *fiber.Ctx, cfg *chatwoot.Config, re
 		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 	}
 
+	h.markOutboundWAID(c.Context(), sessionID, msgID)
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
@@ -598,13 +657,17 @@ func (h *CloudAPIHandler) handleDocumentSend(c *fiber.Ctx, cfg *chatwoot.Config,
 	if req.Document == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'document' field", "OAuthException", 131000))
 	}
+	if req.Document.Link == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'document.link' field", "OAuthException", 131000))
+	}
 
 	sessionID := resolveSessionIDFromConfig(cfg)
+	link := rewriteCloudAssetURL(req.Document.Link, cfg.URL)
 
 	sendReq := dto.SendMediaReq{
 		Phone:    to,
-		URL:      rewriteCloudAssetURL(req.Document.Link, cfg.URL),
-		MimeType: req.Document.MimeType,
+		URL:      link,
+		MimeType: inferMimeType(req.Document.MimeType, link, req.Document.Filename),
 		Caption:  req.Document.Caption,
 		FileName: req.Document.Filename,
 	}
@@ -619,6 +682,7 @@ func (h *CloudAPIHandler) handleDocumentSend(c *fiber.Ctx, cfg *chatwoot.Config,
 		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 	}
 
+	h.markOutboundWAID(c.Context(), sessionID, msgID)
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
@@ -643,6 +707,7 @@ func (h *CloudAPIHandler) handleLocationSend(c *fiber.Ctx, cfg *chatwoot.Config,
 		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 	}
 
+	h.markOutboundWAID(c.Context(), sessionID, msgID)
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
@@ -663,11 +728,12 @@ func (h *CloudAPIHandler) handleContactSend(c *fiber.Ctx, cfg *chatwoot.Config, 
 			Vcard: vcard,
 		}
 
-		_, err := h.messageSvc.SendContact(c.Context(), sessionID, sendReq)
+		msgID, err := h.messageSvc.SendContact(c.Context(), sessionID, sendReq)
 		if err != nil {
 			logger.Warn().Str("component", "handler").Err(err).Str("session", sessionID).Msg("Cloud API: failed to send contact")
 			return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 		}
+		h.markOutboundWAID(c.Context(), sessionID, msgID)
 	}
 
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), ""))
@@ -692,6 +758,7 @@ func (h *CloudAPIHandler) handleReactionSend(c *fiber.Ctx, cfg *chatwoot.Config,
 		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 	}
 
+	h.markOutboundWAID(c.Context(), sessionID, msgID)
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
@@ -728,6 +795,11 @@ func (h *CloudAPIHandler) handleTemplateSend(c *fiber.Ctx, cfg *chatwoot.Config,
 		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 	}
 
+	if h.windowUnlocker != nil {
+		h.windowUnlocker.UnlockCloudWindow(c.Context(), cfg, to)
+	}
+
+	h.markOutboundWAID(c.Context(), sessionID, msgID)
 	return c.JSON(cloudAPISuccess(normalizePhone(req.To), msgID))
 }
 
@@ -794,6 +866,13 @@ func (h *CloudAPIHandler) resolveConfigByPhone(ctx context.Context, phone string
 
 func resolveSessionIDFromConfig(cfg *chatwoot.Config) string {
 	return cfg.SessionID
+}
+
+func (h *CloudAPIHandler) markOutboundWAID(ctx context.Context, sessionID, msgID string) {
+	if h.idempotency == nil || sessionID == "" || msgID == "" {
+		return
+	}
+	h.idempotency.MarkSourceIDIdempotent(ctx, sessionID, "WAID:"+msgID)
 }
 
 func normalizePhone(phone string) string {

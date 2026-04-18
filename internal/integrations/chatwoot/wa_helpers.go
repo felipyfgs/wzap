@@ -25,6 +25,13 @@ func (s *Service) resolveInboundReply(ctx context.Context, sessionID, chatJID, s
 		return *msg.CWMessageID
 	}
 
+	if cfg, err := s.repo.FindBySessionID(ctx, sessionID); err == nil {
+		if ref, ok := s.resolveAndPersistMessageRef(ctx, cfg, stanzaID); ok && ref != nil {
+			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", ref.MessageID).Msg("found CW message ID via Chatwoot database lookup")
+			return ref.MessageID
+		}
+	}
+
 	if quotedText != "" {
 		if msg, err := s.msgRepo.FindByBodyAndChat(ctx, sessionID, chatJID, quotedText, true); err == nil && hasCWMessageID(msg) {
 			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindByBodyAndChat")
@@ -99,17 +106,7 @@ func applyMessagePrefixes(msg map[string]any, text string) string {
 }
 
 func extractContextInfo(msg map[string]any) map[string]any {
-	if ci := getMapField(msg, "contextInfo"); ci != nil {
-		return ci
-	}
-	for _, key := range []string{"extendedTextMessage", "imageMessage", "videoMessage", "audioMessage", "documentMessage", "stickerMessage"} {
-		if sub := getMapField(msg, key); sub != nil {
-			if ci := getMapField(sub, "contextInfo"); ci != nil {
-				return ci
-			}
-		}
-	}
-	return nil
+	return findNestedContextInfo(msg, 0)
 }
 
 func isEphemeral(msg map[string]any) bool {

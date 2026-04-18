@@ -65,11 +65,11 @@
 
 ## 7. Passo 6 — Dividir `inbox_cloud.go` (590 LOC) em três arquivos
 
-- [ ] 7.1 Em `inbox_cloud.go` (~180 LOC restantes): manter struct `cloudInboxHandler` e método `HandleMessage`
-- [ ] 7.2 Criar `internal/integrations/chatwoot/cloud_builders.go` (~170 LOC): mover tipos de envelope cloud + `buildCloudTextMessage`, `buildCloudMediaMessage`, `buildCloudLocationMessage`, `buildCloudContactMessage`, `parseVCardToCloudContacts`, `cloudMediaType`
-- [ ] 7.3 Criar `internal/integrations/chatwoot/cloud_transport.go` (~230 LOC): mover `postToChatwootCloud`, `uploadCloudMedia`, `uploadRawMedia`, `getMediaUploader`, `UnlockCloudWindow` e helpers HTTP
-- [ ] 7.4 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 7.5 Commit: `refactor(chatwoot): split inbox_cloud.go into handler/builders/transport`
+- [x] 7.1 Em `inbox_cloud.go` (157 LOC): manter struct `cloudInboxHandler` e método `HandleMessage`
+- [x] 7.2 Criar `internal/integrations/chatwoot/cloud_builders.go` (219 LOC): tipos de envelope cloud + builders + `parseVCardToCloudContacts`, `cloudMediaType`
+- [x] 7.3 Criar `internal/integrations/chatwoot/cloud_transport.go` (195 LOC): `postToChatwootCloud`, `uploadCloudMedia`, `uploadRawMedia`, `getMediaUploader`, `UnlockCloudWindow` e helpers HTTP
+- [x] 7.4 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 7.5 Commit: `refactor(chatwoot): split inbox_cloud.go into handler/builders/transport`
 
 ## 8. Passo 7 — Dividir `parser.go` (591 LOC) em dois arquivos
 

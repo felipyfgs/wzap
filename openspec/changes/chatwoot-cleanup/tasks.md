@@ -46,12 +46,12 @@
 
 ## 5. Passo 4 — Extrair `import.go` e `events.go` de `service.go`
 
-- [ ] 5.1 Criar `internal/integrations/chatwoot/import.go` movendo funções de service.go: `ImportHistoryAsync`, `importHistory`, `importSingleMessage`, `importMediaMessage`, `importPeriodToDays` (mantêm-se como métodos em `*Service`)
-- [ ] 5.2 Criar `internal/integrations/chatwoot/events.go` com `type eventDispatcher struct { svc *Service }` e método `Handle(ctx, cfg, event, payload) error` contendo o switch de `processInboundEvent` (service.go:~180-217)
-- [ ] 5.3 Em `service.go`, refatorar `processInboundEvent` para delegar a um `eventDispatcher` instanciado lazy (ou campo do struct `Service`)
-- [ ] 5.4 Verificar que `service.go` ficou entre 150-220 LOC (`wc -l`)
-- [ ] 5.5 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 5.6 Commit: `refactor(chatwoot): split service.go into import.go and events.go`
+- [x] 5.1 Criar `internal/integrations/chatwoot/import.go` movendo funções de service.go: `ImportHistoryAsync`, `importHistory`, `importSingleMessage`, `importMediaMessage`, `importPeriodToDays` (mantêm-se como métodos em `*Service`)
+- [x] 5.2 Criar `internal/integrations/chatwoot/events.go` com `type eventDispatcher struct { svc *Service }` e método `Handle(ctx, cfg, event, payload) error` contendo o switch de `processInboundEvent` (service.go:~180-217)
+- [x] 5.3 Em `service.go`, refatorar `processInboundEvent` para delegar a um `eventDispatcher` instanciado lazy (ou campo do struct `Service`)
+- [x] 5.4 Verificar que `service.go` ficou entre 150-220 LOC (`wc -l`) — 187 LOC
+- [x] 5.5 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 5.6 Commit: `refactor(chatwoot): split service.go into import.go and events.go`
 
 ## 6. Passo 5 — Dividir `wa_events.go` (663 LOC) em três arquivos
 

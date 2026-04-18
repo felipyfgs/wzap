@@ -73,10 +73,10 @@
 
 ## 8. Passo 7 — Dividir `parser.go` (591 LOC) em dois arquivos
 
-- [ ] 8.1 Em `parser.go` (~200 LOC restantes): manter tipos de payload, `flexTimestamp`, `parseEnvelopeData`, `parseMessagePayload`, `parseReceiptPayload`, `parseDeletePayload`, helpers de acesso a map (`getStringField`, `getFloatField`, `getMapField`)
-- [ ] 8.2 Criar `internal/integrations/chatwoot/extractors.go` (~390 LOC): mover `detectMessageType`, `extractText`, `formatLocation`, `formatVCard`, `formatVCardWithName`, `splitLines`, `startsWithCI`, `lastIndex`, `findNestedContextInfo`, `extractStanzaID`, `extractQuoteText`, `extractLocationFromText`, `isVCardContent`, `splitVCards`, `extractVCardName`, `extractMediaInfo` e `mediaTypeMap`
-- [ ] 8.3 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
-- [ ] 8.4 Commit: `refactor(chatwoot): split parser.go into parser + extractors`
+- [x] 8.1 Em `parser.go` (136 LOC): tipos de payload, `flexTimestamp`, `parseEnvelopeData`, `parseMessagePayload`, `parseReceiptPayload`, `parseDeletePayload`, helpers (`getStringField`, `getFloatField`, `getMapField`)
+- [x] 8.2 Criar `internal/integrations/chatwoot/extractors.go` (352 LOC): `detectMessageType`, `extractText`, `formatLocation`, `findNestedContextInfo`, `extractStanzaID`, `extractQuoteText`, `extractLocationFromText`, `extractMediaInfo`, `mediaTypeMap`. Helpers de VCard/string foram movidos para `vcard.go` (115 LOC) para manter extractors < 450 LOC.
+- [x] 8.3 `go build ./... && go vet ./... && go test ./internal/integrations/chatwoot/...` — tudo passando
+- [x] 8.4 Commit: `refactor(chatwoot): split parser.go into parser + extractors`
 
 ## 9. Passo 8 — Dividir `webhook_outbound.go` (507 LOC) em dois arquivos
 

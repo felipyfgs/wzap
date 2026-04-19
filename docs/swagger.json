@@ -6424,9 +6424,6 @@
                 "accountId": {
                     "type": "integer"
                 },
-                "databaseUri": {
-                    "type": "string"
-                },
                 "ignoreGroups": {
                     "type": "boolean"
                 },
@@ -6448,13 +6445,6 @@
                 "inboxName": {
                     "type": "string"
                 },
-                "inboxType": {
-                    "type": "string",
-                    "enum": [
-                        "api",
-                        "cloud"
-                    ]
-                },
                 "largeTimeout": {
                     "type": "integer"
                 },
@@ -6469,9 +6459,6 @@
                 },
                 "pendingConv": {
                     "type": "boolean"
-                },
-                "redisUrl": {
-                    "type": "string"
                 },
                 "reopenConv": {
                     "type": "boolean"
@@ -7442,15 +7429,6 @@
                 "name"
             ],
             "properties": {
-                "accessToken": {
-                    "type": "string"
-                },
-                "appSecret": {
-                    "type": "string"
-                },
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "engine": {
                     "type": "string",
                     "enum": [
@@ -7458,9 +7436,6 @@
                     ]
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {
@@ -7474,9 +7449,6 @@
                 },
                 "webhook": {
                     "$ref": "#/definitions/WebhookCreateInline"
-                },
-                "webhookVerifyToken": {
-                    "type": "string"
                 }
             }
         },
@@ -7523,9 +7495,6 @@
         "SessionResp": {
             "type": "object",
             "properties": {
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "businessName": {
                     "type": "string"
                 },
@@ -7548,9 +7517,6 @@
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "platform": {
@@ -7622,22 +7588,10 @@
         "SessionUpdateReq": {
             "type": "object",
             "properties": {
-                "accessToken": {
-                    "type": "string"
-                },
-                "appSecret": {
-                    "type": "string"
-                },
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "engine": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {
@@ -7645,18 +7599,12 @@
                 },
                 "settings": {
                     "$ref": "#/definitions/SessionSettings"
-                },
-                "webhookVerifyToken": {
-                    "type": "string"
                 }
             }
         },
         "SessionWithTokenResp": {
             "type": "object",
             "properties": {
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "connected": {
                     "type": "integer"
                 },
@@ -7673,9 +7621,6 @@
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {

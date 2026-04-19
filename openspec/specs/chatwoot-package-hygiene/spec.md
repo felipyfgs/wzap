@@ -2,7 +2,7 @@
 
 ### Requirement: Preservação da superfície pública externa
 
-O pacote `internal/integrations/chatwoot/` DEVE manter exatamente a mesma superfície pública consumida por callers externos (`internal/server/router.go`, `internal/handler/session.go`, `internal/handler/cloud_api.go`). Nenhum símbolo exportado atualmente importado fora do pacote PODE ser removido, renomeado ou ter sua assinatura alterada por este refactor.
+O pacote `internal/integrations/chatwoot/` MUST manter (DEVE manter) exatamente a mesma superfície pública consumida por callers externos (`internal/server/router.go`, `internal/handler/session.go`). Nenhum símbolo exportado atualmente importado fora do pacote PODE ser removido, renomeado ou ter sua assinatura alterada sem justificativa explícita em change proposal.
 
 #### Cenário: Build do módulo permanece verde após refactor
 
@@ -11,27 +11,32 @@ O pacote `internal/integrations/chatwoot/` DEVE manter exatamente a mesma superf
 
 #### Cenário: Consumidores externos continuam compilando sem alteração
 
-- **WHEN** arquivos em `internal/server/router.go`, `internal/handler/session.go` e `internal/handler/cloud_api.go` não recebem modificação
+- **WHEN** arquivos em `internal/server/router.go` e `internal/handler/session.go` não recebem modificação
 - **THEN** esses arquivos continuam compilando e passando em `go vet ./...`
 
 #### Cenário: Testes existentes passam sem mudança lógica
 
 - **WHEN** `go test ./internal/integrations/chatwoot/...` é executado após cada passo
-- **THEN** 100% dos testes existentes passam sem modificação na lógica de asserções; apenas nomes de arquivo de teste podem mudar (quando o arquivo testado for renomeado)
+- **THEN** 100% dos testes restantes passam sem modificação na lógica de asserções; testes exclusivos do modo Cloud (`inbox_cloud_test.go`, `mapping_test.go`, `cloud_api` fixtures) são removidos junto com a feature
 
 ### Requirement: Ausência de código morto confirmado
 
-O pacote `internal/integrations/chatwoot/` NÃO DEVE conter funções exportadas, arquivos ou blocos de código que este refactor identificou como mortos (`buildCloudReactionMessage`, wrapper `UnlockCloudWindow` sobre `unlockCloudWindow`, arquivo `qrcode.go`, anchor `var _ model.EventType = ""` em `inbox.go`, helper duplicado `urlFilename`).
+O pacote `internal/integrations/chatwoot/` MUST NOT (NÃO DEVE) conter funções exportadas, arquivos ou blocos de código identificados como mortos. Após a remoção do modo Cloud, verificações específicas incluem: ausência de `buildCloudReactionMessage`, `UnlockCloudWindow`, `buildCloudTextMessage`, `buildCloudMediaMessage`, `buildCloudLocationMessage`, `buildCloudContactMessage`, `buildCloudWebhookEnvelope`, `buildCloudContact`, `postToChatwootCloud`, `uploadCloudMedia`, `cloudMediaType`, `resolveCloudRefAsync`, `resolveCloudRefViaAPI`, `resolveAndPersistMessageRef`, `ResolveMessageBySourceID`, `ResolveConversationForContactPhone`, `BackfillCloudRefs`.
 
-#### Cenário: buildCloudReactionMessage removido
+#### Cenário: Símbolos do modo Cloud removidos
 
-- **WHEN** `grep -rn "buildCloudReactionMessage" internal/integrations/chatwoot/` é executado
+- **WHEN** `grep -rn "buildCloud\|postToChatwootCloud\|uploadCloudMedia\|resolveCloudRef\|BackfillCloudRefs\|ResolveMessageBySourceID" internal/integrations/chatwoot/` é executado
 - **THEN** retorna zero ocorrências
 
-#### Cenário: qrcode.go deletado
+#### Cenário: Arquivos Cloud-only deletados
 
-- **WHEN** `ls internal/integrations/chatwoot/qrcode.go` é executado
-- **THEN** retorna erro "No such file or directory"
+- **WHEN** `ls internal/integrations/chatwoot/inbox_cloud.go internal/integrations/chatwoot/mapping.go internal/integrations/chatwoot/mapping_test.go internal/integrations/chatwoot/inbox_cloud_test.go 2>/dev/null` é executado
+- **THEN** retorna lista vazia (todos os arquivos foram removidos)
+
+#### Cenário: cloud_api handler e DTO removidos
+
+- **WHEN** `ls internal/handler/cloud_api.go internal/handler/cloud_api_test.go internal/dto/cloud_api.go 2>/dev/null` é executado
+- **THEN** retorna lista vazia
 
 #### Cenário: Apenas uma implementação de extração de nome de arquivo por URL
 
@@ -40,7 +45,7 @@ O pacote `internal/integrations/chatwoot/` NÃO DEVE conter funções exportadas
 
 ### Requirement: Limite de tamanho de arquivo
 
-Após o refactor, nenhum arquivo `.go` não-teste em `internal/integrations/chatwoot/` DEVE exceder 450 LOC. Arquivos que hoje excedem esse limite (`wa_events.go` 663, `cw_webhook.go` 507, `inbox_cloud.go` 590, `parser.go` 591) DEVEM ser divididos em unidades coesas menores.
+Após o refactor, nenhum arquivo `.go` não-teste em `internal/integrations/chatwoot/` MUST (DEVE) exceder 450 LOC. Com a remoção do modo Cloud, `inbox_cloud.go` e `mapping.go` deixam de existir e a meta continua aplicável aos arquivos restantes.
 
 #### Cenário: Nenhum arquivo grande restante
 
@@ -50,7 +55,7 @@ Após o refactor, nenhum arquivo `.go` não-teste em `internal/integrations/chat
 #### Cenário: service.go reduzido
 
 - **WHEN** `wc -l internal/integrations/chatwoot/service.go` é executado após o refactor
-- **THEN** `service.go` reporta entre 150 e 220 linhas (redução de ~433 → ~180 via extração de `import.go` e `events.go`)
+- **THEN** `service.go` reporta entre 100 e 200 linhas (depois da remoção de `processOutbound` cross-mode, referências a Cloud e setters de dependências Cloud-only)
 
 ### Requirement: Padronização de nomenclatura de arquivos
 
@@ -65,20 +70,6 @@ Arquivos `.go` em `internal/integrations/chatwoot/` NÃO DEVEM usar prefixo `cw_
 
 - **WHEN** `git log --follow internal/integrations/chatwoot/conversation.go` é executado
 - **THEN** o log mostra commits anteriores do arquivo `cw_conversation.go` (rename via `git mv` preserva histórico)
-
-### Requirement: Eliminação de duplicação de prólogo entre inbox handlers
-
-A lógica comum de entrada de mensagens (parse do payload → resolução LID → filtro de JID ignorado → verificação de idempotência) NÃO DEVE estar duplicada entre `inbox_api.go` e `inbox_cloud.go`. DEVE existir um helper compartilhado em `inbox_common.go` consumido por ambos os handlers.
-
-#### Cenário: Helper inboxPrologue existe e é chamado pelos dois handlers
-
-- **WHEN** `grep -n "inboxPrologue" internal/integrations/chatwoot/` é executado após o refactor
-- **THEN** a função é definida em `inbox_common.go` e chamada em `inbox_api.go` e `inbox_cloud.go`
-
-#### Cenário: Paridade comportamental entre modos API e Cloud
-
-- **WHEN** o mesmo payload de mensagem é processado pelo handler API e pelo handler Cloud (com flags apropriadas para idempotência de DB)
-- **THEN** a decisão de "processar vs. pular" é equivalente em ambos os modos para as etapas compartilhadas (parse, LID, filtro, idempotência em cache)
 
 ### Requirement: Pacote permanece flat
 

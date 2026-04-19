@@ -49,30 +49,23 @@ Testes de DB precisam de `DATABASE_URL` apontando para um Postgres acessível. R
 
 `cmd/wzap/main.go` → carrega config → abre pool pgx + roda migrations embutidas (`migrations/*.sql` via `//go:embed`) → conecta NATS JetStream + MinIO → `server.New(cfg, db, nats, minio)` → `SetupRoutes()`.
 
-`SetupRoutes` em [internal/server/router.go](internal/server/router.go) é o root da DI. Constrói repos → services → handlers manualmente (sem framework). A **ordem de registro de rotas importa**: rotas da Cloud API (`/v\d+\.\d+/...`) são registradas ANTES do grupo de auth, pois precisam ficar acessíveis sem o middleware de token admin/session.
+`SetupRoutes` em [internal/server/router.go](internal/server/router.go) é o root da DI. Constrói repos → services → handlers manualmente (sem framework).
 
 Camadas são estritas: `handler → service → repo`. Handlers fazem parse HTTP + retornam DTOs; services concentram lógica de negócio; repos usam SQL bruto com params posicionais (`$1`, `$2`) e listas de colunas em constantes de pacote. Não cruze camadas.
 
-### Dois engines de WhatsApp
+### Engine WhatsApp
 
-O sistema fala WhatsApp por dois caminhos, e cada sessão pode usar qualquer um dos dois:
-
-1. **whatsmeow** (protocolo multi-device direto) — gerenciado por [internal/wa/](internal/wa/). `wa.Manager` mantém um mapa de clients protegido por `sync.RWMutex` e é dono do ciclo de vida da sessão (QR, connect, disconnect, handlers de evento).
-2. **Emulador da Cloud API** — [internal/handler/cloud_api.go](internal/handler/cloud_api.go) emula a WhatsApp Cloud API do Facebook para que o modo Cloud inbox do Chatwoot converse com o wzap como se fosse a Meta. Essas rotas **nunca** retornam 401 (dispararia `reauthorization_required` no Chatwoot); `warnTokenMismatch` apenas loga e segue.
-
-Services que precisam funcionar nos dois engines usam um dispatcher genérico: `runSessionRuntime[T any](...)` + runtimes cacheados em contexto via `context.WithValue(ctx, runtimeCtxKey{}, r)`. Ao adicionar um novo tipo de mensagem ou capability, verifique se os dois engines precisam suportar — capability faltante vira `CapabilityError` (com `Unwrap()`).
+O protocolo WhatsApp é falado por [internal/wa/](internal/wa/) via `whatsmeow` (multi-device direto). `wa.Manager` mantém um mapa de clients protegido por `sync.RWMutex` e é dono do ciclo de vida da sessão (QR, connect, disconnect, handlers de evento).
 
 ### Integração Chatwoot
 
 [internal/integrations/chatwoot/](internal/integrations/chatwoot/) é o subsistema arquiteturalmente mais denso. Os prefixos de arquivo que sobraram após o refactor são estruturais:
 
-- `inbox_*` = abstração do modo de inbox (`inbox.go`, `inbox_api.go`, `inbox_cloud.go`, `inbox_common.go`)
+- `inbox_*` = handler de inbox API (`inbox.go` com prólogo compartilhado + `inbox_api.go` com o fluxo WA→Chatwoot via REST)
 - `wa_events*` = pipeline de eventos vindos do WhatsApp
-- Todos os outros arquivos (webhook_outbound, conversation, bot, labels, backfill, mapping, ...) são puramente Chatwoot-side — o antigo prefixo `cw_*` foi removido em `2edce63`; não reintroduza.
+- Todos os outros arquivos (`webhook_outbound`, `conversation`, `bot`, `labels`, ...) são puramente Chatwoot-side — o antigo prefixo `cw_*` foi removido em `2edce63`; não reintroduza.
 
-A interface `InboxHandler` em [inbox.go](internal/integrations/chatwoot/inbox.go) tem duas implementações (`apiInboxHandler`, `cloudInboxHandler`), escolhidas por sessão via `cfg.InboxType`. `Service.processMessage` roteia para a implementação certa.
-
-Para `inbox_type=cloud`, `wz_chatwoot.database_uri` (Postgres do próprio Chatwoot) permite lookup direto de `messages.source_id` para mapeamento de WAID — evita corrida com timing de webhook. `POST /sessions/{sessionId}/integrations/chatwoot/backfill` preenche retroativamente `wz_messages.cw_message_id/cw_conversation_id/cw_source_id`. Nunca logue o `database_uri` completo.
+A integração suporta **apenas** inbox do tipo API (`Channel::Api`) do Chatwoot. Mensagens WA→Chatwoot vão via `POST /api/v1/.../messages`; Chatwoot→WA chegam em `POST /chatwoot/webhook/{sessionId}` (webhook `message_created`). Edição/deleção chegam via `message_updated`.
 
 ### Fluxo de eventos e trabalho assíncrono
 

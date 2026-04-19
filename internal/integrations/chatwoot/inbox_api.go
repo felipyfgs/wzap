@@ -18,7 +18,7 @@ func newAPIInboxHandler(svc *Service) *apiInboxHandler {
 }
 
 func (h *apiInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payload []byte) error {
-	res, skip := h.svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{checkDBIdempotency: true})
+	res, skip := h.svc.inboxPrologue(ctx, cfg, payload)
 	if skip {
 		return nil
 	}

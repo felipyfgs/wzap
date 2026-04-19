@@ -11,7 +11,6 @@ func TestChatwootConfigNewFields(t *testing.T) {
 		TextTimeout:     10,
 		MediaTimeout:    60,
 		LargeTimeout:    300,
-		RedisURL:        "redis://localhost:6379",
 	}
 
 	if !cfg.ImportOnConnect {
@@ -28,9 +27,6 @@ func TestChatwootConfigNewFields(t *testing.T) {
 	}
 	if cfg.LargeTimeout != 300 {
 		t.Errorf("expected LargeTimeout = 300, got %d", cfg.LargeTimeout)
-	}
-	if cfg.RedisURL != "redis://localhost:6379" {
-		t.Errorf("expected RedisURL = redis://localhost:6379, got %s", cfg.RedisURL)
 	}
 }
 

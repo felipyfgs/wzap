@@ -37,8 +37,6 @@ definitions:
     properties:
       accountId:
         type: integer
-      databaseUri:
-        type: string
       ignoreGroups:
         type: boolean
       ignoreJids:
@@ -53,11 +51,6 @@ definitions:
         type: integer
       inboxName:
         type: string
-      inboxType:
-        enum:
-        - api
-        - cloud
-        type: string
       largeTimeout:
         type: integer
       mediaTimeout:
@@ -68,8 +61,6 @@ definitions:
         type: boolean
       pendingConv:
         type: boolean
-      redisUrl:
-        type: string
       reopenConv:
         type: boolean
       signDelimiter:
@@ -719,19 +710,11 @@ definitions:
     type: object
   SessionCreateReq:
     properties:
-      accessToken:
-        type: string
-      appSecret:
-        type: string
-      businessAccountId:
-        type: string
       engine:
         enum:
         - whatsmeow
         type: string
       name:
-        type: string
-      phoneNumberId:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
@@ -741,8 +724,6 @@ definitions:
         type: string
       webhook:
         $ref: '#/definitions/WebhookCreateInline'
-      webhookVerifyToken:
-        type: string
     required:
     - name
     type: object
@@ -774,8 +755,6 @@ definitions:
     type: object
   SessionResp:
     properties:
-      businessAccountId:
-        type: string
       businessName:
         type: string
       chatwootEnabled:
@@ -791,8 +770,6 @@ definitions:
       jid:
         type: string
       name:
-        type: string
-      phoneNumberId:
         type: string
       platform:
         type: string
@@ -839,29 +816,17 @@ definitions:
     type: object
   SessionUpdateReq:
     properties:
-      accessToken:
-        type: string
-      appSecret:
-        type: string
-      businessAccountId:
-        type: string
       engine:
         type: string
       name:
-        type: string
-      phoneNumberId:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'
       settings:
         $ref: '#/definitions/SessionSettings'
-      webhookVerifyToken:
-        type: string
     type: object
   SessionWithTokenResp:
     properties:
-      businessAccountId:
-        type: string
       connected:
         type: integer
       createdAt:
@@ -873,8 +838,6 @@ definitions:
       jid:
         type: string
       name:
-        type: string
-      phoneNumberId:
         type: string
       proxy:
         $ref: '#/definitions/SessionProxy'

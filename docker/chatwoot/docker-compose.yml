@@ -12,17 +12,12 @@ x-base: &base
   volumes:
     - storage_data:/app/storage
     - ./trigger.rb:/app/lib/webhooks/trigger.rb:ro
-    - ./wzap_patches.rb:/app/config/initializers/wzap_patches.rb:ro
   restart: unless-stopped
 
 x-rails-env: &rails-env
   NODE_ENV: production
   RAILS_ENV: production
   INSTALLATION_ENV: docker
-  WHATSAPP_CLOUD_BASE_URL: ${WHATSAPP_CLOUD_BASE_URL:-http://api:8080}
-  # Desativa janela de 24h em inboxes WhatsApp Cloud (usadas pelo wzap).
-  # Ver docker/chatwoot/wzap_patches.rb para detalhes.
-  WZAP_BYPASS_24H_WINDOW: ${WZAP_BYPASS_24H_WINDOW:-true}
 
 services:
   rails:

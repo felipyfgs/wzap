@@ -3,7 +3,6 @@ package chatwoot
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/skip2/go-qrcode"
@@ -265,11 +264,6 @@ func (s *Service) processPicture(ctx context.Context, cfg *Config, payload []byt
 }
 
 func (s *Service) processGroupInfo(ctx context.Context, cfg *Config, payload []byte) error {
-	// Chatwoot Cloud inbox rejects source_ids > 15 digits (group JIDs have 18+),
-	// so we skip group notifications entirely in cloud mode.
-	if cfg.InboxType == "cloud" {
-		return nil
-	}
 	var data struct {
 		JID      string  `json:"JID"`
 		Sender   *string `json:"Sender"`
@@ -509,15 +503,6 @@ func (s *Service) processEdit(ctx context.Context, cfg *Config, payload []byte) 
 
 	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Str("newText", newText).Msg("handling message edit")
 
-	// Cloud mode: re-post via cloud webhook with the original message ID.
-	// Chatwoot matches by source_id and updates the message in-place.
-	// This is the same approach used by unoapi-cloud (no CW ref lookup needed).
-	if cfg.InboxType == "cloud" {
-		s.processEditCloud(ctx, cfg, data, editedMsgID, newText)
-		return
-	}
-
-	// API mode: create a private reply note with the edited content.
 	msg, err := s.waitForCWRef(ctx, cfg.SessionID, editedMsgID)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Str("editedMsgID", editedMsgID).Msg("message not found for edit")
@@ -554,64 +539,6 @@ func (s *Service) processEdit(ctx context.Context, cfg *Config, payload []byte) 
 	logger.Debug().Str("component", "chatwoot").Str("editedMsgID", editedMsgID).Msg("successfully created edit notification in Chatwoot")
 }
 
-// processEditCloud re-posta a edição no Chatwoot como uma nova mensagem
-// inbound, via o webhook Cloud (/webhooks/whatsapp/+{phone}) — mesmo caminho
-// de mensagens recebidas comuns. Isto:
-//   - Evita o 422 da REST API (que bloqueia incoming em inboxes Cloud).
-//   - Usa um source_id sintético (prefixo wzap-edit-) único, marcado como
-//     idempotente, para que nenhum echo webhook volte como outbound e reenvie
-//     pro WhatsApp.
-//   - Aplica context.message_id apontando pra mensagem original, fazendo o
-//     Chatwoot renderizar a edição como uma reply visual à original.
-func (s *Service) processEditCloud(ctx context.Context, cfg *Config, data *waMessagePayload, editedMsgID, newText string) {
-	sessionPhone := ""
-	if s.sessionPhoneGet != nil {
-		sessionPhone = s.sessionPhoneGet.GetSessionPhone(ctx, cfg.SessionID)
-	}
-	if sessionPhone == "" {
-		logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Msg("edit cloud: no session phone, skipping")
-		return
-	}
-
-	chatJID := data.Info.Chat
-	chatJID = s.resolveLID(ctx, cfg.SessionID, chatJID, data.Info.SenderAlt, data.Info.RecipientAlt)
-	if strings.HasSuffix(chatJID, "@lid") {
-		logger.Warn().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Str("lid", chatJID).Msg("edit cloud: unresolvable LID, skipping")
-		return
-	}
-
-	from := extractPhone(chatJID)
-	if from == "" {
-		logger.Warn().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("chatJID", chatJID).Msg("edit cloud: empty from, skipping")
-		return
-	}
-
-	// source_id sintético único. Marcado como idempotente ANTES do POST para
-	// que qualquer message_created/echo do Chatwoot seja descartado em
-	// isOutboundDuplicate e nunca chegue a processOutgoingMessage.
-	eventID := fmt.Sprintf("wzap-edit-%s-%d", editedMsgID, time.Now().UnixNano())
-	s.MarkSourceIDIdempotent(ctx, cfg.SessionID, eventID)
-
-	contactName := from
-	if data.Info.PushName != "" {
-		contactName = data.Info.PushName
-	}
-
-	cloudMsg := buildCloudTextMessage("✏️ *Mensagem editada:*\n"+newText, eventID, from, fmt.Sprintf("%d", time.Now().Unix()))
-	// Ambos message_id e id: o formato oficial da WhatsApp Cloud API é `id`;
-	// alguns parsers do Chatwoot lêem `message_id`. Duplicar cobre os dois.
-	cloudMsg["context"] = map[string]any{"message_id": editedMsgID, "id": editedMsgID}
-
-	envelope := buildCloudWebhookEnvelope(sessionPhone, false, cloudMsg, buildCloudContact(from, contactName))
-
-	if err := s.postToChatwootCloud(ctx, cfg, sessionPhone, envelope); err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Msg("edit cloud: failed to post edit webhook")
-		return
-	}
-
-	logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("editedMsgID", editedMsgID).Str("eventID", eventID).Msg("edit cloud: posted edit as inbound webhook with reply context")
-}
-
 func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*model.Message, error) {
 	delays := []time.Duration{
 		200 * time.Millisecond,
@@ -631,36 +558,6 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 		return msg, nil
 	}
 
-	cfg, cfgErr := s.repo.FindBySessionID(ctx, sessionID)
-	if cfgErr == nil {
-		if ref, ok := s.resolveAndPersistMessageRef(ctx, cfg, msgID); ok && ref != nil {
-			refreshed, findErr := s.msgRepo.FindByID(ctx, sessionID, msgID)
-			if findErr == nil && refreshed != nil {
-				return refreshed, nil
-			}
-			msg.CWMessageID = &ref.MessageID
-			msg.CWConvID = &ref.ConversationID
-			storedSourceID := ref.SourceID
-			msg.CWSrcID = &storedSourceID
-			return msg, nil
-		}
-
-		// Fallback: try Chatwoot REST API when database_uri is unavailable
-		if msg.ChatJID != "" {
-			if ref, ok := s.resolveCloudRefViaAPI(ctx, cfg, msgID, msg.ChatJID); ok && ref != nil {
-				refreshed, findErr := s.msgRepo.FindByID(ctx, sessionID, msgID)
-				if findErr == nil && refreshed != nil {
-					return refreshed, nil
-				}
-				msg.CWMessageID = &ref.MessageID
-				msg.CWConvID = &ref.ConversationID
-				storedSourceID := ref.SourceID
-				msg.CWSrcID = &storedSourceID
-				return msg, nil
-			}
-		}
-	}
-
 	logger.Debug().Str("component", "chatwoot").Str("msgID", msgID).Msg("CW refs not yet available, starting retry loop")
 
 	for i, delay := range delays {
@@ -678,35 +575,6 @@ func (s *Service) waitForCWRef(ctx context.Context, sessionID, msgID string) (*m
 		if msg.CWMessageID != nil && msg.CWConvID != nil {
 			logger.Debug().Str("component", "chatwoot").Str("msgID", msgID).Int("attempt", i+2).Msg("CW refs available after retry")
 			return msg, nil
-		}
-
-		if cfgErr == nil {
-			if ref, ok := s.resolveAndPersistMessageRef(ctx, cfg, msgID); ok && ref != nil {
-				refreshed, findErr := s.msgRepo.FindByID(ctx, sessionID, msgID)
-				if findErr == nil && refreshed != nil {
-					return refreshed, nil
-				}
-				msg.CWMessageID = &ref.MessageID
-				msg.CWConvID = &ref.ConversationID
-				storedSourceID := ref.SourceID
-				msg.CWSrcID = &storedSourceID
-				return msg, nil
-			}
-
-			// Fallback: try Chatwoot REST API when database_uri is unavailable
-			if msg.ChatJID != "" {
-				if ref, ok := s.resolveCloudRefViaAPI(ctx, cfg, msgID, msg.ChatJID); ok && ref != nil {
-					refreshed, findErr := s.msgRepo.FindByID(ctx, sessionID, msgID)
-					if findErr == nil && refreshed != nil {
-						return refreshed, nil
-					}
-					msg.CWMessageID = &ref.MessageID
-					msg.CWConvID = &ref.ConversationID
-					storedSourceID := ref.SourceID
-					msg.CWSrcID = &storedSourceID
-					return msg, nil
-				}
-			}
 		}
 	}
 

@@ -14,7 +14,6 @@ type Config struct {
 	WebhookToken    string    `json:"webhookToken"`
 	InboxID         int       `json:"inboxId"`
 	InboxName       string    `json:"inboxName"`
-	InboxType       string    `json:"inboxType"`
 	SignMsg         bool      `json:"signMsg"`
 	SignDelimiter   string    `json:"signDelimiter"`
 	ReopenConv      bool      `json:"reopenConv"`
@@ -29,8 +28,6 @@ type Config struct {
 	MediaTimeout    int       `json:"mediaTimeout"`
 	LargeTimeout    int       `json:"largeTimeout"`
 	MessageRead     bool      `json:"messageRead"`
-	DatabaseURI     string    `json:"databaseUri"`
-	RedisURL        string    `json:"redisUrl"`
 	CreatedAt       time.Time `json:"createdAt"`
 	UpdatedAt       time.Time `json:"updatedAt"`
 }

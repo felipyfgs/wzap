@@ -47,7 +47,6 @@ func newChatwootApp() (*fiber.App, *mockRepo, *mockClient) {
 	app.Get("/sessions/:sessionId/integrations/chatwoot", sessionMW, h.GetConfig)
 	app.Delete("/sessions/:sessionId/integrations/chatwoot", sessionMW, h.DeleteConfig)
 	app.Post("/sessions/:sessionId/integrations/chatwoot/import", sessionMW, h.ImportHistory)
-	app.Post("/sessions/:sessionId/integrations/chatwoot/backfill", sessionMW, h.BackfillRefs)
 	app.Post("/chatwoot/webhook/:sessionId", h.IncomingWebhook)
 
 	return app, repository, mockClient
@@ -211,37 +210,6 @@ func TestGetConfig_ResponseShapeParity(t *testing.T) {
 
 	if data["inboxId"].(float64) != 5 {
 		t.Errorf("expected inboxId=5, got %v", data["inboxId"])
-	}
-}
-
-func TestGetConfig_MasksRedisURL(t *testing.T) {
-	app, repo, _ := newChatwootApp()
-	repo.cfg = &Config{
-		SessionID: "test-session",
-		URL:       "https://app.chatwoot.com",
-		AccountID: 1,
-		InboxID:   5,
-		RedisURL:  "redis://:secret@redis.host:6379/0",
-		Enabled:   true,
-	}
-
-	req := httptest.NewRequest("GET", "/sessions/test-session/integrations/chatwoot", nil)
-	resp, err := app.Test(req, -1)
-	if err != nil {
-		t.Fatalf("app.Test: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		t.Fatalf("expected 200, got %d", resp.StatusCode)
-	}
-
-	var result map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-
-	data, _ := result["data"].(map[string]any)
-	if data["redisUrl"] != "redis://***@redis.host:6379/0" {
-		t.Errorf("expected masked redisUrl, got %v", data["redisUrl"])
 	}
 }
 
@@ -433,29 +401,6 @@ func TestImportHistory_Returns202_WithConfig(t *testing.T) {
 	}
 	if data["period"] != "7d" {
 		t.Errorf("expected period 7d, got %v", data["period"])
-	}
-}
-
-func TestBackfillRefs_Returns422_WhenDatabaseURIIsMissing(t *testing.T) {
-	app, repo, _ := newChatwootApp()
-	repo.cfg = &Config{SessionID: "test-session", Enabled: true, InboxID: 1}
-
-	req := httptest.NewRequest("POST", "/sessions/test-session/integrations/chatwoot/backfill", nil)
-	resp, err := app.Test(req, -1)
-	if err != nil {
-		t.Fatalf("app.Test: %v", err)
-	}
-	if resp.StatusCode != 422 {
-		t.Fatalf("expected 422, got %d", resp.StatusCode)
-	}
-
-	var result map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-
-	if success, ok := result["success"].(bool); !ok || success {
-		t.Fatalf("expected success=false, got %v", result["success"])
 	}
 }
 

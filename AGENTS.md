@@ -16,7 +16,7 @@ It manages multiple WhatsApp sessions via [whatsmeow](https://github.com/tulir/w
 | ------------- | -------------------------------------------------------------- |
 | Language      | **Go 1.25** (module `wzap`)                                    |
 | HTTP          | Fiber v2 (`gofiber/fiber`)                                     |
-| WhatsApp      | whatsmeow (`go.mau.fi/whatsmeow`) + Cloud API emulator handler |
+| WhatsApp      | whatsmeow (`go.mau.fi/whatsmeow`)                              |
 | Database      | PostgreSQL 16 via pgx v5 (`jackc/pgx`)                         |
 | Migrations    | Embedded SQL files (`migrations/`) applied at startup           |
 | Object store  | MinIO (`minio/minio-go`)                                       |
@@ -89,7 +89,7 @@ web/                      # Nuxt 4 SPA frontend
 
 - **Layered**: handler → service → repo. Handlers parse HTTP, services hold business logic, repos talk to the DB.
 - **Dependency injection**: `server.New(cfg, db, nats, minio)` → `SetupRoutes()` wires repos → services → handlers. No DI framework, no global state besides the logger.
-- **Router structure**: public routes (health, metrics, swagger, WS, Cloud API) have no auth. All `/sessions` routes require auth, with session-scoped routes nested under `/sessions/:sessionId`.
+- **Router structure**: public routes (health, metrics, swagger, WS, Chatwoot webhook) have no auth. All `/sessions` routes require auth, with session-scoped routes nested under `/sessions/:sessionId`.
 
 ### Imports
 
@@ -137,7 +137,7 @@ func (h *MessageHandler) SendText(c *fiber.Ctx) error {
 ### Service patterns
 
 - Always `context.Context` as first parameter. `sessionID string` as second for session-scoped ops.
-- Generic runtime dispatch for dual-engine (whatsmeow + Cloud API): `runSessionRuntime[T any](...)`.
+- Generic runtime dispatch (`runSessionRuntime[T any](...)`) para runtimes por sessão.
 - Update DTOs use `*string`, `*bool` pointers for optional fields; apply with nil-checks.
 - Setter injection for optional dependencies: `SetMessagePersist(fn)`, `SetMediaAutoUpload(fn)`.
 
@@ -176,47 +176,27 @@ logger.Info().Str("component", "server").Str("addr", addr).Msg("Starting API ser
 - **Session tokens**: each session has its own API key. `middleware.Auth` checks admin first, then session token lookup.
 - **Roles**: `admin` (full access) or `session` (scoped to one session via `RequiredSession` middleware).
 - **WebSocket auth**: token via query param or `Authorization` header (configurable via `WS_AUTH_MODE`).
-- **Cloud API paths** (`/v\d+\.\d+/...`) are skipped by auth middleware — these routes are public by design (registered before the auth group in router.go).
-
-## Cloud API emulator
-
-`internal/handler/cloud_api.go` emulates the Facebook WhatsApp Cloud API for Chatwoot's Cloud inbox mode. Routes are registered **before** the auth group:
-
-- `GET /:version/debug_token` — fake token validation
-- `GET /:version/:phone` — phone status
-- `POST /:version/:phone/register` — register phone
-- `POST /:version/:phone/subscribed_apps` — subscribe
-- `GET /:version/:phone/messages` — webhook verification
-- `POST /:version/:phone/messages` — send messages (text, media, contacts, reaction, template)
-- `GET /:version/:phone/message_templates` — list templates
-- `GET /:version/:phone/phone_numbers` — list phone numbers
-- `GET /:version/:phone/:media_id` — get media
-
-Never returns HTTP 401 to prevent Chatwoot from setting `reauthorization_required`. `warnTokenMismatch` logs mismatches but proceeds.
 
 ## Chatwoot integration
 
-`internal/integrations/chatwoot/` — two-way Chatwoot sync with two inbox modes.
+`internal/integrations/chatwoot/` — two-way Chatwoot sync via inbox **API** (`Channel::Api`) apenas.
 
 ### File naming convention
 
-Após o refactor `2edce63`, apenas dois prefixos sobrevivem — os demais arquivos usam nomes diretos (`webhook_outbound.go`, `conversation.go`, `bot.go`, `labels.go`, `backfill.go`, `mapping.go`, ...).
+Após o refactor `2edce63`, apenas dois prefixos sobrevivem — os demais arquivos usam nomes diretos (`webhook_outbound.go`, `conversation.go`, `bot.go`, `labels.go`, ...).
 
 | Prefix | Origin | Purpose |
 |--------|--------|---------|
 | `wa_*` | WhatsApp inbound | Event pipeline (`wa_events.go`) |
-| `inbox_*` | Inbox mode | Interface + router (`inbox.go`), API mode (`inbox_api.go`), Cloud mode (`inbox_cloud.go`), shared helpers (`inbox_common.go`) |
+| `inbox_*` | Inbox API | Prólogo compartilhado (`inbox.go`) + fluxo REST (`inbox_api.go`) |
 
-### InboxHandler interface
+### Fluxo canônico
 
-`InboxHandler` in `inbox.go` — `HandleMessage(ctx, cfg, payload)` + `UnlockWindow(ctx, cfg, chatJID)`. The `processMessage` router on Service delegates to `apiInboxHandler` (REST API) or `cloudInboxHandler` (Cloud webhook) based on `cfg.InboxType`.
+- WA→Chatwoot: `apiInboxHandler.HandleMessage` posta via REST em `POST /api/v1/accounts/<id>/conversations/<id>/messages`.
+- Chatwoot→WA: webhook `message_created` chega em `POST /chatwoot/webhook/:sessionId` e dispara `messageSvc.SendText` etc.
+- Edição/deleção: webhook `message_updated` com `content_attributes.deleted=true` dispara `DeleteMessage` (revoke).
 
-### Cloud mapping (`database_uri`)
-
-- For `inbox_type=cloud`, set `database_uri` in `wz_chatwoot` whenever possible.
-- `database_uri` enables direct read-only lookup of Chatwoot `messages.source_id` (WAID mapping), avoiding dependence on webhook timing.
-- Use `POST /sessions/{sessionId}/integrations/chatwoot/backfill` to retroactively fill `wz_messages.cw_message_id/cw_conversation_id/cw_source_id` for existing rows.
-- Keep `database_uri` secret (never log full URI).
+Nenhum endpoint `/v\d+\.\d+/...` ou `/cloud-media/...` é servido; nenhum POST direto ao `/webhooks/whatsapp/{phone_number_id}`; nenhuma conexão ao Postgres do Chatwoot.
 
 ## Swagger docs
 
@@ -264,7 +244,7 @@ Serviços `api` e `web` são **sempre separados** (dev e prod). A imagem `combin
 - **Web → API** (server-side): `NUXT_API_URL=http://api:8080` (DNS interno). Usado pelo proxy Nitro em `web/server/api/[...].ts` e pelo WS bridge em `web/server/routes/ws.ts`.
 - **Web → MinIO** (whitelist SSRF): `NUXT_MINIO_ENDPOINT` — dev: `http://localhost:9010`, prod: `http://minio:9000`.
 - **API → DB/MinIO/NATS**: via DNS interno (`postgres:5432`, `minio:9000`, `nats:4222`).
-- **Chatwoot → API (Cloud API)**: `WHATSAPP_CLOUD_BASE_URL=http://api:8080` via rede `wzap_chatwoot`.
+- **Chatwoot → API**: webhook do inbox API aponta para `http://api:8080/chatwoot/webhook/{sessionId}` via rede `wzap_chatwoot`.
 
 ### Makefile targets
 

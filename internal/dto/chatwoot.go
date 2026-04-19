@@ -7,7 +7,6 @@ type CWConfigReq struct {
 	WebhookToken    string   `json:"webhookToken,omitempty"`
 	InboxID         int      `json:"inboxId,omitempty"`
 	InboxName       string   `json:"inboxName,omitempty"`
-	InboxType       *string  `json:"inboxType,omitempty" validate:"omitempty,oneof=api cloud"`
 	SignMsg         *bool    `json:"signMsg,omitempty"`
 	SignDelimiter   string   `json:"signDelimiter,omitempty"`
 	ReopenConv      *bool    `json:"reopenConv,omitempty"`
@@ -21,8 +20,6 @@ type CWConfigReq struct {
 	MediaTimeout    *int     `json:"mediaTimeout,omitempty"`
 	LargeTimeout    *int     `json:"largeTimeout,omitempty"`
 	MessageRead     *bool    `json:"messageRead,omitempty"`
-	DatabaseURI     string   `json:"databaseUri,omitempty"`
-	RedisURL        string   `json:"redisUrl,omitempty"`
 }
 
 type CWConfigResp struct {
@@ -31,7 +28,6 @@ type CWConfigResp struct {
 	AccountID       int      `json:"accountId"`
 	InboxID         int      `json:"inboxId"`
 	InboxName       string   `json:"inboxName"`
-	InboxType       string   `json:"inboxType"`
 	SignMsg         bool     `json:"signMsg"`
 	SignDelimiter   string   `json:"signDelimiter"`
 	ReopenConv      bool     `json:"reopenConv"`
@@ -47,8 +43,6 @@ type CWConfigResp struct {
 	MediaTimeout    int      `json:"mediaTimeout"`
 	LargeTimeout    int      `json:"largeTimeout"`
 	MessageRead     bool     `json:"messageRead"`
-	DatabaseURI     string   `json:"databaseUri,omitempty"`
-	RedisURL        string   `json:"redisUrl,omitempty"`
 }
 
 type CWImportReq struct {

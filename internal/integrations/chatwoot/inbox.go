@@ -12,35 +12,8 @@ type InboxHandler interface {
 	HandleMessage(ctx context.Context, cfg *Config, payload []byte) error
 }
 
-func (s *Service) getInboxHandler(cfg *Config) InboxHandler {
-	if cfg.InboxType == "cloud" {
-		return newCloudInboxHandler(s)
-	}
-	return newAPIInboxHandler(s)
-}
-
 func (s *Service) processMessage(ctx context.Context, cfg *Config, payload []byte) error {
-	data, err := parseMessagePayload(payload)
-	if err != nil {
-		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to parse message payload")
-		return nil
-	}
-
-	// Cloud mode só processa inbound (fromMe=false). Outbound (mensagens
-	// enviadas pelo agente via Chatwoot) não precisa ser re-ecoado porque o
-	// próprio Chatwoot já persistiu essa mensagem localmente.
-	if cfg.InboxType == "cloud" && data.Info.IsFromMe && data.Info.ID != "" && s.cache.GetIdempotent(ctx, cfg.SessionID, "WAID:"+data.Info.ID) {
-		return nil
-	}
-
-	return s.getInboxHandler(cfg).HandleMessage(ctx, cfg, payload)
-}
-
-// inboxPrologueOpts configura passos opcionais do prólogo compartilhado.
-type inboxPrologueOpts struct {
-	// checkDBIdempotency: quando true, além do cache, consulta msgRepo.ExistsBySourceID
-	// para detectar duplicatas que já foram persistidas (apenas modo API faz isso).
-	checkDBIdempotency bool
+	return newAPIInboxHandler(s).HandleMessage(ctx, cfg, payload)
 }
 
 // inboxPrologueResult carrega o payload desempacotado e metadados derivados
@@ -51,14 +24,13 @@ type inboxPrologueResult struct {
 	sourceID string
 }
 
-// inboxPrologue executa a sequência inicial compartilhada dos dois handlers de
-// inbox (API e Cloud): parse → resolve @lid → filtro de JID ignorado → checagem
-// idempotente (cache e, opcionalmente, banco). Retorna (result, skip):
+// inboxPrologue executa a sequência inicial do handler de inbox API:
+// parse → resolve @lid → filtro de JID ignorado → checagem idempotente
+// (cache + banco). Retorna (result, skip):
 //   - skip=true indica que o caller DEVE encerrar silenciosamente (duplicata,
 //     LID irresolvível, JID ignorado, payload malformado).
-//   - skip=false + result preenchido indica que o caller pode prosseguir com
-//     o processamento específico do modo.
-func (s *Service) inboxPrologue(ctx context.Context, cfg *Config, payload []byte, opts inboxPrologueOpts) (*inboxPrologueResult, bool) {
+//   - skip=false + result preenchido indica que o caller pode prosseguir.
+func (s *Service) inboxPrologue(ctx context.Context, cfg *Config, payload []byte) (*inboxPrologueResult, bool) {
 	data, err := parseMessagePayload(payload)
 	if err != nil {
 		logger.Warn().Str("component", "chatwoot").Err(err).Msg("Failed to parse message payload")
@@ -101,7 +73,7 @@ func (s *Service) inboxPrologue(ctx context.Context, cfg *Config, payload []byte
 		_, idemSpan := startSpan(ctx, "chatwoot.check_idempotency",
 			spanAttrs(cfg.SessionID, "message", "inbound")...)
 		isDup := s.cache.GetIdempotent(ctx, cfg.SessionID, sourceID)
-		if !isDup && opts.checkDBIdempotency {
+		if !isDup {
 			if exists, dbErr := s.msgRepo.ExistsBySourceID(ctx, cfg.SessionID, sourceID); dbErr == nil && exists {
 				s.cache.SetIdempotent(ctx, cfg.SessionID, sourceID)
 				isDup = true

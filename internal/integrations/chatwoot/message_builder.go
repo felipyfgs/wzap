@@ -29,13 +29,6 @@ func (s *Service) resolveInboundReply(ctx context.Context, sessionID, chatJID, s
 		return *msg.CWMessageID
 	}
 
-	if cfg, err := s.repo.FindBySessionID(ctx, sessionID); err == nil {
-		if ref, ok := s.resolveAndPersistMessageRef(ctx, cfg, stanzaID); ok && ref != nil {
-			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", ref.MessageID).Msg("found CW message ID via Chatwoot database lookup")
-			return ref.MessageID
-		}
-	}
-
 	if quotedText != "" {
 		if msg, err := s.msgRepo.FindByBodyAndChat(ctx, sessionID, chatJID, quotedText, true); err == nil && hasCWMessageID(msg) {
 			logger.Debug().Str("component", "chatwoot").Str("session", sessionID).Str("stanzaID", stanzaID).Int("cwMsgID", *msg.CWMessageID).Msg("found CW message ID via FindByBodyAndChat")

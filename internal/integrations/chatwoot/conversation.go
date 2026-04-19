@@ -112,11 +112,6 @@ func (s *Service) upsertConversation(ctx context.Context, cfg *Config, chatJID, 
 		}
 		logger.Debug().Str("component", "chatwoot").Int("contactID", contact.ID).Str("jid", chatJID).Msg("contact created")
 		contactID = contact.ID
-		if cfg.DatabaseURI != "" {
-			if err := addLabelToContact(ctx, cfg.DatabaseURI, cfg.InboxName, contact.ID); err != nil {
-				logger.Warn().Str("component", "chatwoot").Err(err).Int("contactID", contact.ID).Msg("failed to add label to contact")
-			}
-		}
 	} else {
 		contactID = contacts[0].ID
 		logger.Debug().Str("component", "chatwoot").Int("contactID", contactID).Str("jid", chatJID).Msg("contact found")

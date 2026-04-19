@@ -8,12 +8,10 @@ import (
 	"wzap/internal/model"
 )
 
-// TestInboxPrologueParity valida que as etapas compartilhadas do prólogo
-// (parse → LID → filtro → idempotência em cache) produzem a mesma decisão
-// skip/continue para ambos os modos (API e Cloud) quando o mesmo payload
-// é processado. A divergência controlada ocorre apenas quando
-// checkDBIdempotency=true é passado para o modo API.
-func TestInboxPrologueParity(t *testing.T) {
+// TestInboxPrologue valida que as etapas do prólogo
+// (parse → LID → filtro → idempotência em cache/DB) produzem a decisão
+// skip/continue esperada para os casos canônicos.
+func TestInboxPrologue(t *testing.T) {
 	tests := []struct {
 		name         string
 		chatJID      string
@@ -72,31 +70,21 @@ func TestInboxPrologueParity(t *testing.T) {
 
 			payload := makeProloguePayload(t, tc.chatJID, tc.msgID, tc.senderAlt, tc.recipientAlt)
 
-			for _, mode := range []struct {
-				name  string
-				check bool
-			}{
-				{"api", true},
-				{"cloud", false},
-			} {
-				t.Run(mode.name, func(t *testing.T) {
-					svc := newTestService(&mockClient{})
-					cfg := &Config{SessionID: "sess", IgnoreGroups: tc.ignoreGroups}
-					if tc.primeCache && tc.msgID != "" {
-						svc.cache.SetIdempotent(ctx, cfg.SessionID, "WAID:"+tc.msgID)
-					}
+			svc := newTestService(&mockClient{})
+			cfg := &Config{SessionID: "sess", IgnoreGroups: tc.ignoreGroups}
+			if tc.primeCache && tc.msgID != "" {
+				svc.cache.SetIdempotent(ctx, cfg.SessionID, "WAID:"+tc.msgID)
+			}
 
-					res, skip := svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{checkDBIdempotency: mode.check})
-					if skip != tc.wantSkip {
-						t.Fatalf("modo %s: skip=%v, esperado %v", mode.name, skip, tc.wantSkip)
-					}
-					if !skip && res == nil {
-						t.Fatalf("modo %s: result nil com skip=false", mode.name)
-					}
-					if !skip && res.chatJID == "" {
-						t.Fatalf("modo %s: chatJID vazio no result", mode.name)
-					}
-				})
+			res, skip := svc.inboxPrologue(ctx, cfg, payload)
+			if skip != tc.wantSkip {
+				t.Fatalf("skip=%v, esperado %v", skip, tc.wantSkip)
+			}
+			if !skip && res == nil {
+				t.Fatalf("result nil com skip=false")
+			}
+			if !skip && res.chatJID == "" {
+				t.Fatalf("chatJID vazio no result")
 			}
 		})
 	}

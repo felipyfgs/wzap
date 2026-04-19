@@ -6432,9 +6432,6 @@ const docTemplate = `{
                 "accountId": {
                     "type": "integer"
                 },
-                "databaseUri": {
-                    "type": "string"
-                },
                 "ignoreGroups": {
                     "type": "boolean"
                 },
@@ -6456,13 +6453,6 @@ const docTemplate = `{
                 "inboxName": {
                     "type": "string"
                 },
-                "inboxType": {
-                    "type": "string",
-                    "enum": [
-                        "api",
-                        "cloud"
-                    ]
-                },
                 "largeTimeout": {
                     "type": "integer"
                 },
@@ -6477,9 +6467,6 @@ const docTemplate = `{
                 },
                 "pendingConv": {
                     "type": "boolean"
-                },
-                "redisUrl": {
-                    "type": "string"
                 },
                 "reopenConv": {
                     "type": "boolean"
@@ -7450,15 +7437,6 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "accessToken": {
-                    "type": "string"
-                },
-                "appSecret": {
-                    "type": "string"
-                },
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "engine": {
                     "type": "string",
                     "enum": [
@@ -7466,9 +7444,6 @@ const docTemplate = `{
                     ]
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {
@@ -7482,9 +7457,6 @@ const docTemplate = `{
                 },
                 "webhook": {
                     "$ref": "#/definitions/WebhookCreateInline"
-                },
-                "webhookVerifyToken": {
-                    "type": "string"
                 }
             }
         },
@@ -7531,9 +7503,6 @@ const docTemplate = `{
         "SessionResp": {
             "type": "object",
             "properties": {
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "businessName": {
                     "type": "string"
                 },
@@ -7556,9 +7525,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "platform": {
@@ -7630,22 +7596,10 @@ const docTemplate = `{
         "SessionUpdateReq": {
             "type": "object",
             "properties": {
-                "accessToken": {
-                    "type": "string"
-                },
-                "appSecret": {
-                    "type": "string"
-                },
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "engine": {
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {
@@ -7653,18 +7607,12 @@ const docTemplate = `{
                 },
                 "settings": {
                     "$ref": "#/definitions/SessionSettings"
-                },
-                "webhookVerifyToken": {
-                    "type": "string"
                 }
             }
         },
         "SessionWithTokenResp": {
             "type": "object",
             "properties": {
-                "businessAccountId": {
-                    "type": "string"
-                },
                 "connected": {
                     "type": "integer"
                 },
@@ -7681,9 +7629,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
-                    "type": "string"
-                },
-                "phoneNumberId": {
                     "type": "string"
                 },
                 "proxy": {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
 	"time"
@@ -62,15 +61,6 @@ type MediaPresigner interface {
 	GetPresignedURL(ctx context.Context, key string) (string, error)
 }
 
-type MediaStorage interface {
-	Upload(ctx context.Context, key string, reader io.Reader, size int64, contentType string) error
-	UploadWithMeta(ctx context.Context, key string, reader io.Reader, size int64, contentType string, userMeta map[string]string) error
-}
-
-type SessionPhoneGetter interface {
-	GetSessionPhone(ctx context.Context, sessionID string) string
-}
-
 type missingEntry struct {
 	expiresAt time.Time
 }
@@ -88,8 +78,6 @@ type Service struct {
 	numberChecker     NumberChecker
 	contactNameGetter ContactNameGetter
 	mediaPresigner    MediaPresigner
-	mediaStorage      MediaStorage
-	sessionPhoneGet   SessionPhoneGetter
 	serverURL         string
 	lastBotNotify     sync.Map
 	httpClient        *http.Client
@@ -98,13 +86,6 @@ type Service struct {
 	convFlight        singleflight.Group
 	importFlight      singleflight.Group
 	missingConfig     sync.Map
-}
-
-func (s *Service) MarkSourceIDIdempotent(ctx context.Context, sessionID, sourceID string) {
-	if s == nil || s.cache == nil || sessionID == "" || sourceID == "" {
-		return
-	}
-	s.cache.SetIdempotent(ctx, sessionID, sourceID)
 }
 
 func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messageSvc MessageService) *Service {
@@ -131,8 +112,6 @@ func (s *Service) SetJetStream(js jetstream.JetStream)    { s.js = js }
 func (s *Service) SetCache(c Cache)                       { s.cache = c }
 func (s *Service) SetNameGetter(g ContactNameGetter)      { s.contactNameGetter = g }
 func (s *Service) SetMediaPresigner(p MediaPresigner)     { s.mediaPresigner = p }
-func (s *Service) SetMediaStorage(st MediaStorage)        { s.mediaStorage = st }
-func (s *Service) SetPhoneGetter(g SessionPhoneGetter)    { s.sessionPhoneGet = g }
 func (s *Service) clearConfigCache(sessionID string) {
 	s.missingConfig.Delete(sessionID)
 }
@@ -189,22 +168,6 @@ func (s *Service) processOutbound(ctx context.Context, sessionID string, rawPayl
 		return fmt.Errorf("unmarshal outbound webhook: %w", err)
 	}
 	return s.HandleIncomingWebhook(ctx, sessionID, body)
-}
-
-type sessionPhoneGetter struct {
-	sessRepo *repo.SessionRepository
-}
-
-func NewSessionPhoneGetter(sessRepo *repo.SessionRepository) SessionPhoneGetter {
-	return &sessionPhoneGetter{sessRepo: sessRepo}
-}
-
-func (g *sessionPhoneGetter) GetSessionPhone(ctx context.Context, sessionID string) string {
-	sess, err := g.sessRepo.FindByID(ctx, sessionID)
-	if err != nil || sess == nil || sess.JID == "" {
-		return ""
-	}
-	return extractPhone(sess.JID)
 }
 
 type managerConnector struct {

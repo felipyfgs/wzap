@@ -173,7 +173,7 @@ func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, boo
 
 	case *events.MediaRetry:
 		eventType = model.EventMediaRetry
-		logger.Debug().Str("component", "wa").Str("session", sessionID).Str("mid", string(v.MessageID)).Msg("Media retry")
+		logger.Debug().Str("component", "wa").Str("session", sessionID).Str("mid", v.MessageID).Msg("Media retry")
 		m.handleMediaRetry(v)
 
 	case *events.Receipt:
@@ -555,7 +555,7 @@ func (m *Manager) dispatchEvent(sessionID string, eventType model.EventType, env
 }
 
 func (m *Manager) handleMediaRetry(v *events.MediaRetry) {
-	mid := string(v.MessageID)
+	mid := v.MessageID
 	raw, ok := m.mediaRetryCache.Load(mid)
 	if !ok {
 		return

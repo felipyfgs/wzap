@@ -39,7 +39,8 @@ func parseAndValidate(c *fiber.Ctx, req any) error {
 	}
 
 	if err := mw.Validate.Struct(req); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
 			var msgs []string
 			for _, e := range validationErrors {
 				msgs = append(msgs, fmt.Sprintf("field '%s' failed on '%s'", e.Field(), e.Tag()))

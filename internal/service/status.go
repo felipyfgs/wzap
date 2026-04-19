@@ -173,17 +173,18 @@ func (s *StatusService) SendStatusMedia(ctx context.Context, sessionID string, r
 
 	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
 		var data []byte
-		if req.Base64 != "" {
+		switch {
+		case req.Base64 != "":
 			data, err = base64.StdEncoding.DecodeString(req.Base64)
 			if err != nil {
 				return "", fmt.Errorf("failed to decode base64: %w", err)
 			}
-		} else if req.URL != "" {
-			data, err = downloadURL(req.URL)
+		case req.URL != "":
+			data, err = downloadURL(ctx, req.URL)
 			if err != nil {
 				return "", err
 			}
-		} else {
+		default:
 			return "", fmt.Errorf("either base64 or url is required")
 		}
 

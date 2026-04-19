@@ -18,9 +18,9 @@ func newAPIInboxHandler(svc *Service) *apiInboxHandler {
 }
 
 func (h *apiInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payload []byte) error {
-	res, skip, err := h.svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{checkDBIdempotency: true})
-	if err != nil || skip {
-		return err
+	res, skip := h.svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{checkDBIdempotency: true})
+	if skip {
+		return nil
 	}
 	data := res.data
 	chatJID := res.chatJID

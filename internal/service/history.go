@@ -91,7 +91,9 @@ func (m *minioMediaStorage) Upload(ctx context.Context, sessionID, messageID, ch
 }
 
 func (s *HistoryService) PersistMessage(input wa.PersistInput) {
+	enqueuedAt := time.Now()
 	_ = s.pool.Submit(func(ctx context.Context) {
+		waited := time.Since(enqueuedAt)
 		msg := &model.Message{
 			ID:        input.MessageID,
 			SessionID: input.SessionID,
@@ -106,8 +108,11 @@ func (s *HistoryService) PersistMessage(input wa.PersistInput) {
 			Timestamp: time.Unix(input.Timestamp, 0),
 		}
 
+		saveStart := time.Now()
 		if err := s.messageRepo.Save(ctx, msg); err != nil {
 			logger.Warn().Str("component", "service").Err(err).Str("session", input.SessionID).Str("mid", input.MessageID).Msg("Failed to persist message")
+		} else {
+			logger.Debug().Str("component", "service").Str("session", input.SessionID).Str("mid", input.MessageID).Bool("fromMe", input.FromMe).Dur("queueWait", waited).Dur("saveDur", time.Since(saveStart)).Msg("PersistMessage: wz_messages row saved")
 		}
 
 		if s.chatRepo == nil || input.ChatJID == "" {
@@ -318,7 +323,7 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 
 	senderJID := resolveMessageSenderJID(info, chatJID)
 	msgType, body, mediaType := wautil.ExtractMessageContent(info.GetMessage())
-	timestamp := int64(info.GetMessageTimestamp())
+	timestamp := wautil.Uint64ToInt64(info.GetMessageTimestamp())
 	if timestamp == 0 {
 		if conversation != nil {
 			timestamp = wautil.Uint64ToInt64(conversation.GetConversationTimestamp())
@@ -329,7 +334,7 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 	}
 
 	var messageOrder *int64
-	if order := int64(historyMessage.GetMsgOrderID()); order > 0 {
+	if order := wautil.Uint64ToInt64(historyMessage.GetMsgOrderID()); order > 0 {
 		messageOrder = &order
 	}
 

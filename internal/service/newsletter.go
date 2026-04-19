@@ -88,7 +88,7 @@ func (s *NewsletterService) Messages(ctx context.Context, sessionID string, req 
 
 	params := &whatsmeow.GetNewsletterMessagesParams{
 		Count:  req.Count,
-		Before: types.MessageServerID(req.BeforeID),
+		Before: req.BeforeID,
 	}
 
 	return client.GetNewsletterMessages(ctx, jid, params)
@@ -147,7 +147,7 @@ func (s *NewsletterService) React(ctx context.Context, sessionID string, req dto
 		return err
 	}
 
-	return client.NewsletterSendReaction(ctx, jid, types.MessageServerID(req.ServerID), req.Reaction, types.MessageID(req.MessageID))
+	return client.NewsletterSendReaction(ctx, jid, req.ServerID, req.Reaction, req.MessageID)
 }
 
 func (s *NewsletterService) MarkViewed(ctx context.Context, sessionID string, req dto.NewsletterViewReq) error {
@@ -162,9 +162,7 @@ func (s *NewsletterService) MarkViewed(ctx context.Context, sessionID string, re
 	}
 
 	serverIDs := make([]types.MessageServerID, len(req.ServerIDs))
-	for i, id := range req.ServerIDs {
-		serverIDs[i] = types.MessageServerID(id)
-	}
+	copy(serverIDs, req.ServerIDs)
 
 	return client.NewsletterMarkViewed(ctx, jid, serverIDs)
 }

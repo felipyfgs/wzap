@@ -119,14 +119,13 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	}
 
 	for _, wh := range webhooks {
-		wh := wh
 		if wh.NATSEnabled && d.nats != nil {
 			_ = d.pool.Submit(func(ctx context.Context) {
-				d.publishToNATS(wh, payload)
+				d.publishToNATS(ctx, wh, payload)
 			})
 		} else {
 			_ = d.pool.Submit(func(ctx context.Context) {
-				d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
+				d.deliverHTTPWithRetry(ctx, wh.URL, wh.Secret, payload)
 			})
 		}
 	}
@@ -134,7 +133,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	if d.globalWebhookURL != "" && d.shouldAttemptGlobal() {
 		logger.Debug().Str("component", "webhook").Str("url", d.globalWebhookURL).Msg("Sending to global webhook")
 		_ = d.pool.Submit(func(ctx context.Context) {
-			d.deliverGlobalWebhook(payload)
+			d.deliverGlobalWebhook(ctx, payload)
 		})
 	}
 
@@ -149,7 +148,7 @@ func (d *Dispatcher) Dispatch(sessionID string, eventType model.EventType, paylo
 	}
 }
 
-func (d *Dispatcher) publishToNATS(wh model.Webhook, payload []byte) {
+func (d *Dispatcher) publishToNATS(ctx context.Context, wh model.Webhook, payload []byte) {
 	msg := deliverMsg{
 		WebhookID: wh.ID,
 		URL:       wh.URL,
@@ -162,19 +161,19 @@ func (d *Dispatcher) publishToNATS(wh model.Webhook, payload []byte) {
 		return
 	}
 	subject := natsDeliverSubject + "." + wh.ID
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	pubCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	if err := d.nats.Publish(ctx, subject, data); err != nil {
+	if err := d.nats.Publish(pubCtx, subject, data); err != nil {
 		logger.Error().Str("component", "webhook").Err(err).Str("webhook", wh.ID).Msg("Failed to publish webhook delivery to NATS — falling back to direct dispatch")
-		_ = d.pool.Submit(func(_ context.Context) {
-			d.deliverHTTPWithRetry(wh.URL, wh.Secret, payload)
+		_ = d.pool.Submit(func(ctx context.Context) {
+			d.deliverHTTPWithRetry(ctx, wh.URL, wh.Secret, payload)
 		})
 	}
 }
 
-func (d *Dispatcher) deliverHTTPWithRetry(url, secret string, payload []byte) {
+func (d *Dispatcher) deliverHTTPWithRetry(ctx context.Context, url, secret string, payload []byte) {
 	for attempt := 0; attempt <= maxHTTPRetries; attempt++ {
-		if err := d.deliverHTTPWithErr(url, secret, payload); err != nil {
+		if err := d.deliverHTTPWithErr(ctx, url, secret, payload); err != nil {
 			var permErr *permanentDeliveryError
 			if errors.As(err, &permErr) {
 				logger.Warn().Str("component", "webhook").Err(err).Str("url", url).Int("status", permErr.statusCode).Msg("Webhook HTTP delivery failed permanently (4xx, no retry)")
@@ -183,7 +182,11 @@ func (d *Dispatcher) deliverHTTPWithRetry(url, secret string, payload []byte) {
 			if attempt < maxHTTPRetries {
 				delay := httpRetryBaseDelay * time.Duration(1<<uint(attempt))
 				logger.Warn().Str("component", "webhook").Err(err).Str("url", url).Int("attempt", attempt+1).Dur("retryIn", delay).Msg("Webhook HTTP delivery failed, retrying")
-				time.Sleep(delay)
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(delay):
+				}
 				continue
 			}
 			logger.Error().Str("component", "webhook").Err(err).Str("url", url).Msg("Webhook HTTP delivery failed after all retries")
@@ -198,19 +201,16 @@ func (d *Dispatcher) shouldAttemptGlobal() bool {
 		return true
 	}
 
-	backoff := globalBackoffBase * time.Duration(1<<min(failures-1, 10))
-	if backoff > globalBackoffMax {
-		backoff = globalBackoffMax
-	}
+	backoff := min(globalBackoffBase*time.Duration(1<<min(failures-1, 10)), globalBackoffMax)
 
 	lastAttempt := time.Unix(0, d.globalLastAttempt.Load())
 	return time.Since(lastAttempt) >= backoff
 }
 
-func (d *Dispatcher) deliverGlobalWebhook(payload []byte) {
+func (d *Dispatcher) deliverGlobalWebhook(ctx context.Context, payload []byte) {
 	d.globalLastAttempt.Store(time.Now().UnixNano())
 
-	if err := d.deliverHTTPWithErr(d.globalWebhookURL, "", payload); err != nil {
+	if err := d.deliverHTTPWithErr(ctx, d.globalWebhookURL, "", payload); err != nil {
 		failures := d.globalFailures.Add(1)
 		var permErr *permanentDeliveryError
 		if errors.As(err, &permErr) {
@@ -257,9 +257,7 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 
 	logger.Info().Str("component", "webhook").Msg("NATS webhook consumer started")
 
-	d.wg.Add(1)
-	go func() {
-		defer d.wg.Done()
+	d.wg.Go(func() {
 		defer msgCtx.Stop()
 		for {
 			select {
@@ -284,7 +282,7 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 				continue
 			}
 
-			if err := d.deliverHTTPWithErr(dm.URL, dm.Secret, dm.Payload); err != nil {
+			if err := d.deliverHTTPWithErr(ctx, dm.URL, dm.Secret, dm.Payload); err != nil {
 				var permErr *permanentDeliveryError
 				if errors.As(err, &permErr) {
 					logger.Warn().Str("component", "webhook").Err(err).Str("webhook", dm.WebhookID).Str("url", dm.URL).Int("status", permErr.statusCode).Msg("NATS webhook delivery failed permanently (4xx), terminating message")
@@ -297,7 +295,7 @@ func (d *Dispatcher) StartConsumer(ctx context.Context) {
 				_ = msg.Ack()
 			}
 		}
-	}()
+	})
 }
 
 func (d *Dispatcher) Shutdown(ctx context.Context) error {
@@ -315,9 +313,9 @@ func (d *Dispatcher) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-func (d *Dispatcher) deliverHTTPWithErr(url, secret string, payload []byte) error {
+func (d *Dispatcher) deliverHTTPWithErr(ctx context.Context, url, secret string, payload []byte) error {
 	start := time.Now()
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(payload))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(payload))
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
 	}

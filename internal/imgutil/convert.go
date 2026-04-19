@@ -59,7 +59,7 @@ func buildPalette(img image.Image, bounds image.Rectangle) color.Palette {
 	for y := bounds.Min.Y; y < bounds.Max.Y && len(palette) < 256; y++ {
 		for x := bounds.Min.X; x < bounds.Max.X && len(palette) < 256; x++ {
 			r32, g32, b32, a32 := img.At(x, y).RGBA()
-			k := rgbaKey{uint8(r32 >> 8), uint8(g32 >> 8), uint8(b32 >> 8), uint8(a32 >> 8)}
+			k := rgbaKey{uint8(r32 >> 8), uint8(g32 >> 8), uint8(b32 >> 8), uint8(a32 >> 8)} //nolint:gosec // RGBA() returns 16-bit channels; >>8 yields 0-255, safe for uint8
 			if _, ok := seen[k]; !ok {
 				seen[k] = struct{}{}
 				palette = append(palette, color.RGBA{R: k.R, G: k.G, B: k.B, A: k.A})

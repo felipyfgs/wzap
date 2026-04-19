@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 
-	"go.mau.fi/whatsmeow/appstate"
 	"wzap/internal/dto"
 	"wzap/internal/wa"
+
+	"go.mau.fi/whatsmeow/appstate"
 )
 
 type LabelService struct {
@@ -83,6 +84,6 @@ func (s *LabelService) EditLabel(ctx context.Context, sessionID string, req dto.
 		return err
 	}
 
-	patch := appstate.BuildLabelEdit(req.LabelID, req.Name, int32(req.Color), req.Deleted)
+	patch := appstate.BuildLabelEdit(req.LabelID, req.Name, req.Color, req.Deleted)
 	return client.SendAppState(ctx, patch)
 }

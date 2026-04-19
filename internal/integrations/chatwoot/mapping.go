@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"wzap/internal/logger"
+	"wzap/internal/repo"
 )
 
 // ChatwootMessageRef is the resolved pair of IDs used by the mapping between a
@@ -121,6 +122,12 @@ func (s *Service) resolveAndPersistMessageRef(ctx context.Context, cfg *Config, 
 	}
 
 	if err := s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, waMsgID, ref.MessageID, ref.ConversationID, ref.SourceID); err != nil {
+		if errors.Is(err, repo.ErrChatwootRefNotApplied) {
+			// Race com PersistMessage: ref achado no Chatwoot mas wz_messages
+			// ainda sem a linha. Retorna ok=false para forçar retry no caller.
+			logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("cwMsgID", ref.MessageID).Msg("DB lookup found CW ref, but wz_messages not yet persisted — will retry")
+			return ref, false
+		}
 		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Msg("failed to persist chatwoot ref after resolve")
 		return ref, true
 	}
@@ -136,28 +143,35 @@ func (s *Service) resolveAndPersistMessageRef(ctx context.Context, cfg *Config, 
 // the CW refs without depending on the message_created return webhook.
 func (s *Service) resolveCloudRefAsync(cfg *Config, waMsgID, chatJID string) {
 	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
 
-		delays := []time.Duration{500 * time.Millisecond, 1 * time.Second, 2 * time.Second}
+		logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Str("chatJID", chatJID).Msg("cloud ref: async resolution started")
+
+		// Delays estendidos cobrem o pior caso do async pool de PersistMessage
+		// (2 workers, fila 100 em router.go). Total ~17.5s.
+		delays := []time.Duration{500 * time.Millisecond, 1 * time.Second, 2 * time.Second, 4 * time.Second, 4 * time.Second, 6 * time.Second}
 
 		for i, delay := range delays {
 			time.Sleep(delay)
 
 			// Strategy 1: database_uri (fast, direct read)
 			if ref, ok := s.resolveAndPersistMessageRef(ctx, cfg, waMsgID); ok && ref != nil {
+				logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("attempt", i+1).Dur("elapsed", time.Since(start)).Str("via", "db").Msg("cloud ref: resolved and applied")
 				return
 			}
 
 			// Strategy 2: Chatwoot REST API (works without database_uri)
 			if ref, ok := s.resolveCloudRefViaAPI(ctx, cfg, waMsgID, chatJID); ok && ref != nil {
+				logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("attempt", i+1).Dur("elapsed", time.Since(start)).Str("via", "api").Msg("cloud ref: resolved and applied")
 				return
 			}
 
-			logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("attempt", i+1).Msg("cloud ref not yet available, will retry")
+			logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("attempt", i+1).Dur("elapsed", time.Since(start)).Msg("cloud ref not yet available, will retry")
 		}
 
-		logger.Warn().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Msg("cloud ref: could not resolve CW refs after async retries")
+		logger.Warn().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Str("chatJID", chatJID).Dur("elapsed", time.Since(start)).Msg("cloud ref: gave up after async retries (message stays unmapped)")
 	}()
 }
 
@@ -201,6 +215,10 @@ func (s *Service) resolveCloudRefViaAPI(ctx context.Context, cfg *Config, waMsgI
 	}
 
 	if err := s.msgRepo.UpdateChatwootRef(ctx, cfg.SessionID, waMsgID, ref.MessageID, ref.ConversationID, ref.SourceID); err != nil {
+		if errors.Is(err, repo.ErrChatwootRefNotApplied) {
+			logger.Debug().Str("component", "chatwoot").Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Int("cwMsgID", ref.MessageID).Msg("API lookup found CW ref, but wz_messages not yet persisted — will retry")
+			return ref, false
+		}
 		logger.Warn().Str("component", "chatwoot").Err(err).Str("session", cfg.SessionID).Str("waMsgID", waMsgID).Msg("cloud ref via API: failed to persist ref")
 		return ref, true
 	}
@@ -255,4 +273,118 @@ func (s *Service) findConvIDViaAPI(ctx context.Context, cfg *Config, chatJID str
 
 	// Fallback: return the first conversation
 	return convs[0].ID
+}
+
+// BackfillResult summarizes the outcome of a BackfillCloudRefs run.
+type BackfillResult struct {
+	Scanned  int `json:"scanned"`
+	Updated  int `json:"updated"`
+	NotFound int `json:"notFound"`
+}
+
+// ErrBackfillUnavailable is returned when the Chatwoot configuration does not
+// expose a database_uri, making the direct lookup strategy unusable.
+var ErrBackfillUnavailable = errors.New("chatwoot database_uri is not configured")
+
+// BackfillCloudRefs walks wz_messages rows for the given session that still
+// lack Chatwoot references and tries to resolve them via a direct read-only
+// query on the Chatwoot database using the configured database_uri. Every
+// match is written back to wz_messages through the regular
+// UpdateChatwootRef repository call so downstream consumers (reply/edit/
+// revoke) can use the cached references.
+func (s *Service) BackfillCloudRefs(ctx context.Context, sessionID string) (BackfillResult, error) {
+	cfg, err := s.repo.FindBySessionID(ctx, sessionID)
+	if err != nil {
+		return BackfillResult{}, fmt.Errorf("load chatwoot config: %w", err)
+	}
+	if cfg.DatabaseURI == "" {
+		return BackfillResult{}, ErrBackfillUnavailable
+	}
+
+	pool, err := getPool(ctx, cfg.DatabaseURI)
+	if err != nil {
+		return BackfillResult{}, fmt.Errorf("chatwoot mapping pool: %w", err)
+	}
+
+	const batchSize = 500
+	var (
+		result  BackfillResult
+		afterID string
+		start   = time.Now()
+	)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return result, ctx.Err()
+		default:
+		}
+
+		ids, err := s.msgRepo.ListMissingChatwootRefs(ctx, sessionID, batchSize, afterID)
+		if err != nil {
+			return result, fmt.Errorf("list missing refs: %w", err)
+		}
+		if len(ids) == 0 {
+			break
+		}
+		result.Scanned += len(ids)
+
+		sourceIDs := make([]string, len(ids))
+		for i, id := range ids {
+			sourceIDs[i] = "WAID:" + id
+		}
+
+		rows, err := pool.Query(ctx,
+			`SELECT source_id, id, conversation_id
+			   FROM messages
+			  WHERE account_id = $1
+			    AND source_id = ANY($2::text[])`,
+			cfg.AccountID, sourceIDs)
+		if err != nil {
+			return result, fmt.Errorf("query chatwoot messages: %w", err)
+		}
+
+		type match struct {
+			waMsgID  string
+			cwMsgID  int
+			cwConvID int
+			sourceID string
+		}
+		matches := make([]match, 0, len(ids))
+		for rows.Next() {
+			var m match
+			if err := rows.Scan(&m.sourceID, &m.cwMsgID, &m.cwConvID); err != nil {
+				rows.Close()
+				return result, fmt.Errorf("scan chatwoot match: %w", err)
+			}
+			if len(m.sourceID) > 5 && m.sourceID[:5] == "WAID:" {
+				m.waMsgID = m.sourceID[5:]
+			} else {
+				m.waMsgID = m.sourceID
+			}
+			matches = append(matches, m)
+		}
+		rowsErr := rows.Err()
+		rows.Close()
+		if rowsErr != nil {
+			return result, fmt.Errorf("iterate chatwoot matches: %w", rowsErr)
+		}
+
+		for _, m := range matches {
+			if err := s.msgRepo.UpdateChatwootRef(ctx, sessionID, m.waMsgID, m.cwMsgID, m.cwConvID, m.sourceID); err != nil {
+				logger.Warn().Str("component", "chatwoot").Err(err).Str("session", sessionID).Str("waMsgID", m.waMsgID).Int("cwMsgID", m.cwMsgID).Msg("backfill: failed to update chatwoot ref")
+				continue
+			}
+			result.Updated++
+		}
+		result.NotFound += len(ids) - len(matches)
+
+		afterID = ids[len(ids)-1]
+		if len(ids) < batchSize {
+			break
+		}
+	}
+
+	logger.Info().Str("component", "chatwoot").Str("session", sessionID).Int("scanned", result.Scanned).Int("updated", result.Updated).Int("notFound", result.NotFound).Dur("duration", time.Since(start)).Msg("chatwoot cloud refs backfill finished")
+	return result, nil
 }

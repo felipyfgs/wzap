@@ -17,9 +17,9 @@ func newCloudInboxHandler(svc *Service) *cloudInboxHandler {
 }
 
 func (h *cloudInboxHandler) HandleMessage(ctx context.Context, cfg *Config, payload []byte) error {
-	res, skip, err := h.svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{})
-	if err != nil || skip {
-		return err
+	res, skip := h.svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{})
+	if skip {
+		return nil
 	}
 	data := res.data
 	chatJID := res.chatJID

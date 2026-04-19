@@ -34,15 +34,15 @@ func NewPool(name string, workers int, queueSize int) *Pool {
 		ctx:     ctx,
 		cancel:  cancel,
 	}
-	for i := 0; i < workers; i++ {
+	for range workers {
 		p.wg.Add(1)
-		go p.worker(i)
+		go p.worker()
 	}
 	logger.Info().Str("pool", name).Int("workers", workers).Int("queue", queueSize).Msg("async pool started")
 	return p
 }
 
-func (p *Pool) worker(id int) {
+func (p *Pool) worker() {
 	defer p.wg.Done()
 	for {
 		select {

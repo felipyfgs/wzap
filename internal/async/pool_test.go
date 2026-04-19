@@ -90,7 +90,7 @@ func TestPool_Shutdown(t *testing.T) {
 
 	var count atomic.Int64
 	var wg sync.WaitGroup
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		wg.Add(1)
 		_ = p.Submit(func(ctx context.Context) {
 			count.Add(1)
@@ -114,7 +114,7 @@ func TestPool_Stats(t *testing.T) {
 	p := NewPool("test-stats", 1, 5)
 	defer p.Shutdown(context.Background())
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		_ = p.Submit(func(ctx context.Context) {})
 	}
 

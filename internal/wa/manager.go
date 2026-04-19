@@ -187,7 +187,7 @@ func (m *Manager) RequestMediaRetry(ctx context.Context, sessionID, messageID, c
 			IsFromMe: fromMe,
 			IsGroup:  parsedChatJID.Server == "g.us",
 		},
-		ID:        types.MessageID(messageID),
+		ID:        messageID,
 		Timestamp: timestamp,
 	}
 

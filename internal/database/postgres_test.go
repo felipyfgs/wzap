@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -66,15 +67,7 @@ func TestGetExistingTables(t *testing.T) {
 		t.Fatalf("getExistingTables() error = %v", err)
 	}
 
-	found := false
-	for _, table := range tables {
-		if table == "wz_migrations" {
-			found = true
-			break
-		}
-	}
-
-	if !found {
+	if !slices.Contains(tables, "wz_migrations") {
 		t.Log("wz_migrations table not found - this is expected for fresh database")
 	}
 }
@@ -170,14 +163,12 @@ func TestConcurrentMigrationSafety(t *testing.T) {
 	var wg sync.WaitGroup
 	errCh := make(chan error, 3)
 
-	for i := 0; i < 3; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+	for range 3 {
+		wg.Go(func() {
 			if err := db.recordMigration(ctx, "test_concurrent.up.sql"); err != nil {
 				errCh <- err
 			}
-		}()
+		})
 	}
 
 	wg.Wait()

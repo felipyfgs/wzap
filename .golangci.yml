@@ -1,0 +1,93 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    # Correctness
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - bodyclose
+    - sqlclosecheck
+    - rowserrcheck
+    - noctx
+    - errorlint
+    - nilerr
+    - nilnil
+    - exhaustive
+    - gocheckcompilerdirectives
+    - durationcheck
+    - contextcheck
+
+    # Security
+    - gosec
+
+    # Code quality / modernization
+    - gocritic
+    - copyloopvar
+    - intrange
+    - unconvert
+    - unparam
+    - wastedassign
+    - makezero
+    - prealloc
+    - misspell
+
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: true
+    gosec:
+      excludes:
+        - G115 # Integer overflow: annotated case-by-case with //nolint:gosec + reason
+    misspell:
+      ignore-rules:
+        # Portuguese words flagged by the default English dictionary
+        - comando
+        - comandos
+        - correspondente
+        - duplicatas
+        - clientes
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+
+  exclusions:
+    generated: lax
+    presets:
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      # Handlers use parseAndValidate which already writes the HTTP response
+      # and returns a sentinel; the handler then returns nil. nilerr does not
+      # see through this pattern.
+      - path: internal/handler/
+        linters:
+          - nilerr
+      - path: internal/integrations/chatwoot/handler\.go
+        linters:
+          - nilerr
+      # Test HTTP responses do not leak in CI
+      - path: _test\.go
+        linters:
+          - bodyclose
+      # Tests commonly ignore errors from setup helpers
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

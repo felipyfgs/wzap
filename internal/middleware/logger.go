@@ -3,9 +3,10 @@ package middleware
 import (
 	"time"
 
+	"wzap/internal/logger"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
-	"wzap/internal/logger"
 )
 
 func Logger() fiber.Handler {

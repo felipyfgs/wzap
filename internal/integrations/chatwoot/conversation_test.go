@@ -36,9 +36,7 @@ func TestFindOrCreateConversation_ConcurrentCalls(t *testing.T) {
 	errs := make(chan error, 2)
 
 	for range 2 {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			<-start
 			convID, err := svc.findOrCreateConversation(context.Background(), cfg, "5511999999999@s.whatsapp.net", "User")
 			if err != nil {
@@ -46,7 +44,7 @@ func TestFindOrCreateConversation_ConcurrentCalls(t *testing.T) {
 				return
 			}
 			results <- convID
-		}()
+		})
 	}
 
 	close(start)

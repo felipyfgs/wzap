@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"net/http/httptest"
+	"slices"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
@@ -269,14 +270,7 @@ func TestConfigure_IgnoreGroupsCompatibilityWrite(t *testing.T) {
 	if repo.cfg == nil {
 		t.Fatal("config not saved")
 	}
-	found := false
-	for _, jid := range repo.cfg.IgnoreJIDs {
-		if jid == "@g.us" {
-			found = true
-			break
-		}
-	}
-	if !found {
+	if !slices.Contains(repo.cfg.IgnoreJIDs, "@g.us") {
 		t.Error("ignoreGroups=true should add @g.us to ignoreJids")
 	}
 }
@@ -374,12 +368,7 @@ func TestConfigure_ResponseUsesSuccessEnvelope(t *testing.T) {
 }
 
 func jidsContainGroup(ignoreJIDs []string) bool {
-	for _, jid := range ignoreJIDs {
-		if jid == "@g.us" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ignoreJIDs, "@g.us")
 }
 
 func TestJIDsContainGroup(t *testing.T) {

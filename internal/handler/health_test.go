@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/handler"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func TestHealthHandler_Check_NilDependencies(t *testing.T) {

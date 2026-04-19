@@ -8,10 +8,17 @@ import (
 	"strings"
 	"time"
 
+	"wzap/internal/logger"
 	"wzap/internal/model"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
+
+// ErrChatwootRefNotApplied é retornado por UpdateChatwootRef quando o UPDATE
+// afeta 0 linhas — ou seja, a linha em wz_messages ainda não existia. Serve
+// como sinal para callers (ex. resolveCloudRefAsync) retryarem após a escrita
+// assíncrona em PersistMessage, em vez de tratar como sucesso silencioso.
+var ErrChatwootRefNotApplied = errors.New("chatwoot ref update affected 0 rows")
 
 const messageSelectColumns = `id, session_id, chat_jid, sender_jid, from_me, msg_type, body,
 	COALESCE(media_type, ''), COALESCE(media_url, ''), COALESCE(source, 'live'), COALESCE(source_sync_type, ''),
@@ -248,7 +255,6 @@ func buildMediaWhere(sessionID string, f MediaFilter, sortOrder string, addCurso
 			where += fmt.Sprintf(` AND (timestamp, id) > ($%d, $%d)`, argN, argN+1)
 		}
 		args = append(args, cursorTime, cursorID)
-		argN += 2
 	}
 
 	return where, args, nil
@@ -328,12 +334,20 @@ func (r *MessageRepository) FindSessionByMessageID(ctx context.Context, msgID st
 }
 
 func (r *MessageRepository) UpdateChatwootRef(ctx context.Context, sessionID, msgID string, cwMsgID, cwConvID int, sourceID string) error {
-	_, err := r.db.Exec(ctx,
+	tag, err := r.db.Exec(ctx,
 		`UPDATE wz_messages SET cw_message_id = $1, cw_conversation_id = $2, cw_source_id = $3
 		 WHERE id = $4 AND session_id = $5`,
 		cwMsgID, cwConvID, sourceID, msgID, sessionID)
 	if err != nil {
 		return fmt.Errorf("failed to update chatwoot ref: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		// UPDATE 0: a mensagem ainda não foi persistida em wz_messages quando
+		// chegou o ref do Chatwoot. Indica race entre PersistMessage (async
+		// pool) e resolveCloudRefAsync. Sinalizamos via sentinel para o
+		// caller decidir retry; os logs com essas chaves permitem correlacionar.
+		logger.Warn().Str("component", "repo").Str("session", sessionID).Str("msgID", msgID).Int("cwMsgID", cwMsgID).Int("cwConvID", cwConvID).Msg("UpdateChatwootRef: 0 rows affected (wz_messages not yet persisted)")
+		return ErrChatwootRefNotApplied
 	}
 	return nil
 }

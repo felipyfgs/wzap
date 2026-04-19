@@ -136,9 +136,7 @@ func (s *ChatService) MarkRead(ctx context.Context, sessionID string, req dto.Ch
 	}
 
 	ids := make([]types.MessageID, len(req.MessageIDs))
-	for i, id := range req.MessageIDs {
-		ids[i] = types.MessageID(id)
-	}
+	copy(ids, req.MessageIDs)
 
 	return client.MarkRead(ctx, ids, time.Now(), jid, jid)
 }

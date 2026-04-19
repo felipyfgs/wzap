@@ -66,7 +66,7 @@ func (r *RuntimeResolver) Resolve(ctx context.Context, sessionID string) (*Sessi
 
 	runtime := &SessionRuntime{
 		session: session,
-		engine:   r.engine,
+		engine:  r.engine,
 	}
 
 	return runtime, nil

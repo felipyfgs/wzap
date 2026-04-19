@@ -1,6 +1,7 @@
 package middleware_test
 
 import (
+	"errors"
 	"testing"
 
 	"wzap/internal/middleware"
@@ -19,8 +20,8 @@ func TestValidate_MissingRequired(t *testing.T) {
 	if err == nil {
 		t.Error("expected validation error")
 	}
-	vErrs, ok := err.(validator.ValidationErrors)
-	if !ok {
+	var vErrs validator.ValidationErrors
+	if !errors.As(err, &vErrs) {
 		t.Fatalf("expected ValidationErrors, got %T", err)
 	}
 	if len(vErrs) < 2 {

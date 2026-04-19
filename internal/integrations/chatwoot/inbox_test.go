@@ -15,14 +15,14 @@ import (
 // checkDBIdempotency=true é passado para o modo API.
 func TestInboxPrologueParity(t *testing.T) {
 	tests := []struct {
-		name           string
-		chatJID        string
-		msgID          string
-		ignoreGroups   bool
-		primeCache     bool
-		wantSkip       bool
-		senderAlt      string
-		recipientAlt   string
+		name         string
+		chatJID      string
+		msgID        string
+		ignoreGroups bool
+		primeCache   bool
+		wantSkip     bool
+		senderAlt    string
+		recipientAlt string
 	}{
 		{
 			name:     "mensagem v\u00e1lida (s.whatsapp.net) prossegue",
@@ -86,10 +86,7 @@ func TestInboxPrologueParity(t *testing.T) {
 						svc.cache.SetIdempotent(ctx, cfg.SessionID, "WAID:"+tc.msgID)
 					}
 
-					res, skip, err := svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{checkDBIdempotency: mode.check})
-					if err != nil {
-						t.Fatalf("erro inesperado: %v", err)
-					}
+					res, skip := svc.inboxPrologue(ctx, cfg, payload, inboxPrologueOpts{checkDBIdempotency: mode.check})
 					if skip != tc.wantSkip {
 						t.Fatalf("modo %s: skip=%v, esperado %v", mode.name, skip, tc.wantSkip)
 					}

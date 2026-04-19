@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -40,8 +41,9 @@ func New(cfg *config.Config, db *database.DB, n *broker.NATS, m *storage.Minio) 
 		DisableStartupMessage: true,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
-			if e, ok := err.(*fiber.Error); ok {
-				code = e.Code
+			var fiberErr *fiber.Error
+			if errors.As(err, &fiberErr) {
+				code = fiberErr.Code
 			}
 			return c.Status(code).JSON(dto.ErrorResp("Error", err.Error()))
 		},

@@ -211,14 +211,14 @@ func TestImportHistory_SingleflightPreventsConcurrent(t *testing.T) {
 	}
 
 	done := make(chan struct{})
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		go func() {
 			svc.ImportHistoryAsync(context.Background(), "sess", "7d", 0)
 			done <- struct{}{}
 		}()
 	}
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		<-done
 	}
 

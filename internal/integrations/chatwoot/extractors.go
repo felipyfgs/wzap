@@ -2,16 +2,235 @@ package chatwoot
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
+
+	"wzap/internal/model"
 )
 
 var (
 	googleMapsRegex = regexp.MustCompile(`[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)`)
 	coordRegex      = regexp.MustCompile(`(-?\d+\.\d+),\s*(-?\d+\.\d+)`)
+
+	waBoldToCW   = regexp.MustCompile(`\*([^*\n]+?)\*`)
+	waItalicToCW = regexp.MustCompile(`_([^_\n]+?)_`)
+	waStrikeToCW = regexp.MustCompile(`~([^~\n]+?)~`)
+
+	cwBoldToWA   = regexp.MustCompile(`\*\*([^*\n]+?)\*\*`)
+	cwItalicToWA = regexp.MustCompile(`\*(\S(?:[^*\n]*\S)?)\*`)
+	cwStrikeToWA = regexp.MustCompile(`~~([^~\n]+?)~~`)
 )
+
+type flexTimestamp int64
+
+func (ft *flexTimestamp) UnmarshalJSON(b []byte) error {
+	var n int64
+	if err := json.Unmarshal(b, &n); err == nil {
+		*ft = flexTimestamp(n)
+		return nil
+	}
+	var s string
+	if err := json.Unmarshal(b, &s); err != nil {
+		return fmt.Errorf("cannot unmarshal timestamp from %s", string(b))
+	}
+	for _, layout := range []string{time.RFC3339Nano, time.RFC3339} {
+		if t, err := time.Parse(layout, s); err == nil {
+			*ft = flexTimestamp(t.Unix())
+			return nil
+		}
+	}
+	return fmt.Errorf("cannot parse timestamp string %q", s)
+}
+
+type waMessageInfo struct {
+	Chat           string        `json:"Chat"`
+	Sender         string        `json:"Sender"`
+	SenderAlt      string        `json:"SenderAlt"`
+	RecipientAlt   string        `json:"RecipientAlt"`
+	AddressingMode string        `json:"AddressingMode"`
+	IsFromMe       bool          `json:"IsFromMe"`
+	IsGroup        bool          `json:"IsGroup"`
+	ID             string        `json:"ID"`
+	PushName       string        `json:"PushName"`
+	Timestamp      flexTimestamp `json:"Timestamp"`
+}
+
+type waMessagePayload struct {
+	Info    waMessageInfo  `json:"Info"`
+	Message map[string]any `json:"Message"`
+}
+
+type waReceiptPayload struct {
+	Type       string        `json:"Type"`
+	MessageIDs []string      `json:"MessageIDs"`
+	Chat       string        `json:"Chat"`
+	Sender     string        `json:"Sender"`
+	Timestamp  flexTimestamp `json:"Timestamp"`
+}
+
+type waDeletePayload struct {
+	Chat      string        `json:"Chat"`
+	Sender    string        `json:"Sender"`
+	MessageID string        `json:"MessageID"`
+	Timestamp flexTimestamp `json:"Timestamp"`
+}
+
+func parseEnvelopeData(payload []byte, target any) error {
+	envelope, err := model.ParseEventEnvelope(payload)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal event envelope: %w", err)
+	}
+	if err := json.Unmarshal(envelope.Data, target); err != nil {
+		return fmt.Errorf("failed to unmarshal envelope data: %w", err)
+	}
+	return nil
+}
+
+func parseMessagePayload(payload []byte) (*waMessagePayload, error) {
+	var data waMessagePayload
+	if err := parseEnvelopeData(payload, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
+func parseReceiptPayload(payload []byte) (*waReceiptPayload, error) {
+	var data waReceiptPayload
+	if err := parseEnvelopeData(payload, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
+func parseDeletePayload(payload []byte) (*waDeletePayload, error) {
+	var data waDeletePayload
+	if err := parseEnvelopeData(payload, &data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
+type mediaInfo struct {
+	DirectPath    string
+	MediaKey      []byte
+	FileSHA256    []byte
+	FileEncSHA256 []byte
+	FileLength    int
+	MimeType      string
+	MediaType     string
+	FileName      string
+}
+
+func getStringField(m map[string]any, key string) string {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+func getFloatField(m map[string]any, key string) float64 {
+	if v, ok := m[key]; ok {
+		if f, ok := v.(float64); ok {
+			return f
+		}
+	}
+	return 0
+}
+
+func getMapField(m map[string]any, key string) map[string]any {
+	if v, ok := m[key]; ok {
+		if m2, ok := v.(map[string]any); ok {
+			return m2
+		}
+	}
+	return nil
+}
+
+func convertWAToCWMarkdown(s string) string {
+	s = waBoldToCW.ReplaceAllString(s, "**${1}**")
+	s = waItalicToCW.ReplaceAllString(s, "*${1}*")
+	s = waStrikeToCW.ReplaceAllString(s, "~~${1}~~")
+	return s
+}
+
+func convertCWToWAMarkdown(s string) string {
+	s = cwBoldToWA.ReplaceAllString(s, "\x00BOLD\x00${1}\x00/BOLD\x00")
+	s = cwStrikeToWA.ReplaceAllString(s, "\x00STRIKE\x00${1}\x00/STRIKE\x00")
+	s = cwItalicToWA.ReplaceAllString(s, "_${1}_")
+	s = strings.ReplaceAll(s, "\x00BOLD\x00", "*")
+	s = strings.ReplaceAll(s, "\x00/BOLD\x00", "*")
+	s = strings.ReplaceAll(s, "\x00STRIKE\x00", "~")
+	s = strings.ReplaceAll(s, "\x00/STRIKE\x00", "~")
+	return s
+}
+
+func formatVCard(vcard string) string {
+	return formatVCardWithName(vcard, "")
+}
+
+func formatVCardWithName(vcard, displayName string) string {
+	name := ""
+	var phones []string
+	for _, raw := range strings.Split(vcard, "\n") {
+		line := strings.TrimRight(raw, "\r")
+		switch {
+		case len(line) >= 3 && strings.EqualFold(line[:3], "FN:"):
+			name = line[3:]
+		case len(line) >= 3 && strings.EqualFold(line[:3], "TEL"):
+			if idx := strings.LastIndex(line, ":"); idx >= 0 {
+				phones = append(phones, line[idx+1:])
+			}
+		}
+	}
+	if displayName != "" {
+		name = displayName
+	}
+	if name == "" {
+		return vcard
+	}
+	var sb strings.Builder
+	sb.WriteString("*Contato:*\n\n")
+	sb.WriteString("_Nome:_ ")
+	sb.WriteString(name)
+	for i, phone := range phones {
+		fmt.Fprintf(&sb, "\n_Número (%d):_ %s", i+1, phone)
+	}
+	return sb.String()
+}
+
+func isVCardContent(content string) bool {
+	return strings.HasPrefix(strings.TrimSpace(content), "BEGIN:VCARD")
+}
+
+func splitVCards(content string) []string {
+	var vcards []string
+	lines := strings.Split(content, "\n")
+	var current strings.Builder
+	for _, line := range lines {
+		current.WriteString(line)
+		current.WriteString("\n")
+		if strings.TrimSpace(line) == "END:VCARD" {
+			vcards = append(vcards, current.String())
+			current.Reset()
+		}
+	}
+	return vcards
+}
+
+func extractVCardName(vcard string) string {
+	for line := range strings.SplitSeq(vcard, "\n") {
+		if after, ok := strings.CutPrefix(strings.TrimSpace(line), "FN:"); ok {
+			return after
+		}
+	}
+	return ""
+}
 
 var mediaTypeMap = map[string]string{
 	"imageMessage":    "image",
@@ -349,4 +568,3 @@ func extractLocationFromText(text string) (lat, lng float64, ok bool) {
 	}
 	return 0, 0, false
 }
-

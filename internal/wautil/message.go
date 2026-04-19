@@ -70,19 +70,19 @@ func ExtractMediaDownloadInfo(msg *waE2E.Message) (directPath string, encFileHas
 	switch {
 	case msg.GetImageMessage() != nil:
 		im := msg.GetImageMessage()
-		return im.GetDirectPath(), im.GetFileEncSHA256(), im.GetFileSHA256(), im.GetMediaKey(), int(im.GetFileLength()), true
+		return im.GetDirectPath(), im.GetFileEncSHA256(), im.GetFileSHA256(), im.GetMediaKey(), int(im.GetFileLength()), true //nolint:gosec // WhatsApp media length fits in int on 64-bit platforms
 	case msg.GetVideoMessage() != nil:
 		vm := msg.GetVideoMessage()
-		return vm.GetDirectPath(), vm.GetFileEncSHA256(), vm.GetFileSHA256(), vm.GetMediaKey(), int(vm.GetFileLength()), true
+		return vm.GetDirectPath(), vm.GetFileEncSHA256(), vm.GetFileSHA256(), vm.GetMediaKey(), int(vm.GetFileLength()), true //nolint:gosec // WhatsApp media length fits in int on 64-bit platforms
 	case msg.GetAudioMessage() != nil:
 		am := msg.GetAudioMessage()
-		return am.GetDirectPath(), am.GetFileEncSHA256(), am.GetFileSHA256(), am.GetMediaKey(), int(am.GetFileLength()), true
+		return am.GetDirectPath(), am.GetFileEncSHA256(), am.GetFileSHA256(), am.GetMediaKey(), int(am.GetFileLength()), true //nolint:gosec // WhatsApp media length fits in int on 64-bit platforms
 	case msg.GetDocumentMessage() != nil:
 		dm := msg.GetDocumentMessage()
-		return dm.GetDirectPath(), dm.GetFileEncSHA256(), dm.GetFileSHA256(), dm.GetMediaKey(), int(dm.GetFileLength()), true
+		return dm.GetDirectPath(), dm.GetFileEncSHA256(), dm.GetFileSHA256(), dm.GetMediaKey(), int(dm.GetFileLength()), true //nolint:gosec // WhatsApp media length fits in int on 64-bit platforms
 	case msg.GetStickerMessage() != nil:
 		sm := msg.GetStickerMessage()
-		return sm.GetDirectPath(), sm.GetFileEncSHA256(), sm.GetFileSHA256(), sm.GetMediaKey(), int(sm.GetFileLength()), true
+		return sm.GetDirectPath(), sm.GetFileEncSHA256(), sm.GetFileSHA256(), sm.GetMediaKey(), int(sm.GetFileLength()), true //nolint:gosec // WhatsApp media length fits in int on 64-bit platforms
 	default:
 		return "", nil, nil, nil, 0, false
 	}

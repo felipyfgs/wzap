@@ -74,7 +74,7 @@ type CloudAPIContact struct {
 	} `json:"name"`
 	Org struct {
 		Company string `json:"company,omitempty"`
-	} `json:"org,omitempty"`
+	} `json:"org"`
 	Phones []struct {
 		Phone string `json:"phone,omitempty"`
 		Type  string `json:"type,omitempty"`
@@ -91,8 +91,8 @@ type CloudAPIContext struct {
 }
 
 type CloudAPITemplate struct {
-	Name       string                      `json:"name"`
-	Language   TemplateLang    `json:"language"`
+	Name       string              `json:"name"`
+	Language   TemplateLang        `json:"language"`
 	Components []TemplateComponent `json:"components,omitempty"`
 }
 
@@ -102,8 +102,8 @@ type TemplateLang struct {
 }
 
 type TemplateComponent struct {
-	Type       string                      `json:"type"`
-	SubType    string                      `json:"sub_type,omitempty"`
+	Type       string          `json:"type"`
+	SubType    string          `json:"sub_type,omitempty"`
 	Parameters []TemplateParam `json:"parameters,omitempty"`
 }
 
@@ -113,9 +113,9 @@ type TemplateParam struct {
 }
 
 type CloudAPIMessageResp struct {
-	MessagingProduct string                `json:"messaging_product"`
+	MessagingProduct string               `json:"messaging_product"`
 	Contacts         []CloudAPIContactRef `json:"contacts"`
-	Messages         []CloudAPIMsgRef `json:"messages"`
+	Messages         []CloudAPIMsgRef     `json:"messages"`
 }
 
 type CloudAPIContactRef struct {

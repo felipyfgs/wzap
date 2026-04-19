@@ -6,12 +6,12 @@ import (
 
 func TestChatwootConfigNewFields(t *testing.T) {
 	cfg := &Config{
-		ImportOnConnect:     true,
-		ImportPeriod:        "7d",
-		TextTimeout:  10,
-		MediaTimeout: 60,
-		LargeTimeout: 300,
-		RedisURL:            "redis://localhost:6379",
+		ImportOnConnect: true,
+		ImportPeriod:    "7d",
+		TextTimeout:     10,
+		MediaTimeout:    60,
+		LargeTimeout:    300,
+		RedisURL:        "redis://localhost:6379",
 	}
 
 	if !cfg.ImportOnConnect {

@@ -9,13 +9,18 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/singleflight"
 
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/repo"
+	"wzap/internal/wa"
 )
 
 type MessageService interface {
@@ -184,4 +189,90 @@ func (s *Service) processOutbound(ctx context.Context, sessionID string, rawPayl
 		return fmt.Errorf("unmarshal outbound webhook: %w", err)
 	}
 	return s.HandleIncomingWebhook(ctx, sessionID, body)
+}
+
+type sessionPhoneGetter struct {
+	sessRepo *repo.SessionRepository
+}
+
+func NewSessionPhoneGetter(sessRepo *repo.SessionRepository) SessionPhoneGetter {
+	return &sessionPhoneGetter{sessRepo: sessRepo}
+}
+
+func (g *sessionPhoneGetter) GetSessionPhone(ctx context.Context, sessionID string) string {
+	sess, err := g.sessRepo.FindByID(ctx, sessionID)
+	if err != nil || sess == nil || sess.JID == "" {
+		return ""
+	}
+	return extractPhone(sess.JID)
+}
+
+type managerConnector struct {
+	engine *wa.Manager
+}
+
+func NewSessionConnector(engine *wa.Manager) SessionConnector {
+	return &managerConnector{engine: engine}
+}
+
+func (c *managerConnector) Connect(ctx context.Context, sessionID string) error {
+	_, _, err := c.engine.Connect(ctx, sessionID)
+	return err
+}
+
+func (c *managerConnector) Disconnect(ctx context.Context, sessionID string) error {
+	return c.engine.Disconnect(ctx, sessionID)
+}
+
+func (c *managerConnector) Logout(ctx context.Context, sessionID string) error {
+	return c.engine.Logout(ctx, sessionID)
+}
+
+func (c *managerConnector) IsConnected(sessionID string) bool {
+	client, err := c.engine.GetClient(sessionID)
+	if err != nil {
+		return false
+	}
+	return client.IsConnected()
+}
+
+const tracerName = "wzap/chatwoot"
+
+func startSpan(ctx context.Context, name string, attrs ...attribute.KeyValue) (context.Context, trace.Span) {
+	tracer := otel.Tracer(tracerName)
+	return tracer.Start(ctx, name, trace.WithAttributes(attrs...))
+}
+
+func spanAttrs(sessionID, msgType, direction string) []attribute.KeyValue {
+	return []attribute.KeyValue{
+		attribute.String("messaging.system", "whatsapp"),
+		attribute.String("session.id", sessionID),
+		attribute.String("message.type", msgType),
+		attribute.String("message.direction", direction),
+	}
+}
+
+// natsHeaderCarrier adapts nats.Header to the TextMapCarrier interface.
+type natsHeaderCarrier nats.Header
+
+func (c natsHeaderCarrier) Get(key string) string {
+	return nats.Header(c).Get(key)
+}
+func (c natsHeaderCarrier) Set(key, val string) {
+	nats.Header(c).Set(key, val)
+}
+func (c natsHeaderCarrier) Keys() []string {
+	keys := make([]string, 0, len(c))
+	for k := range c {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// InjectNATSHeaders injects the current trace context into NATS message headers.
+func InjectNATSHeaders(ctx context.Context, msg *nats.Msg) {
+	if msg.Header == nil {
+		msg.Header = make(nats.Header)
+	}
+	otel.GetTextMapPropagator().Inject(ctx, natsHeaderCarrier(msg.Header))
 }

@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/gofiber/fiber/v2"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func Recovery() fiber.Handler {

@@ -115,7 +115,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 
 		var data []byte
 		if req.URL != "" {
-			data, err = downloadURL(req.URL)
+			data, err = downloadURL(ctx, req.URL)
 			if err != nil {
 				return "", err
 			}
@@ -157,7 +157,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 
 		ci := buildContextInfo(req.ReplyTo, req.MentionedJIDs)
 
-		switch mediaType {
+		switch mediaType { //nolint:exhaustive // sendMedia only accepts Image/Video/Audio/Document
 		case whatsmeow.MediaImage:
 			msg.ImageMessage = &waE2E.ImageMessage{
 				Caption:       proto.String(req.Caption),
@@ -223,7 +223,7 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 		}
 
 		var msgType string
-		switch mediaType {
+		switch mediaType { //nolint:exhaustive // sendMedia only accepts Image/Video/Audio/Document
 		case whatsmeow.MediaImage:
 			msgType = "image"
 		case whatsmeow.MediaVideo:

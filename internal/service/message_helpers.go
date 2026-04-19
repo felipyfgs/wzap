@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"io"
 	net_http "net/http"
@@ -59,8 +60,12 @@ func buildSendOpts(customID string) []whatsmeow.SendRequestExtra {
 
 var defaultHTTPClient = &net_http.Client{Timeout: 60 * time.Second}
 
-func downloadURL(url string) ([]byte, error) {
-	resp, err := defaultHTTPClient.Get(url)
+func downloadURL(ctx context.Context, url string) ([]byte, error) {
+	req, err := net_http.NewRequestWithContext(ctx, net_http.MethodGet, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build download request: %w", err)
+	}
+	resp, err := defaultHTTPClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to download from url: %w", err)
 	}

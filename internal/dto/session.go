@@ -44,9 +44,9 @@ type SessionCreateReq struct {
 	Name     string               `json:"name" validate:"required"`
 	Token    string               `json:"token,omitempty"`
 	Engine   string               `json:"engine,omitempty" validate:"omitempty,oneof=whatsmeow"`
-	Proxy    SessionProxy         `json:"proxy,omitempty"`
+	Proxy    SessionProxy         `json:"proxy"`
 	Webhook  *WebhookCreateInline `json:"webhook,omitempty"`
-	Settings SessionSettings      `json:"settings,omitempty"`
+	Settings SessionSettings      `json:"settings"`
 }
 
 type SessionResp struct {

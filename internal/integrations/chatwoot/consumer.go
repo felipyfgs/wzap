@@ -89,9 +89,7 @@ func NewConsumer(js jetstream.JetStream, svc *Service) (*Consumer, error) {
 }
 
 func (c *Consumer) startQueueDepthPoller(ctx context.Context) {
-	c.wg.Add(1)
-	go func() {
-		defer c.wg.Done()
+	c.wg.Go(func() {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 		for {
@@ -102,7 +100,7 @@ func (c *Consumer) startQueueDepthPoller(ctx context.Context) {
 				c.pollQueueDepth(ctx)
 			}
 		}
-	}()
+	})
 }
 
 func (c *Consumer) pollQueueDepth(ctx context.Context) {
@@ -149,12 +147,12 @@ func (c *Consumer) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to create outbound consumer: %w", err)
 	}
 
-	for i := 0; i < workerCount; i++ {
+	for range workerCount {
 		c.wg.Add(1)
 		go c.worker(consCtx, inboundCons, c.processInboundWorker)
 	}
 
-	for i := 0; i < workerCount; i++ {
+	for range workerCount {
 		c.wg.Add(1)
 		go c.worker(consCtx, outboundCons, c.processOutboundWorker)
 	}

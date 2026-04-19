@@ -3,8 +3,9 @@ package dto_test
 import (
 	"testing"
 
-	"github.com/go-playground/validator/v10"
 	"wzap/internal/dto"
+
+	"github.com/go-playground/validator/v10"
 )
 
 var validate = validator.New()

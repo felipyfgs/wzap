@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -38,7 +39,8 @@ func validateReq(c *fiber.Ctx, req any) error {
 	}
 
 	if err := mw.Validate.Struct(req); err != nil {
-		if validationErrors, ok := err.(validator.ValidationErrors); ok {
+		var validationErrors validator.ValidationErrors
+		if errors.As(err, &validationErrors) {
 			var msgs []string
 			for _, e := range validationErrors {
 				msgs = append(msgs, fmt.Sprintf("field '%s' failed on '%s'", e.Field(), e.Tag()))
@@ -53,13 +55,7 @@ func validateReq(c *fiber.Ctx, req any) error {
 }
 
 func configToResp(cfg *Config, webhookURL string) dto.CWConfigResp {
-	ignoreGroups := false
-	for _, jid := range cfg.IgnoreJIDs {
-		if jid == "@g.us" {
-			ignoreGroups = true
-			break
-		}
-	}
+	ignoreGroups := slices.Contains(cfg.IgnoreJIDs, "@g.us")
 
 	return dto.CWConfigResp{
 		SessionID:       cfg.SessionID,
@@ -154,14 +150,7 @@ func (h *Handler) Configure(c *fiber.Ctx) error {
 	ignoreJIDs := make([]string, 0, len(req.IgnoreJIDs))
 	ignoreJIDs = append(ignoreJIDs, req.IgnoreJIDs...)
 	if req.IgnoreGroups != nil && *req.IgnoreGroups {
-		hasGroupMarker := false
-		for _, jid := range ignoreJIDs {
-			if jid == "@g.us" {
-				hasGroupMarker = true
-				break
-			}
-		}
-		if !hasGroupMarker {
+		if !slices.Contains(ignoreJIDs, "@g.us") {
 			ignoreJIDs = append(ignoreJIDs, "@g.us")
 		}
 	}

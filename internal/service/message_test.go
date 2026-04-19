@@ -44,6 +44,7 @@ func TestBuildContextInfo_MentionedJIDsOnly(t *testing.T) {
 	ci := buildContextInfo(nil, []string{"5511@s.whatsapp.net"})
 	if ci == nil {
 		t.Fatal("expected non-nil ContextInfo for MentionedJIDs only")
+		return
 	}
 	if len(ci.MentionedJID) != 1 || ci.MentionedJID[0] != "5511@s.whatsapp.net" {
 		t.Errorf("unexpected MentionedJID: %v", ci.MentionedJID)

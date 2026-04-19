@@ -5,13 +5,14 @@ import (
 	"encoding/base64"
 	"fmt"
 
+	"wzap/internal/dto"
+	"wzap/internal/model"
+	"wzap/internal/wa"
+
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/appstate"
 	"go.mau.fi/whatsmeow/types"
 	"go.mau.fi/whatsmeow/types/events"
-	"wzap/internal/dto"
-	"wzap/internal/model"
-	"wzap/internal/wa"
 )
 
 type ContactService struct {
@@ -36,7 +37,7 @@ func (s *ContactService) CheckContacts(ctx context.Context, sessionID string, re
 		return nil, fmt.Errorf("failed to check contacts: %w", err)
 	}
 
-	var results []dto.CheckContactResp
+	results := make([]dto.CheckContactResp, 0, len(resp))
 	for _, check := range resp {
 		results = append(results, dto.CheckContactResp{
 			Exists:      check.IsIn,
@@ -59,7 +60,7 @@ func (s *ContactService) List(ctx context.Context, sessionID string, filter stri
 		return nil, fmt.Errorf("failed to get contacts: %w", err)
 	}
 
-	var result []model.Contact
+	result := make([]model.Contact, 0, len(contacts))
 	for jid, info := range contacts {
 		if jid.Server == types.GroupServer || jid.Server == types.HiddenUserServer {
 			continue
@@ -94,7 +95,7 @@ func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req dt
 
 	info, err := client.GetProfilePictureInfo(ctx, jid, &whatsmeow.GetProfilePictureParams{})
 	if err != nil {
-		return &dto.GetAvatarResp{}, nil
+		return &dto.GetAvatarResp{}, nil //nolint:nilerr // no avatar is not an error for the caller
 	}
 
 	if info == nil {

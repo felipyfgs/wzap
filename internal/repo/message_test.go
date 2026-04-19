@@ -20,19 +20,19 @@ func TestMessageRepositorySavePreservesBestDataAcrossHistoryAndLive(t *testing.T
 	liveTimestamp := historyTimestamp.Add(2 * time.Minute)
 
 	historyMessage := &model.Message{
-		ID:                  "same-id",
-		SessionID:           sessionID,
-		ChatJID:             "5511888888888@s.whatsapp.net",
-		SenderJID:           "5511888888888@s.whatsapp.net",
-		FromMe:              false,
-		MsgType:             "text",
-		Body:                "texto histórico",
-		Source:              "history_sync",
-		SyncType:      "INITIAL_BOOTSTRAP",
-		ChunkOrder:   &chunkOrder,
-		MsgOrder: &messageOrder,
-		Raw:                 map[string]any{"origin": "history"},
-		Timestamp:           historyTimestamp,
+		ID:         "same-id",
+		SessionID:  sessionID,
+		ChatJID:    "5511888888888@s.whatsapp.net",
+		SenderJID:  "5511888888888@s.whatsapp.net",
+		FromMe:     false,
+		MsgType:    "text",
+		Body:       "texto histórico",
+		Source:     "history_sync",
+		SyncType:   "INITIAL_BOOTSTRAP",
+		ChunkOrder: &chunkOrder,
+		MsgOrder:   &messageOrder,
+		Raw:        map[string]any{"origin": "history"},
+		Timestamp:  historyTimestamp,
 	}
 	if err := repository.Save(context.Background(), historyMessage); err != nil {
 		t.Fatalf("failed to save history message: %v", err)

@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"go.mau.fi/whatsmeow"
-	"go.mau.fi/whatsmeow/types"
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/model"
 	"wzap/internal/wa"
+
+	"go.mau.fi/whatsmeow"
+	"go.mau.fi/whatsmeow/types"
 )
 
 func parseParticipantJIDs(participants []string) []types.JID {
@@ -69,7 +70,7 @@ func (s *GroupService) List(ctx context.Context, sessionID string) ([]model.Grou
 		return nil, fmt.Errorf("failed to get groups: %w", err)
 	}
 
-	var result []model.Group
+	result := make([]model.Group, 0, len(groups))
 	ownJID := client.Store.ID
 	ownLID := client.Store.GetLID()
 

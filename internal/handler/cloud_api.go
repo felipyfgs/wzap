@@ -334,6 +334,10 @@ func (h *CloudAPIHandler) SendMessage(c *fiber.Ctx) error {
 		return h.handleMarkRead(c, cfg, req)
 	}
 
+	if req.Status == "deleted" && req.MessageID != "" {
+		return h.handleDeleteMessage(c, cfg, req)
+	}
+
 	if req.To == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(cloudAPIError("Missing 'to' field", "OAuthException", 131000))
 	}
@@ -827,6 +831,32 @@ func (h *CloudAPIHandler) handleMarkRead(c *fiber.Ctx, cfg *chatwoot.Config, req
 		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
 	}
 
+	return c.JSON(fiber.Map{"success": true})
+}
+
+func (h *CloudAPIHandler) handleDeleteMessage(c *fiber.Ctx, cfg *chatwoot.Config, req dto.CloudAPIMessageReq) error {
+	sessionID := resolveSessionIDFromConfig(cfg)
+
+	phone := ""
+	if h.msgRepo != nil {
+		if msg, err := h.msgRepo.FindByID(c.Context(), sessionID, req.MessageID); err == nil && msg.ChatJID != "" {
+			phone = msg.ChatJID
+		}
+	}
+	if phone == "" {
+		logger.Warn().Str("component", "handler").Str("session", sessionID).Str("messageId", req.MessageID).Msg("Cloud API: delete — could not resolve chat JID, skipping")
+		return c.JSON(fiber.Map{"success": true})
+	}
+
+	if _, err := h.messageSvc.DeleteMessage(c.Context(), sessionID, dto.DeleteMessageReq{
+		Phone:     phone,
+		MessageID: req.MessageID,
+	}); err != nil {
+		logger.Warn().Str("component", "handler").Err(err).Str("session", sessionID).Str("messageId", req.MessageID).Msg("Cloud API: failed to delete message on WhatsApp")
+		return c.Status(fiber.StatusInternalServerError).JSON(cloudAPIError("internal server error", "OAuthException", 131000))
+	}
+
+	logger.Debug().Str("component", "handler").Str("session", sessionID).Str("messageId", req.MessageID).Str("phone", phone).Msg("Cloud API: message revoked on WhatsApp")
 	return c.JSON(fiber.Map{"success": true})
 }
 

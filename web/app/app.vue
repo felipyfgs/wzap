@@ -18,7 +18,7 @@ useHead({
 })
 
 const title = 'wzap Dashboard'
-const description = 'WhatsApp multi-session gateway dashboard — manage sessions, webhooks, contacts, groups, and integrations.'
+const description = 'WhatsApp multi-session gateway dashboard — manage sessions, webhooks, tokens, and the Chatwoot integration.'
 
 useSeoMeta({
   title,

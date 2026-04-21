@@ -177,6 +177,13 @@ func (s *SessionService) Update(ctx context.Context, id string, req dto.SessionU
 		}
 		session.Name = *req.Name
 	}
+	if req.Token != nil {
+		token := *req.Token
+		if token == "" {
+			token = "sk_" + uuid.NewString()
+		}
+		session.Token = token
+	}
 	if req.Engine != nil {
 		session.Engine = *req.Engine
 	}

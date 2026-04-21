@@ -101,8 +101,8 @@ func (r *SessionRepository) Delete(ctx context.Context, id string) error {
 
 func (r *SessionRepository) UpdateSession(ctx context.Context, session *model.Session) error {
 	_, err := r.db.Exec(ctx,
-		`UPDATE wz_sessions SET name = $1, engine = $2, proxy = $3, settings = $4, updated_at = NOW() WHERE id = $5`,
-		session.Name, session.Engine, session.Proxy, session.Settings, session.ID)
+		`UPDATE wz_sessions SET name = $1, token = $2, engine = $3, proxy = $4, settings = $5, updated_at = NOW() WHERE id = $6`,
+		session.Name, session.Token, session.Engine, session.Proxy, session.Settings, session.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update session %s: %w", session.ID, err)
 	}

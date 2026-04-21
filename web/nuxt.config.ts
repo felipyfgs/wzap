@@ -21,6 +21,12 @@ export default defineNuxtConfig({
 
   compatibilityDate: '2024-07-11',
 
+  nitro: {
+    experimental: {
+      websocket: true
+    }
+  },
+
   vite: {
     optimizeDeps: {
       include: [
@@ -32,12 +38,6 @@ export default defineNuxtConfig({
         '@tanstack/vue-virtual',
         '@tanstack/virtual-core'
       ]
-    }
-  },
-
-  nitro: {
-    experimental: {
-      websocket: true
     }
   },
 

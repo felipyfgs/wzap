@@ -52,6 +52,7 @@ type SessionCreateReq struct {
 type SessionResp struct {
 	ID              string          `json:"id"`
 	Name            string          `json:"name"`
+	Token           string          `json:"token,omitempty"`
 	JID             string          `json:"jid,omitempty"`
 	Connected       int             `json:"connected"`
 	Status          string          `json:"status"`
@@ -83,6 +84,7 @@ type SessionWithTokenResp struct {
 
 type SessionUpdateReq struct {
 	Name     *string          `json:"name,omitempty"`
+	Token    *string          `json:"token,omitempty"`
 	Engine   *string          `json:"engine,omitempty"`
 	Proxy    *SessionProxy    `json:"proxy,omitempty"`
 	Settings *SessionSettings `json:"settings,omitempty"`
@@ -123,6 +125,7 @@ func SessionToResp(s model.Session, pushName, businessName, platform string) Ses
 	return SessionResp{
 		ID:           s.ID,
 		Name:         s.Name,
+		Token:        s.Token,
 		JID:          s.JID,
 		Connected:    s.Connected,
 		Status:       s.Status,

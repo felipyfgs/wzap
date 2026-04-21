@@ -26,14 +26,12 @@ export interface SessionSettings {
 export interface Session {
   id: string
   name: string
-  apiKey?: string
+  token?: string
   jid?: string
   qrCode?: string
   connected: number
   status: string
   engine?: string
-  phoneNumberId?: string
-  businessAccountId?: string
   pushName?: string
   businessName?: string
   platform?: string

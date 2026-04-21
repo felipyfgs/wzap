@@ -17,7 +17,7 @@ export function useWzap() {
 
   const api = async <T = unknown>(path: string, options: Omit<RequestInit, 'body'> & { body?: unknown } = {}): Promise<T> => {
     const headers: Record<string, string> = {
-      'Authorization': token.value,
+      Authorization: token.value
     }
     if (options.body !== undefined && !(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json'

@@ -22,20 +22,9 @@ const protocolOptions = [
   { label: 'SOCKS5', value: 'socks5' }
 ]
 
-const engineOptions = [
-  { label: 'WhatsApp Web (whatsmeow)', value: 'whatsmeow' },
-  { label: 'Cloud API', value: 'cloud_api' }
-]
-
 const schema = z.object({
   name: z.string().min(1, 'Required').max(64, 'Too long').regex(/^[a-zA-Z0-9_-]+$/, 'Only letters, numbers, _ and -'),
-  apiKey: z.string().optional(),
-  engine: z.string().optional(),
-  phoneNumberId: z.string().optional(),
-  accessToken: z.string().optional(),
-  businessAccountId: z.string().optional(),
-  appSecret: z.string().optional(),
-  webhookVerifyToken: z.string().optional(),
+  token: z.string().optional(),
   settings: z.object({
     alwaysOnline: z.boolean(),
     rejectCall: z.boolean(),
@@ -57,17 +46,9 @@ const schema = z.object({
 
 type Schema = z.output<typeof schema>
 
-const isCloudApi = computed(() => state.engine === 'cloud_api')
-
 const state = reactive<Schema>({
   name: '',
-  apiKey: '',
-  engine: 'whatsmeow',
-  phoneNumberId: '',
-  accessToken: '',
-  businessAccountId: '',
-  appSecret: '',
-  webhookVerifyToken: '',
+  token: '',
   settings: {
     alwaysOnline: false,
     rejectCall: false,
@@ -81,21 +62,15 @@ const state = reactive<Schema>({
   webhookEvents: []
 })
 
-function generateApiKey() {
+function generateToken() {
   const arr = new Uint8Array(24)
   window.crypto.getRandomValues(arr)
-  state.apiKey = 'sk_' + Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('')
+  state.token = 'sk_' + Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
 function resetState() {
   state.name = ''
-  state.apiKey = ''
-  state.engine = 'whatsmeow'
-  state.phoneNumberId = ''
-  state.accessToken = ''
-  state.businessAccountId = ''
-  state.appSecret = ''
-  state.webhookVerifyToken = ''
+  state.token = ''
   state.settings = { alwaysOnline: false, rejectCall: false, msgRejectCall: '', readMessages: false, ignoreGroups: false, ignoreStatus: false }
   state.proxy = { host: '', port: 0, protocol: '', username: '', password: '' }
   state.webhookURL = ''
@@ -109,16 +84,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   try {
     const body: Record<string, unknown> = { name: event.data.name }
 
-    if (event.data.engine === 'cloud_api') {
-      body.engine = 'cloud_api'
-      if (event.data.phoneNumberId) body.phoneNumberId = event.data.phoneNumberId
-      if (event.data.accessToken) body.accessToken = event.data.accessToken
-      if (event.data.businessAccountId) body.businessAccountId = event.data.businessAccountId
-      if (event.data.appSecret) body.appSecret = event.data.appSecret
-      if (event.data.webhookVerifyToken) body.webhookVerifyToken = event.data.webhookVerifyToken
-    }
-
-    if (event.data.apiKey) body.apiKey = event.data.apiKey
+    if (event.data.token) body.token = event.data.token
 
     const s = event.data.settings
     if (s.alwaysOnline || s.rejectCall || s.readMessages || s.ignoreGroups || s.ignoreStatus || s.msgRejectCall) {
@@ -162,70 +128,23 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           <UFormField label="Name" name="name" required>
             <UInput v-model="state.name" placeholder="my-session" class="w-full" />
           </UFormField>
-          <UFormField label="API Key" name="apiKey" hint="Leave blank to auto-generate">
-            <UInput v-model="state.apiKey" placeholder="sk_..." class="w-full">
+          <UFormField label="API Token" name="token" hint="Leave blank to auto-generate">
+            <UInput v-model="state.token" placeholder="sk_..." class="w-full">
               <template #trailing>
-                <UTooltip text="Generate key">
+                <UTooltip text="Generate token">
                   <UButton
                     icon="i-lucide-refresh-cw"
                     color="neutral"
                     variant="ghost"
                     size="xs"
                     tabindex="-1"
-                    @click.prevent="generateApiKey"
+                    @click.prevent="generateToken"
                   />
                 </UTooltip>
               </template>
             </UInput>
           </UFormField>
-          <UFormField label="Engine" name="engine">
-            <USelect
-              v-model="state.engine"
-              :items="engineOptions"
-              value-key="value"
-              class="w-full"
-            />
-          </UFormField>
         </div>
-
-        <!-- Cloud API Fields -->
-        <template v-if="isCloudApi">
-          <USeparator />
-          <div class="space-y-3">
-            <p class="text-sm font-medium text-highlighted">
-              Cloud API Configuration
-            </p>
-            <div class="grid grid-cols-2 gap-3">
-              <UFormField label="Phone Number ID" name="phoneNumberId" required>
-                <UInput v-model="state.phoneNumberId" placeholder="123456789" class="w-full" />
-              </UFormField>
-              <UFormField label="Business Account ID" name="businessAccountId">
-                <UInput v-model="state.businessAccountId" placeholder="987654321" class="w-full" />
-              </UFormField>
-            </div>
-            <UFormField label="Access Token" name="accessToken" required>
-              <UInput
-                v-model="state.accessToken"
-                type="password"
-                placeholder="EAAx..."
-                class="w-full"
-              />
-            </UFormField>
-            <div class="grid grid-cols-2 gap-3">
-              <UFormField label="App Secret" name="appSecret">
-                <UInput
-                  v-model="state.appSecret"
-                  type="password"
-                  placeholder="App secret"
-                  class="w-full"
-                />
-              </UFormField>
-              <UFormField label="Webhook Verify Token" name="webhookVerifyToken">
-                <UInput v-model="state.webhookVerifyToken" placeholder="verify-token" class="w-full" />
-              </UFormField>
-            </div>
-          </div>
-        </template>
 
         <USeparator />
 

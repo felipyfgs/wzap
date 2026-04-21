@@ -90,18 +90,18 @@ const listSchema = z.object({
 })
 
 const schemas: Record<MessageType, z.ZodTypeAny> = {
-  'text': textSchema,
-  'image': mediaSchema,
-  'video': mediaSchema,
-  'document': mediaSchema,
-  'audio': mediaSchema,
-  'contact': contactSchema,
-  'location': locationSchema,
-  'poll': pollSchema,
-  'sticker': stickerSchema,
-  'link': linkSchema,
-  'button': buttonSchema,
-  'list': listSchema
+  text: textSchema,
+  image: mediaSchema,
+  video: mediaSchema,
+  document: mediaSchema,
+  audio: mediaSchema,
+  contact: contactSchema,
+  location: locationSchema,
+  poll: pollSchema,
+  sticker: stickerSchema,
+  link: linkSchema,
+  button: buttonSchema,
+  list: listSchema
 }
 
 const activeSchema = computed(() => schemas[msgType.value])
@@ -299,27 +299,30 @@ async function onSubmit(_event: FormSubmitEvent<any>) {
 
 function getModalDescription(): string {
   const descriptions: Record<MessageType, string> = {
-    'text': 'Send a text message',
-    'image': 'Send an image',
-    'video': 'Send a video',
-    'document': 'Send a document',
-    'audio': 'Send an audio',
-    'contact': 'Send a contact',
-    'location': 'Send a location',
-    'poll': 'Send a poll',
-    'sticker': 'Send a sticker',
-    'link': 'Send a link preview',
-    'button': 'Send buttons message',
-    'list': 'Send a list message'
+    text: 'Send a text message',
+    image: 'Send an image',
+    video: 'Send a video',
+    document: 'Send a document',
+    audio: 'Send an audio',
+    contact: 'Send a contact',
+    location: 'Send a location',
+    poll: 'Send a poll',
+    sticker: 'Send a sticker',
+    link: 'Send a link preview',
+    button: 'Send buttons message',
+    list: 'Send a list message'
   }
   return descriptions[msgType.value]
 }
+
+function show() {
+  open.value = true
+}
+defineExpose({ show })
 </script>
 
 <template>
   <UModal v-model:open="open" :title="'Send Message'" :description="getModalDescription()">
-    <UButton label="Send Message" icon="i-lucide-send" color="primary" />
-
     <template #body>
       <UForm
         :schema="activeSchema"

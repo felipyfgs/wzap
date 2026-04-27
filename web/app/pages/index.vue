@@ -25,6 +25,7 @@ const qrModal = useTemplateRef('qrModal')
 const pairModal = useTemplateRef('pairModal')
 const sendModal = useTemplateRef('sendModal')
 const chatwootModal = useTemplateRef('chatwootModal')
+const elodeskModal = useTemplateRef('elodeskModal')
 const webhooksModal = useTemplateRef('webhooksModal')
 const tokenModal = useTemplateRef('tokenModal')
 const settingsModal = useTemplateRef('settingsModal')
@@ -147,6 +148,9 @@ function openSend(s: Session) {
 function openChatwoot(s: Session) {
   openModal(chatwootModal.value, s)
 }
+function openElodesk(s: Session) {
+  openModal(elodeskModal.value, s)
+}
 function openWebhooks(s: Session) {
   openModal(webhooksModal.value, s)
 }
@@ -176,6 +180,7 @@ function rowMenu(s: Session): DropdownMenuItem[][] {
     { label: 'Live events', icon: 'i-lucide-radio', onSelect: () => openEvents(s) }
   ].filter(Boolean) as DropdownMenuItem[], [
     { label: 'Chatwoot', icon: 'i-lucide-plug-zap', onSelect: () => openChatwoot(s) },
+    { label: 'Elodesk', icon: 'i-lucide-building-2', onSelect: () => openElodesk(s) },
     { label: 'Webhooks', icon: 'i-lucide-webhook', onSelect: () => openWebhooks(s) },
     { label: 'API Token', icon: 'i-lucide-key', onSelect: () => openToken(s) },
     { label: 'Settings', icon: 'i-lucide-settings-2', onSelect: () => openSettings(s) }
@@ -432,6 +437,15 @@ onMounted(refreshAll)
                     @click="openChatwoot(row.original)"
                   />
                 </UTooltip>
+                <UTooltip text="Elodesk">
+                  <UButton
+                    icon="i-lucide-building-2"
+                    size="xs"
+                    color="neutral"
+                    variant="ghost"
+                    @click="openElodesk(row.original)"
+                  />
+                </UTooltip>
                 <UDropdownMenu :items="rowMenu(row.original)" :content="{ align: 'end' }">
                   <UButton
                     icon="i-lucide-ellipsis-vertical"
@@ -477,6 +491,12 @@ onMounted(refreshAll)
         />
         <SessionsChatwootModal
           ref="chatwootModal"
+          :session-id="activeSession.id"
+          :session-name="activeSession.name"
+          @updated="refreshSessions"
+        />
+        <SessionsElodeskModal
+          ref="elodeskModal"
           :session-id="activeSession.id"
           :session-name="activeSession.name"
           @updated="refreshSessions"

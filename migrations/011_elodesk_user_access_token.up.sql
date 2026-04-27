@@ -1,0 +1,8 @@
+ALTER TABLE wz_elodesk
+    ADD COLUMN IF NOT EXISTS user_access_token VARCHAR(255) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS account_id        INTEGER      NOT NULL DEFAULT 1,
+    ADD COLUMN IF NOT EXISTS channel_id       BIGINT       NOT NULL DEFAULT 0;
+
+ALTER TABLE wz_elodesk
+    ALTER COLUMN inbox_identifier DROP NOT NULL,
+    ALTER COLUMN api_token DROP NOT NULL;

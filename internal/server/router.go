@@ -10,6 +10,7 @@ import (
 	"wzap/internal/async"
 	"wzap/internal/handler"
 	"wzap/internal/integrations/chatwoot"
+	"wzap/internal/integrations/elodesk"
 	"wzap/internal/logger"
 	"wzap/internal/middleware"
 	"wzap/internal/repo"
@@ -97,6 +98,33 @@ func (s *Server) SetupRoutes() error {
 	chatwootHandler := chatwoot.NewHandler(chatwootSvc, chatwootRepo)
 	disp.AddListener(chatwootSvc)
 
+	// Elodesk integration — pacote simétrico ao chatwoot, habilitado em
+	// paralelo. Sessão pode ter Chatwoot e Elodesk configurados ao mesmo
+	// tempo: dispatcher chama OnEvent em ambos os listeners.
+	elodeskRepo := elodesk.NewRepository(s.db.Pool)
+	elodeskSvc := elodesk.NewService(s.ctx, elodeskRepo, messageRepo, messageSvc)
+	elodeskSvc.SetJIDResolver(engine)
+	elodeskSvc.SetMediaDownloader(engine)
+	elodeskSvc.SetSessionConnector(elodesk.NewSessionConnector(engine))
+	elodeskSvc.SetAvatarGetter(engine)
+	elodeskSvc.SetNumberChecker(engine)
+	elodeskSvc.SetNameGetter(engine)
+	elodeskSvc.SetServerURL(s.Config.ServerURL)
+	elodeskSvc.SetCache(elodesk.NewCache(s.ctx, s.Config.RedisURL))
+	if s.nats != nil {
+		elodeskSvc.SetJetStream(s.nats.JS)
+		elConsumer, elErr := elodesk.NewConsumer(s.nats.JS, elodeskSvc)
+		if elErr != nil {
+			logger.Warn().Str("component", "server").Err(elErr).Msg("Failed to create Elodesk NATS consumer, falling back to sync mode")
+		} else {
+			if err := elConsumer.Start(s.ctx); err != nil {
+				logger.Warn().Str("component", "server").Err(err).Msg("Failed to start Elodesk NATS consumer")
+			}
+		}
+	}
+	elodeskHandler := elodesk.NewHandler(elodeskSvc, elodeskRepo)
+	disp.AddListener(elodeskSvc)
+
 	mediaSvc.SetMessageRepo(messageRepo)
 	mediaSvc.SetStatusRepo(statusRepo)
 	engine.SetOnMediaUpload(mediaSvc.OnMediaReceived)
@@ -167,6 +195,9 @@ func (s *Server) SetupRoutes() error {
 
 	// Chatwoot Webhook (No Auth - validated via HMAC signature)
 	s.App.Post("/chatwoot/webhook/:sessionId", chatwootHandler.IncomingWebhook)
+
+	// Elodesk Webhook (No Auth - validated via HMAC signature)
+	s.App.Post("/elodesk/webhook/:sessionId", elodeskHandler.IncomingWebhook)
 
 	// API Group with Auth (admin token or session token)
 	grp := s.App.Group("/", middleware.Auth(s.Config, sessionRepo))
@@ -306,6 +337,12 @@ func (s *Server) SetupRoutes() error {
 	sess.Get("/integrations/chatwoot", chatwootHandler.GetConfig)
 	sess.Delete("/integrations/chatwoot", chatwootHandler.DeleteConfig)
 	sess.Post("/integrations/chatwoot/import", chatwootHandler.ImportHistory)
+
+	// 13. Elodesk Integration
+	sess.Put("/integrations/elodesk", elodeskHandler.Configure)
+	sess.Get("/integrations/elodesk", elodeskHandler.GetConfig)
+	sess.Delete("/integrations/elodesk", elodeskHandler.DeleteConfig)
+	sess.Post("/integrations/elodesk/import", elodeskHandler.ImportHistory)
 
 	return nil
 }

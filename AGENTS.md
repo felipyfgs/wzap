@@ -198,6 +198,39 @@ Após o refactor `2edce63`, apenas dois prefixos sobrevivem — os demais arquiv
 
 Nenhum endpoint `/v\d+\.\d+/...` ou `/cloud-media/...` é servido; nenhum POST direto ao `/webhooks/whatsapp/{phone_number_id}`; nenhuma conexão ao Postgres do Chatwoot.
 
+## Elodesk integration
+
+`internal/integrations/elodesk/` — two-way Elodesk sync, espelhando a integração Chatwoot. Funciona como `EventListener` no dispatcher, permitindo fan-out paralelo (Chatwoot e Elodesk ao mesmo tempo).
+
+### Arquitetura
+
+- 22 arquivos no pacote `elodesk/` (config, repo, client, service, handler, webhook_outbound, inbox, inbox_api, conversation, events, cache, consumer, helpers, etc.)
+- Tabela `wz_elodesk` (config per-session) + colunas `elodesk_*` em `wz_messages`
+- Client REST com circuit breaker (5 falhas em 30s → open 60s)
+- NATS stream `ELODESK_INBOUND` (fallback síncrono se NATS indisponível)
+- Cache de idempotência Redis + DB (`ExistsByElodeskSrcID`)
+- Echo-loop prevention via cache outbound
+
+### Endpoints
+
+| Rota | Descrição |
+|------|-----------|
+| `PUT /sessions/:sid/integrations/elodesk` | Configurar integração |
+| `GET /sessions/:sid/integrations/elodesk` | Obter config |
+| `DELETE /sessions/:sid/integrations/elodesk` | Remover config |
+| `POST /sessions/:sid/integrations/elodesk/import` | Importar histórico |
+| `POST /elodesk/webhook/:sessionId` | Webhook outbound (agent replies) |
+
+### Fluxo canônico
+
+- WA→Elodesk: evento chega no dispatcher → `elodeskSvc.OnEvent` → resolve contact/conversation → posta via REST em `/public/api/v1/inboxes/:identifier/...`
+- Elodesk→WA: webhook `message_created` chega em `POST /elodesk/webhook/:sessionId` → HMAC verify → `messageSvc.SendText` etc.
+- Agnosticismo: wzap não sabe se elodesk usa `provider=wzap` ou `Channel::Api`. Contrato é via identifier + api-access-token.
+
+### Fan-out
+
+O dispatcher chama `OnEvent` em todos os listeners em paralelo. Chatwoot e Elodesk podem estar ativos simultaneamente para a mesma sessão.
+
 ## Swagger docs
 
 Every exported handler has godoc/Swagger annotations. Regenerate with `make docs`. The swag command scans `cmd/wzap,internal` with `--parseInternal --useStructName`.

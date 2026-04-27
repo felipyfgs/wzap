@@ -87,9 +87,8 @@ type ClientInfo struct {
 func (m *Manager) GetClientInfo(sessionID string) *ClientInfo {
 	m.mu.RLock()
 	client, exists := m.clients[sessionID]
-	m.mu.RUnlock()
-
 	if !exists || client.Store == nil {
+		m.mu.RUnlock()
 		return nil
 	}
 
@@ -98,6 +97,7 @@ func (m *Manager) GetClientInfo(sessionID string) *ClientInfo {
 		BusinessName: client.Store.BusinessName,
 		Platform:     client.Store.Platform,
 	}
+	m.mu.RUnlock()
 
 	if info.PushName == "" && info.BusinessName == "" && info.Platform == "" {
 		return nil
@@ -236,10 +236,11 @@ func (m *Manager) SetIgnoreStatus(fn IgnoreStatusFunc) {
 func (m *Manager) GetPNForLID(ctx context.Context, sessionID, lidJID string) string {
 	m.mu.RLock()
 	client, exists := m.clients[sessionID]
-	m.mu.RUnlock()
 	if !exists || client.Store == nil {
+		m.mu.RUnlock()
 		return ""
 	}
+	m.mu.RUnlock()
 	lid, err := types.ParseJID(lidJID)
 	if err != nil {
 		return ""

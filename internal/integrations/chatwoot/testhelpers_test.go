@@ -192,6 +192,18 @@ func (m *mockMsgRepo) ExistsBySourceID(_ context.Context, _, _ string) (bool, er
 	return false, nil
 }
 
+func (m *mockMsgRepo) UpdateElodeskRef(_ context.Context, _, _ string, _, _ int64, _ string) error {
+	return nil
+}
+
+func (m *mockMsgRepo) ExistsByElodeskSrcID(_ context.Context, _, _ string) (bool, error) {
+	return false, nil
+}
+
+func (m *mockMsgRepo) FindChatJIDByElodeskConvID(_ context.Context, _ string, _ int64) (string, error) {
+	return "", nil
+}
+
 func (m *mockMsgRepo) FindBySourceID(_ context.Context, _, _ string) (*model.Message, error) {
 	return nil, fmt.Errorf("not implemented")
 }
@@ -278,6 +290,18 @@ func (m *mockDupMsgRepo) ListMissingChatwootRefs(_ context.Context, _ string, _ 
 
 func (m *mockDupMsgRepo) ExistsBySourceID(_ context.Context, sessionID, sourceID string) (bool, error) {
 	return m.existingSourceIDs[sessionID+":"+sourceID], nil
+}
+
+func (m *mockDupMsgRepo) UpdateElodeskRef(_ context.Context, _, _ string, _, _ int64, _ string) error {
+	return nil
+}
+
+func (m *mockDupMsgRepo) ExistsByElodeskSrcID(_ context.Context, _, _ string) (bool, error) {
+	return false, nil
+}
+
+func (m *mockDupMsgRepo) FindChatJIDByElodeskConvID(_ context.Context, _ string, _ int64) (string, error) {
+	return "", nil
 }
 
 func (m *mockDupMsgRepo) FindBySourceID(_ context.Context, _, _ string) (*model.Message, error) {

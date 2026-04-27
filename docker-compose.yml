@@ -20,7 +20,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-wzap}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-wzap123}
     ports:
-      - "${POSTGRES_PORT:-5435}:5432"
+      - "${POSTGRES_BIND_ADDR:-127.0.0.1}:${POSTGRES_PORT:-5435}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -38,8 +38,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-admin}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-admin123}
     ports:
-      - "${MINIO_PORT:-9010}:9000"
-      - "${MINIO_CONSOLE_PORT:-9011}:9001"
+      - "${MINIO_BIND_ADDR:-127.0.0.1}:${MINIO_PORT:-9010}:9000"
+      - "${MINIO_CONSOLE_BIND_ADDR:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9011}:9001"
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
@@ -55,8 +55,8 @@ services:
     image: nats:2-alpine
     container_name: wzap_nats
     ports:
-      - "${NATS_PORT:-4222}:4222"
-      - "${NATS_MONITOR_PORT:-8222}:8222"
+      - "${NATS_BIND_ADDR:-127.0.0.1}:${NATS_PORT:-4222}:4222"
+      - "${NATS_MONITOR_BIND_ADDR:-127.0.0.1}:${NATS_MONITOR_PORT:-8222}:8222"
     command: "-js -m 8222"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:8222/healthz"]

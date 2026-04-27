@@ -210,6 +210,9 @@ func (d *Dispatcher) shouldAttemptGlobal() bool {
 func (d *Dispatcher) deliverGlobalWebhook(ctx context.Context, payload []byte) {
 	d.globalLastAttempt.Store(time.Now().UnixNano())
 
+	// Nota: global webhook é enviado sem secret → sem assinatura HMAC.
+	// O receiver não consegue verificar a origem. Se precisar de
+	// verificação, configure webhooks por sessão (com secret).
 	if err := d.deliverHTTPWithErr(ctx, d.globalWebhookURL, "", payload); err != nil {
 		failures := d.globalFailures.Add(1)
 		var permErr *permanentDeliveryError

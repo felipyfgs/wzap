@@ -24,4 +24,8 @@ type Message struct {
 	CWMessageID *int    `json:"cwMessageId,omitempty"`
 	CWConvID    *int    `json:"cwConvId,omitempty"`
 	CWSrcID     *string `json:"cwSrcId,omitempty"`
+
+	ElodeskMessageID *int64  `json:"elodeskMessageId,omitempty"`
+	ElodeskConvID    *int64  `json:"elodeskConvId,omitempty"`
+	ElodeskSrcID     *string `json:"elodeskSrcId,omitempty"`
 }

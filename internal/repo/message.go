@@ -23,7 +23,8 @@ var ErrChatwootRefNotApplied = errors.New("chatwoot ref update affected 0 rows")
 const messageSelectColumns = `id, session_id, chat_jid, sender_jid, from_me, msg_type, body,
 	COALESCE(media_type, ''), COALESCE(media_url, ''), COALESCE(source, 'live'), COALESCE(source_sync_type, ''),
 	history_chunk_order, history_message_order, COALESCE(raw, 'null'::jsonb), timestamp, created_at,
-	cw_message_id, cw_conversation_id, cw_source_id, imported_to_chatwoot_at`
+	cw_message_id, cw_conversation_id, cw_source_id, imported_to_chatwoot_at,
+	elodesk_message_id, elodesk_conv_id, elodesk_src_id`
 
 type messageScanner interface {
 	Scan(dest ...any) error
@@ -47,6 +48,9 @@ type MessageRepo interface {
 	UpdateChatwootRef(ctx context.Context, sessionID, msgID string, cwMsgID, cwConvID int, cwSourceID string) error
 	ListMissingChatwootRefs(ctx context.Context, sessionID string, limit int, afterID string) ([]string, error)
 	ExistsBySourceID(ctx context.Context, sessionID, sourceID string) (bool, error)
+	UpdateElodeskRef(ctx context.Context, sessionID, msgID string, elMsgID, elConvID int64, srcID string) error
+	ExistsByElodeskSrcID(ctx context.Context, sessionID, srcID string) (bool, error)
+	FindChatJIDByElodeskConvID(ctx context.Context, sessionID string, elConvID int64) (string, error)
 	FindUnimportedHistory(ctx context.Context, sessionID string, since time.Time, limit, offset int) ([]model.Message, error)
 	MarkImported(ctx context.Context, sessionID, msgID string) error
 	UpdateMediaURL(ctx context.Context, sessionID, msgID, mediaURL string) error
@@ -116,6 +120,9 @@ func scanMessage(scanner messageScanner, m *model.Message) error {
 		&m.CWConvID,
 		&m.CWSrcID,
 		&m.CWImportedAt,
+		&m.ElodeskMessageID,
+		&m.ElodeskConvID,
+		&m.ElodeskSrcID,
 	); err != nil {
 		return err
 	}
@@ -558,4 +565,49 @@ func (r *MessageRepository) UpdateMediaURL(ctx context.Context, sessionID, msgID
 		return fmt.Errorf("failed to update media url: %w", err)
 	}
 	return nil
+}
+
+// ErrElodeskRefNotApplied é o análogo de ErrChatwootRefNotApplied para refs elodesk.
+var ErrElodeskRefNotApplied = errors.New("elodesk ref update affected 0 rows")
+
+func (r *MessageRepository) UpdateElodeskRef(ctx context.Context, sessionID, msgID string, elMsgID, elConvID int64, srcID string) error {
+	tag, err := r.db.Exec(ctx,
+		`UPDATE wz_messages SET elodesk_message_id = $1, elodesk_conv_id = $2, elodesk_src_id = $3
+		 WHERE id = $4 AND session_id = $5`,
+		elMsgID, elConvID, srcID, msgID, sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to update elodesk ref: %w", err)
+	}
+	if tag.RowsAffected() == 0 {
+		logger.Warn().Str("component", "repo").Str("session", sessionID).Str("msgID", msgID).Int64("elMsgID", elMsgID).Int64("elConvID", elConvID).Msg("UpdateElodeskRef: 0 rows affected (wz_messages not yet persisted)")
+		return ErrElodeskRefNotApplied
+	}
+	return nil
+}
+
+func (r *MessageRepository) ExistsByElodeskSrcID(ctx context.Context, sessionID, srcID string) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM wz_messages WHERE elodesk_src_id = $1 AND session_id = $2 AND elodesk_message_id IS NOT NULL)`,
+		srcID, sessionID).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("failed to check elodesk src_id existence: %w", err)
+	}
+	return exists, nil
+}
+
+// FindChatJIDByElodeskConvID retorna o chat_jid mais recente que o wzap
+// associou a uma elodesk_conv_id — usado pelo webhook outbound para resolver
+// o destino quando o elodesk envia agente→WA (o payload do webhook só traz ids).
+func (r *MessageRepository) FindChatJIDByElodeskConvID(ctx context.Context, sessionID string, elConvID int64) (string, error) {
+	var chatJID string
+	err := r.db.QueryRow(ctx,
+		`SELECT chat_jid FROM wz_messages
+		 WHERE session_id = $1 AND elodesk_conv_id = $2 AND chat_jid <> ''
+		 ORDER BY timestamp DESC LIMIT 1`,
+		sessionID, elConvID).Scan(&chatJID)
+	if err != nil {
+		return "", fmt.Errorf("failed to find chat_jid by elodesk_conv_id: %w", err)
+	}
+	return chatJID, nil
 }

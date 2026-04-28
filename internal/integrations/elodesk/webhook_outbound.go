@@ -100,12 +100,19 @@ func (s *Service) processOutgoingMessage(ctx context.Context, cfg *Config, body 
 	}
 
 	conv := body.Conversation
-	// O payload outbound do elodesk só traz ids — busca o chatJID que o wzap
-	// associou a essa conv quando criou a conversation.
+	// Caminho normal: wzap viu uma mensagem incoming e gravou o mapeamento
+	// elodesk_conv_id → chat_jid em wz_messages.
 	chatJID, err := s.msgRepo.FindChatJIDByElodeskConvID(ctx, cfg.SessionID, conv.ID)
 	if err != nil || chatJID == "" || !isValidWhatsAppJID(chatJID) {
-		logger.Warn().Str("component", "elodesk").Int64("convID", conv.ID).Err(err).Msg("no valid chat JID found for outgoing message, skipping")
-		return nil
+		// Fallback: forward / primeira mensagem para contato sem histórico WA.
+		// Não há linha em wz_messages ainda, mas o elodesk enviou source_id no
+		// contactInbox (telefone E.164 normalizado). Convertemos pra JID.
+		chatJID = chatJIDFromContactInbox(conv)
+		if chatJID == "" {
+			logger.Warn().Str("component", "elodesk").Int64("convID", conv.ID).Err(err).Msg("no valid chat JID found for outgoing message, skipping")
+			return nil
+		}
+		logger.Info().Str("component", "elodesk").Int64("convID", conv.ID).Str("chatJID", chatJID).Msg("using contactInbox.sourceId fallback for outgoing message")
 	}
 
 	if s.messageSvc == nil {
@@ -288,4 +295,51 @@ func isValidWhatsAppJID(jid string) bool {
 		strings.HasSuffix(jid, "@g.us") ||
 		strings.HasSuffix(jid, "@lid") ||
 		strings.HasSuffix(jid, "@broadcast")
+}
+
+// E.164 phone number range — ITU-T E.164 spec: country code + subscriber
+// number, max 15 digits. Mínimo de 8 cobre os países mais curtos
+// (ex.: Argentina 8 dígitos sem DDI), com folga pra entradas locais.
+const (
+	minE164Digits = 8
+	maxE164Digits = 15
+)
+
+// chatJIDFromContactInbox converte o source_id que o elodesk anexou ao
+// contactInbox em um JID válido. Para inboxes WhatsApp o elodesk envia o
+// telefone (E.164 com "+" ou plain digits); extraímos somente os dígitos e
+// anexamos @s.whatsapp.net. Strings que já são JIDs válidos passam direto.
+// Source IDs que não correspondem a um telefone E.164 plausível devolvem ""
+// — melhor falhar visível aqui do que mandar pro WhatsApp e tomar erro 4xx
+// silencioso na rede.
+func chatJIDFromContactInbox(conv *dto.ElodeskWebhookConversation) string {
+	if conv == nil || conv.ContactInbox == nil {
+		return ""
+	}
+	src := strings.TrimSpace(conv.ContactInbox.SourceID)
+	if src == "" {
+		return ""
+	}
+	if isValidWhatsAppJID(src) {
+		return src
+	}
+	digits := stripNonDigits(src)
+	if len(digits) < minE164Digits || len(digits) > maxE164Digits {
+		return ""
+	}
+	return digits + "@s.whatsapp.net"
+}
+
+// stripNonDigits remove tudo que não for dígito de uma string. Usado pra
+// normalizar telefones (com +, espaços, parênteses, hífens) em formato puro de
+// dígitos que o WhatsApp aceita como prefixo do JID.
+func stripNonDigits(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		if r >= '0' && r <= '9' {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }

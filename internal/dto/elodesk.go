@@ -113,14 +113,24 @@ type ElodeskWebhookAttachment struct {
 }
 
 type ElodeskWebhookConversation struct {
-	ID             int64  `json:"id"`
-	AccountID      int64  `json:"accountId,omitempty"`
-	InboxID        int64  `json:"inboxId,omitempty"`
-	Status         int    `json:"status"`
-	ContactID      int64  `json:"contactId,omitempty"`
-	ContactInboxID int64  `json:"contactInboxId,omitempty"`
-	DisplayID      int64  `json:"displayId,omitempty"`
-	UUID           string `json:"uuid,omitempty"`
+	ID             int64                       `json:"id"`
+	AccountID      int64                       `json:"accountId,omitempty"`
+	InboxID        int64                       `json:"inboxId,omitempty"`
+	Status         int                         `json:"status"`
+	ContactID      int64                       `json:"contactId,omitempty"`
+	ContactInboxID int64                       `json:"contactInboxId,omitempty"`
+	DisplayID      int64                       `json:"displayId,omitempty"`
+	UUID           string                      `json:"uuid,omitempty"`
+	ContactInbox   *ElodeskWebhookContactInbox `json:"contactInbox,omitempty"`
+}
+
+// ElodeskWebhookContactInbox carrega o source_id do canal (telefone E.164 para
+// WhatsApp/SMS, email para Email, identifier para os demais). Usado como
+// fallback de destino quando wz_messages ainda não tem mapeamento
+// elodesk_conv_id → chat_jid (caso típico: forward para contato sem histórico).
+type ElodeskWebhookContactInbox struct {
+	ID       int64  `json:"id"`
+	SourceID string `json:"sourceId"`
 }
 
 func (p *ElodeskWebhookPayload) GetMessage() *ElodeskWebhookMessage {

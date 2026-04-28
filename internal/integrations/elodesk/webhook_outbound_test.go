@@ -263,3 +263,83 @@ func TestHandleIncomingWebhook_DuplicateBySourceID(t *testing.T) {
 		t.Errorf("expected dedup by elodesk_src_id, got %d send calls", len(msgSvc.sentText))
 	}
 }
+
+func TestChatJIDFromContactInbox_NilConv(t *testing.T) {
+	if got := chatJIDFromContactInbox(nil); got != "" {
+		t.Errorf("nil conv: got %q, want empty", got)
+	}
+}
+
+func TestChatJIDFromContactInbox_NoContactInbox(t *testing.T) {
+	if got := chatJIDFromContactInbox(&dto.ElodeskWebhookConversation{ID: 1}); got != "" {
+		t.Errorf("missing contactInbox: got %q, want empty", got)
+	}
+}
+
+func TestChatJIDFromContactInbox_EmptySource(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "  "}}
+	if got := chatJIDFromContactInbox(conv); got != "" {
+		t.Errorf("empty source: got %q, want empty", got)
+	}
+}
+
+func TestChatJIDFromContactInbox_E164(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "+5511999998888"}}
+	want := "5511999998888@s.whatsapp.net"
+	if got := chatJIDFromContactInbox(conv); got != want {
+		t.Errorf("E.164: got %q, want %q", got, want)
+	}
+}
+
+func TestChatJIDFromContactInbox_PlainDigits(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "5511999998888"}}
+	want := "5511999998888@s.whatsapp.net"
+	if got := chatJIDFromContactInbox(conv); got != want {
+		t.Errorf("plain digits: got %q, want %q", got, want)
+	}
+}
+
+func TestChatJIDFromContactInbox_FormattedPhone(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "(11) 99999-8888"}}
+	want := "11999998888@s.whatsapp.net"
+	if got := chatJIDFromContactInbox(conv); got != want {
+		t.Errorf("formatted: got %q, want %q", got, want)
+	}
+}
+
+func TestChatJIDFromContactInbox_AlreadyJIDPassesThrough(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "5511999998888@s.whatsapp.net"}}
+	want := "5511999998888@s.whatsapp.net"
+	if got := chatJIDFromContactInbox(conv); got != want {
+		t.Errorf("JID passthrough: got %q, want %q", got, want)
+	}
+}
+
+func TestChatJIDFromContactInbox_GroupJIDPassesThrough(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "120363012345@g.us"}}
+	want := "120363012345@g.us"
+	if got := chatJIDFromContactInbox(conv); got != want {
+		t.Errorf("group JID: got %q, want %q", got, want)
+	}
+}
+
+func TestChatJIDFromContactInbox_TooFewDigitsRejected(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "abc1"}}
+	if got := chatJIDFromContactInbox(conv); got != "" {
+		t.Errorf("garbage source (1 digit): got %q, want empty", got)
+	}
+}
+
+func TestChatJIDFromContactInbox_TooManyDigitsRejected(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "1234567890123456"}}
+	if got := chatJIDFromContactInbox(conv); got != "" {
+		t.Errorf("16 digits exceeds E.164 max: got %q, want empty", got)
+	}
+}
+
+func TestChatJIDFromContactInbox_ZeroDigits(t *testing.T) {
+	conv := &dto.ElodeskWebhookConversation{ContactInbox: &dto.ElodeskWebhookContactInbox{SourceID: "tg-handle"}}
+	if got := chatJIDFromContactInbox(conv); got != "" {
+		t.Errorf("non-numeric source: got %q, want empty", got)
+	}
+}

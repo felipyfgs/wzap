@@ -21,7 +21,7 @@ func (s *Service) ImportHistoryAsync(ctx context.Context, sessionID, period stri
 		importCtx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 		defer cancel()
 		s.importHistory(importCtx, sessionID, period, customDays)
-		return nil, nil
+		return struct{}{}, nil
 	})
 }
 

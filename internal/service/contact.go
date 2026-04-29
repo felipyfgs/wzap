@@ -95,7 +95,7 @@ func (s *ContactService) GetAvatar(ctx context.Context, sessionID string, req dt
 
 	info, err := client.GetProfilePictureInfo(ctx, jid, &whatsmeow.GetProfilePictureParams{})
 	if err != nil {
-		return &dto.GetAvatarResp{}, nil //nolint:nilerr // no avatar is not an error for the caller
+		return nil, fmt.Errorf("get profile picture: %w", err)
 	}
 
 	if info == nil {

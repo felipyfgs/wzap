@@ -22,7 +22,9 @@ var ErrChatwootRefNotApplied = errors.New("chatwoot ref update affected 0 rows")
 
 const messageSelectColumns = `id, session_id, chat_jid, sender_jid, from_me, msg_type, body,
 	COALESCE(media_type, ''), COALESCE(media_url, ''), COALESCE(source, 'live'), COALESCE(source_sync_type, ''),
-	history_chunk_order, history_message_order, COALESCE(raw, 'null'::jsonb), timestamp, created_at,
+	history_chunk_order, history_message_order, COALESCE(raw, 'null'::jsonb),
+	COALESCE(is_forwarded, FALSE), COALESCE(forwarding_score, 0),
+	timestamp, created_at,
 	cw_message_id, cw_conversation_id, cw_source_id, imported_to_chatwoot_at,
 	elodesk_message_id, elodesk_conv_id, elodesk_src_id`
 
@@ -73,9 +75,11 @@ func (r *MessageRepository) Save(ctx context.Context, msg *model.Message) error 
 	_, err := r.db.Exec(ctx,
 		`INSERT INTO wz_messages (
 			id, session_id, chat_jid, sender_jid, from_me, msg_type, body, media_type, media_url,
-			source, source_sync_type, history_chunk_order, history_message_order, raw, timestamp, imported_to_chatwoot_at
+			source, source_sync_type, history_chunk_order, history_message_order, raw,
+			is_forwarded, forwarding_score,
+			timestamp, imported_to_chatwoot_at
 		)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		 ON CONFLICT (id, session_id) DO UPDATE SET
 		   body = CASE WHEN EXCLUDED.body != '' THEN EXCLUDED.body ELSE wz_messages.body END,
 		   msg_type = CASE WHEN EXCLUDED.msg_type != '' AND EXCLUDED.msg_type != 'unknown' THEN EXCLUDED.msg_type ELSE wz_messages.msg_type END,
@@ -87,10 +91,14 @@ func (r *MessageRepository) Save(ctx context.Context, msg *model.Message) error 
 		   source_sync_type = COALESCE(NULLIF(EXCLUDED.source_sync_type, ''), wz_messages.source_sync_type),
 		   history_chunk_order = COALESCE(EXCLUDED.history_chunk_order, wz_messages.history_chunk_order),
 		   history_message_order = COALESCE(EXCLUDED.history_message_order, wz_messages.history_message_order),
+		   is_forwarded = wz_messages.is_forwarded OR EXCLUDED.is_forwarded,
+		   forwarding_score = GREATEST(wz_messages.forwarding_score, EXCLUDED.forwarding_score),
 		   imported_to_chatwoot_at = COALESCE(EXCLUDED.imported_to_chatwoot_at, wz_messages.imported_to_chatwoot_at),
 		   timestamp = LEAST(wz_messages.timestamp, EXCLUDED.timestamp)`,
 		msg.ID, msg.SessionID, msg.ChatJID, msg.SenderJID, msg.FromMe, msg.MsgType, msg.Body, msg.MediaType, msg.MediaURL,
-		msg.Source, msg.SyncType, msg.ChunkOrder, msg.MsgOrder, rawJSON, msg.Timestamp, msg.CWImportedAt)
+		msg.Source, msg.SyncType, msg.ChunkOrder, msg.MsgOrder, rawJSON,
+		msg.IsForwarded, msg.ForwardingScore,
+		msg.Timestamp, msg.CWImportedAt)
 	if err != nil {
 		return fmt.Errorf("failed to save message: %w", err)
 	}
@@ -114,6 +122,8 @@ func scanMessage(scanner messageScanner, m *model.Message) error {
 		&m.ChunkOrder,
 		&m.MsgOrder,
 		&raw,
+		&m.IsForwarded,
+		&m.ForwardingScore,
 		&m.Timestamp,
 		&m.CreatedAt,
 		&m.CWMessageID,

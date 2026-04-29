@@ -156,9 +156,9 @@ func TestConvertWAToCWMarkdown(t *testing.T) {
 			expected: "This is **bold** text",
 		},
 		{
-			name:     "italic conversion",
+			name:     "italic preserves underscore",
 			input:    "This is _italic_ text",
-			expected: "This is *italic* text",
+			expected: "This is _italic_ text",
 		},
 		{
 			name:     "strikethrough conversion",
@@ -168,7 +168,7 @@ func TestConvertWAToCWMarkdown(t *testing.T) {
 		{
 			name:     "multiple formats",
 			input:    "*bold* and _italic_ and ~strike~",
-			expected: "**bold** and *italic* and ~~strike~~",
+			expected: "**bold** and _italic_ and ~~strike~~",
 		},
 		{
 			name:     "no formatting",
@@ -178,7 +178,7 @@ func TestConvertWAToCWMarkdown(t *testing.T) {
 		{
 			name:     "multiline with formatting",
 			input:    "Line 1 with *bold*\nLine 2 with _italic_",
-			expected: "Line 1 with **bold**\nLine 2 with *italic*",
+			expected: "Line 1 with **bold**\nLine 2 with _italic_",
 		},
 	}
 

@@ -35,7 +35,7 @@ func (s *Service) processBotCommand(ctx context.Context, cfg *Config, content st
 		s.sendBotReply(ctx, client, convID, "⏳ Conectando ao WhatsApp...")
 		if err := s.connector.Connect(ctx, cfg.SessionID); err != nil {
 			s.sendBotReply(ctx, client, convID, "❌ Falha ao conectar: "+err.Error())
-			return nil
+			return err
 		}
 
 	case "status":
@@ -57,7 +57,7 @@ func (s *Service) processBotCommand(ctx context.Context, cfg *Config, content st
 		s.sendBotReply(ctx, client, convID, "⏳ Desconectando do WhatsApp...")
 		if err := s.connector.Disconnect(ctx, cfg.SessionID); err != nil {
 			s.sendBotReply(ctx, client, convID, "❌ Falha ao desconectar: "+err.Error())
-			return nil
+			return err
 		}
 		s.sendBotReply(ctx, client, convID, "✅ Sessão desconectada com sucesso.")
 
@@ -69,7 +69,7 @@ func (s *Service) processBotCommand(ctx context.Context, cfg *Config, content st
 		s.sendBotReply(ctx, client, convID, "⏳ Desvinculando dispositivo...")
 		if err := s.connector.Logout(ctx, cfg.SessionID); err != nil {
 			s.sendBotReply(ctx, client, convID, "❌ Falha ao desvincular: "+err.Error())
-			return nil
+			return err
 		}
 		s.sendBotReply(ctx, client, convID, "✅ Dispositivo desvinculado. Envie *init* para reconectar com novo QR code.")
 

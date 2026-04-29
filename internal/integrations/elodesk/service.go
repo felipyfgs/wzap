@@ -77,7 +77,6 @@ type Service struct {
 	convFlight        singleflight.Group
 	importFlight      singleflight.Group
 	missingConfig     sync.Map
-	lastBotNotify     sync.Map
 }
 
 func NewService(ctx context.Context, repo Repo, msgRepo repo.MessageRepo, messageSvc MessageService) *Service {

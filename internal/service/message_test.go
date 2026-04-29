@@ -7,14 +7,14 @@ import (
 )
 
 func TestBuildContextInfo_Nil(t *testing.T) {
-	if buildContextInfo(nil, nil) != nil {
+	if buildContextInfo(nil, nil, nil) != nil {
 		t.Error("expected nil for nil input")
 	}
 }
 
 func TestBuildContextInfo_EmptyMessageID(t *testing.T) {
 	r := &dto.ReplyContext{MessageID: "", Participant: "5511@s.whatsapp.net"}
-	if buildContextInfo(r, nil) != nil {
+	if buildContextInfo(r, nil, nil) != nil {
 		t.Error("expected nil when MessageID is empty")
 	}
 }
@@ -25,7 +25,7 @@ func TestBuildContextInfo_Full(t *testing.T) {
 		Participant:  "5511@s.whatsapp.net",
 		MentionedJID: []string{"5522@s.whatsapp.net"},
 	}
-	ci := buildContextInfo(r, nil)
+	ci := buildContextInfo(r, nil, nil)
 	if ci == nil {
 		t.Fatal("expected non-nil ContextInfo")
 	}
@@ -41,13 +41,36 @@ func TestBuildContextInfo_Full(t *testing.T) {
 }
 
 func TestBuildContextInfo_MentionedJIDsOnly(t *testing.T) {
-	ci := buildContextInfo(nil, []string{"5511@s.whatsapp.net"})
+	ci := buildContextInfo(nil, []string{"5511@s.whatsapp.net"}, nil)
 	if ci == nil {
 		t.Fatal("expected non-nil ContextInfo for MentionedJIDs only")
 		return
 	}
 	if len(ci.MentionedJID) != 1 || ci.MentionedJID[0] != "5511@s.whatsapp.net" {
 		t.Errorf("unexpected MentionedJID: %v", ci.MentionedJID)
+	}
+}
+
+func TestBuildContextInfo_ForwardingDefaultScore(t *testing.T) {
+	ci := buildContextInfo(nil, nil, &dto.ForwardingContext{})
+	if ci == nil {
+		t.Fatal("expected non-nil ContextInfo when forwarding is set")
+	}
+	if !ci.GetIsForwarded() {
+		t.Error("expected IsForwarded=true")
+	}
+	if got := ci.GetForwardingScore(); got != 1 {
+		t.Errorf("expected default score 1, got %d", got)
+	}
+}
+
+func TestBuildContextInfo_ForwardingExplicitScore(t *testing.T) {
+	ci := buildContextInfo(nil, nil, &dto.ForwardingContext{Score: 7})
+	if ci == nil {
+		t.Fatal("expected non-nil ContextInfo")
+	}
+	if got := ci.GetForwardingScore(); got != 7 {
+		t.Errorf("expected score 7, got %d", got)
 	}
 }
 

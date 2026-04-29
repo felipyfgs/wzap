@@ -10,61 +10,7 @@ import (
 	"wzap/internal/repo"
 )
 
-// mockClient implementa elodesk.Client para testes.
-type mockClient struct {
-	contacts      []Contact
-	conversations []Conversation
-	messages      []MessageReq
-
-	nextMessageID int64
-	nextConvID    int
-	createMsgErr  error
-}
-
-func (m *mockClient) UpsertContact(_ context.Context, _ string, req UpsertContactReq) (*Contact, error) {
-	c := Contact{ID: 1, Name: req.Name, Identifier: req.Identifier, PhoneNumber: req.PhoneNumber, SourceID: req.Identifier}
-	m.contacts = append(m.contacts, c)
-	return &c, nil
-}
-
-func (m *mockClient) GetOrCreateConversation(_ context.Context, _, _ string, _ GetOrCreateConvReq) (*Conversation, error) {
-	m.nextConvID++
-	c := Conversation{ID: m.nextConvID, ContactID: 1, InboxID: 1, Status: ConversationStatusOpen}
-	m.conversations = append(m.conversations, c)
-	return &c, nil
-}
-
-func (m *mockClient) CreateMessage(_ context.Context, _, _ string, convID int64, req MessageReq) (*Message, error) {
-	if m.createMsgErr != nil {
-		return nil, m.createMsgErr
-	}
-	m.messages = append(m.messages, req)
-	m.nextMessageID++
-	return &Message{
-		ID:             m.nextMessageID,
-		Content:        req.Content,
-		SourceID:       req.SourceID,
-		ConversationID: convID,
-	}, nil
-}
-
-func (m *mockClient) CreateAttachment(_ context.Context, _, _ string, convID int64, _, _ string, _ []byte, _, _, sourceID string, _ map[string]any) (*Message, error) {
-	m.nextMessageID++
-	return &Message{ID: m.nextMessageID, ConversationID: convID, SourceID: sourceID}, nil
-}
-
-func (m *mockClient) UpdateConversationStatus(_ context.Context, _, _ string, _ int64, _ string) error {
-	return nil
-}
-
-func (m *mockClient) CreateInbox(_ context.Context, _ int, _, _, _ string) (*CreateInboxResp, error) {
-	return &CreateInboxResp{Identifier: "mock", ApiToken: "mock-token", ChannelID: 1}, nil
-}
-
-func (m *mockClient) UpdateInboxWebhook(_ context.Context, _, _ int, _, _ string) error {
-	return nil
-}
-
+// mockMsgRepo é um Mock de model.MessageRepository para testes.
 type mockMsgRepo struct {
 	existingSourceIDs map[string]bool
 	existingElodesk   map[string]bool

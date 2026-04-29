@@ -11,6 +11,7 @@ import (
 	"wzap/internal/dto"
 	"wzap/internal/logger"
 	"wzap/internal/model"
+	"wzap/internal/wautil"
 )
 
 // elodesk Attachment.fileType — mantém em sync com backend/internal/model.AttachmentFileType.
@@ -127,10 +128,16 @@ func (s *Service) processOutgoingMessage(ctx context.Context, cfg *Config, body 
 	if content == "" {
 		return nil
 	}
+	// Elodesk armazena texto em markdown padrão; o WhatsApp usa um dialeto
+	// próprio (`*` = bold, `_` = italic, `~` = strike). Converter aqui
+	// garante que `**negrito**` digitado no painel apareça em negrito no
+	// celular do contato.
+	content = wautil.MarkdownToWA(content)
 
 	waMsgID, err := s.messageSvc.SendText(ctx, cfg.SessionID, dto.SendTextReq{
-		Phone: chatJID,
-		Body:  content,
+		Phone:      chatJID,
+		Body:       content,
+		Forwarding: forwardingFromElodesk(msg),
 	})
 	if err != nil {
 		logger.Warn().Str("component", "elodesk").Err(err).Str("session", cfg.SessionID).Msg("failed to send outgoing text to WA")
@@ -160,12 +167,16 @@ func (s *Service) sendOutgoingMedia(ctx context.Context, cfg *Config, chatJID st
 
 	mimeType, fileName := resolveAttachmentMeta(att)
 
+	// Caption também passa por Markdown→WA (mesma razão do SendText).
+	caption := wautil.MarkdownToWA(msg.Content)
+
 	req := dto.SendMediaReq{
-		Phone:    chatJID,
-		MimeType: mimeType,
-		Caption:  msg.Content,
-		FileName: fileName,
-		URL:      att.DataURL,
+		Phone:      chatJID,
+		MimeType:   mimeType,
+		Caption:    caption,
+		FileName:   fileName,
+		URL:        att.DataURL,
+		Forwarding: forwardingFromElodesk(msg),
 	}
 
 	var (
@@ -328,6 +339,19 @@ func chatJIDFromContactInbox(conv *dto.ElodeskWebhookConversation) string {
 		return ""
 	}
 	return digits + "@s.whatsapp.net"
+}
+
+// forwardingFromElodesk traduz a presença de forwardedFromMessageId no payload
+// do elodesk para a flag IsForwarded no ContextInfo do WhatsApp. O elodesk não
+// expõe um forwarding score (apenas o ponteiro pra mensagem-raiz), então
+// usamos score 1 — encaminhada uma vez. Para "encaminhada várias vezes"
+// (score >= 5) seria necessário rastrear a cadeia de forwards no elodesk e
+// propagar o contador, o que o backend ainda não faz.
+func forwardingFromElodesk(msg *dto.ElodeskWebhookMessage) *dto.ForwardingContext {
+	if msg == nil || msg.ForwardedFromMessageID == nil {
+		return nil
+	}
+	return &dto.ForwardingContext{Score: 1}
 }
 
 // stripNonDigits remove tudo que não for dígito de uma string. Usado pra

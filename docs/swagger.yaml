@@ -236,18 +236,80 @@ definitions:
     - messageId
     - phone
     type: object
-  ForwardMessageReq:
+  ElodeskConfigReq:
     properties:
-      fromJid:
+      accountId:
+        type: integer
+      apiToken:
         type: string
-      messageId:
+      enabled:
+        type: boolean
+      hmacToken:
         type: string
-      phone:
+      ignoreGroups:
+        type: boolean
+      ignoreJids:
+        items:
+          type: string
+        type: array
+      importOnConnect:
+        type: boolean
+      importPeriod:
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        - custom
+        type: string
+      inboxIdentifier:
+        type: string
+      inboxName:
+        type: string
+      largeTimeout:
+        type: integer
+      mediaTimeout:
+        type: integer
+      mergeBrContacts:
+        type: boolean
+      messageRead:
+        type: boolean
+      pendingConv:
+        type: boolean
+      reopenConv:
+        type: boolean
+      signDelimiter:
+        type: string
+      signMsg:
+        type: boolean
+      textTimeout:
+        type: integer
+      url:
+        type: string
+      userAccessToken:
+        type: string
+      webhookSecret:
         type: string
     required:
-    - fromJid
-    - messageId
-    - phone
+    - url
+    type: object
+  ElodeskImportReq:
+    properties:
+      customDays:
+        type: integer
+      period:
+        enum:
+        - 24h
+        - 7d
+        - 30d
+        - custom
+        type: string
+    required:
+    - period
+    type: object
+  ForwardingContext:
+    properties:
+      score:
+        type: integer
     type: object
   GetAvatarReq:
     properties:
@@ -643,6 +705,8 @@ definitions:
         type: string
       fileName:
         type: string
+      forwarding:
+        $ref: '#/definitions/ForwardingContext'
       mentionedJids:
         items:
           type: string
@@ -696,6 +760,8 @@ definitions:
         type: string
       customId:
         type: string
+      forwarding:
+        $ref: '#/definitions/ForwardingContext'
       mentionedJids:
         items:
           type: string
@@ -781,6 +847,8 @@ definitions:
         $ref: '#/definitions/SessionSettings'
       status:
         type: string
+      token:
+        type: string
       updatedAt:
         type: string
     type: object
@@ -824,6 +892,8 @@ definitions:
         $ref: '#/definitions/SessionProxy'
       settings:
         $ref: '#/definitions/SessionSettings'
+      token:
+        type: string
     type: object
   SessionWithTokenResp:
     properties:
@@ -1067,6 +1137,44 @@ paths:
       summary: Receive webhook events from Chatwoot
       tags:
       - Chatwoot
+  /elodesk/webhook/{sessionId}:
+    post:
+      consumes:
+      - application/json
+      description: Handles incoming Elodesk webhook events (agent replies, message
+        updates, conversation status changes)
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: HMAC-SHA256 signature (legacy alias)
+        in: header
+        name: X-Chatwoot-Hmac-Sha256
+        type: string
+      - description: HMAC-SHA256 signature (preferred)
+        in: header
+        name: X-Elodesk-Signature
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIError'
+      summary: Receive webhook events from Elodesk
+      tags:
+      - Elodesk
   /health:
     get:
       description: Returns the health status of the API and its dependencies
@@ -3002,6 +3110,137 @@ paths:
       summary: Trigger manual history import from WhatsApp to Chatwoot
       tags:
       - Chatwoot
+  /sessions/{sessionId}/integrations/elodesk:
+    delete:
+      parameters:
+      - description: Session ID or name
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Delete Elodesk configuration for a session
+      tags:
+      - Elodesk
+    get:
+      parameters:
+      - description: Session ID or name
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Get Elodesk configuration for a session
+      tags:
+      - Elodesk
+    put:
+      consumes:
+      - application/json
+      description: Upserts Elodesk configuration for the session
+      parameters:
+      - description: Session ID or name
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Elodesk configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ElodeskConfigReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Configure Elodesk integration for a session
+      tags:
+      - Elodesk
+  /sessions/{sessionId}/integrations/elodesk/import:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Session ID
+        in: path
+        name: sessionId
+        required: true
+        type: string
+      - description: Import configuration
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/ElodeskImportReq'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/APIError'
+      security:
+      - Authorization: []
+      summary: Trigger manual history import from WhatsApp to Elodesk
+      tags:
+      - Elodesk
   /sessions/{sessionId}/label/chat:
     post:
       consumes:
@@ -3514,48 +3753,6 @@ paths:
       security:
       - Authorization: []
       summary: Edit a sent message
-      tags:
-      - Messages
-  /sessions/{sessionId}/messages/forward:
-    post:
-      consumes:
-      - application/json
-      description: Forwards an existing message to another chat or group
-      parameters:
-      - description: Session name or ID
-        in: path
-        name: sessionId
-        required: true
-        type: string
-      - description: Forward message payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/ForwardMessageReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/APIResponse'
-            - properties:
-                Data:
-                  $ref: '#/definitions/MessageIDResp'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/APIError'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/APIError'
-      security:
-      - Authorization: []
-      summary: Forward a message
       tags:
       - Messages
   /sessions/{sessionId}/messages/image:

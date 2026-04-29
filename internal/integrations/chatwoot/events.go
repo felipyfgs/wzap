@@ -58,6 +58,9 @@ func (d *eventDispatcher) Handle(ctx context.Context, cfg *Config, event model.E
 		s.processPicture(ctx, cfg, payload)
 	case model.EventHistorySync:
 		s.processHistorySync(ctx, cfg, payload)
+	default:
+		// Events not handled by Chatwoot are ignored
+		return nil
 	}
 	return nil
 }
@@ -289,7 +292,7 @@ func (s *Service) processGroupInfo(ctx context.Context, cfg *Config, payload []b
 		Demote        []string `json:"Demote"`
 	}
 	if err := parseEnvelopeData(payload, &data); err != nil {
-		return nil
+		return fmt.Errorf("parse group info envelope: %w", err)
 	}
 	if data.JID == "" {
 		return nil

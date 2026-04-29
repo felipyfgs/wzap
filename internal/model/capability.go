@@ -24,7 +24,6 @@ const (
 	CapabilityMessageContact     EngineCapability = "message.contact"
 	CapabilityMessageEdit        EngineCapability = "message.edit"
 	CapabilityMessageDelete      EngineCapability = "message.delete"
-	CapabilityMessageForward     EngineCapability = "message.forward"
 	CapabilityMessagePresence    EngineCapability = "message.presence"
 	CapabilityMessageStatusText  EngineCapability = "message.status_text"
 	CapabilityMessageStatusMedia EngineCapability = "message.status_media"
@@ -60,7 +59,6 @@ var DefaultCapabilities = CapabilityMap{
 			CapabilityMessageContact:     SupportComplete,
 			CapabilityMessageEdit:        SupportComplete,
 			CapabilityMessageDelete:      SupportComplete,
-			CapabilityMessageForward:     SupportComplete,
 			CapabilityMessagePresence:    SupportComplete,
 			CapabilityMessageStatusText:  SupportComplete,
 			CapabilityMessageStatusMedia: SupportComplete,

@@ -88,41 +88,6 @@ func (s *MessageService) ReactMessage(ctx context.Context, sessionID string, req
 	})
 }
 
-func (s *MessageService) ForwardMessage(ctx context.Context, sessionID string, req dto.ForwardMessageReq) (string, error) {
-	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageForward)
-	if err != nil {
-		return "", err
-	}
-
-	return runConnectedRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (string, error) {
-		destJID, err := parseJID(req.Phone)
-		if err != nil {
-			return "", err
-		}
-
-		msgID := client.GenerateMessageID()
-		msg := &waE2E.Message{
-			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-				ContextInfo: &waE2E.ContextInfo{
-					IsForwarded:     proto.Bool(true),
-					ForwardingScore: proto.Uint32(1),
-					StanzaID:        proto.String(req.MessageID),
-					RemoteJID:       proto.String(req.FromJID),
-				},
-			},
-		}
-
-		resp, err := client.SendMessage(ctx, destJID, msg, whatsmeow.SendRequestExtra{ID: msgID})
-		if err != nil {
-			return "", fmt.Errorf("failed to forward message: %w", err)
-		}
-
-		s.persistSent(session.ID, resp.ID, destJID.String(), "forward", "", "", client)
-
-		return resp.ID, nil
-	})
-}
-
 func (s *MessageService) SendSticker(ctx context.Context, sessionID string, req dto.SendStickerReq) (string, error) {
 	runtime, err := s.runtimeResolver.ResolveMessage(ctx, sessionID, model.CapabilityMessageSticker)
 	if err != nil {

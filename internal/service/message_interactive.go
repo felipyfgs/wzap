@@ -43,7 +43,7 @@ func (s *MessageService) SendButton(ctx context.Context, sessionID string, req d
 						FooterText:  proto.String(req.Footer),
 						Buttons:     buttons,
 						HeaderType:  waE2E.ButtonsMessage_EMPTY.Enum(),
-						ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
+						ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs, nil),
 					},
 				},
 			},
@@ -97,7 +97,7 @@ func (s *MessageService) SendList(ctx context.Context, sessionID string, req dto
 				ButtonText:  proto.String(req.ButtonText),
 				ListType:    waE2E.ListMessage_SINGLE_SELECT.Enum(),
 				Sections:    sections,
-				ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
+				ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs, nil),
 			},
 		}
 

@@ -497,34 +497,3 @@ func (h *MessageHandler) SendList(c *fiber.Ctx) error {
 
 	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
 }
-
-// ForwardMessage godoc
-// @Summary     Forward a message
-// @Description Forwards an existing message to another chat or group
-// @Tags        Messages
-// @Accept      json
-// @Produce     json
-// @Param       sessionId path string true "Session name or ID"
-// @Param       body body dto.ForwardMessageReq true "Forward message payload"
-// @Success     200 {object} dto.APIResponse{Data=dto.MessageIDResp}
-// @Failure     400 {object} dto.APIError
-// @Failure     500 {object} dto.APIError
-// @Security    Authorization
-// @Router      /sessions/{sessionId}/messages/forward [post]
-func (h *MessageHandler) ForwardMessage(c *fiber.Ctx) error {
-	id, err := getSessionID(c)
-	if err != nil {
-		return err
-	}
-	var req dto.ForwardMessageReq
-	if err := parseAndValidate(c, &req); err != nil {
-		return nil
-	}
-
-	msgID, err := h.msgSvc.ForwardMessage(c.Context(), id, req)
-	if err != nil {
-		return h.respondMessageError(c, err, id, "failed to forward message")
-	}
-
-	return c.JSON(dto.SuccessResp(dto.MessageIDResp{MessageID: msgID}))
-}

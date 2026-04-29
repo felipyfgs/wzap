@@ -27,7 +27,7 @@ func parseJID(target string) (types.JID, error) {
 	return jid, nil
 }
 
-func buildContextInfo(reply *dto.ReplyContext, mentionedJIDs []string) *waE2E.ContextInfo {
+func buildContextInfo(reply *dto.ReplyContext, mentionedJIDs []string, forwarding *dto.ForwardingContext) *waE2E.ContextInfo {
 	ci := &waE2E.ContextInfo{}
 
 	if reply != nil && reply.MessageID != "" {
@@ -44,7 +44,16 @@ func buildContextInfo(reply *dto.ReplyContext, mentionedJIDs []string) *waE2E.Co
 		ci.MentionedJID = mentionedJIDs
 	}
 
-	if ci.StanzaID == nil && ci.Participant == nil && len(ci.MentionedJID) == 0 {
+	if forwarding != nil {
+		score := forwarding.Score
+		if score == 0 {
+			score = 1
+		}
+		ci.IsForwarded = proto.Bool(true)
+		ci.ForwardingScore = proto.Uint32(score)
+	}
+
+	if ci.StanzaID == nil && ci.Participant == nil && len(ci.MentionedJID) == 0 && ci.IsForwarded == nil {
 		return nil
 	}
 

@@ -80,19 +80,20 @@ type ElodeskWebhookPayload struct {
 }
 
 type ElodeskWebhookMessage struct {
-	ID             int64                      `json:"id"`
-	AccountID      int64                      `json:"accountId,omitempty"`
-	InboxID        int64                      `json:"inboxId,omitempty"`
-	ConversationID int64                      `json:"conversationId,omitempty"`
-	MessageType    int                        `json:"messageType"`
-	ContentType    int                        `json:"contentType,omitempty"`
-	Content        string                     `json:"content,omitempty"`
-	Private        bool                       `json:"private,omitempty"`
-	Status         int                        `json:"status,omitempty"`
-	SourceID       string                     `json:"sourceId,omitempty"`
-	Attachments    []ElodeskWebhookAttachment `json:"attachments,omitempty"`
-	CreatedAt      string                     `json:"createdAt,omitempty"`
-	UpdatedAt      string                     `json:"updatedAt,omitempty"`
+	ID                     int64                      `json:"id"`
+	AccountID              int64                      `json:"accountId,omitempty"`
+	InboxID                int64                      `json:"inboxId,omitempty"`
+	ConversationID         int64                      `json:"conversationId,omitempty"`
+	MessageType            int                        `json:"messageType"`
+	ContentType            int                        `json:"contentType,omitempty"`
+	Content                string                     `json:"content,omitempty"`
+	Private                bool                       `json:"private,omitempty"`
+	Status                 int                        `json:"status,omitempty"`
+	SourceID               string                     `json:"sourceId,omitempty"`
+	Attachments            []ElodeskWebhookAttachment `json:"attachments,omitempty"`
+	CreatedAt              string                     `json:"createdAt,omitempty"`
+	UpdatedAt              string                     `json:"updatedAt,omitempty"`
+	ForwardedFromMessageID *int64                     `json:"forwardedFromMessageId,omitempty"`
 }
 
 // ElodeskWebhookAttachment espelha backend/internal/model.Attachment do

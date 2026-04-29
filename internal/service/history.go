@@ -95,17 +95,19 @@ func (s *HistoryService) PersistMessage(input wa.PersistInput) {
 	_ = s.pool.Submit(func(ctx context.Context) {
 		waited := time.Since(enqueuedAt)
 		msg := &model.Message{
-			ID:        input.MessageID,
-			SessionID: input.SessionID,
-			ChatJID:   input.ChatJID,
-			SenderJID: input.SenderJID,
-			FromMe:    input.FromMe,
-			MsgType:   input.MsgType,
-			Body:      input.Body,
-			MediaType: input.MediaType,
-			Source:    "live",
-			Raw:       input.Raw,
-			Timestamp: time.Unix(input.Timestamp, 0),
+			ID:              input.MessageID,
+			SessionID:       input.SessionID,
+			ChatJID:         input.ChatJID,
+			SenderJID:       input.SenderJID,
+			FromMe:          input.FromMe,
+			MsgType:         input.MsgType,
+			Body:            input.Body,
+			MediaType:       input.MediaType,
+			Source:          "live",
+			Raw:             input.Raw,
+			IsForwarded:     input.IsForwarded,
+			ForwardingScore: input.ForwardingScore,
+			Timestamp:       time.Unix(input.Timestamp, 0),
 		}
 
 		saveStart := time.Now()
@@ -323,6 +325,7 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 
 	senderJID := resolveMessageSenderJID(info, chatJID)
 	msgType, body, mediaType := wautil.ExtractMessageContent(info.GetMessage())
+	isForwarded, fwdScore := wautil.ExtractForwarding(info.GetMessage())
 	timestamp := wautil.Uint64ToInt64(info.GetMessageTimestamp())
 	if timestamp == 0 {
 		if conversation != nil {
@@ -339,20 +342,22 @@ func buildHistoryMessage(sessionID string, conversation *waHistorySync.Conversat
 	}
 
 	return &model.Message{
-		ID:         messageID,
-		SessionID:  sessionID,
-		ChatJID:    chatJID,
-		SenderJID:  senderJID,
-		FromMe:     key.GetFromMe(),
-		MsgType:    msgType,
-		Body:       body,
-		MediaType:  mediaType,
-		Source:     "history_sync",
-		SyncType:   syncType,
-		ChunkOrder: wautil.IntPtr(chunkOrder),
-		MsgOrder:   messageOrder,
-		Raw:        info,
-		Timestamp:  time.Unix(timestamp, 0),
+		ID:              messageID,
+		SessionID:       sessionID,
+		ChatJID:         chatJID,
+		SenderJID:       senderJID,
+		FromMe:          key.GetFromMe(),
+		MsgType:         msgType,
+		Body:            body,
+		MediaType:       mediaType,
+		Source:          "history_sync",
+		SyncType:        syncType,
+		ChunkOrder:      wautil.IntPtr(chunkOrder),
+		MsgOrder:        messageOrder,
+		Raw:             info,
+		IsForwarded:     isForwarded,
+		ForwardingScore: fwdScore,
+		Timestamp:       time.Unix(timestamp, 0),
 	}
 }
 

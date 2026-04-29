@@ -50,14 +50,19 @@ func (h *WebSocketHandler) Handle() func(*ws.Conn) {
 	return func(c *ws.Conn) {
 		sessionID := c.Params("sessionId", "*")
 
-		h.hub.Register(sessionID, c)
-		defer h.hub.Unregister(sessionID, c)
+		// Configure read deadline + pong handler before entering the read
+		// loop — without it the connection survives forever even after the
+		// peer is gone (NAT silent timeout).
+		wsHub.Configure(c)
+
+		release := h.hub.Register(sessionID, c)
+		defer release()
 
 		for {
 			_, _, err := c.ReadMessage()
 			if err != nil {
 				logger.Debug().Str("component", "handler").Err(err).Str("session", sessionID).Msg("WebSocket read error")
-				break
+				return
 			}
 		}
 	}

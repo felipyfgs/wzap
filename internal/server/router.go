@@ -242,7 +242,6 @@ func (s *Server) SetupRoutes() error {
 	sess.Post("/messages/presence", messageHandler.SetPresence)
 	sess.Post("/messages/button", messageHandler.SendButton)
 	sess.Post("/messages/list", messageHandler.SendList)
-	sess.Post("/messages/forward", messageHandler.ForwardMessage)
 
 	// 3.1. Media & History
 	sess.Get("/media", historyHandler.ListMedia)

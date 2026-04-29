@@ -12,15 +12,15 @@ import "time"
 //
 // Tokens usam json:"-" para não vazar em logs ou responses automáticas.
 type Config struct {
-	SessionID       string    `json:"sessionId"`
-	URL             string    `json:"url"`
-	InboxIdentifier string    `json:"inboxIdentifier"`
-	APIToken        string    `json:"-"`
-	HMACToken       string    `json:"-"`
-	WebhookSecret   string    `json:"-"`
-	UserAccessToken string    `json:"-"`
-	AccountID       int       `json:"accountId"`
-	ChannelID       int64     `json:"-"`
+	SessionID       string `json:"sessionId"`
+	URL             string `json:"url"`
+	InboxIdentifier string `json:"inboxIdentifier"`
+	APIToken        string `json:"-"`
+	HMACToken       string `json:"-"`
+	WebhookSecret   string `json:"-"`
+	UserAccessToken string `json:"-"`
+	AccountID       int    `json:"accountId"`
+	ChannelID       int64  `json:"-"`
 	// InboxName é transient — usado apenas durante o auto-provision para
 	// nomear a inbox criada no Elodesk. Não persistido no wz_elodesk.
 	InboxName       string    `json:"-"`

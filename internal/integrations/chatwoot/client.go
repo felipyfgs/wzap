@@ -26,6 +26,8 @@ func (e *APIError) Error() string {
 	return fmt.Sprintf("chatwoot API error: status=%d, body=%s", e.StatusCode, e.Message)
 }
 
+var ErrNotFound = errors.New("not found")
+
 func isRetryableError(err error) bool {
 	if err == nil {
 		return false
@@ -420,7 +422,7 @@ func (c *HTTPClient) FindMessageBySourceID(ctx context.Context, convID int, sour
 			return &result.Payload[i], nil
 		}
 	}
-	return nil, nil
+	return nil, ErrNotFound
 }
 
 type Inbox struct {

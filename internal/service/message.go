@@ -69,7 +69,7 @@ func (s *MessageService) SendText(ctx context.Context, sessionID string, req dto
 		msg := &waE2E.Message{
 			ExtendedTextMessage: &waE2E.ExtendedTextMessage{
 				Text:        proto.String(req.Body),
-				ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs),
+				ContextInfo: buildContextInfo(req.ReplyTo, req.MentionedJIDs, req.Forwarding),
 			},
 		}
 
@@ -155,9 +155,9 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 
 		var msg waE2E.Message
 
-		ci := buildContextInfo(req.ReplyTo, req.MentionedJIDs)
+		ci := buildContextInfo(req.ReplyTo, req.MentionedJIDs, req.Forwarding)
 
-		switch mediaType { //nolint:exhaustive // sendMedia only accepts Image/Video/Audio/Document
+		switch mediaType {
 		case whatsmeow.MediaImage:
 			msg.ImageMessage = &waE2E.ImageMessage{
 				Caption:       proto.String(req.Caption),
@@ -220,10 +220,12 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 				audioMsg.Seconds = proto.Uint32(secs)
 			}
 			msg.AudioMessage = audioMsg
+		default:
+			return "", fmt.Errorf("unsupported media type: %s", mediaType)
 		}
 
 		var msgType string
-		switch mediaType { //nolint:exhaustive // sendMedia only accepts Image/Video/Audio/Document
+		switch mediaType {
 		case whatsmeow.MediaImage:
 			msgType = "image"
 		case whatsmeow.MediaVideo:
@@ -232,6 +234,8 @@ func (s *MessageService) sendMedia(ctx context.Context, sessionID string, req dt
 			msgType = "document"
 		case whatsmeow.MediaAudio:
 			msgType = "audio"
+		default:
+			msgType = "unknown"
 		}
 
 		opts := buildSendOpts(req.CustomID)

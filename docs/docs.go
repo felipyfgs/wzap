@@ -78,6 +78,62 @@ const docTemplate = `{
                 }
             }
         },
+        "/elodesk/webhook/{sessionId}": {
+            "post": {
+                "description": "Handles incoming Elodesk webhook events (agent replies, message updates, conversation status changes)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Elodesk"
+                ],
+                "summary": "Receive webhook events from Elodesk",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "HMAC-SHA256 signature (legacy alias)",
+                        "name": "X-Chatwoot-Hmac-Sha256",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "HMAC-SHA256 signature (preferred)",
+                        "name": "X-Elodesk-Signature",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/health": {
             "get": {
                 "description": "Returns the health status of the API and its dependencies",
@@ -3127,6 +3183,213 @@ const docTemplate = `{
                 }
             }
         },
+        "/sessions/{sessionId}/integrations/elodesk": {
+            "get": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Elodesk"
+                ],
+                "summary": "Get Elodesk configuration for a session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID or name",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "description": "Upserts Elodesk configuration for the session",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Elodesk"
+                ],
+                "summary": "Configure Elodesk integration for a session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID or name",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Elodesk configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ElodeskConfigReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "tags": [
+                    "Elodesk"
+                ],
+                "summary": "Delete Elodesk configuration for a session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID or name",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
+        "/sessions/{sessionId}/integrations/elodesk/import": {
+            "post": {
+                "security": [
+                    {
+                        "Authorization": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Elodesk"
+                ],
+                "summary": "Trigger manual history import from WhatsApp to Elodesk",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Session ID",
+                        "name": "sessionId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Import configuration",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ElodeskImportReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/APIError"
+                        }
+                    }
+                }
+            }
+        },
         "/sessions/{sessionId}/label/chat": {
             "post": {
                 "security": [
@@ -3917,76 +4180,6 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/EditMessageReq"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "Data": {
-                                            "$ref": "#/definitions/MessageIDResp"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/APIError"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/APIError"
-                        }
-                    }
-                }
-            }
-        },
-        "/sessions/{sessionId}/messages/forward": {
-            "post": {
-                "security": [
-                    {
-                        "Authorization": []
-                    }
-                ],
-                "description": "Forwards an existing message to another chat or group",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Messages"
-                ],
-                "summary": "Forward a message",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Session name or ID",
-                        "name": "sessionId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Forward message payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/ForwardMessageReq"
                         }
                     }
                 ],
@@ -6725,22 +6918,114 @@ const docTemplate = `{
                 }
             }
         },
-        "ForwardMessageReq": {
+        "ElodeskConfigReq": {
             "type": "object",
             "required": [
-                "fromJid",
-                "messageId",
-                "phone"
+                "url"
             ],
             "properties": {
-                "fromJid": {
+                "accountId": {
+                    "type": "integer"
+                },
+                "apiToken": {
                     "type": "string"
                 },
-                "messageId": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "hmacToken": {
                     "type": "string"
                 },
-                "phone": {
+                "ignoreGroups": {
+                    "type": "boolean"
+                },
+                "ignoreJids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "importOnConnect": {
+                    "type": "boolean"
+                },
+                "importPeriod": {
+                    "type": "string",
+                    "enum": [
+                        "24h",
+                        "7d",
+                        "30d",
+                        "custom"
+                    ]
+                },
+                "inboxIdentifier": {
                     "type": "string"
+                },
+                "inboxName": {
+                    "type": "string"
+                },
+                "largeTimeout": {
+                    "type": "integer"
+                },
+                "mediaTimeout": {
+                    "type": "integer"
+                },
+                "mergeBrContacts": {
+                    "type": "boolean"
+                },
+                "messageRead": {
+                    "type": "boolean"
+                },
+                "pendingConv": {
+                    "type": "boolean"
+                },
+                "reopenConv": {
+                    "type": "boolean"
+                },
+                "signDelimiter": {
+                    "type": "string"
+                },
+                "signMsg": {
+                    "type": "boolean"
+                },
+                "textTimeout": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "userAccessToken": {
+                    "type": "string"
+                },
+                "webhookSecret": {
+                    "type": "string"
+                }
+            }
+        },
+        "ElodeskImportReq": {
+            "type": "object",
+            "required": [
+                "period"
+            ],
+            "properties": {
+                "customDays": {
+                    "type": "integer"
+                },
+                "period": {
+                    "type": "string",
+                    "enum": [
+                        "24h",
+                        "7d",
+                        "30d",
+                        "custom"
+                    ]
+                }
+            }
+        },
+        "ForwardingContext": {
+            "type": "object",
+            "properties": {
+                "score": {
+                    "type": "integer"
                 }
             }
         },
@@ -7339,6 +7624,9 @@ const docTemplate = `{
                 "fileName": {
                     "type": "string"
                 },
+                "forwarding": {
+                    "$ref": "#/definitions/ForwardingContext"
+                },
                 "mentionedJids": {
                     "type": "array",
                     "items": {
@@ -7416,6 +7704,9 @@ const docTemplate = `{
                 },
                 "customId": {
                     "type": "string"
+                },
+                "forwarding": {
+                    "$ref": "#/definitions/ForwardingContext"
                 },
                 "mentionedJids": {
                     "type": "array",
@@ -7542,6 +7833,9 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
+                "token": {
+                    "type": "string"
+                },
                 "updatedAt": {
                     "type": "string"
                 }
@@ -7607,6 +7901,9 @@ const docTemplate = `{
                 },
                 "settings": {
                     "$ref": "#/definitions/SessionSettings"
+                },
+                "token": {
+                    "type": "string"
                 }
             }
         },

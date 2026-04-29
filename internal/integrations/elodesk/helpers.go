@@ -165,6 +165,71 @@ func extractText(msg map[string]any) string {
 	return ""
 }
 
+// extractForwardingFromMap procura o ContextInfo aninhado no payload da
+// mensagem (map[string]any vindo do envelope JSON) e devolve o par
+// (isForwarded, forwardingScore). Espelha a lógica de wautil.ExtractForwarding
+// mas opera no formato map para evitar reparsing do proto. Cobre os tipos de
+// mensagem que efetivamente carregam ContextInfo no protocolo do WhatsApp.
+func extractForwardingFromMap(msg map[string]any) (bool, uint32) {
+	ci := findContextInfoInMessage(msg)
+	if ci == nil {
+		return false, 0
+	}
+	isFwd, _ := ci["isForwarded"].(bool)
+	var score uint32
+	switch v := ci["forwardingScore"].(type) {
+	case float64:
+		if v > 0 {
+			score = uint32(v)
+		}
+	case int:
+		if v > 0 {
+			score = uint32(v)
+		}
+	case int64:
+		if v > 0 && v <= 0xFFFFFFFF {
+			score = uint32(v)
+		}
+	}
+	return isFwd, score
+}
+
+func findContextInfoInMessage(msg map[string]any) map[string]any {
+	if msg == nil {
+		return nil
+	}
+	if ci := getMapField(msg, "contextInfo"); ci != nil {
+		return ci
+	}
+	for _, key := range []string{
+		"extendedTextMessage", "imageMessage", "videoMessage", "audioMessage",
+		"documentMessage", "stickerMessage", "contactMessage", "contactsArrayMessage",
+		"liveLocationMessage", "buttonsMessage", "buttonsResponseMessage",
+		"listMessage", "listResponseMessage", "templateMessage",
+		"templateButtonReplyMessage", "pollCreationMessage", "groupInviteMessage",
+		"productMessage", "orderMessage",
+	} {
+		if sub := getMapField(msg, key); sub != nil {
+			if ci := getMapField(sub, "contextInfo"); ci != nil {
+				return ci
+			}
+		}
+	}
+	for _, wrapper := range []string{
+		"ephemeralMessage", "viewOnceMessage", "viewOnceMessageV2",
+		"viewOnceMessageV2Extension", "documentWithCaptionMessage",
+	} {
+		if sub := getMapField(msg, wrapper); sub != nil {
+			if inner := getMapField(sub, "message"); inner != nil {
+				if ci := findContextInfoInMessage(inner); ci != nil {
+					return ci
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func shouldIgnoreJID(chatJID string, ignoreGroups bool, ignoreJIDs []string) bool {
 	if strings.HasPrefix(chatJID, "status@") {
 		return true

@@ -46,16 +46,18 @@ type MediaRetryInput struct {
 }
 
 type PersistInput struct {
-	SessionID string
-	MessageID string
-	ChatJID   string
-	SenderJID string
-	FromMe    bool
-	MsgType   string
-	Body      string
-	MediaType string
-	Timestamp int64
-	Raw       any
+	SessionID       string
+	MessageID       string
+	ChatJID         string
+	SenderJID       string
+	FromMe          bool
+	MsgType         string
+	Body            string
+	MediaType       string
+	Timestamp       int64
+	Raw             any
+	IsForwarded     bool
+	ForwardingScore uint32
 }
 
 type MediaUploadFunc func(MediaUploadInput)

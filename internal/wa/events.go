@@ -92,11 +92,13 @@ func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, boo
 				}
 				if m.OnStatusPersist != nil {
 					msgType, body, mediaType := wautil.ExtractMessageContent(v.Message)
+					isForwarded, fwdScore := wautil.ExtractForwarding(v.Message)
 					m.OnStatusPersist(PersistInput{
 						SessionID: sessionID, MessageID: v.Info.ID, ChatJID: v.Info.Chat.String(),
 						SenderJID: v.Info.Sender.String(), FromMe: v.Info.IsFromMe,
 						MsgType: msgType, Body: body, MediaType: mediaType,
 						Timestamp: v.Info.Timestamp.Unix(), Raw: v.Message,
+						IsForwarded: isForwarded, ForwardingScore: fwdScore,
 					})
 				}
 				if m.OnStatusMedia != nil && v.Message != nil {
@@ -158,11 +160,13 @@ func (m *Manager) classifyEvent(sessionID string, evt any) (model.EventType, boo
 
 			if m.OnMessagePersist != nil {
 				msgType, body, mediaType := wautil.ExtractMessageContent(v.Message)
+				isForwarded, fwdScore := wautil.ExtractForwarding(v.Message)
 				m.OnMessagePersist(PersistInput{
 					SessionID: sessionID, MessageID: v.Info.ID, ChatJID: v.Info.Chat.String(),
 					SenderJID: v.Info.Sender.String(), FromMe: v.Info.IsFromMe,
 					MsgType: msgType, Body: body, MediaType: mediaType,
 					Timestamp: v.Info.Timestamp.Unix(), Raw: v.Message,
+					IsForwarded: isForwarded, ForwardingScore: fwdScore,
 				})
 			}
 		}

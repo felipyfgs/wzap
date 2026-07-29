@@ -22,6 +22,8 @@ services:
       MINIO_ENDPOINT: minio:9000
       NATS_URL: nats://nats:4222
       SERVER_URL: ${SERVER_URL:-http://api:8080}
+      # Vazio = automático. Para fixar, use por exemplo: "2.3000.1044062641"
+      WA_VERSION: ${WA_VERSION:-}
     ports:
       - "${PORT:-8080}:8080"
     depends_on:

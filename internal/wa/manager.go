@@ -299,7 +299,10 @@ func (m *Manager) DownloadMediaByPath(ctx context.Context, sessionID, directPath
 		wmMediaType = whatsmeow.MediaDocument
 	}
 
-	return client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, fileLength, wmMediaType, "")
+	// whatsmeow no longer accepts file length in this low-level API. Keep the
+	// parameter in our interface for compatibility with existing consumers.
+	_ = fileLength
+	return client.DownloadMediaWithPath(ctx, directPath, encFileHash, fileHash, mediaKey, wmMediaType, "", false)
 }
 
 func (m *Manager) GetProfilePicture(ctx context.Context, sessionID, jid string) (string, error) {

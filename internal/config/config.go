@@ -26,6 +26,7 @@ type Config struct {
 	RedisURL string
 
 	WALogLevel       string
+	WAVersion        string
 	GlobalWebhookURL string
 	ServerURL        string
 
@@ -54,6 +55,7 @@ func Load() *Config {
 		RedisURL: getEnv("REDIS_URL", ""),
 
 		WALogLevel:       getEnv("WA_LOG_LEVEL", "INFO"),
+		WAVersion:        getEnv("WA_VERSION", ""),
 		GlobalWebhookURL: getEnv("GLOBAL_WEBHOOK_URL", ""),
 		ServerURL:        getEnv("SERVER_URL", "http://localhost:8080"),
 

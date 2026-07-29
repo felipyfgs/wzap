@@ -121,7 +121,10 @@ func (s *MediaService) RetryMediaUpload(input wa.MediaRetryInput) {
 		}
 
 		_, err = runSessionRuntime(ctx, runtime.SessionRuntime, func(ctx context.Context, session *model.Session, client *whatsmeow.Client) (struct{}, error) {
-			data, err := client.DownloadMediaWithPath(ctx, input.DirectPath, input.EncFileHash, input.FileHash, input.MediaKey, input.FileLength, wautil.MimeTypeToMediaType(input.MimeType), "")
+			data, err := client.DownloadMediaWithPath(
+				ctx, input.DirectPath, input.EncFileHash, input.FileHash, input.MediaKey,
+				wautil.MimeTypeToMediaType(input.MimeType), "", false,
+			)
 			if err != nil {
 				logger.Warn().Str("component", "service").Err(err).Str("session", session.ID).Str("mid", input.MessageID).Msg("Media retry upload: failed to download media")
 				return struct{}{}, nil

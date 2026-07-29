@@ -28,6 +28,9 @@ func NewManager(ctx context.Context, cfg *config.Config, sessionRepo *repo.Sessi
 		waLevel = zerolog.InfoLevel
 	}
 	waLogger := waLog.Zerolog(logger.Logger().Level(waLevel).With().Str("module", "wzap").Logger())
+	if err := ConfigureWAVersion(ctx, cfg.WAVersion, nil); err != nil {
+		return nil, fmt.Errorf("failed to configure WhatsApp client version: %w", err)
+	}
 
 	container, err := sqlstore.New(ctx, "postgres", cfg.DatabaseURL, waLogger)
 	if err != nil {
